@@ -25,12 +25,12 @@ work with JSON formatted data.
 - It doesn’t have the object mapping feature which takes raw JSON
   strings and maps it to user POJOs. Users need to work with
   `JsonObject`s to access the fields.
-- The classes are in `com.hazelcast.internal.json` package, in order to
+- The classes are in `uk.org.hecaton.internal.json` package, in order to
   use them in public APIs we need to relocate them in maven shade
   plugin. Shading happens at the package phase which means in the code
   we’ll see them in internal package. Though this already can be
   considered as an issue, the real problem is with the `examples`. The
-  example projects has the dependency to `hazelcast-jet`, the IDE uses
+  example projects has the dependency to `hecaton-jet`, the IDE uses
   the compiled classes for this dependency, so you need to import JSON
   classes from internal packages but when you try to build from maven
   it does not compile.
@@ -77,7 +77,7 @@ Shading the library proved to have issues because IMDG already shades
 `jackson-core` which is a dependency of `jackson-jr`. We decided to
 override the shaded `jackson-core` classes coming from IMDG and
 re-shade them to the same location
-(`com.hazelcast.com.fasterxml.jackson.`) while packaging.
+(`uk.org.hecaton.com.fasterxml.jackson.`) while packaging.
 
 Maven shade plugin filters out classes/resources shaded for
 `jackson-core` in IMDG and re-shades them along with `jackson-jr`
@@ -86,21 +86,21 @@ classes/resources to the same location:
 ```xml
 <filters>
     <filter>
-        <artifact>com.hazelcast:hazelcast</artifact>
+        <artifact>uk.org.hecaton:hecaton</artifact>
         <excludes>
-            <exclude>com/hazelcast/com/fasterxml/**</exclude>
-            <exclude>META-INF/services/com.hazelcast.com.fasterxml.jackson.core.JsonFactory</exclude>
+            <exclude>uk/org/hecaton/com/fasterxml/**</exclude>
+            <exclude>META-INF/services/uk.org.hecaton.com.fasterxml.jackson.core.JsonFactory</exclude>
         </excludes>
     </filter>
 </filters>
 <relocations>
     <relocation>
         <pattern>com.fasterxml.jackson.jr.</pattern>
-        <shadedPattern>com.hazelcast.com.fasterxml.jackson.jr.</shadedPattern>
+        <shadedPattern>uk.org.hecaton.com.fasterxml.jackson.jr.</shadedPattern>
     </relocation>
     <relocation>
         <pattern>com.fasterxml.jackson.core.</pattern>
-        <shadedPattern>com.hazelcast.com.fasterxml.jackson.core.</shadedPattern>
+        <shadedPattern>uk.org.hecaton.com.fasterxml.jackson.core.</shadedPattern>
     </relocation>
 </relocations>
 ```
@@ -165,15 +165,15 @@ public static <T> Sink<T> json(@Nonnull String directoryName) {
 
 ### IMap Sink with JSON value
 
-Hazelcast introduced `HazelcastJsonValue` as a wrapper to JSON
+Hecaton introduced `HecatonJsonValue` as a wrapper to JSON
 formatted strings. If key/value of the entry is wrapped in
-`HazelcastJsonValue`, then users can run queries on these items using
+`HecatonJsonValue`, then users can run queries on these items using
 the JSON structure. Currently, if user wants to wrap items to
-`HazelcastJsonValue`, a prior mapping stage is necessary.
+`HecatonJsonValue`, a prior mapping stage is necessary.
 
 Alternatively, user can use `Sinks.mapWithMerging` or
 `Sinks.mapWithEntryProcessor` to convert the key/value to
-`HazelcastJsonValue` via provided functions, but these are less
+`HecatonJsonValue` via provided functions, but these are less
 performant variants since they submit entry processors per key.
 
 We’ve changed `WriteMapP` so that it takes `toKeyFn` and `toValueFn`:
@@ -190,10 +190,10 @@ public static <T, K, V> Sink<T> map(
 ```
 
 In addition to this, we’ve added a convenience for wrapping key/value
-to `HazelcastJsonValue` in `JsonUtil`:
+to `HecatonJsonValue` in `JsonUtil`:
 
 ```java
-public static HazelcastJsonValue hazelcastJsonValue(@Nonnull Object object) {
-    return new HazelcastJsonValue(object.toString());
+public static HecatonJsonValue hecatonJsonValue(@Nonnull Object object) {
+    return new HecatonJsonValue(object.toString());
 }
 ```

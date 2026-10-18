@@ -1,0 +1,10 @@
+{
+  "instance": {
+    "hecaton-client": {
+      "tpc": {
+        "enabled": true
+      }
+    }
+  },
+  "error": null
+}

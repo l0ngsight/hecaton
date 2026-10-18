@@ -83,7 +83,7 @@ of migrations. There are also tests to verify rolling upgrade
 compatibility of migrations. They are all expected to pass. 
 
 Additionally, performance effect of these changes will be measured using
-Hazelcast Simulator.
+Hecaton Simulator.
 
 ## Performance Tests
 
@@ -152,20 +152,20 @@ MigrationPerfTest@valueSize=1000
 ##### **MigrationPerfTest**
 
 ```java
-import com.hazelcast.core.Cluster;
-import com.hazelcast.core.IMap;
-import com.hazelcast.instance.Node;
-import com.hazelcast.internal.partition.MigrationInfo;
-import com.hazelcast.internal.partition.impl.InternalMigrationListener;
-import com.hazelcast.internal.partition.impl.InternalPartitionServiceImpl;
-import com.hazelcast.simulator.hz.HazelcastTest;
-import com.hazelcast.simulator.test.annotations.Prepare;
-import com.hazelcast.simulator.test.annotations.Run;
-import com.hazelcast.simulator.test.annotations.Setup;
-import com.hazelcast.simulator.test.annotations.Teardown;
-import com.hazelcast.simulator.tests.helpers.HazelcastTestUtils;
-import com.hazelcast.simulator.worker.loadsupport.Streamer;
-import com.hazelcast.simulator.worker.loadsupport.StreamerFactory;
+import uk.org.hecaton.core.Cluster;
+import uk.org.hecaton.core.IMap;
+import uk.org.hecaton.instance.Node;
+import uk.org.hecaton.internal.partition.MigrationInfo;
+import uk.org.hecaton.internal.partition.impl.InternalMigrationListener;
+import uk.org.hecaton.internal.partition.impl.InternalPartitionServiceImpl;
+import uk.org.hecaton.simulator.hz.HecatonTest;
+import uk.org.hecaton.simulator.test.annotations.Prepare;
+import uk.org.hecaton.simulator.test.annotations.Run;
+import uk.org.hecaton.simulator.test.annotations.Setup;
+import uk.org.hecaton.simulator.test.annotations.Teardown;
+import uk.org.hecaton.simulator.tests.helpers.HecatonTestUtils;
+import uk.org.hecaton.simulator.worker.loadsupport.Streamer;
+import uk.org.hecaton.simulator.worker.loadsupport.StreamerFactory;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramLogWriter;
 
@@ -174,9 +174,9 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Random;
 
-import static com.hazelcast.util.UuidUtil.newUnsecureUuidString;
+import static uk.org.hecaton.util.UuidUtil.newUnsecureUuidString;
 
-public class MigrationPerfTest extends HazelcastTest {
+public class MigrationPerfTest extends HecatonTest {
 
     public int clusterSize = 5;
     public int mapCount = 10;
@@ -215,7 +215,7 @@ public class MigrationPerfTest extends HazelcastTest {
         }
         testContext.echoCoordinator("Inserted %d entries into %d different maps.", entryCount, mapCount);
 
-        Node node = HazelcastTestUtils.getNode(targetInstance);
+        Node node = HecatonTestUtils.getNode(targetInstance);
         if (node.getClusterService().isMaster()) {
             partitionService = node.partitionService;
             partitionService.setInternalMigrationListener(migrationListener);

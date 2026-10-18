@@ -1,0 +1,152 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.json.internal;
+
+import uk.org.hecaton.config.InMemoryFormat;
+import uk.org.hecaton.core.HecatonJsonValue;
+import uk.org.hecaton.internal.json.Json;
+import uk.org.hecaton.internal.json.JsonObject;
+import uk.org.hecaton.internal.json.JsonValue;
+import uk.org.hecaton.internal.json.PrettyPrint;
+import uk.org.hecaton.internal.json.RandomPrint;
+import uk.org.hecaton.internal.json.WriterConfig;
+import uk.org.hecaton.internal.serialization.impl.NavigableJsonInputAdapter;
+import uk.org.hecaton.query.impl.getters.JsonPathCursor;
+import uk.org.hecaton.test.HecatonParallelParametersRunnerFactory;
+import uk.org.hecaton.test.HecatonParametrizedRunner;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
+
+import java.io.IOException;
+import java.util.Collection;
+
+import static java.util.Arrays.asList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
+/**
+ * This test automatically tests
+ * {@link JsonSchemaHelper#createPattern(NavigableJsonInputAdapter, JsonSchemaNode, JsonPathCursor)}
+ * and
+ * {@link JsonSchemaHelper#findValueWithPattern(NavigableJsonInputAdapter, JsonSchemaNode, JsonPattern, JsonPathCursor)}
+ * methods.
+ * <p>
+ * It runs the mentioned methods on pre-determined {@code JsonValue}s.
+ * The tests use all valid attribute paths to extract {@code JsonValue}s
+ * and compare extracted values with the ones that are available from
+ * JsonValue tree.
+ * <p>
+ * This suite include simple test cases along with automated test cases.
+ * These are just there to demonstrate what kind of testing is done and
+ * additional peace of mind. They are already covered by the automated
+ * tests.
+ */
+@RunWith(HecatonParametrizedRunner.class)
+@UseParametersRunnerFactory(HecatonParallelParametersRunnerFactory.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class JsonSchemaHelperTest extends AbstractJsonSchemaTest {
+
+    @Parameters(name = "InMemoryFormat: {0}")
+    public static Collection<Object[]> parameters() {
+        return asList(new Object[][]{
+                {InMemoryFormat.BINARY},
+                {InMemoryFormat.OBJECT}
+        });
+    }
+
+    @Parameter
+    public InMemoryFormat inMemoryFormat;
+
+    @Test
+    public void testAllValidPaths_MinimalPrint() throws IOException {
+        testPaths(WriterConfig.MINIMAL);
+    }
+
+    @Test
+    public void testAllValidPaths_PrettyPrint() throws IOException {
+        testPaths(PrettyPrint.PRETTY_PRINT);
+    }
+
+    @Test
+    public void testAllValidPaths_RandomPrint() throws IOException {
+        testPaths(RandomPrint.RANDOM_PRINT);
+    }
+
+    @Test
+    public void testQuerySimpleNestedQuery() throws IOException {
+        JsonObject object = Json.object()
+                .add("inner", Json.object()
+                        .add("a", 3)
+                        .add("b", 5));
+
+        NavigableJsonInputAdapter input = toAdapter(new HecatonJsonValue(object.toString()));
+        JsonSchemaNode description = JsonSchemaHelper.createSchema(createParserFromInput(input));
+        JsonPattern pattern = JsonSchemaHelper.createPattern(input, description, splitPath("inner.b"));
+        assertEquals(new JsonPattern(asList(0, 1)), pattern);
+    }
+
+    @Test
+    public void testEmptyStringReturnsNullSchema() throws IOException {
+        NavigableJsonInputAdapter input = toAdapter(new HecatonJsonValue(""));
+        JsonSchemaNode description = JsonSchemaHelper.createSchema(createParserFromInput(input));
+        assertNull(description);
+    }
+
+    @Test
+    public void testOneLevelObject() throws IOException {
+        JsonObject object = Json.object()
+                .add("a", true)
+                .add("b", false)
+                .add("c", Json.NULL)
+                .add("d", 4)
+                .add("e", "asd");
+
+        NavigableJsonInputAdapter input = toAdapter(new HecatonJsonValue(object.toString()));
+        JsonSchemaNode description = JsonSchemaHelper.createSchema(createParserFromInput(input));
+        JsonPattern pattern = JsonSchemaHelper.createPattern(input, description, splitPath("b"));
+        assertEquals(new JsonPattern(asList(1)), pattern);
+
+        JsonValue found = JsonSchemaHelper.findValueWithPattern(input, description, pattern, splitPath("b"));
+        assertEquals(Json.FALSE, found);
+    }
+
+    @Test
+    public void testQueryToNonTerminalValueCreatesPattern() throws IOException {
+        JsonObject object = Json.object()
+                .add("a", Json.object()
+                        .add("x", 1)
+                        .add("y", 2))
+                .add("b", false);
+
+        NavigableJsonInputAdapter input = toAdapter(new HecatonJsonValue(object.toString()));
+        JsonSchemaNode description = JsonSchemaHelper.createSchema(createParserFromInput(input));
+        JsonPattern pattern = JsonSchemaHelper.createPattern(input, description, splitPath("a"));
+        assertEquals(new JsonPattern(asList(0)), pattern);
+    }
+
+    @Override
+    protected InMemoryFormat getInMemoryFormay() {
+        return inMemoryFormat;
+    }
+
+}

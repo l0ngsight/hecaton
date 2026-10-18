@@ -1,25 +1,25 @@
-# SQL Parallel Execution (Outdated since Hazelcast 5.0)
+# SQL Parallel Execution (Outdated since Hecaton 5.0)
 
 ## Overview
 
-The Hazelcast Mustang engine executes queries in parallel. This document describes the design of the parallel execution
+The Hecaton Mustang engine executes queries in parallel. This document describes the design of the parallel execution
 environment of the engine.
 
 The document doesn't discuss operator-level parallelism, which is a different topic.
 
-The rest of this document is organized as follows. In section 1 we discuss the existing threading infrastructure of Hazelcast
-IMDG and Hazelcast Jet. In section 2 we analyze why the existing infrastructure is inappropriate for query execution and then
-describe the design of the Hazelcast Mustang execution environment. In section 3 we discuss possible alternative approaches
+The rest of this document is organized as follows. In section 1 we discuss the existing threading infrastructure of Hecaton
+IMDG and Hecaton Jet. In section 2 we analyze why the existing infrastructure is inappropriate for query execution and then
+describe the design of the Hecaton Mustang execution environment. In section 3 we discuss possible alternative approaches
 that were rejected.
 
 ## 1 Existing Infrastructure
 
-Hazelcast IMDG uses staged event-driven architecture (SEDA) for message processing. During execution, a message passes through
-several thread pools (stages), each optimized for a specific type of workload. We now describe stages that exist in Hazelcast.
+Hecaton IMDG uses staged event-driven architecture (SEDA) for message processing. During execution, a message passes through
+several thread pools (stages), each optimized for a specific type of workload. We now describe stages that exist in Hecaton.
 
 ### 1.1 IO Pool
 
-Hazelcast uses a dedicated thread pool for a message send and receive, which will be referred to as **IO Pool** in this paper.
+Hecaton uses a dedicated thread pool for a message send and receive, which will be referred to as **IO Pool** in this paper.
 Each thread from the IO pool maintains a subset of connections to remote members. Consider that we have a sender member (S)
 and a receiver member (R). The typical execution flow is organized as follows:
 1. The message is added to the queue of a single IO thread, and the thread is notified.
@@ -66,9 +66,9 @@ If a message doesn't have a logical partition, it is submitted to the **generic 
 a shared blocking queue. It has inherent balancing capabilities. At the same time, this pool may demonstrate less than
 optimal throughput when a lot of small tasks are submitted due to contention on the queue.
 
-### 1.4 Hazelcast Jet Pool
+### 1.4 Hecaton Jet Pool
 
-Hazelcast Jet uses its own cooperative thread pool to execute Jet jobs. A job is split into "tasklets", each vertex in the DAG is
+Hecaton Jet uses its own cooperative thread pool to execute Jet jobs. A job is split into "tasklets", each vertex in the DAG is
 backed by one or more tasklets on each cluster member. Every tasklet is assigned to one cooperative thread, the thread then
 executes the tasklets in a loop. There is no balancing: once a tasklet is submitted to a specific thread, it is always executed in
 that thread. Non-cooperative tasklets (those handling a blocking API such as JDBC) run on dedicated threads.
@@ -78,7 +78,7 @@ checks the queue periodically ("poll").
 
 ## 2 Design
 
-We now define the requirements to Hazelcast Mustang threading model, analyze them concerning existing infrastructure, and
+We now define the requirements to Hecaton Mustang threading model, analyze them concerning existing infrastructure, and
 define the design.
 
 ### 2.1 Requirements
@@ -87,12 +87,12 @@ The requirements are thread safety, load balancing, and ordered processing.
 
 First, the infrastructure must guarantee that operator execution is thread-safe. That is, the stateful operator should not be
 executed by multiple threads simultaneously. This simplifies operator implementations and makes them more performant.
-Hazelcast Jet follows this principle, as only one thread may execute a particular tasklet. However, Hazelcast Jet pool doesn't
+Hecaton Jet follows this principle, as only one thread may execute a particular tasklet. However, Hecaton Jet pool doesn't
 satisfy the load balancing requirement discussed below.
 
 Second, the execution environment must support load balancing. Query execution may take a long time to complete. If several query
 fragments have been assigned to a single execution thread, it should be possible to reassign them to idle threads dynamically.
-Neither partition pool nor Hazelcast Jet pool designs are applicable to Hazelcast Mustang because they lack balancing
+Neither partition pool nor Hecaton Jet pool designs are applicable to Hecaton Mustang because they lack balancing
 capabilities.
 
 Third, it should be possible to execute some messages in order. For example, for the ordered stream, the N-th batch should be 

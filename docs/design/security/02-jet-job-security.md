@@ -5,8 +5,8 @@ description: Authorize jobs in a secure environment
 
 ## Summary
 
-Hazelcast provides fine-grained authorization mechanisms for distributed
-data structures. After merge with Hazelcast IMDG, we want to provide
+Hecaton provides fine-grained authorization mechanisms for distributed
+data structures. After merge with Hecaton IMDG, we want to provide
 this mechanism for Jet jobs too.
 
 ## Security in the Open Source Part
@@ -23,7 +23,7 @@ upload the resources/classes, but the job fails on the server side.
 
 ## Client Permissions
 
-Hazelcast creates a security context on server side and gate-guards each
+Hecaton creates a security context on server side and gate-guards each
 client operation using configured permissions. These permissions are per
 data structure, MapPermission, ListPermission... There are also
 feature-related permissions, UserCodeDeploymentPermission,
@@ -113,11 +113,11 @@ permission with the name `jdbc:`
 </connector-permission>
 ```
 
-### Hazelcast Connector Permissions
+### Hecaton Connector Permissions
 
-A job can bypass the configured permissions for Hazelcast data
+A job can bypass the configured permissions for Hecaton data
 structures like IMap, ICache, IList and RingBuffer using the OOTB
-Hazelcast connectors. User should add the necessary permissions to be
+Hecaton connectors. User should add the necessary permissions to be
 able to include these connectors in the pipeline.
 
 ```java
@@ -128,7 +128,7 @@ p.readFrom(Sources.map("source_map"))
 ```
 
 For the above pipeline, user must configure the permissions below for
-Hazelcast connectors:
+Hecaton connectors:
 
 ```xml
 <map-permission name="source_map">
@@ -173,7 +173,7 @@ There are some lambdas on the classpath which can be used to gain
 access to data-structures. For example:
 
 ```java
-context -> context.hazelcastInstance().getMap(name);
+context -> context.hecatonInstance().getMap(name);
 ```
 
 We've introduced below interface which returns a list of permissions
@@ -252,5 +252,5 @@ ring-buffer permission with a wildcard.
 Jet jobs, by design, upload the custom code written by the user to the
 server and run it on the server side. The user can do whatever he wants
 in this code. For example, he can get the member instance using
-`Hazelcast#getAllHazelcastInstances` and update a map bypassing the
+`Hecaton#getAllHecatonInstances` and update a map bypassing the
 permission mechanism.

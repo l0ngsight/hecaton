@@ -5,11 +5,11 @@
 When a query string is submitted for execution, it is first parsed, converted to a tree of relational operators, and then
 passed to the optimizer in order to find the best execution path.
 
-In this document, we describe the design of the Hazelcast Mustang query optimizer that is based on Apache Calcite.
+In this document, we describe the design of the Hecaton Mustang query optimizer that is based on Apache Calcite.
 
 ## 1 Theory
 
-In this section we describe the theoretical aspects of query optimization that form the basis of the Hazelcast Mustang query
+In this section we describe the theoretical aspects of query optimization that form the basis of the Hecaton Mustang query
 optimizer.
 
 ### 1.1 Definitions
@@ -544,9 +544,9 @@ Once the optimization is finished, it is necessary to produce the resulting plan
 top-bottom dive from the top `RelSubset` is performed. All `RelSubset` instances already have a node with the best cost at
 this point (aka "winner"). To construct the final plan, the optimizer recursively finds winners bottom-up.
 
-## 3 Hazelcast Mustang Optimizer
+## 3 Hecaton Mustang Optimizer
 
-We now discuss how the query optimization is organized in the Hazelcast Mustang. The process is split into the following
+We now discuss how the query optimization is organized in the Hecaton Mustang. The process is split into the following
 phases:
 
 *Table 2: Optimization Phases*
@@ -575,7 +575,7 @@ find unsupported operators. When found, an exception is thrown with the precise 
 Once the `SqlNode` is validated, it is converted to the tree of abstract relational operators (`RelNode`), all with the
 `Convention.NONE`.
 
-We use Calcite's `SqlValidator` and `HazelcastSqlToRelConverter` with custom extensions for validation and conversion
+We use Calcite's `SqlValidator` and `HecatonSqlToRelConverter` with custom extensions for validation and conversion
 respectively.
 
 ### 3.3 Rewrite
@@ -630,7 +630,7 @@ field trimming, and filter push-downs produces better plans in almost all cases,
 stage.
 
 As a part of the logical optimization process, we convert the Calcite operators with the convention `Convention.NONE`
-to our own logical operators with the convention `HazelcastConvention.LOGICAL`. We do this through a special conversion
+to our own logical operators with the convention `HecatonConvention.LOGICAL`. We do this through a special conversion
 rules that extend Calcite's `ConverterRule`.
 
 If there is a Calcite operator in the tree that doesn't have a logical counterpart, it indicates that there is either an
@@ -639,7 +639,7 @@ thrown in this case.
 
 *Table 3: Logical Conversion Rules*
 
-| Name                  | From (Calcite)     | To (Hazelcast)       |
+| Name                  | From (Calcite)     | To (Hecaton)       |
 |-----------------------|--------------------|----------------------|
 | `FullScanLogicalRule` | `LogicalTableScan` | `FullScanLogicalRel` |
 | `CalcLogicalRule`     | `LogicalCalc`      | `CalcLogicalRel`     |
@@ -648,7 +648,7 @@ thrown in this case.
 Last, we manually add a special `RootLogicalRel` on top of the result. This operator is an abstraction of a user query
 cursor that returns results on the initiator member.
 
-The result of the logical optimization is an optimized tree of operators with the `HazelcastConvention.LOGICAL` convention,
+The result of the logical optimization is an optimized tree of operators with the `HecatonConvention.LOGICAL` convention,
 that has `RootLogicalRel` at the root.
 
 ### 3.5 Physical Optimization

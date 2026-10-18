@@ -1,0 +1,282 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.instance.impl;
+
+import uk.org.hecaton.cluster.Cluster;
+import uk.org.hecaton.collection.IList;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.instance.impl.executejar.ExecuteJobParameters;
+import uk.org.hecaton.jet.JetCacheManager;
+import uk.org.hecaton.jet.JetException;
+import uk.org.hecaton.jet.JetService;
+import uk.org.hecaton.jet.Job;
+import uk.org.hecaton.jet.Observable;
+import uk.org.hecaton.jet.config.JetConfig;
+import uk.org.hecaton.jet.config.JobConfig;
+import uk.org.hecaton.jet.core.DAG;
+import uk.org.hecaton.jet.impl.AbstractJetInstance;
+import uk.org.hecaton.jet.impl.operation.GetJobIdsOperation;
+import uk.org.hecaton.jet.pipeline.Pipeline;
+import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.logging.Logger;
+import uk.org.hecaton.map.IMap;
+import uk.org.hecaton.replicatedmap.ReplicatedMap;
+import uk.org.hecaton.topic.ITopic;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.security.auth.Subject;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * This class is a decorator that delegates most of the calls to given JetService.
+ * Implementors of this class provides a strategy pattern to access ExecuteJobParameters to launch a new jet job
+ */
+@SuppressWarnings("checkstyle:methodcount")
+public abstract class BootstrappedJetProxy<M> extends AbstractJetInstance<M> {
+
+    private static final ILogger LOGGER = Logger.getLogger(BootstrappedJetProxy.class);
+
+    private final AbstractJetInstance<M> jetInstance;
+
+    protected BootstrappedJetProxy(@Nonnull JetService jetService) {
+        super(((AbstractJetInstance) jetService).getHecatonInstance());
+        this.jetInstance = (AbstractJetInstance<M>) jetService;
+    }
+
+    public abstract boolean hasExecuteJobParameters();
+
+    /**
+     * The strategy to get ExecuteJobParameters on client and member side
+     */
+    public abstract ExecuteJobParameters getExecuteJobParameters();
+
+    /**
+     * The strategy to set ExecuteJobParameters on client and member side
+     */
+    public abstract void setExecuteJobParameters(ExecuteJobParameters executeJobParameters);
+
+    public void removeExecuteJobParameters() {
+        // empty
+    }
+
+    @Nonnull
+    @Override
+    public String getName() {
+        return jetInstance.getName();
+    }
+
+    @Nonnull
+    @Override
+    public HecatonInstance getHecatonInstance() {
+        return jetInstance.getHecatonInstance();
+    }
+
+    @Nonnull
+    @Override
+    public Cluster getCluster() {
+        return jetInstance.getCluster();
+    }
+
+    @Nonnull
+    @Override
+    public JetConfig getConfig() {
+        return jetInstance.getConfig();
+    }
+
+    @Nonnull
+    @Override
+    public Job newJob(@Nonnull Pipeline pipeline, @Nonnull JobConfig config) {
+        updateJobConfig(config);
+        Job job = jetInstance.newJob(pipeline, config);
+        addToSubmittedJobs(job);
+        return job;
+    }
+
+    @Nonnull
+    @Override
+    public Job newJob(@Nonnull DAG dag, @Nonnull JobConfig config) {
+        updateJobConfig(config);
+        Job job = jetInstance.newJob(dag, config);
+        addToSubmittedJobs(job);
+        return job;
+    }
+
+    @Nonnull
+    @Override
+    public Job newJobIfAbsent(@Nonnull Pipeline pipeline, @Nonnull JobConfig config) {
+        updateJobConfig(config);
+        Job job = jetInstance.newJobIfAbsent(pipeline, config);
+        addToSubmittedJobs(job);
+        return job;
+    }
+
+    @Nonnull
+    @Override
+    public Job newJobIfAbsent(@Nonnull DAG dag, @Nonnull JobConfig config) {
+        updateJobConfig(config);
+        Job job = jetInstance.newJobIfAbsent(dag, config);
+        addToSubmittedJobs(job);
+        return job;
+    }
+
+    @Nonnull
+    @Override
+    public List<Job> getJobs(@Nonnull String name) {
+        return jetInstance.getJobs(name);
+    }
+
+    @Override
+    public Job getJob(long id) {
+        return jetInstance.getJob(id);
+    }
+
+    @Override
+    public Job getJob(@Nonnull String name) {
+        return jetInstance.getJob(name);
+    }
+
+    @Nonnull
+    @Override
+    public List<Job> getJobs() {
+        return jetInstance.getJobs();
+    }
+
+    @Nonnull
+    @Override
+    public <K, V> IMap<K, V> getMap(@Nonnull String name) {
+        return jetInstance.getMap(name);
+    }
+
+    @Nonnull
+    @Override
+    public <K, V> ReplicatedMap<K, V> getReplicatedMap(@Nonnull String name) {
+        return jetInstance.getReplicatedMap(name);
+    }
+
+
+    // suppress "@Deprecated" code should not be used
+    @SuppressWarnings("java:S1874")
+    @Nonnull
+    @Override
+    public JetCacheManager getCacheManager() {
+        return jetInstance.getCacheManager();
+    }
+
+    @Nonnull
+    @Override
+    public <E> IList<E> getList(@Nonnull String name) {
+        return jetInstance.getList(name);
+    }
+
+    @Nonnull
+    @Override
+    public <T> ITopic<T> getReliableTopic(@Nonnull String name) {
+        return jetInstance.getReliableTopic(name);
+    }
+
+    @Nonnull
+    @Override
+    public <T> Observable<T> getObservable(@Nonnull String name) {
+        return jetInstance.getObservable(name);
+    }
+
+    @Override
+    public void shutdown() {
+        jetInstance.shutdown();
+    }
+
+    @Override
+    public boolean existsDistributedObject(@Nonnull String serviceName, @Nonnull String objectName) {
+        return jetInstance.existsDistributedObject(serviceName, objectName);
+    }
+
+    @Override
+    public ILogger getLogger() {
+        return jetInstance.getLogger();
+    }
+
+    @Override
+    public Job newJobProxy(long jobId, M lightJobCoordinator) {
+        return jetInstance.newJobProxy(jobId, lightJobCoordinator);
+    }
+
+    @Override
+    public Job newJobProxy(long jobId,
+                           boolean isLightJob,
+                           @Nonnull Object jobDefinition,
+                           @Nonnull JobConfig config,
+                           @Nullable Subject subject) {
+        return jetInstance.newJobProxy(jobId, isLightJob, jobDefinition, config, subject);
+    }
+
+    @Override
+    public M getMasterId() {
+        return jetInstance.getMasterId();
+    }
+
+    private void addToSubmittedJobs(@Nonnull Job job) {
+        if (hasExecuteJobParameters()) {
+            ExecuteJobParameters executeJobParameters = getExecuteJobParameters();
+            executeJobParameters.addSubmittedJob(job);
+        }
+    }
+
+    private void updateJobConfig(JobConfig jobConfig) {
+        if (hasExecuteJobParameters()) {
+            ExecuteJobParameters jobParameters = getExecuteJobParameters();
+
+            if (jobParameters.hasJarPath()) {
+                jobConfig.addJar(jobParameters.getJarPath());
+
+                if (jobParameters.hasSnapshotName()) {
+                    jobConfig.setInitialSnapshotName(jobParameters.getSnapshotName());
+                }
+                if (jobParameters.hasJobName()) {
+                    jobConfig.setName(jobParameters.getJobName());
+                }
+            } else {
+                String message = """
+                        The jet job has been started from a thread that is different from the one that called \
+                        the main method.\s
+                        The job could not be found in the ThreadLocal and the job will not start.
+                        If you still want to start job in a different thread, then you need to set the parameters \
+                        of the JobConfig in that thread
+                        JobConfig
+                          .addJar(...)
+                          .setInitialSnapshotName(...)
+                          .setName(...);\s""";
+                LOGGER.severe(message);
+                throw new JetException(message);
+            }
+        }
+    }
+
+    protected GetJobIdsOperation.GetJobIdsResult getJobByName(String onlyName) {
+        throw new UnsupportedOperationException("This method is not supported in this BootstrappedJetProxy class.");
+    }
+
+    protected Map<M, GetJobIdsOperation.GetJobIdsResult> getJobsById(Long onlyJobId) {
+        throw new UnsupportedOperationException("This method is not supported in this BootstrappedJetProxy class.");
+    }
+
+    protected Map<M, GetJobIdsOperation.GetJobIdsResult> getAllJobs() {
+        throw new UnsupportedOperationException("This method is not supported in this BootstrappedJetProxy class.");
+    }
+
+}

@@ -3,7 +3,7 @@
 ## Overview
 
 Optimization of a query may take considerable time. In many applications, the set of queries is fixed. Therefore, the result of
-query optimization could be cached and reused. This document explains the design of the plan cache in the Hazelcast Mustang SQL
+query optimization could be cached and reused. This document explains the design of the plan cache in the Hecaton Mustang SQL
 engine.
 
 In section 1 we discuss the high-level requirements to the plan cache. In section 2 we describe the design.

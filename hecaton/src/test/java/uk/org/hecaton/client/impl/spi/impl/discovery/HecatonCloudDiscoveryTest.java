@@ -1,0 +1,317 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.impl.spi.impl.discovery;
+
+import uk.org.hecaton.client.test.ClientTestSupport;
+import uk.org.hecaton.cluster.Address;
+import uk.org.hecaton.core.HecatonException;
+import uk.org.hecaton.internal.json.Json;
+import uk.org.hecaton.internal.json.JsonValue;
+import uk.org.hecaton.test.HecatonSerialClassRunner;
+import uk.org.hecaton.test.annotation.QuickTest;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+
+@RunWith(HecatonSerialClassRunner.class)
+@Category(QuickTest.class)
+public class HecatonCloudDiscoveryTest extends ClientTestSupport {
+
+    private static final String RESPONSE = """
+            [
+              {
+                "private-address": "10.47.0.8",
+                "public-address": "54.213.63.142:32298"
+              },
+              {
+                "private-address": "10.47.0.9",
+                "public-address": "54.245.77.185:32298"
+              },
+              {
+                "private-address": "10.47.0.10",
+                "public-address": "54.186.232.37:32298"
+              }
+            ]""";
+
+    private static final String TPC_ENABLED_RESPONSE = """
+            [
+              {
+                "private-address": "10.47.0.8:30000",
+                "public-address": "54.213.63.142:32298",
+                "tpc-ports": [
+                  {
+                    "private-port": 40000,
+                    "public-port": 42298
+                  },
+                  {
+                    "private-port": 40001,
+                    "public-port": 42299
+                  }
+                ]
+              },
+              {
+                "private-address": "10.47.0.9:30000",
+                "public-address": "54.245.77.185:32298",
+                "tpc-ports": [
+                  {
+                    "private-port": 32000,
+                    "public-port": 40250
+                  },
+                  {
+                    "private-port": 32001,
+                    "public-port": 40251
+                  }
+                ]
+              }
+            ]""";
+
+    private static final String NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\nContent-Length: 0\n\n";
+    private static final String VALID_TOKEN = "validToken";
+    private static final String VALID_TPC_TOKEN = "validTpcToken";
+
+    private HttpServer httpsServer;
+
+    static class MyHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange t) throws IOException {
+            URI requestURI = t.getRequestURI();
+            if (requestURI.getPath().equals("/cluster/discovery")) {
+                String[] split = requestURI.getQuery().split("=");
+                if ("token".equals(split[0])) {
+                    String response = switch (split[1]) {
+                        case VALID_TOKEN -> RESPONSE;
+                        case VALID_TPC_TOKEN -> TPC_ENABLED_RESPONSE;
+                        default -> throw new IllegalStateException("Unexpected token");
+                    };
+
+                    t.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes().length);
+                    try (OutputStream os = t.getResponseBody()) {
+                        os.write(response.getBytes());
+                    }
+                    return;
+                }
+            }
+
+            t.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, NOT_FOUND_RESPONSE.getBytes().length);
+            try (OutputStream os = t.getResponseBody()) {
+                os.write(NOT_FOUND_RESPONSE.getBytes());
+            }
+        }
+    }
+
+    @Before
+    public void setUp() throws IOException {
+        httpsServer = HttpServer.create(new InetSocketAddress(0), 0);
+
+        httpsServer.createContext("/", new MyHandler());
+        httpsServer.setExecutor(null); // creates a default executor
+        httpsServer.start();
+    }
+
+    @After
+    public void tearDown() {
+        httpsServer.stop(0);
+    }
+
+    @Test
+    public void testWithValidToken() throws UnknownHostException {
+        String cloudBaseUrl = "http://127.0.0.1:" + httpsServer.getAddress().getPort();
+        String urlEndpoint = HecatonCloudDiscovery.createUrlEndpoint(cloudBaseUrl, VALID_TOKEN);
+        HecatonCloudDiscovery discovery = new HecatonCloudDiscovery(urlEndpoint, Integer.MAX_VALUE, false);
+        HecatonCloudDiscovery.DiscoveryResponse response = discovery.discoverNodes();
+        Map<Address, Address> privateToPublic = response.getPrivateToPublicAddresses();
+        List<Address> members = response.getPrivateMemberAddresses();
+
+        Map<Address, Address> expectedPrivateToPublic = new HashMap<>();
+        expectedPrivateToPublic.put(new Address("10.47.0.8", 32298), new Address("54.213.63.142", 32298));
+        expectedPrivateToPublic.put(new Address("10.47.0.9", 32298), new Address("54.245.77.185", 32298));
+        expectedPrivateToPublic.put(new Address("10.47.0.10", 32298), new Address("54.186.232.37", 32298));
+
+        assertEquals(expectedPrivateToPublic.size(), privateToPublic.size());
+        for (Map.Entry<Address, Address> entry : privateToPublic.entrySet()) {
+            assertEquals(expectedPrivateToPublic.get(entry.getKey()), entry.getValue());
+        }
+
+        assertContainsAll(members, expectedPrivateToPublic.keySet());
+    }
+
+    @Test
+    public void testWithValidTpcToken() throws UnknownHostException {
+        String cloudBaseUrl = "http://127.0.0.1:" + httpsServer.getAddress().getPort();
+        String urlEndpoint = HecatonCloudDiscovery.createUrlEndpoint(cloudBaseUrl, VALID_TPC_TOKEN);
+
+        HecatonCloudDiscovery cloudDiscovery = new HecatonCloudDiscovery(urlEndpoint, Integer.MAX_VALUE, true);
+        HecatonCloudDiscovery.DiscoveryResponse response = cloudDiscovery.discoverNodes();
+        Map<Address, Address> privateToPublic = response.getPrivateToPublicAddresses();
+        List<Address> members = response.getPrivateMemberAddresses();
+
+        Map<Address, Address> expectedPrivateToPublic = new HashMap<>();
+        expectedPrivateToPublic.put(new Address("10.47.0.8", 30000), new Address("54.213.63.142", 32298));
+        expectedPrivateToPublic.put(new Address("10.47.0.8", 40000), new Address("54.213.63.142", 42298));
+        expectedPrivateToPublic.put(new Address("10.47.0.8", 40001), new Address("54.213.63.142", 42299));
+        expectedPrivateToPublic.put(new Address("10.47.0.9", 30000), new Address("54.245.77.185", 32298));
+        expectedPrivateToPublic.put(new Address("10.47.0.9", 32000), new Address("54.245.77.185", 40250));
+        expectedPrivateToPublic.put(new Address("10.47.0.9", 32001), new Address("54.245.77.185", 40251));
+
+        assertEquals(expectedPrivateToPublic.size(), privateToPublic.size());
+        for (Map.Entry<Address, Address> entry : privateToPublic.entrySet()) {
+            assertEquals(expectedPrivateToPublic.get(entry.getKey()), entry.getValue());
+        }
+
+        Set<Address> expectedMembers = new HashSet<>();
+        expectedMembers.add(new Address("10.47.0.8", 30000));
+        expectedMembers.add(new Address("10.47.0.9", 30000));
+
+        assertContainsAll(members, expectedMembers);
+    }
+
+    @Test(expected = HecatonException.class)
+    public void testWithInvalidToken() {
+        String cloudBaseUrl = "http://127.0.0.1:" + httpsServer.getAddress().getPort();
+        String urlEndpoint = HecatonCloudDiscovery.createUrlEndpoint(cloudBaseUrl, "invalid");
+        HecatonCloudDiscovery cloudDiscovery = new HecatonCloudDiscovery(urlEndpoint, Integer.MAX_VALUE, false);
+        cloudDiscovery.discoverNodes();
+    }
+
+    @Test
+    public void testJsonResponseParse_withDifferentPortOnPrivateAddress() throws IOException {
+        JsonValue jsonResponse = Json.parse("""
+                [
+                  {
+                    "private-address": "100.96.5.1:5701",
+                    "public-address": "10.113.44.139:31115"
+                  },
+                  {
+                    "private-address": "100.96.4.2:5701",
+                    "public-address": "10.113.44.130:31115"
+                  }
+                ]""");
+        HecatonCloudDiscovery.DiscoveryResponse response = HecatonCloudDiscovery.parseJsonResponse(jsonResponse, false);
+        Map<Address, Address> privateToPublic = response.getPrivateToPublicAddresses();
+
+        assertEquals(2, privateToPublic.size());
+        assertEquals(new Address("10.113.44.139", 31115), privateToPublic.get(new Address("100.96.5.1", 5701)));
+        assertEquals(new Address("10.113.44.130", 31115), privateToPublic.get(new Address("100.96.4.2", 5701)));
+
+        List<Address> members = response.getPrivateMemberAddresses();
+
+        assertEquals(2, members.size());
+        assertContains(members, new Address("100.96.5.1", 5701));
+        assertContains(members, new Address("100.96.4.2", 5701));
+    }
+
+    @Test
+    public void testJsonResponseParse() throws IOException {
+        JsonValue jsonResponse = Json.parse("""
+                [
+                  {
+                    "private-address": "100.96.5.1",
+                    "public-address": "10.113.44.139:31115"
+                  },
+                  {
+                    "private-address": "100.96.4.2",
+                    "public-address": "10.113.44.130:31115"
+                  }
+                ]""");
+        HecatonCloudDiscovery.DiscoveryResponse response = HecatonCloudDiscovery.parseJsonResponse(jsonResponse, false);
+        Map<Address, Address> privateToPublic = response.getPrivateToPublicAddresses();
+
+        assertEquals(2, privateToPublic.size());
+        assertEquals(new Address("10.113.44.139", 31115), privateToPublic.get(new Address("100.96.5.1", 31115)));
+        assertEquals(new Address("10.113.44.130", 31115), privateToPublic.get(new Address("100.96.4.2", 31115)));
+
+        List<Address> members = response.getPrivateMemberAddresses();
+
+        assertEquals(2, members.size());
+        assertContains(members, new Address("100.96.5.1", 31115));
+        assertContains(members, new Address("100.96.4.2", 31115));
+    }
+
+    @Test
+    public void testJsonResponseParse_withTpc() throws IOException {
+        JsonValue jsonResponse = Json.parse("""
+                [
+                  {
+                    "private-address": "10.96.5.1:30000",
+                    "public-address": "100.113.44.139:31115",
+                    "tpc-ports": [
+                      {
+                        "private-port": 40000,
+                        "public-port": 32115
+                      }
+                    ]
+                  }
+                ]""");
+        HecatonCloudDiscovery.DiscoveryResponse response = HecatonCloudDiscovery.parseJsonResponse(jsonResponse, true);
+        Map<Address, Address> privateToPublic = response.getPrivateToPublicAddresses();
+
+        assertEquals(2, privateToPublic.size());
+        assertEquals(new Address("100.113.44.139", 31115), privateToPublic.get(new Address("10.96.5.1", 30000)));
+        assertEquals(new Address("100.113.44.139", 32115), privateToPublic.get(new Address("10.96.5.1", 40000)));
+
+        List<Address> members = response.getPrivateMemberAddresses();
+
+        assertEquals(1, members.size());
+        assertContains(members, new Address("10.96.5.1", 30000));
+    }
+
+    @Test
+    public void testJsonResponseParse_withTpc_whenTpcIsDisabled() throws IOException {
+        JsonValue jsonResponse = Json.parse("""
+                [
+                  {
+                    "private-address": "10.96.5.1:30000",
+                    "public-address": "100.113.44.139:31115",
+                    "tpc-ports": [
+                      {
+                        "private-port": 40000,
+                        "public-port": 32115
+                      }
+                    ]
+                  }
+                ]""");
+        HecatonCloudDiscovery.DiscoveryResponse response = HecatonCloudDiscovery.parseJsonResponse(jsonResponse, false);
+        Map<Address, Address> privateToPublic = response.getPrivateToPublicAddresses();
+
+        assertEquals(1, privateToPublic.size());
+        assertEquals(new Address("100.113.44.139", 31115), privateToPublic.get(new Address("10.96.5.1", 30000)));
+
+        List<Address> members = response.getPrivateMemberAddresses();
+
+        assertEquals(1, members.size());
+        assertContains(members, new Address("10.96.5.1", 30000));
+    }
+}

@@ -31,15 +31,15 @@
 
 #### Description
 
-Several problems can arise when using hostnames in Hazelcast's network
+Several problems can arise when using hostnames in Hecaton's network
 and WAN configurations. With this effort, we aim to provide a seamless
-usage of hostnames in the Hazelcast configurations by fixing issues
+usage of hostnames in the Hecaton configurations by fixing issues
 related to hostname usage. The source of the problems is the fact that
 multiple network addresses can point to the same member, and we ignore
 this fact while dealing with network addresses in our codebase. A
 significant part of our codebase is written assuming a member will only
 have one network address, but this assumption fails, so we encounter
-errors/wrong behavior in the different processes of the Hazelcast.
+errors/wrong behavior in the different processes of the Hecaton.
 
 When using hostnames in the network configuration of the members, we
 directly encounter the situation of having multiple addresses for the
@@ -60,7 +60,7 @@ Until now, many of our users and customers have had problems with this
 regard as shown in the known issues. Although the hostname usages can be
 replaced with IP based addressing in simple networking setups, it is a
 necessary functionality for maintaining complex network setups where IPs
-are dynamically assigned to the machines that Hazelcast members will
+are dynamically assigned to the machines that Hecaton members will
 work on. This is specifically important for cloud-based deployments that
 could be the subject of more complex networking setups compared to on
 premise deployments that may include members whose IPs are assigned
@@ -73,8 +73,8 @@ resolution mechanism.
 - Support the hostname-based addressing in relevant discovery plugins
   (e.g. discovery in AWS, Azure, GCP, Kubernetes)
 
-In summary, we want Hazelcast to work when a hostname address used
-instead of an IP address in any Hazelcast cluster configuration that
+In summary, we want Hecaton to work when a hostname address used
+instead of an IP address in any Hecaton cluster configuration that
 works when an IP address is used in the configuration element. In short,
 we want any cluster setup that works properly when IP addresses are
 used, to operate when hostnames are used.
@@ -83,25 +83,25 @@ used, to operate when hostnames are used.
 
 |Term|Definition|
 |---|---|
-|Hostname|A hostname is an easy to use name assigned to a host machine on a network which is mapped into an IP address/IP addresses (We will not consider hostnames mapped to multiple IP addresses, as there is no such use case for it in Hazelcast).|
+|Hostname|A hostname is an easy to use name assigned to a host machine on a network which is mapped into an IP address/IP addresses (We will not consider hostnames mapped to multiple IP addresses, as there is no such use case for it in Hecaton).|
 |Hostname resolution|The process of converting the hostname to its mapped IP Address so that socket bind and connect can be performed on this IP address|
 
 #### Actors and Scenarios
 
-#### Scenario 1 - Hazelcast user must be able to use hostnames in member server bind(publicAddress) and join configuration:
+#### Scenario 1 - Hecaton user must be able to use hostnames in member server bind(publicAddress) and join configuration:
 
 1. User configures members' join and bind configuration with using hostnames and starts members.
 2. These members must be able to join and form cluster.
-3. Any other Hazelcast functionalities depending on networking must
-   continue to work correctly. (Since Hazelcast is a distributed system,
+3. Any other Hecaton functionalities depending on networking must
+   continue to work correctly. (Since Hecaton is a distributed system,
    networking changes concern many parts of it)
 
-#### Scenario 2 - Hazelcast user must be able to use hostname in WAN target address configuration:
+#### Scenario 2 - Hecaton user must be able to use hostname in WAN target address configuration:
 
 1. User configures members' wan target configuration with using hostnames and starts members.
 2. The WAN members must be able to connect each other
-3. Any other Hazelcast functionalities depending on networking must
-   continue to work correctly. (Since Hazelcast is a distributed system,
+3. Any other Hecaton functionalities depending on networking must
+   continue to work correctly. (Since Hecaton is a distributed system,
    networking changes concern many parts of it)
 
 
@@ -117,12 +117,12 @@ management problems when their configurations include hostnames. We need
 to provide them with a way to manage member addresses. So, for solving
 this kind of problem, we should expose our managed `UUID-Set<Address>`
 and its reverse mappings to our users. The jet connectors as a user of
-Hazelcast member APIs uses some `Address` dependent logic inside. e.g.
+Hecaton member APIs uses some `Address` dependent logic inside. e.g.
 In Elasticsearch connector, we use member addresses to check if in case
-the Hazelcast cluster runs on the same machines as Elastic it uses the
+the Hecaton cluster runs on the same machines as Elastic it uses the
 addresses to plan the job in a way the reading from the local shard that
 belongs to same machine and doesn't go over the network. This is also
-same for the hadoop connectors. This logic may go wrong when Hazelcast
+same for the hadoop connectors. This logic may go wrong when Hecaton
 members have multiple addresses.
 
 Up until now, our users mainly use the picked public address of the
@@ -136,19 +136,19 @@ address in related places to show it in the logs.
 ### Technical Design
 
 What we propose as a solution to these issues is that we will try to
-manage this multiple network addresses at the Hazelcast networking
+manage this multiple network addresses at the Hecaton networking
 level, and we will avoid dealing with multiple addresses in high-level
 places by only exposing single representation of these addresses to the
 higher levels. We'll call this single exposed address the primary
 address of the member. We select this primary address as follows:
 - For the member protocol connections and for other connections using unified
   connection manager, we select the public address of the member protocol which
-  corresponds to `com.hazelcast.instance.ProtocolType#MEMBER` as the primary
+  corresponds to `uk.org.hecaton.instance.ProtocolType#MEMBER` as the primary
   address.
 - For the other protocol connections (this is possible when advanced networking
   is enabled.), we select the public address of the corresponding protocol as the
   primary address. e.g. we select the public address that corresponds to
-  `com.hazelcast.instance.ProtocolType#WAN` for the incoming connections to the
+  `uk.org.hecaton.instance.ProtocolType#WAN` for the incoming connections to the
   connection manager which manages only the wan connections.
 
 After exposing only the primary address to those high-level places and
@@ -163,7 +163,7 @@ reach these endpoints using addresses other than this defined public
 addresses. It is impossible to understand that these different addresses
 point to the same member just only looking at the content of these
 address objects. Even if we only use the IP addresses, multiple
-different IP addresses can refer to the same host machine. Hazelcast
+different IP addresses can refer to the same host machine. Hecaton
 server socket can bind different network interfaces of the host machine
 which can have multiple private and public addresses etc.; or consider
 that adding network proxies to the front of the member, the addresses of
@@ -293,7 +293,7 @@ https://github.com/hazelcast/hazelcast/blob/4a73cc5f9b4ebef09c5a8e0067da464b5ef6
    serialization of those objects. These places will be resolved through
    the implementation. We need to document the changes in package by
    package manner. Questions to be answered: What is going to happen to
-   use of `Address` in `com.hazelcast.xxx` package?
+   use of `Address` in `uk.org.hecaton.xxx` package?
 4) To note, we can use a new class to represent our aliases set,
    `Set<Address>` in our mappings, but I couldn't provide a good
    abstraction yet.
@@ -303,7 +303,7 @@ https://github.com/hazelcast/hazelcast/blob/4a73cc5f9b4ebef09c5a8e0067da464b5ef6
     - How does the change behave in mixed-version deployments? During a version upgrade? Which migrations are needed?
     In this effort, we avoid the changes that would break backward compatibility, so we
     don't expect any backward compatibility issue with respect to this change.
-    - What are the possible interactions with other features or sub-systems inside Hazelcast? How does the behavior of other code change implicitly as a result of the changes outlined in the design document? (Provide examples if relevant.)
+    - What are the possible interactions with other features or sub-systems inside Hecaton? How does the behavior of other code change implicitly as a result of the changes outlined in the design document? (Provide examples if relevant.)
     - Is there other ongoing or recent work that is related? (Cross-reference the relevant design documents.)
     There is a previously reverted PR: https://github.com/hazelcast/hazelcast/pull/18591 (the related TDD is available in this PR changes), https://github.com/hazelcast/hazelcast/pull/19684
     - What are the edge cases? What are example uses or inputs that we think are uncommon but are still possible and thus need to be handled? How are these edge cases handled? Provide examples.
@@ -344,18 +344,18 @@ Unit and integration tests should:
 - Verify cluster is correctly being formed, Persistence and WAN is working when `setPublicAdress` is applied
 - Verify that the client from external network can connect to the cluster
 
-It would definitely be better to test these scenarios also with hazelcast test containers as well.
+It would definitely be better to test these scenarios also with hecaton test containers as well.
 
 #### Stress test
 
-Stress tests must validate the Hazelcast work when:
+Stress tests must validate the Hecaton work when:
 
 - A member in the cluster gracefully shutdown
 - A member forcefully shutdown
 - Split-brain happens and resolves
 - Cluster-wide crash happens on some cluster B when WAN replication is set between cluster A and B
 
-The above scenarios must also be tested when Hazelcast persistence is
+The above scenarios must also be tested when Hecaton persistence is
 enabled.
 
 #### Cloud tests

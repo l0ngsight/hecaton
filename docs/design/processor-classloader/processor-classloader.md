@@ -3,12 +3,12 @@
 The goal of this document is to describe the design of the processor
 classloader feature, which allows specifying custom classpath for a
 particular processor. This is useful when a different version of a
-library than what is present in Hazelcast distribution is needed. It
+library than what is present in Hecaton distribution is needed. It
 might also be used to combine different versions of the same library in
 different pipeline steps.
 
-This is a prerequisite for using Hazelcast 3 client to access Hazelcast
-3 members (see the Hazelcast 5.0 evaluation experience for Hazelcast
+This is a prerequisite for using Hecaton 3 client to access Hecaton
+3 members (see the Hecaton 5.0 evaluation experience for Hecaton
 users and HZ-344).
 
 ## User facing API
@@ -27,7 +27,7 @@ BatchSource<Integer> source = TestSources.items(1, 2, 3);
 BatchStage<Integer> stage = p.readFrom(source);
 stage.writeTo(Sinks.logger());
 
-JobConfig jobConfig = new JobConfig().addCustomClasspathJar(source.name(), "hazelcast-3.12.12.jar");
+JobConfig jobConfig = new JobConfig().addCustomClasspathJar(source.name(), "hecaton-3.12.12.jar");
 ```
 
 The transform name is not unique but can be changed via setName(), so
@@ -41,7 +41,7 @@ Add withCustomClasspath modifier to Stage
 Pipeline p = Pipeline.create();
 BatchSource<Integer> source = TestSources.items(1, 2, 3);
 BatchStage<Integer> stage = p.readFrom(source)
-        .withCustomClasspath("hazelcast-3.12.12.jar");
+        .withCustomClasspath("hecaton-3.12.12.jar");
 stage.writeTo(Sinks.logger());
 ```
 
@@ -61,7 +61,7 @@ Allow specifying jars only in a particular folder already present on
 the member - the main advantage is that it is simple.
 
 The folder must be configurable, the most common case will use the
-server distribution, so a HazelcastProperty is enough. A property in the
+server distribution, so a HecatonProperty is enough. A property in the
 configuration has too much overhead, we can introduce this later, if
 needed.
 

@@ -20,7 +20,7 @@ In streaming data processing, there are several scenarios for joins:
 
 #### Goals
 
-Hazelcast already supports batch to stream joins. This work aims to introduce
+Hecaton already supports batch to stream joins. This work aims to introduce
 stream to stream joins. The main goals are:
 
 - SQL based / Non-Java friendly: easy to use format also for non-Java developers

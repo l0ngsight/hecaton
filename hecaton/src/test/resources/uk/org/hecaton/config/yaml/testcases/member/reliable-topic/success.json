@@ -1,0 +1,18 @@
+{
+  "instance": {
+    "hecaton": {
+      "reliable-topic": {
+        "my-reliable-topic": {
+          "statistics-enabled": true,
+          "topic-overload-policy": "ERROR",
+          "read-batch-size": 10,
+          "message-listeners": [
+            "uk.org.hecaton.examples.MessageListener"
+          ],
+          "user-code-namespace": "ns1"
+        }
+      }
+    }
+  },
+  "error": null
+}

@@ -1,0 +1,218 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.impl.deployment;
+
+import childfirstclassloader.TestProcessor;
+import uk.org.hecaton.client.HecatonClient;
+import uk.org.hecaton.collection.IList;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.jet.JetService;
+import uk.org.hecaton.jet.config.JobConfig;
+import uk.org.hecaton.jet.core.DAG;
+import uk.org.hecaton.jet.core.JetTestSupport;
+import uk.org.hecaton.jet.impl.util.ReflectionUtils;
+import uk.org.hecaton.jet.pipeline.BatchSource;
+import uk.org.hecaton.jet.pipeline.Pipeline;
+import uk.org.hecaton.jet.pipeline.Sinks;
+import uk.org.hecaton.jet.pipeline.StreamSource;
+import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.logging.Logger;
+import uk.org.hecaton.spi.properties.ClusterProperty;
+import uk.org.hecaton.test.HecatonSerialClassRunner;
+import uk.org.hecaton.test.JarUtil;
+import uk.org.hecaton.test.annotation.QuickTest;
+import uk.org.hecaton.test.starter.HecatonAPIDelegatingClassloader;
+import uk.org.hecaton.test.starter.HecatonStarter;
+import org.example.jet.impl.deployment.ResourceCollector;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import uk.org.webcompere.systemstubs.rules.SystemPropertiesRule;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@RunWith(HecatonSerialClassRunner.class)
+@Category(QuickTest.class)
+public class ProcessorClassLoaderTest extends JetTestSupport {
+
+    @ClassRule
+    public static final TemporaryFolder tempDir = new TemporaryFolder();
+
+    // Set up the path for custom lib directory, this is by default set to `custom-lib` directory in hecaton
+    // distribution zip
+    @Rule
+    public final SystemPropertiesRule systemProperties = new SystemPropertiesRule(
+            ClusterProperty.PROCESSOR_CUSTOM_LIB_DIR.getName(),
+            tempDir.getRoot().getAbsolutePath());
+    private static final ILogger LOGGER = Logger.getLogger(ProcessorClassLoaderTest.class);
+    private static final String SOURCE_NAME = "test-source";
+
+    private HecatonInstance member;
+    private HecatonInstance client;
+    private JetService jet;
+
+    private static File jarFile;
+    private static File resourcesJarFile;
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        jarFile = tempDir.newFile("source_" + System.currentTimeMillis() + ".jar");
+        JarUtil.createJarFile(
+                "target/test-classes/",
+                Stream.of(
+                        TestProcessor.ResourceReader.class,
+                        TestProcessor.TestProcessorMetaSupplier.class,
+                        TestProcessor.TestProcessorSupplier.class,
+                        TestProcessor.class,
+                        SourceWithClassLoader.class
+                ).map(ReflectionUtils::toClassResourceId).collect(Collectors.toList()),
+                jarFile.getAbsolutePath()
+        );
+        LOGGER.fine("Jar file path: %s", jarFile);
+
+        resourcesJarFile = tempDir.newFile("resources_ " + System.currentTimeMillis() + ".jar");
+        JarUtil.createResourcesJarFile(resourcesJarFile);
+
+        assertThat(tempDir.getRoot()).exists().isReadable();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        ResourceCollector.items().clear();
+
+        member = createHecatonMember();
+        client = HecatonClient.newHecatonClient();
+        jet = client.getJet();
+
+        assertThat(resourcesJarFile).exists().isReadable();
+        assertThat(jarFile).exists().isReadable();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (client != null) {
+            client.shutdown();
+        }
+        if (member != null) {
+            member.shutdown();
+        }
+    }
+
+    private HecatonInstance createHecatonMember() throws MalformedURLException {
+        Config config = smallInstanceConfig();
+        config.getJetConfig().setResourceUploadEnabled(true);
+
+        // Create a member in a separate classloader without the test classes loaded
+        URL classesUrl = new File("target/classes/").toURI().toURL();
+        URL tpcClassesUrl = new File("../hecaton-tpc-engine/target/classes/").toURI().toURL();
+        ClassLoader classLoader = getClass().getClassLoader();
+        HecatonAPIDelegatingClassloader classloader = new HecatonAPIDelegatingClassloader(
+                new URL[]{classesUrl, tpcClassesUrl},
+                classLoader
+        );
+        return HecatonStarter.newHecatonInstance(config, classloader);
+    }
+
+    @Test
+    public void testClassLoaderForBatchSource() {
+        Pipeline p = Pipeline.create();
+        BatchSource<String> source = SourceWithClassLoader.batchSource(SOURCE_NAME);
+
+        p.readFrom(source).setLocalParallelism(1)
+         .writeTo(Sinks.list("test"));
+
+        JobConfig jobConfig = new JobConfig();
+        jobConfig.addCustomClasspath(source.name(), resourcesJarFile.getName());
+        jobConfig.addCustomClasspath(source.name(), jarFile.getName());
+        jet.newJob(p, jobConfig).join();
+
+        IList<Object> list = member.getList("test");
+        assertThat(list).contains("resource in jar");
+
+        assertThat(ResourceCollector.items()).containsExactly(
+                "Processor init resource in jar",
+                "Processor complete resource in jar"
+        );
+    }
+
+    @Test
+    public void testClassLoaderForStreamSource() {
+        Pipeline p = Pipeline.create();
+        StreamSource<String> source = SourceWithClassLoader.streamSource(SOURCE_NAME);
+
+        p.readFrom(source)
+         .withoutTimestamps()
+         .setLocalParallelism(1)
+         .writeTo(Sinks.list("test"));
+
+        JobConfig jobConfig = new JobConfig();
+        jobConfig.addCustomClasspath(source.name(), resourcesJarFile.getName());
+        jobConfig.addCustomClasspath(source.name(), jarFile.getName());
+        jet.newJob(p, jobConfig).join();
+
+        IList<Object> list = member.getList("test");
+        assertThat(list).contains("resource in jar");
+
+        assertThat(ResourceCollector.items()).containsExactly(
+                "Processor init resource in jar",
+                "Processor complete resource in jar"
+        );
+    }
+
+    @Test
+    public void testClassLoaderSetForSupplierDAG() {
+        DAG dag = new DAG();
+        dag.newVertex(SOURCE_NAME, TestProcessor.TestProcessorMetaSupplier.create())
+           .localParallelism(1);
+
+        JobConfig jobConfig = new JobConfig();
+        jobConfig.addCustomClasspath(SOURCE_NAME, resourcesJarFile.getName());
+        jobConfig.addCustomClasspath(SOURCE_NAME, jarFile.getName());
+        jet.newJob(dag, jobConfig).join();
+
+        List<String> items = ResourceCollector.items();
+        assertThat(items).containsExactly(
+                "ProcessorMetaSupplier init resource in jar",
+                "ProcessorMetaSupplier get resource in jar",
+                "ProcessorMetaSupplier create resource in jar",
+
+                "ProcessorSupplier init resource in jar",
+                "ProcessorSupplier get resource in jar",
+
+                "Processor init resource in jar",
+                "Processor complete resource in jar",
+
+                "ProcessorSupplier close resource in jar",
+                "ProcessorMetaSupplier close resource in jar"
+        );
+    }
+
+}

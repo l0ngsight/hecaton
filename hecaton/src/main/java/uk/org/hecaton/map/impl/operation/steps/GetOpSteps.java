@@ -1,0 +1,113 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.map.impl.operation.steps;
+
+import uk.org.hecaton.internal.util.BiTuple;
+import uk.org.hecaton.map.impl.MapContainer;
+import uk.org.hecaton.map.impl.MapServiceContext;
+import uk.org.hecaton.map.impl.operation.steps.engine.State;
+import uk.org.hecaton.map.impl.operation.steps.engine.Step;
+import uk.org.hecaton.map.impl.record.Record;
+import uk.org.hecaton.map.impl.recordstore.DefaultRecordStore;
+import uk.org.hecaton.map.impl.recordstore.RecordStore;
+
+public enum GetOpSteps implements IMapOpStep {
+
+    READ() {
+        @Override
+        public void runStep(State state) {
+            RecordStore recordStore = state.getRecordStore();
+            Record record = recordStore.getRecordOrNull(state.getKey(), false);
+            if (record != null) {
+                Object oldValue = record.getValue();
+                state.setOldValue(oldValue);
+                state.setRecordExistsInMemory(true);
+            }
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return state.getOldValue() == null ? GetOpSteps.LOAD : GetOpSteps.RESPONSE;
+        }
+    },
+
+    LOAD() {
+        @Override
+        public boolean isLoadStep() {
+            return true;
+        }
+
+        @Override
+        public void runStep(State state) {
+            RecordStore recordStore = state.getRecordStore();
+            BiTuple<Object, Long> loadedValueWithTtl = ((DefaultRecordStore) recordStore)
+                    .loadValueWithTtl(state.getKey(), state.getNow());
+            state.setLoadedOldValueWithTtl(loadedValueWithTtl);
+            if (loadedValueWithTtl != null) {
+                state.setOldValue(loadedValueWithTtl.element1);
+            }
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return state.getLoadedOldValueWithTtl() == null ? GetOpSteps.RESPONSE : GetOpSteps.ON_LOAD;
+        }
+    },
+
+    ON_LOAD() {
+        @Override
+        public void runStep(State state) {
+            RecordStore recordStore = state.getRecordStore();
+            Record record = ((DefaultRecordStore) recordStore).onLoadRecord(state.getKey(),
+                    state.getLoadedOldValueWithTtl(), false, state.getCallerAddress(), state.getNow());
+            record = recordStore.evictIfExpired(state.getKey(), state.getNow(), false)
+                    ? null : record;
+            state.setOldValue(record == null ? null : record.getValue());
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return GetOpSteps.RESPONSE;
+        }
+    },
+
+    RESPONSE() {
+        @Override
+        public void runStep(State state) {
+            RecordStore recordStore = state.getRecordStore();
+            MapContainer mapContainer = recordStore.getMapContainer();
+            MapServiceContext mapServiceContext = mapContainer.getMapServiceContext();
+
+            Object oldValue = state.getOldValue();
+            oldValue = mapServiceContext.interceptGet(mapContainer.getInterceptorRegistry(), oldValue);
+            state.setOldValue(oldValue);
+
+            Record record = recordStore.getRecord(state.getKey());
+            if (record != null) {
+                recordStore.accessRecord(state.getKey(), record, state.getNow());
+            }
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return UtilSteps.FINAL_STEP;
+        }
+    };
+
+    GetOpSteps() {
+    }
+}

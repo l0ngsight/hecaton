@@ -53,7 +53,7 @@ join and removal) process. These are;
 |-------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Member list version           | A monotonic version number to identify freshness of a specific member list.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Master member                 | Oldest member in the cluster which is responsible for administrating the cluster                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Slave member                  | Non-master members of the cluster. Sorry for the terminology. Hazelcast slaves are cool guys since they don't do any work until they become master.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Slave member                  | Non-master members of the cluster. Sorry for the terminology. Hecaton slaves are cool guys since they don't do any work until they become master.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Suspicion                     | The situation in which a **slave** thinks that **another member** (i.e., the master or another slave) of the cluster **may be** dead. It can occur because of a heartbeat timeout or a connection problem. **Suspicions are done based on local information.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Master confirmation           | The message periodically sent **from a slave to the master** to notify that the slave still follows its master                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | Master confirmation timeout   | If **the master node** doesn't receive a master confirmation message **from a slave** for "master confirmation timeout" duration, it will kick that slave from the cluster.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -74,14 +74,14 @@ be more consistent and safe.
 There will be no updates/changes in public api and configuration. Two
 new system properties will be added;
 
--   `hazelcast.mastership.claim.timeout.seconds`: The timeout which
+-   `hecaton.mastership.claim.timeout.seconds`: The timeout which
     defines when master candidate gives up waiting for response to its
     mastership claim. After timeout happens, non-responding member will
     be removed from member list. See [mastership claim process](#mastership-claim-process)
     for details.  
      
 
--   `hazelcast.legacy.memberlist.format.enabled`: Enables the legacy,
+-   `hecaton.legacy.memberlist.format.enabled`: Enables the legacy,
     pre 3.9, member list format in logs. New format will include member
     list version too.   
       
@@ -111,7 +111,7 @@ new system properties will be added;
           
 
 Additionally, periodic member list publish interval
-(`hazelcast.member.list.publish.interval.seconds)` will be downed from
+(`hecaton.member.list.publish.interval.seconds)` will be downed from
 300 seconds to 60 seconds.
 
 ## Technical Design
@@ -124,7 +124,7 @@ and invariants into our cluster management system. Jgroups is also an
 implementation of the paper. The paper already fits to our system
 because it maintains a "partitionable" system, in which members of the
 cluster can split into partitions, and it assumes the crash-stop model.
-Both are already handled by Hazelcast.
+Both are already handled by Hecaton.
 
 We deal with the "group membership problem", which is defined in the
 paper as following:
@@ -138,7 +138,7 @@ paper as following:
 > transforms them into views that are agreed upon as defining the
 > group's current composition.**"
 
-In Hazelcast terms, the master node is responsible for performing the
+In Hecaton terms, the master node is responsible for performing the
 group membership service, as it manages the cluster member list. Once a
 member joins or leaves the cluster, a new view (i.e., member list) is
 created and publish it to the slaves. 
@@ -149,8 +149,8 @@ the system (i.e., unbounded gc pauses, network delays, etc.), members of
 a cluster can also create "virtual" partitions, which are
 indistinguishable from real ones. It means that there can be multiple
 views (i.e., network partitions) present in the system concurrently.
-This model is equivalent to behaviour of Hazelcast clusters. There can
-be multiple non-intersecting Hazelcast clusters in the same environment.
+This model is equivalent to behaviour of Hecaton clusters. There can
+be multiple non-intersecting Hecaton clusters in the same environment.
 They work as separate clusters until they eventually discover each other
 and merge into a single cluster.
 
@@ -163,7 +163,7 @@ service" needs to have:
 > then v and w cannot be installed in a conflicting order at some other
 > process q.
 
-In Hazelcast terms, each Hazelcast member should apply the member list
+In Hecaton terms, each Hecaton member should apply the member list
 updates in the same order. 
 
   
@@ -174,7 +174,7 @@ updates in the same order. 
 > either (i) q eventually installs v, or (ii) p eventually installs view
 > w as a immediate successor to v such that q not in w.
 
-In Hazelcast terms, lets say we have two nodes: A, B. Both nodes have
+In Hecaton terms, lets say we have two nodes: A, B. Both nodes have
 the member list: \[ A, B \]. A new member C joins to cluster and master
 node publishes a new member list \[ A, B, C \]. Then, B should either
 apply \[ A, B, C \] or split from the cluster, and A publishes a new
@@ -190,7 +190,7 @@ This property is to eliminate trivial solutions.
 
   
 
-With the improvements implemented in this work, Hazelcast satisfies all
+With the improvements implemented in this work, Hecaton satisfies all
 the properties describe above. Member list updates are performed in the
 master node and they are ordered with a monotonic version number. Slaves
 apply member list updates they receive from the master and they check
@@ -239,7 +239,7 @@ list and version. 
 
 ### Member Suspicion & Removal
 
-In the previous implementation, when a Hazelcast member encounters
+In the previous implementation, when a Hecaton member encounters
 failure of another member (by the decision of failure detector),
 regardless of being master or not, it directly removes the problematic
 member from its member list. This standalone member removal decision
@@ -373,5 +373,5 @@ version: `{v=7, member list = [B, D, E]}`. 
 ##  Testing Criteria
 
 Added 3.8 \~ 3.9 compatibility
-tests: [hazelcast-enterprise/pull/1449](https://github.com/hazelcast/hazelcast-enterprise/pull/1449)  
+tests: [hecaton-enterprise/pull/1449](https://github.com/hazelcast/hazelcast-enterprise/pull/1449)  
  

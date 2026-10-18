@@ -13,7 +13,7 @@
 ## Description
 
 This document describes design, efforts and feature rejection reasons 
-of transferring Hazelcast SQL engine to Columbia optimizer.
+of transferring Hecaton SQL engine to Columbia optimizer.
 
 ## Design
 
@@ -35,7 +35,7 @@ like `Index Scan` or `Merge Join`.
 
 Main requirement to achieve CASCADES-style optimization is to implement `PhysicalNode` interface for each _physical_ rel available for the optimizer. 
 
-**(!)** We need to note that the meaning of Hazelcast _physical_ relation and Top-Down Optimizer's _physical_ node are different.
+**(!)** We need to note that the meaning of Hecaton _physical_ relation and Top-Down Optimizer's _physical_ node are different.
 
 It contains 4 methods to implement : 
 - `passThrough` -- propagates the trait request from given rel to its children rels. In most common case it returns a copy of original rel with satisfied propagated traits. 
@@ -53,8 +53,8 @@ that collation was requested by `Sort` rel, it may be just eliminated due to red
 
 ### Optimizer Application Issues
 
-As it was mentioned above, the meaning of Hazelcast _physical_ relation and Top-Down Optimizer's _physical_ node are different.
-Hazelcast has 3 optimization phases (state of 5.2.0) : 
+As it was mentioned above, the meaning of Hecaton _physical_ relation and Top-Down Optimizer's _physical_ node are different.
+Hecaton has 3 optimization phases (state of 5.2.0) : 
 - unconditional rel tree rewrites, like `Project -> Calc` or `Filter -> Calc` conversions.
 - logical phase : default Calcite rel tree with `NONE` convention rewrites with `LOGICAL` convention 
 with a few rel transpositions or merges.  

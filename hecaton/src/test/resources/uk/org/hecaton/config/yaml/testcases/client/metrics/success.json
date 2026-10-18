@@ -1,0 +1,14 @@
+{
+  "instance": {
+    "hecaton-client": {
+      "metrics": {
+        "enabled": true,
+        "jmx": {
+          "enabled": false
+        },
+        "collection-frequency-seconds": 10
+      }
+    }
+  },
+  "error": null
+}

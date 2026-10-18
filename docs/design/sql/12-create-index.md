@@ -18,7 +18,7 @@
 
 ### Description
 
-This document describes IMap index creation via SQL. It's a step to improve Hazelcast SQL engine dynamic configuration
+This document describes IMap index creation via SQL. It's a step to improve Hecaton SQL engine dynamic configuration
 possibilities and enrich available SQL syntax.
 
 ## Functional Design

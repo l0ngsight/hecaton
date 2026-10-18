@@ -334,7 +334,7 @@
             <property name="format" value="RunWith\(Parameterized\.class\)"/>
             <property name="ignoreComments" value="true"/>
             <property name="message"
-                      value="Please use com.hazelcast.test.HazelcastParametrizedRunner that correctly checks running member and client instances"/>
+                      value="Please use uk.org.hecaton.test.HecatonParametrizedRunner that correctly checks running member and client instances"/>
         </module>
     </module>
 </module>

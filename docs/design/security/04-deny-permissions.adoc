@@ -26,7 +26,7 @@ The permission additive-only approach is also listed as a medium-severity issue 
 [options="header"]
 |=====================================================================================================
 | Term               | Definition
-| Role               | Hazelcast Clients are assigned roles during the authentication. Roles group together sets of permissions that are relevant to those roles.
+| Role               | Hecaton Clients are assigned roles during the authentication. Roles group together sets of permissions that are relevant to those roles.
 | Permission         | Protects access to specific resources. A permission could be something like "everyone can access the Map ABC", "role XYZ can deploy and run jobs", "Role XYZ can run SQL queries".
 | Grant (Permission) | Default permission type. It allows (adds) access to the protected resource.
 | Deny (Permission)  | Access to resource/action described by the permission is forbidden  (subtracted) instead of granted.
@@ -35,7 +35,7 @@ The permission additive-only approach is also listed as a medium-severity issue 
 
 === Actors and Scenarios
 
-As a _Cluster Administrator_, I want to allow clients _access to all data structures but the Hazelcast internal ones_.
+As a _Cluster Administrator_, I want to allow clients _access to all data structures but the Hecaton internal ones_.
 
 As a _Cluster Administrator_, I want to allow Management Center to fully manage the members, but I don't
 want to _prevent it from reading files on the member's local filesystem_.
@@ -81,7 +81,7 @@ The following table lists new permission evaluation rules for the `DefaultPermis
 
 The `DefaultPermissionPolicy` will behave in a backward-compatible way.
 If users don't configure Deny permissions or priority for Grants, then
-there will be no difference in Hazelcast permission evaluation.
+there will be no difference in Hecaton permission evaluation.
 
 An alternative approach would be to introduce the `deny` permission support
 in a new `PermissionPolicy` implementation besides the `DefaultPermissionPolicy`.
@@ -144,7 +144,7 @@ When stored in XML or YAML the value is listed as a child of the `client-permiss
 
 [source,yaml]
 ----
-hazelcast:
+hecaton:
   security:
     enabled: true
     client-permissions:
@@ -162,7 +162,7 @@ hazelcast:
 
 [source,xml]
 ----
-<hazelcast>
+<hecaton>
     <security enabled="false">
         <client-permissions priority-grant="false">
             <map-permission name="*">
@@ -177,7 +177,7 @@ hazelcast:
             </map-permission>
         </client-permission>
     </security>
-</hazelcast>
+</hecaton>
 ----
 
 == Technical Design

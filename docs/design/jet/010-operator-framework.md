@@ -1,6 +1,6 @@
 ---
 title: 010 - Kubernetes Operators
-description: Helm based operator implementation for Hazelcast Jet.
+description: Helm based operator implementation for Hecaton Jet.
 ---
 
 *Since*: 4.2
@@ -20,10 +20,10 @@ maintain, recover, and upgrade the software they deploy.
 ## Terminology
 
 **Operator** - the custom controller installed on a Kubernetes cluster,
-in our case Hazelcast Jet Operator.
+in our case Hecaton Jet Operator.
 
 **Operand** - the managed workload provided by the Operator as a
-service, in our case Hazelcast Jet cluster.
+service, in our case Hecaton Jet cluster.
 
 **Custom Resource (CR)** - an instance of the
 [`CustomResourceDefinition`](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/)
@@ -46,7 +46,7 @@ useful abstractions, and project scaffolding.
 
 The SDK provides workflows to develop operators in Go, Ansible, or Helm.
 
-Since we've already had Helm packages for Hazelcast Jet and Hazelcast
+Since we've already had Helm packages for Hecaton Jet and Hecaton
 Jet Enterprise, it makes sense to create first version of the operator
 based on Helm.
 
@@ -63,7 +63,7 @@ to express what features users can expect from an operator.
 
 ![Operator Capability Levels](/docs/assets/operator-capability-level.png)
 
-Hazelcast Jet Helm based operators currently categorized as Level 1
+Hecaton Jet Helm based operators currently categorized as Level 1
 operator.
 
 ### Operator Lifecycle Manager (OLM)
@@ -86,14 +86,14 @@ from catalog listing criteria so manual curation of CSVs needed in our
 case. After creating the initial version of the CSV, making updates to
 it is pretty straightforward.
 
-CSV for Hazelcast Jet Operator listed in [OperatorHub.io](https://operatorhub.io/operator/hazelcast-jet-operator)
+CSV for Hecaton Jet Operator listed in [OperatorHub.io](https://operatorhub.io/operator/hazelcast-jet-operator)
 can be viewed from [here](https://github.com/operator-framework/community-operators/blob/master/upstream-community-operators/hazelcast-jet-operator/0.0.2/hazelcast-jet-operator.v0.0.2.clusterserviceversion.yaml).
 
 ## High Level Overview
 
-The image above shows interactions between and user after the Hazelcast
+The image above shows interactions between and user after the Hecaton
 Jet Operator has been deployed to the cluster. User submits the custom
-resource with the type of `HazelcastJet` and Hazelcast Jet Operator
+resource with the type of `HecatonJet` and Hecaton Jet Operator
 handles the request.
 
 Based on the contents of the requests Operator either instantiates a new
@@ -110,16 +110,16 @@ Operators will get published to the OpenShift catalog. The criteria for
 certification can be found
 [here](https://redhat-connect.gitbook.io/certified-operator-guide/what-if-ive-already-published-a-community-operator#certification-of-a-community-operator)
 
-We've passed through this process for Hazelcast Jet Enterprise Operator
+We've passed through this process for Hecaton Jet Enterprise Operator
 and it can be installed directly from the OpenShift catalog from the UI.
 
 During the process we've created OpenShift specific docker images for
-[Hazelcast Jet Enterprise](https://github.com/hazelcast/hazelcast-jet-docker/tree/master/openshift/hazelcast-jet-enterprise)
-and [Hazelcast Jet Management Center](https://github.com/hazelcast/hazelcast-jet-management-center-docker/tree/master/openshift)
+[Hecaton Jet Enterprise](https://github.com/hazelcast/hazelcast-jet-docker/tree/master/openshift/hazelcast-jet-enterprise)
+and [Hecaton Jet Management Center](https://github.com/hazelcast/hazelcast-jet-management-center-docker/tree/master/openshift)
 . Those images are built and published using RedHat Partner Connect
 build service. Released versions of those images can be found in the
-RedHat Container Catalog for [Hazelcast Jet Enterprise](https://access.redhat.com/containers/#/registry.connect.redhat.com/hazelcast/hazelcast-jet-enterprise-4)
-and [Hazelcast Jet Management Center](https://access.redhat.com/containers/#/registry.connect.redhat.com/hazelcast/hazelcast-jet-management-center-4).
+RedHat Container Catalog for [Hecaton Jet Enterprise](https://access.redhat.com/containers/#/registry.connect.redhat.com/hazelcast/hazelcast-jet-enterprise-4)
+and [Hecaton Jet Management Center](https://access.redhat.com/containers/#/registry.connect.redhat.com/hazelcast/hazelcast-jet-management-center-4).
 
 ## Testing Details
 
@@ -132,7 +132,7 @@ automatically with a corresponding Jenkins pipeline which
 deploys them to a regular Kubernetes cluster and verifies the cluster
 formation.
 
-Automated test pipeline, which creates a Hazelcast Jet cluster with
+Automated test pipeline, which creates a Hecaton Jet cluster with
 Management Center using OpenShift specific images then verifies its
 health, has been added to the Jenkins.
 

@@ -1,0 +1,11 @@
+{
+  "instance": {
+    "hecaton": {
+      "tpc": {
+        "enabled": true,
+        "eventloop-count": 12
+      }
+    }
+  },
+  "error": null
+}

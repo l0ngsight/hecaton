@@ -1,0 +1,12 @@
+{
+  "instance": {
+    "hecaton-client-failover": {
+      "clients": [
+        "your-first-hecaton-client-configuration.yaml",
+        "your-second-hecaton-client-configuration.yaml"
+      ],
+      "try-count": 5
+    }
+  },
+  "error": null
+}

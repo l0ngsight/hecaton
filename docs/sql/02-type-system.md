@@ -2,7 +2,7 @@
 
 ## Overview
 
-The type system defines how objects of different types interact with each other in the Hazelcast Mustang engine.
+The type system defines how objects of different types interact with each other in the Hecaton Mustang engine.
 The type system is defined by the list of supported types, type mapping, and type conversion rules.
 
 A type is defined by name, precedence, precision, and scale.
@@ -17,14 +17,14 @@ A type is defined by name, precedence, precision, and scale.
 within a family have the same name and precedence. For example, `INTEGER(11)` and `INTEGER(12)` are two types
 from the same `INTEGER` family.
 
-The scale is not used in Hazelcast Mustang. It is applicable only for `DECIMAL`, `REAL`, and `DOUBLE` types.
+The scale is not used in Hecaton Mustang. It is applicable only for `DECIMAL`, `REAL`, and `DOUBLE` types.
 Instead of defining it as a separate value, we just treat these types as types with infinite scale.
 
 ## 1 Supported Types
 
-Types supported by the Hazelcast Mustang are listed in Table 1.
+Types supported by the Hecaton Mustang are listed in Table 1.
 
-`OBJECT` is a Hazelcast-specific type representing an object which doesn't match any other type.
+`OBJECT` is a Hecaton-specific type representing an object which doesn't match any other type.
 
 `NULL` is a special type representing a type of `NULL` literal to which a more
 specific type couldn't be assigned. Consider `SELECT NULL FROM t` query, the `NULL`
@@ -32,7 +32,7 @@ literal would have `NULL` type assigned.
 
 [//]: # (TODO : CREATE TYPE command)
 
-*Table 1: Hazelcast Mustang Data Types*
+*Table 1: Hecaton Mustang Data Types*
 
 | SQL Type                   | Precedence | Precision |
 |----------------------------|------------|-----------|
@@ -61,10 +61,10 @@ Check out `CREATE TYPE` command for more information.
 
 ## 2 Type Mapping
 
-Hazelcast is implemented in Java. It is necessary to map SQL types to Java types. We define two mapping tables:
+Hecaton is implemented in Java. It is necessary to map SQL types to Java types. We define two mapping tables:
 
 1. SQL-to-Java mapping: defines the Java class of the value returned by a query depending on the SQL type
-1. Java-to-SQL mapping: defines how user values stored in Hazelcast data structures are mapped to relevant SQL types
+1. Java-to-SQL mapping: defines how user values stored in Hecaton data structures are mapped to relevant SQL types
 
 Every input value is mapped to an SQL type first. If there is no appropriate Java-to-SQL mapping, then the value is
 interpreted as the `OBJECT` type. Then the value is converted to a Java type mapped to the SQL type. Internally the
@@ -129,7 +129,7 @@ Table 3 establishes a many-to-one mapping between Java and SQL types.
 | `java.time.Instant`        | `TIMESTAMP WITH TIME ZONE` |
 | `java.time.OffsetDateTime` | `TIMESTAMP WITH TIME ZONE` |
 | `java.time.ZonedDateTime`  | `TIMESTAMP WITH TIME ZONE` |
-| `HazelcastJsonValue`       | `JSON`                     |
+| `HecatonJsonValue`       | `JSON`                     |
 | Any other type             | `OBJECT`                   |
 
 The following SQL types are mapped to several Java types:

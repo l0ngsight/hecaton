@@ -2,7 +2,7 @@
 
 ## Background
 ### Description
-This document outlines the solution for adding instance tracking to Hazelcast IMDG. Instance tracking is a feature which, when enabled, writes a file on instance startup at the configured location. The file will contain metadata about the instance, such as version, product name, process ID and is not deleted on node shutdown. This file can then later be used by other programs to detect what kind of Hazelcast instances were running on a particular machine.
+This document outlines the solution for adding instance tracking to Hecaton IMDG. Instance tracking is a feature which, when enabled, writes a file on instance startup at the configured location. The file will contain metadata about the instance, such as version, product name, process ID and is not deleted on node shutdown. This file can then later be used by other programs to detect what kind of Hecaton instances were running on a particular machine.
 
 ## Functional Design
 ### Summary of Functionality
@@ -22,29 +22,29 @@ config.getInstanceTrackingConfig()
 
 The equivalent XML configuration:
 ```xml
-<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+<hecaton xmlns="https://hecaton.org.uk/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="http://www.hazelcast.com/schema/config
-           http://www.hazelcast.com/schema/config/hazelcast-config-5.2.xsd">
+           xsi:schemaLocation="https://hecaton.org.uk/schema/config
+           https://hecaton.org.uk/schema/config/hecaton-config-5.2.xsd">
     
     <instance-tracking enabled="true">
         <file-name>/tmp/hz-tracking.txt</file-name>
         <format-pattern>$HZ_INSTANCE_TRACKING{product}:$HZ_INSTANCE_TRACKING{version}</format-pattern>
     </instance-tracking>
 
-</hazelcast>
+</hecaton>
 ```
 
 The equivalent YAML configuration:
 ```yaml
-hazelcast:
+hecaton:
   instance-tracking:
     enabled: true
     file-name: /tmp/hz-tracking.txt
     format-pattern: $HZ_INSTANCE_TRACKING{product}:$HZ_INSTANCE_TRACKING{version}
 ```
 
-The feature supports both OS and EE members and clients, is disabled by default and uses a JVM argument to distinguish if the instance was started using `start.sh/bat` or inside another application by invoking `Hazelcast.newHazelcastInstance()`.
+The feature supports both OS and EE members and clients, is disabled by default and uses a JVM argument to distinguish if the instance was started using `start.sh/bat` or inside another application by invoking `Hecaton.newHecatonInstance()`.
 
 The file overwrites any existing file with the same name. Placeholders in the file name can be used to create a new file each time. Failing to write the file will only generate a warning and the instance is allowed to start.
 
@@ -53,11 +53,11 @@ The file overwrites any existing file with the same name. Placeholders in the fi
 We introduce new configuration both on the member and the client side:
 ```java
 /**
- * Configures tracking of a running Hazelcast instance. For now, this is
- * limited to writing information about the Hazelcast instance to a file
+ * Configures tracking of a running Hecaton instance. For now, this is
+ * limited to writing information about the Hecaton instance to a file
  * while the instance is starting.
  * <p>
- * The file is overwritten on every start of the Hazelcast instance and if
+ * The file is overwritten on every start of the Hecaton instance and if
  * multiple instance share the same file system, every instance will
  * overwrite the tracking file of a previously started instance.
  * <p>
@@ -73,21 +73,21 @@ public class InstanceTrackingConfig {
 }
 ```
 
-The user can use this configuration to enable the instance tracking feature, specify the file name and the pattern for the file contents. By default, the feature is disabled, the file name is `Hazelcast.process` in the OS temporary directory as returned by `System.getProperty("java.io.tmpdir")` and the file contents are JSON-formatted key-value pairs of all available metadata.
+The user can use this configuration to enable the instance tracking feature, specify the file name and the pattern for the file contents. By default, the feature is disabled, the file name is `Hecaton.process` in the OS temporary directory as returned by `System.getProperty("java.io.tmpdir")` and the file contents are JSON-formatted key-value pairs of all available metadata.
 
 Here is an example when running a client instance:
 ```json
-{"product":"Hazelcast", "version":"4.1.7", "pid":27746, "mode":"client", "start_timestamp":1595851430741, "licensed":0}
+{"product":"Hecaton", "version":"4.1.7", "pid":27746, "mode":"client", "start_timestamp":1595851430741, "licensed":0}
 ```
 
 Here is an example when running a member instance in the "server" mode:
 ```json
-{"product":"Hazelcast", "version":"4.1.7", "pid":27746, "mode":"server", "start_timestamp":1595851430741, "licensed":1}
+{"product":"Hecaton", "version":"4.1.7", "pid":27746, "mode":"server", "start_timestamp":1595851430741, "licensed":1}
 ```
 
 And here is an example when running a member instance in the "embedded" mode:
 ```json
-{"product":"Hazelcast", "version":"4.1.7", "pid":27746, "mode":"embedded", "start_timestamp":1595851430741, "licensed":1}
+{"product":"Hecaton", "version":"4.1.7", "pid":27746, "mode":"embedded", "start_timestamp":1595851430741, "licensed":1}
 ```
 
 The user can specify a custom format by using a predefined set of available metadata keys. For example:
@@ -102,7 +102,7 @@ String format = "mode: $HZ_INSTANCE_TRACKING{mode}\n"
 This should produce a file with this content:
 ```
 mode: embedded
-product: Hazelcast
+product: Hecaton
 licensed: 0
 missing: $HZ_INSTANCE_TRACKING{missing}
 broken: $HZ_INSTANCE_TRACKING{broken
@@ -117,7 +117,7 @@ As can be seen, once we encounter a broken placeholder, all subsequent placehold
  */
 public enum InstanceTrackingProperties {
     /**
-     * The instance product name, e.g. "Hazelcast" or "Hazelcast Enterprise".
+     * The instance product name, e.g. "Hecaton" or "Hecaton Enterprise".
      */
     PRODUCT("product"),
     /**
@@ -149,13 +149,13 @@ public enum InstanceTrackingProperties {
 }
 ```
 
-The possible values for the `product` placeholder are: `Hazelcast`, `Hazelcast Enterprise`, `Hazelcast Client`, `Hazelcast Client Enterprise`, `Hazelcast Jet`, `Hazelcast Jet Enterprise`. 
+The possible values for the `product` placeholder are: `Hecaton`, `Hecaton Enterprise`, `Hecaton Client`, `Hecaton Client Enterprise`, `Hecaton Jet`, `Hecaton Jet Enterprise`. 
 The possible values for the `mode` placeholder are:
- - `server` - this value is used when the instance was started using the `start.sh` or `start.bat` scripts. If the JVM argument `hazelcast.tracking.server` is set to `true`, we conclude that the instance was started in server mode.
- - `client` - this instance is a Hazelcast client instance
- - `embedded` - this instance is embedded in another Java program. This will be the case when the JVM argument `hazelcast.tracking.server` is not set to `true`.
+ - `server` - this value is used when the instance was started using the `start.sh` or `start.bat` scripts. If the JVM argument `hecaton.tracking.server` is set to `true`, we conclude that the instance was started in server mode.
+ - `client` - this instance is a Hecaton client instance
+ - `embedded` - this instance is embedded in another Java program. This will be the case when the JVM argument `hecaton.tracking.server` is not set to `true`.
  
-In addition to the above, the hazelcast instance will overwrite any existing file in the configured location. To prevent this, the user can configure the file location using the placeholders in the same way they can be used when defining the file contents. For example, if the file name is configured as `Hazelcast-$HZ_INSTANCE_TRACKING{pid}-$HZ_INSTANCE_TRACKING{start_timestamp}.process`, the file name will contain the process ID and the creation time, making it unique every time the instance is started. The created file is not deleted on node shutdown. As such, it leaves a trace of instances started on a particular machine. The file creation process also is fail-safe meaning that the instance will proceed with starting even though it is unable to write the tracking file and the instance will only log a warning.
+In addition to the above, the hecaton instance will overwrite any existing file in the configured location. To prevent this, the user can configure the file location using the placeholders in the same way they can be used when defining the file contents. For example, if the file name is configured as `Hecaton-$HZ_INSTANCE_TRACKING{pid}-$HZ_INSTANCE_TRACKING{start_timestamp}.process`, the file name will contain the process ID and the creation time, making it unique every time the instance is started. The created file is not deleted on node shutdown. As such, it leaves a trace of instances started on a particular machine. The file creation process also is fail-safe meaning that the instance will proceed with starting even though it is unable to write the tracking file and the instance will only log a warning.
 
 ### Testing criteria
 

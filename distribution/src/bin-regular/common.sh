@@ -3,7 +3,7 @@ if [ -z "$SCRIPT_DIR" ]; then
   exit 1;
 fi;
 
-export HAZELCAST_HOME="$(cd "$SCRIPT_DIR/.." && pwd)"
+export HECATON_HOME="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 if [ "$JAVA_HOME" ]; then
     JAVA="$JAVA_HOME/bin/java"
@@ -54,9 +54,9 @@ if [[ "$VM_NAME" =~ "OpenJ9" ]]; then
 fi
 
 # Disable the log4j2 shutdown hook, otherwise log lines during node shutdown might be lost
-JDK_OPTS="$JDK_OPTS -Dlog4j.shutdownHookEnabled=false -Dhazelcast.logging.shutdown=true"
+JDK_OPTS="$JDK_OPTS -Dlog4j.shutdownHookEnabled=false -Dhecaton.logging.shutdown=true"
 # Suppress Java 24 and 25 warnings for deprecated Unsafe methods.
-# This is required because Hazelcast and JCTools internally use Unsafe API.
+# This is required because Hecaton and JCTools internally use Unsafe API.
 # Java 23: 'allow' is the default, so no explicit setting is needed.
 # Java 24-25: 'warn' is the default, so we explicitly set it to 'allow'.
 # Java 26 or later: 'deny' will be the default, and 'allow' option will no longer be supported.
@@ -98,7 +98,7 @@ else
   export JAVA_OPTS="${JAVA_OPTS_DEFAULT}"
 fi
 
-CLASSPATH="$CLASSPATH:$HAZELCAST_HOME/lib:$HAZELCAST_HOME/lib/*:$HAZELCAST_HOME/bin/user-lib:$HAZELCAST_HOME/bin/user-lib/*"
+CLASSPATH="$CLASSPATH:$HECATON_HOME/lib:$HECATON_HOME/lib/*:$HECATON_HOME/bin/user-lib:$HECATON_HOME/bin/user-lib/*"
 
 function readJvmOptionsFile {
     # Read jvm.options file
@@ -111,9 +111,9 @@ function readJvmOptionsFile {
       fi
 
       JVM_OPTIONS="$JVM_OPTIONS $line"
-    done < $HAZELCAST_HOME/config/$1
+    done < $HECATON_HOME/config/$1
 
-    # Evaluate variables in the options, allowing to use e.g. HAZELCAST_HOME variable
+    # Evaluate variables in the options, allowing to use e.g. HECATON_HOME variable
     JVM_OPTIONS=$(eval echo $JVM_OPTIONS)
 }
 

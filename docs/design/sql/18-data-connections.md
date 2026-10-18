@@ -40,13 +40,13 @@ In 5.2, a new configuration element was introduced:
 
 ```xml
 <!--
- ===== HAZELCAST EXTERNAL DATA STORE CONFIGURATION =====
+ ===== HECATON EXTERNAL DATA STORE CONFIGURATION =====
 
  Configuration element's name is <external-data-store>. Contains configuration of external data stores
  used by map stores and jdbc sinks and sources
  -->
 <external-data-store name="mysql-database">
-    <class-name>com.hazelcast.datastore.JdbcDataStoreFactory</class-name>
+    <class-name>uk.org.hecaton.datastore.JdbcDataStoreFactory</class-name>
     <properties>
         <property name="jdbcUrl">jdbc:mysql://dummy:3306</property>
     </properties>
@@ -81,7 +81,7 @@ Or in `GenericMapStore` configuration:
 
 <map name="my-map">
     <map-store enabled="true">
-        <class-name>com.hazelcast.mapstore.GenericMapStore</class-name>
+        <class-name>uk.org.hecaton.mapstore.GenericMapStore</class-name>
         <properties>
             <property name="external-data-store-ref">my-mysql-database</property>
         </properties>
@@ -109,7 +109,7 @@ An instance of a data store differs one system from another (only JDBC is
 implemented atm):
 
 * For JDBC, it’s a `javax.sql.DataSource` (either simple or pooled)
-* For Hazelcast, it is the `HazecastInstance`
+* For Hecaton, it is the `HazecastInstance`
 * For Kafka, it is either `KafkaConsumer` or `KafkaProducer`
 * For MongoDB, it is `MongoClient`
 
@@ -128,7 +128,7 @@ factory up:
 ExternalDataStoreFactory<?> dataStoreFactory = nodeEngine.getExternalDataStoreService().getExternalDataStoreFactory(name);
 if (!(dataStoreFactory instanceof JdbcDataStoreFactory)) {
    String className = JdbcDataStoreFactory.class.getSimpleName();
-   throw new HazelcastException("Data store factory '" + name + "' must be an instance of " + className);
+   throw new HecatonException("Data store factory '" + name + "' must be an instance of " + className);
 }
 return (JdbcDataStoreFactory) dataStoreFactory;
 ```
@@ -147,11 +147,11 @@ Non-shared should be closed when the job is finished.
 To make minimal changes to the Jet sources/sinks we create a wrapper which
 doesn’t close the DataSource when close is called, and leaves the closing to the
 JdbcDataStoreFactory on shutdown. See
-[com.hazelcast.datastore.impl.CloseableDataSource#nonClosing](https://github.com/hazelcast/hazelcast/blob/7c3894b1474dba56648cf10ad8441615486fcdea/hazelcast/src/main/java/com/hazelcast/datastore/impl/CloseableDataSource.java#L98-L106)
+[uk.org.hecaton.datastore.impl.CloseableDataSource#nonClosing](https://github.com/hazelcast/hazelcast/blob/7c3894b1474dba56648cf10ad8441615486fcdea/hazelcast/src/main/java/com/hazelcast/datastore/impl/CloseableDataSource.java#L98-L106)
 
 # Terminology
 
-* **Connector**: a type of remote system, e.g. remote Hazelcast, Kafka, Jdbc,
+* **Connector**: a type of remote system, e.g. remote Hecaton, Kafka, Jdbc,
   Kinesis…
 * **Data connection**: a reference to a single external system. It contains metadata
   needed to connect, and might or might not maintain a physical connection or
@@ -162,7 +162,7 @@ JdbcDataStoreFactory on shutdown. See
 
 # Background
 
-Hazelcast Jet was originally designed with large batch jobs and streaming jobs
+Hecaton Jet was originally designed with large batch jobs and streaming jobs
 in mind. With SQL this changed, very small jobs are now common. Sources and
 sinks currently open and close connections for each job, and this is a huge
 overhead if that connection is used, for example, to insert just a single
@@ -183,7 +183,7 @@ feature was released in Beta status in 5.2.
   done, it is reset[^2] and returned to the pool. One physical connection is
   always used by one process.
 * **Shared**: the same connection can be used by multiple threads for multiple
-  concurrent tasks. The connection must be stateless. Hazelcast client works
+  concurrent tasks. The connection must be stateless. Hecaton client works
   this way.
 
 Streaming sources use single-use connections. Streaming sinks might use
@@ -289,7 +289,7 @@ link in SQL, one has to enclose it in double quotes.
 Since one connector can have multiple types of data sources, both bounded and
 unbounded, and we want to use the same connection for all of them, we need to
 move the `SqlConnector.isStream()` method to `JetTable` class (or another
-object-level class). For example, Hazelcast can support not only imap, but also
+object-level class). For example, Hecaton can support not only imap, but also
 imap journal, IList, queue etc., and we want to access all of them using the
 same HZ client instance.
 
@@ -415,7 +415,7 @@ the default schema.[^4]
 
 # Java APIs
 
-**hazelcast.jar**
+**hecaton.jar**
 
 ```java
 interface JetConnector {
@@ -450,7 +450,7 @@ interface DataConnection {
 }
 ```
 
-**hazelcast-sql.jar**
+**hecaton-sql.jar**
 
 ```java
 interface SqlConnector extends DataConnectionConnector {
@@ -470,15 +470,15 @@ interface SqlConnector extends DataConnectionConnector {
 
 ## Connector-specific API
 
-### Hazelcast Client
+### Hecaton Client
 
 Used to connect to remote HZ clusters. Since the HZ client is fully thread-safe,
 a single shared instance can be used. Any processor that needs a connection from
 the data connection will obtain the same HZ client instance.
 
 ```java
-public class RemoteHazelcastDataConnection implements DataConnection {
-    HazelcastInstance getSharedClient();
+public class RemoteHecatonDataConnection implements DataConnection {
+    HecatonInstance getSharedClient();
 }
 ```
 
@@ -613,7 +613,7 @@ SELECT * FROM information_schema.dataconnections;
 +-----------+--------+-----------+-------+--------+-------------------------------------------------------------------+--------+
 |catalog    |schema  |name       |type   |shared  |options                                                            |source  |
 +-----------+--------+-----------+-------+--------+-------------------------------------------------------------------+--------+
-|hazelcast  |public  |testMongo  |Mongo  |true    |{"connectionString":"mongodb://localhost:55899","database":"db1"}  |CONFIG  |
+|hecaton  |public  |testMongo  |Mongo  |true    |{"connectionString":"mongodb://localhost:55899","database":"db1"}  |CONFIG  |
 +-----------+--------+-----------+-------+--------+-------------------------------------------------------------------+--------+
 
 SHOW RESOURCES FOR testMongo;

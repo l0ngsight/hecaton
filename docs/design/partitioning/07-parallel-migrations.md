@@ -123,7 +123,7 @@ parallelize only migrations belonging to different partitions. Migrations belong
 executed serially. That's the upper limit of migration parallelization. But still we may want to limit parallel 
 migrations to keep heap memory usage under control and to avoid overload of network resources.
 
-A new `ClusterProperty`, `hazelcast.partition.max.parallel.migrations`, will be introduced, with a default value of `10`. 
+A new `ClusterProperty`, `hecaton.partition.max.parallel.migrations`, will be introduced, with a default value of `10`. 
 This property defines the maximum number of partition migrations to be executed on a member. That member can be either source 
 or destination of the migration. _Value of `10` is selected as a heuristic after benchmarking on EC2. You can find the 
 benchmark results below._ There may be consequences of using too much or too less parallelization:
@@ -241,31 +241,31 @@ member, adding a new member and crash of a single member scenarios.
 
 #### Server configuration:
 ```xml
-<hazelcast>
+<hecaton>
     <properties>
-        <property name="hazelcast.phone.home.enabled">false</property>
-        <property name="hazelcast.hidensity.check.freememory">false</property>
-        <property name="hazelcast.health.monitoring.level">NOISY</property>
-        <property name="hazelcast.health.monitoring.delay.seconds">15</property>
-        <property name="hazelcast.diagnostics.enabled">true</property>
-        <property name="hazelcast.diagnostics.metrics.period.seconds">10</property>   
-        <property name="hazelcast.graceful.shutdown.max.wait">7200</property>   
-        <property name="hazelcast.partition.count">20000</property>
-        <property name="hazelcast.partition.max.parallel.migrations">20</property>
+        <property name="hecaton.phone.home.enabled">false</property>
+        <property name="hecaton.hidensity.check.freememory">false</property>
+        <property name="hecaton.health.monitoring.level">NOISY</property>
+        <property name="hecaton.health.monitoring.delay.seconds">15</property>
+        <property name="hecaton.diagnostics.enabled">true</property>
+        <property name="hecaton.diagnostics.metrics.period.seconds">10</property>   
+        <property name="hecaton.graceful.shutdown.max.wait">7200</property>   
+        <property name="hecaton.partition.count">20000</property>
+        <property name="hecaton.partition.max.parallel.migrations">20</property>
     </properties>
 
     ...
 
     <native-memory allocator-type="POOLED" enabled="true">
         <size unit="GIGABYTES" value="500"/>
-        <!-- disabled schema validation via hazelcast.internal.override.version system property. -->
+        <!-- disabled schema validation via hecaton.internal.override.version system property. -->
         <metadata-space-percentage>1</metadata-space-percentage>
     </native-memory>
 
     <map name="default">
         <in-memory-format>NATIVE</in-memory-format>
     </map>
-</hazelcast>
+</hecaton>
 ```
 
 #### Memory usage:
@@ -371,7 +371,7 @@ Member shutdown in **2145 seconds**.
 
 #### Parallel Migrations - 5x
 
-5x parallelization was used: `hazelcast.partition.max.parallel.migrations=5`.
+5x parallelization was used: `hecaton.partition.max.parallel.migrations=5`.
 
 - *Scale down from 10 to 9 members*: `14000` migrations were completed in **4 minutes and 45 seconds**. 
 Member shutdown in **299 seconds**. 
@@ -411,7 +411,7 @@ Member shutdown in **299 seconds**.
 
 #### Parallel Migrations - 20x
 
-20x parallelization was used: `hazelcast.partition.max.parallel.migrations=20`.
+20x parallelization was used: `hecaton.partition.max.parallel.migrations=20`.
 
 - *Scale down from 10 to 9 members*: `14000` migrations were completed in **3 minutes and 22 seconds**. 
 Member shutdown in **215 seconds**.
@@ -498,7 +498,7 @@ Member shutdown in **2456 seconds**.
 
 #### Parallel Migrations
 
-20x parallelization was used: `hazelcast.partition.max.parallel.migrations=20`.
+20x parallelization was used: `hecaton.partition.max.parallel.migrations=20`.
 
 - *Scale down from 10 to 9 members*: `14000` migrations were completed in **1 minute and 47 seconds**. 
 Member shutdown in **215 seconds**.

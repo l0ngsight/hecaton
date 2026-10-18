@@ -17,7 +17,7 @@
 <assembly xmlns="http://maven.apache.org/ASSEMBLY/2.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.1.0 http://maven.apache.org/xsd/assembly-2.1.0.xsd">
 
-    <id>hazelcast</id>
+    <id>hecaton</id>
     <formats>
         <format>zip</format>
         <format>tar.gz</format>
@@ -26,9 +26,9 @@
     <dependencySets>
         <dependencySet>
             <includes>
-                <include>com.hazelcast:hazelcast</include>
-                <include>com.hazelcast:hazelcast-sql</include>
-                <include>com.hazelcast:hazelcast-wm</include>
+                <include>uk.org.hecaton:hecaton</include>
+                <include>uk.org.hecaton:hecaton-sql</include>
+                <include>uk.org.hecaton:hecaton-wm</include>
                 <include>io.prometheus.jmx:jmx_prometheus_javaagent</include>
                 <include>javax.cache:cache-api</include>
                 <include>org.apache.logging.log4j:*</include>
@@ -36,26 +36,26 @@
                 <include>info.picocli:picocli</include>
                 <include>org.jline:*</include>
                 <include>org.fusesource.jansi:jansi</include>
-                <include>com.hazelcast.jet:hazelcast-jet-avro</include>
-                <include>com.hazelcast.jet:hazelcast-jet-cdc-debezium</include>
-                <include>com.hazelcast.jet:hazelcast-jet-cdc-mysql</include>
-                <include>com.hazelcast.jet:hazelcast-jet-cdc-postgres</include>
-                <include>com.hazelcast.jet:hazelcast-jet-csv</include>
-                <include>com.hazelcast.jet:hazelcast-jet-elasticsearch-7</include>
-                <include>com.hazelcast.jet:hazelcast-jet-grpc</include>
-                <include>com.hazelcast.jet:hazelcast-jet-files-azure</include>
-                <include>com.hazelcast.jet:hazelcast-jet-files-gcs</include>
-                <include>com.hazelcast.jet:hazelcast-jet-files-s3</include>
-                <include>com.hazelcast.jet:hazelcast-jet-hadoop-all</include>
-                <include>com.hazelcast.jet:hazelcast-jet-kafka</include>
-                <include>com.hazelcast.jet:hazelcast-jet-kafka-connect</include>
-                <include>com.hazelcast.jet:hazelcast-jet-kinesis</include>
-                <include>com.hazelcast.jet:hazelcast-jet-mongodb</include>
-                <include>com.hazelcast.jet:hazelcast-jet-protobuf</include>
-                <include>com.hazelcast.jet:hazelcast-jet-python</include>
-                <include>com.hazelcast.jet:hazelcast-jet-s3</include>
-                <include>com.hazelcast:hazelcast-distribution</include>
-                <include>com.hazelcast:hazelcast-mapstore</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-avro</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-cdc-debezium</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-cdc-mysql</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-cdc-postgres</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-csv</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-elasticsearch-7</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-grpc</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-files-azure</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-files-gcs</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-files-s3</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-hadoop-all</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-kafka</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-kafka-connect</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-kinesis</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-mongodb</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-protobuf</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-python</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-s3</include>
+                <include>uk.org.hecaton:hecaton-distribution</include>
+                <include>uk.org.hecaton:hecaton-mapstore</include>
             </includes>
             <outputDirectory>lib</outputDirectory>
             <outputFileNameMapping>${artifact.artifactId}-${artifact.baseVersion}.${artifact.extension}</outputFileNameMapping>
@@ -70,13 +70,13 @@
 
         <!-- Full Example YAML config files -->
         <file>
-            <source>${configs.from.jar}/hazelcast-full-example.yaml</source>
-            <destName>hazelcast-full-example.yaml</destName>
+            <source>${configs.from.jar}/hecaton-full-example.yaml</source>
+            <destName>hecaton-full-example.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-client-full-example.yaml</source>
-            <destName>hazelcast-client-full-example.yaml</destName>
+            <source>${configs.from.jar}/hecaton-client-full-example.yaml</source>
+            <destName>hecaton-client-full-example.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
 
@@ -84,20 +84,20 @@
         <!-- We use a different default file for the assembly
              because of different settings, e.g. jet is enabled -->
         <file>
-            <source>${configs.from.jar}/hazelcast-default-assembly.xml</source>
-            <destName>hazelcast.xml</destName>
+            <source>${configs.from.jar}/hecaton-default-assembly.xml</source>
+            <destName>hecaton.xml</destName>
             <outputDirectory>config</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-docker-assembly.xml</source>
-            <destName>hazelcast-docker.xml</destName>
+            <source>${configs.from.jar}/hecaton-docker-assembly.xml</source>
+            <destName>hecaton-docker.xml</destName>
             <outputDirectory>config</outputDirectory>
         </file>
         <!-- We use a different default file for the assembly
              because of different settings, e.g. smart routing is disabled -->
         <file>
-            <source>${configs.from.jar}/hazelcast-client-default-assembly.xml</source>
-            <destName>hazelcast-client.xml</destName>
+            <source>${configs.from.jar}/hecaton-client-default-assembly.xml</source>
+            <destName>hecaton-client.xml</destName>
             <outputDirectory>config</outputDirectory>
         </file>
 
@@ -105,55 +105,55 @@
         <!-- We use a different default file for the assembly
              because of different settings, e.g. jet is enabled -->
         <file>
-            <source>${configs.from.jar}/hazelcast-default-assembly.yaml</source>
-            <destName>hazelcast.yaml</destName>
+            <source>${configs.from.jar}/hecaton-default-assembly.yaml</source>
+            <destName>hecaton.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-docker-assembly.yaml</source>
-            <destName>hazelcast-docker.yaml</destName>
+            <source>${configs.from.jar}/hecaton-docker-assembly.yaml</source>
+            <destName>hecaton-docker.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <!-- We use a different default file for the assembly
              because of different settings, e.g. smart routing is disabled -->
         <file>
-            <source>${configs.from.jar}/hazelcast-client-default-assembly.yaml</source>
-            <destName>hazelcast-client.yaml</destName>
+            <source>${configs.from.jar}/hecaton-client-default-assembly.yaml</source>
+            <destName>hecaton-client.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
 
         <!-- Full Example XML config files -->
         <file>
-            <source>${configs.from.jar}/hazelcast-full-example.xml</source>
-            <destName>hazelcast-full-example.xml</destName>
+            <source>${configs.from.jar}/hecaton-full-example.xml</source>
+            <destName>hecaton-full-example.xml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-client-full-example.xml</source>
-            <destName>hazelcast-client-full-example.xml</destName>
+            <source>${configs.from.jar}/hecaton-client-full-example.xml</source>
+            <destName>hecaton-client-full-example.xml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
 
         <!-- Other Example config files -->
         <file>
-            <source>${configs.from.jar}/hazelcast-security-hardened.yaml</source>
-            <destName>hazelcast-security-hardened.yaml</destName>
+            <source>${configs.from.jar}/hecaton-security-hardened.yaml</source>
+            <destName>hecaton-security-hardened.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-security-hardened.xml</source>
-            <destName>hazelcast-security-hardened.xml</destName>
+            <source>${configs.from.jar}/hecaton-security-hardened.xml</source>
+            <destName>hecaton-security-hardened.xml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
 
-        <!-- NOTICE file from hazelcast.jar -->
+        <!-- NOTICE file from hecaton.jar -->
         <file>
             <source>${configs.from.jar}/META-INF/NOTICE</source>
             <destName>NOTICE</destName>
             <outputDirectory>/</outputDirectory>
         </file>
 
-        <!-- Release Notes from hazelcast.jar -->
+        <!-- Release Notes from hecaton.jar -->
         <file>
             <source>${configs.from.jar}/release_notes.txt</source>
             <destName>release_notes.txt</destName>

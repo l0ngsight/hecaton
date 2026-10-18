@@ -16,7 +16,7 @@ has no statistics available.
 ## Design
 
 In this design, we collect statistics for offloaded entry processor executors. 
-We use same `LocalExecutorStats` with other executors in Hazelcast.
+We use same `LocalExecutorStats` with other executors in Hecaton.
 
 ```
 public interface LocalExecutorStats extends LocalInstanceStats {

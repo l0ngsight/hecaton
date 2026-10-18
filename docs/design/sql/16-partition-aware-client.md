@@ -1,6 +1,6 @@
 # Partition-aware client
 
-If we want SQL to be the primary interface to Hazelcast, the basic map get/put
+If we want SQL to be the primary interface to Hecaton, the basic map get/put
 operations using SQL have to be equally fast as their native counterparts. We’ve
 implemented shortcut evaluation for the queries where the WHERE clause contains
 `__key=?` - we don’t start a job in this case, but directly execute
@@ -104,7 +104,7 @@ This idea was rejected for the following reasons:
   generally frowned upon.
 
 ```java
-((HazelcastPreparedStatement) pstmt).setPartitionArgumentIndex(0);
+((HecatonPreparedStatement) pstmt).setPartitionArgumentIndex(0);
 ```
 
 - The benefit is small. The speedup of a single query is in the range of 100s of
@@ -153,6 +153,6 @@ The clean-up threshold can be hardcoded to: `min(cacheSize / 10, 50)`.
      * client. This parameter configures the size of the cache the client uses
      * for storing this information.
      */
-    public static final HazelcastProperty PARTITION_ARGUMENT_CACHE_SIZE
-            = new HazelcastProperty("hazelcast.client.sql.partition.argument.cache.size", 1024);
+    public static final HecatonProperty PARTITION_ARGUMENT_CACHE_SIZE
+            = new HecatonProperty("hecaton.client.sql.partition.argument.cache.size", 1024);
 ```

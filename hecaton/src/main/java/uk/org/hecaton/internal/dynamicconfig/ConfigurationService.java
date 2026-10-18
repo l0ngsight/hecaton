@@ -1,0 +1,423 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.internal.dynamicconfig;
+
+import uk.org.hecaton.config.CacheSimpleConfig;
+import uk.org.hecaton.config.CardinalityEstimatorConfig;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.DataConnectionConfig;
+import uk.org.hecaton.internal.diagnostics.DiagnosticsConfig;
+import uk.org.hecaton.config.DurableExecutorConfig;
+import uk.org.hecaton.config.ExecutorConfig;
+import uk.org.hecaton.config.FlakeIdGeneratorConfig;
+import uk.org.hecaton.config.ListConfig;
+import uk.org.hecaton.config.MapConfig;
+import uk.org.hecaton.config.MultiMapConfig;
+import uk.org.hecaton.config.PNCounterConfig;
+import uk.org.hecaton.config.QueueConfig;
+import uk.org.hecaton.config.ReliableTopicConfig;
+import uk.org.hecaton.config.ReplicatedMapConfig;
+import uk.org.hecaton.config.RingbufferConfig;
+import uk.org.hecaton.config.ScheduledExecutorConfig;
+import uk.org.hecaton.config.SetConfig;
+import uk.org.hecaton.config.TopicConfig;
+import uk.org.hecaton.config.UserCodeNamespaceConfig;
+import uk.org.hecaton.config.WanReplicationConfig;
+import uk.org.hecaton.config.vector.VectorCollectionConfig;
+import uk.org.hecaton.nio.serialization.IdentifiedDataSerializable;
+
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * Dynamic configurations.
+ * <p>
+ * Registers dynamic configurations in a local member and also broadcasts configuration to all cluster members.
+ * <p>
+ * <b>Note:</b> Implementations should do pattern matching on their own.
+ */
+@SuppressWarnings("checkstyle:methodcount")
+public interface ConfigurationService {
+
+    String SERVICE_NAME = "hz:configurationService";
+
+    /**
+     * Registers a dynamic configurations to all cluster members.
+     *
+     * @param config configuration to register
+     */
+    void broadcastConfig(IdentifiedDataSerializable config);
+
+    /**
+     * Update the license for the cluster.
+     *
+     * @param licenseKey new license key to set
+     */
+    void updateLicense(String licenseKey);
+
+    /**
+     * Update the license for the cluster.
+     *
+     * @param licenseKey new license key to set
+     */
+    CompletableFuture<Void> updateLicenseAsync(String licenseKey);
+
+    /**
+     * Update the member list of TCP-IP join config
+     * @param memberList a new member list to set
+     */
+    void updateTcpIpConfigMemberList(List<String> memberList);
+
+    /**
+     * Update the member list of TCP-IP join config
+     * @param memberList a new member list to set
+     */
+    CompletableFuture<Void> updateTcpIpConfigMemberListAsync(List<String> memberList);
+
+    /**
+     * Persists any dynamically changeable sub configuration to this member's
+     * declarative configuration. Preserves file format of the existing dynamic
+     * configuration persistence file. Also note that this method is
+     * idempotent.
+     *
+     * @param subConfig configuration to persist
+     */
+    void persist(Object subConfig);
+
+    /**
+     * Updates the configuration with the given configuration. Updating means
+     * dynamically changing all the differences dynamically changeable.
+     *
+     * @param newConfig config to find any new dynamically changeable sub configs
+     * @return update result which includes added and ignored configurations
+     */
+    ConfigUpdateResult update(Config newConfig);
+
+    /**
+     * Updates the configuration with the declarative configuration. Updating
+     * means dynamically changing all the differences dynamically changeable.
+     *
+     * @return update result which includes added and ignored configurations
+     */
+    default ConfigUpdateResult update() {
+        return update(null);
+    }
+
+    /**
+     * Starts a configuration update process asynchronously. Updates the configuration with the given configuration. Updating
+     * means dynamically changing all the differences dynamically changeable.
+     *
+     * @param configPatch string representation of the config patch, to find any new dynamically changeable sub configs
+     * @return the unique identifier of the config update process. The MC Events emitted during the process will have the same
+     * {@link uk.org.hecaton.internal.management.events.AbstractConfigUpdateEvent#getConfigUpdateProcessId()}.
+     */
+    UUID updateAsync(String configPatch);
+
+    default UUID updateAsync() {
+        return updateAsync(null);
+    }
+
+    /**
+     * Finds existing Multimap config.
+     *
+     * @param name name of the config
+     * @return Multimap config or {@code null} when requested MultiMap configuration does not exist
+     */
+    MultiMapConfig findMultiMapConfig(String name);
+
+    /**
+     * Finds existing Map config.
+     *
+     * @param name name of the config
+     * @return Map config or {@code null} when requested Map configuration does not exist
+     */
+    MapConfig findMapConfig(String name);
+
+    /**
+     * Finds existing Topic config.
+     *
+     * @param name name of the config
+     * @return Topic config or {@code null} when requested Topic configuration does not exist
+     */
+    TopicConfig findTopicConfig(String name);
+
+    /**
+     * Finds existing Cardinality Estimator config.
+     *
+     * @param name name of the config
+     * @return Cardinality Estimator config or {@code null} when requested Cardinality Estimator configuration does not exist
+     */
+    CardinalityEstimatorConfig findCardinalityEstimatorConfig(String name);
+
+    /**
+     * Finds existing PN counter config.
+     *
+     * @param name name of the config
+     * @return PN counter config or {@code null} when requested PN counter configuration does not exist
+     */
+    PNCounterConfig findPNCounterConfig(String name);
+
+    /**
+     * Finds existing Executor config.
+     *
+     * @param name name of the config
+     * @return Executor config or {@code null} when requested Executor configuration does not exist
+     */
+    ExecutorConfig findExecutorConfig(String name);
+
+    /**
+     * Finds existing Scheduled Executor config.
+     *
+     * @param name name of the config
+     * @return Scheduled Executor config or {@code null} when requested Scheduled Executor configuration does not exist
+     */
+    ScheduledExecutorConfig findScheduledExecutorConfig(String name);
+
+    /**
+     * Finds existing Durable Executor config.
+     *
+     * @param name name of the config
+     * @return Durable Executor config or {@code null} when requested Durable Executor configuration does not exist
+     */
+    DurableExecutorConfig findDurableExecutorConfig(String name);
+
+    /**
+     * Finds existing Ringbuffer config.
+     *
+     * @param name name of the config
+     * @return Ringbuffer config or {@code null} when requested Ringbuffer configuration does not exist
+     */
+    RingbufferConfig findRingbufferConfig(String name);
+
+    /**
+     * Finds existing List config.
+     *
+     * @param name name of the config
+     * @return List config or {@code null} when requested List configuration does not exist
+     */
+    ListConfig findListConfig(String name);
+
+    /**
+     * Finds existing Queue config.
+     *
+     * @param name name of the config
+     * @return Queue config or {@code null} when requested Queue configuration does not exist
+     */
+    QueueConfig findQueueConfig(String name);
+
+    /**
+     * Finds existing Set config.
+     *
+     * @param name name of the config
+     * @return Set config or {@code null} when requested Set configuration does not exist
+     */
+    SetConfig findSetConfig(String name);
+
+    /**
+     * Finds existing ReplicatedMap config.
+     *
+     * @param name name of the config
+     * @return ReplicatedMap config or {@code null} when requested ReplicatedMap configuration does not exist
+     */
+    ReplicatedMapConfig findReplicatedMapConfig(String name);
+
+    /**
+     * Finds existing Reliable Topic config.
+     *
+     * @param name name of the config
+     * @return Reliable Topic config or {@code null} when requested Reliable Topic configuration does not exist
+     */
+    ReliableTopicConfig findReliableTopicConfig(String name);
+
+    /**
+     * Finds existing Cache config.
+     *
+     * @param name name of the config
+     * @return Cache config or {@code null} when requested Cache configuration does not exist
+     */
+    CacheSimpleConfig findCacheSimpleConfig(String name);
+
+    /**
+     * Finds existing FlakeIdGeneratorConfig config.
+     *
+     * @param name name of the config
+     * @return FlakeIdGenerator config or {@code null} when requested FlakeIdGenerator configuration does not exist
+     */
+    FlakeIdGeneratorConfig findFlakeIdGeneratorConfig(String name);
+
+    /**
+     * Returns all registered map configurations.
+     *
+     * @return registered map configurations
+     */
+    Map<String, MapConfig> getMapConfigs();
+
+    /**
+     * Returns all registered queue configurations.
+     *
+     * @return registered queue configurations
+     */
+    Map<String, QueueConfig> getQueueConfigs();
+
+    /**
+     * Returns all registered list configurations.
+     *
+     * @return registered list configurations
+     */
+    Map<String, ListConfig> getListConfigs();
+
+    /**
+     * Returns all registered set configurations.
+     *
+     * @return registered set configurations
+     */
+    Map<String, SetConfig> getSetConfigs();
+
+    /**
+     * Returns all registered multimap configurations.
+     *
+     * @return registered multimap configurations
+     */
+    Map<String, MultiMapConfig> getMultiMapConfigs();
+
+    /**
+     * Returns all registered replicated map configurations.
+     *
+     * @return registered replicated map configurations
+     */
+    Map<String, ReplicatedMapConfig> getReplicatedMapConfigs();
+
+    /**
+     * Returns all registered ringbuffer configurations.
+     *
+     * @return registered ringbuffer configurations
+     */
+    Map<String, RingbufferConfig> getRingbufferConfigs();
+
+    /**
+     * Returns all registered topic configurations.
+     *
+     * @return registered topic configurations
+     */
+    Map<String, TopicConfig> getTopicConfigs();
+
+    /**
+     * Returns all registered reliable topic configurations.
+     *
+     * @return registered reliable topic configurations
+     */
+    Map<String, ReliableTopicConfig> getReliableTopicConfigs();
+
+    /**
+     * Returns all registered executor configurations.
+     *
+     * @return registered executor configurations
+     */
+    Map<String, ExecutorConfig> getExecutorConfigs();
+
+    /**
+     * Returns all registered durable executor configurations.
+     *
+     * @return registered durable executor configurations
+     */
+    Map<String, DurableExecutorConfig> getDurableExecutorConfigs();
+
+    /**
+     * Returns all registered scheduled executor configurations.
+     *
+     * @return registered scheduled executor configurations
+     */
+    Map<String, ScheduledExecutorConfig> getScheduledExecutorConfigs();
+
+    /**
+     * Returns all registered cardinality estimator configurations.
+     *
+     * @return registered cardinality estimator configurations
+     */
+    Map<String, CardinalityEstimatorConfig> getCardinalityEstimatorConfigs();
+
+    /**
+     * Returns all registered PN counter configurations.
+     *
+     * @return registered PN counter configurations
+     */
+    Map<String, PNCounterConfig> getPNCounterConfigs();
+
+    /**
+     * Returns all registered cache configurations.
+     *
+     * @return registered cache configurations
+     */
+    Map<String, CacheSimpleConfig> getCacheSimpleConfigs();
+
+    /**
+     * Returns all registered FlakeIdGenerator configurations.
+     *
+     * @return registered FlakeIdGenerator configurations
+     */
+    Map<String, FlakeIdGeneratorConfig> getFlakeIdGeneratorConfigs();
+
+    /**
+     * Finds existing data connection config.
+     *
+     * @param name name of the config
+     * @return Data connection config or {@code null} when requested configuration does not exist
+     */
+    DataConnectionConfig findDataConnectionConfig(String name);
+
+    /**
+     * Returns all registered data connection configurations keyed by store's name.
+     *
+     * @return registered data connection configurations keyed by store's name
+     */
+    Map<String, DataConnectionConfig> getDataConnectionConfigs();
+
+    /**
+     * Finds existing WAN replication configuration by name.
+     *
+     * @param name name of the configuration
+     * @return WAN replication configuration or {@code null} when the requested configuration does not exist
+     */
+    WanReplicationConfig findWanReplicationConfig(String name);
+
+    /**
+     * Returns all registered WAN replication configurations keyed by configuration name.
+     *
+     * @return registered WAN replication configurations keyed by configuration name
+     */
+    Map<String, WanReplicationConfig> getWanReplicationConfigs();
+
+    /**
+     * Returns all registered namespace configurations keyed by configuration name.
+     *
+     * @return Namespace configurations keyed by configuration name
+     */
+    Map<String, UserCodeNamespaceConfig> getNamespaceConfigs();
+
+    VectorCollectionConfig findVectorCollectionConfig(String name);
+
+    Map<String, VectorCollectionConfig> getVectorCollectionConfigs();
+
+    /**
+     * Returns registered diagnostics configuration.
+     *
+     * @return registered diagnostics configuration
+     */
+    DiagnosticsConfig getDiagnosticsConfig();
+}

@@ -1,6 +1,6 @@
 # MongoDB Connector
 
-A Hazelcast Jet connector for MongoDB which enables Hazelcast Jet pipelines to 
+A Hecaton Jet connector for MongoDB which enables Hecaton Jet pipelines to 
 read/write data points from/to MongoDB.
 
 ## Connector Attributes
@@ -30,15 +30,15 @@ project:
 
 ```
 <dependency>
-    <groupId>com.hazelcast.jet</groupId>
-    <artifactId>hazelcast-jet-mongodb</artifactId>
+    <groupId>uk.org.hecaton.jet</groupId>
+    <artifactId>hecaton-jet-mongodb</artifactId>
     <version>${version}</version>
 </dependency>
 ```
 
 or if you are using Gradle: 
 ```
-compile group: 'com.hazelcast.jet', name: 'hazelcast-jet-mongodb', version: ${version}
+compile group: 'uk.org.hecaton.jet', name: 'hecaton-jet-mongodb', version: ${version}
 ```
 
 ## Usage
@@ -67,10 +67,10 @@ BatchStage<Document> srcStage = p.readFrom(batchSource);
 ```
 
 For more detail check out 
-[MongoSources](src/main/java/com/hazelcast/jet/mongodb/MongoSources.java),
-[MongoSourceBuilder](src/main/java/com/hazelcast/jet/mongodb/MongoSourceBuilder.java)
+[MongoSources](src/main/java/uk/org/hecaton/jet/mongodb/MongoSources.java),
+[MongoSourceBuilder](src/main/java/uk/org/hecaton/jet/mongodb/MongoSourceBuilder.java)
 and 
-[MongoSourceTest](src/test/java/com/hazelcast/jet/mongodb/MongoSourceTest.java).
+[MongoSourceTest](src/test/java/uk/org/hecaton/jet/mongodb/MongoSourceTest.java).
 
 ### As a Stream Source
 
@@ -115,18 +115,18 @@ StreamSourceStage<? extends Document> srcStage = p.readFrom(streamSource);
 ```
 
 For more detail check out 
-[MongoSources](src/main/java/com/hazelcast/jet/mongodb/MongoSources.java),
-[MongoSourceBuilder](src/main/java/com/hazelcast/jet/mongodb/MongoSourceBuilder.java)
+[MongoSources](src/main/java/uk/org/hecaton/jet/mongodb/MongoSources.java),
+[MongoSourceBuilder](src/main/java/uk/org/hecaton/jet/mongodb/MongoSourceBuilder.java)
 and 
-[MongoSourceTest](src/test/java/com/hazelcast/jet/mongodb/MongoSourceTest.java).
+[MongoSourceTest](src/test/java/uk/org/hecaton/jet/mongodb/MongoSourceTest.java).
 
 
 ### As a Sink
 
 MongoDB sink (`MongoSinks.mongodb()`) is used to write documents from 
-Hazelcast Jet Pipeline to MongoDB. 
+Hecaton Jet Pipeline to MongoDB. 
 
-Following is an example pipeline which reads out items from Hazelcast
+Following is an example pipeline which reads out items from Hecaton
 List, maps them to `Document` instances and writes them to MongoDB.
 
 ```java
@@ -144,10 +144,10 @@ p.readFrom(Sources.list(list))
 ```
 
 For more detail check out 
-[MongoSinks](src/main/java/com/hazelcast/jet/mongodb/MongoSinks.java),
-[MongoSinkBuilder](src/main/java/com/hazelcast/jet/mongodb/MongoSinkBuilder.java)
+[MongoSinks](src/main/java/uk/org/hecaton/jet/mongodb/MongoSinks.java),
+[MongoSinkBuilder](src/main/java/uk/org/hecaton/jet/mongodb/MongoSinkBuilder.java)
 and 
-[MongoSinkTest](src/test/java/com/hazelcast/jet/mongodb/MongoSinkTest.java).
+[MongoSinkTest](src/test/java/uk/org/hecaton/jet/mongodb/MongoSinkTest.java).
 
 ## Fault Tolerance
 

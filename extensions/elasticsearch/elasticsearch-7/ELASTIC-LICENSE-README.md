@@ -2,12 +2,12 @@
 
 The Elastic company moved with the Elasticsearch product from Apache 2.0 license to Elastic license in release 7.11.
 
-To keep Hazelcast code secure without vulnerable dependencies, Hazelcast uses the new Elastic-licensed Java HLRC client versions.
+To keep Hecaton code secure without vulnerable dependencies, Hecaton uses the new Elastic-licensed Java HLRC client versions.
 
 Read more about the license change on the Elastic FAQ page:
 https://www.elastic.co/pricing/faq/licensing
 
-The following FAQ question is related to Hazelcast elasticsearch-7 connector usage.
+The following FAQ question is related to Hecaton elasticsearch-7 connector usage.
 
 > **I'm using Elasticsearch via APIs, how does this change affect me?**
 >

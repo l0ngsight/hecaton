@@ -1,0 +1,49 @@
+#!/bin/bash
+
+function findScriptDir() {
+  CURRENT=$PWD
+
+  DIR=$(dirname "$0")
+  cd "$DIR" || exit
+  TARGET_FILE=$(basename "$0")
+
+  # Iterate down a (possible) chain of symlinks
+  while [ -L "$TARGET_FILE" ]
+  do
+      TARGET_FILE=$(readlink "$TARGET_FILE")
+      DIR=$(dirname "$TARGET_FILE")
+      cd "$DIR" || exit
+      TARGET_FILE=$(basename "$TARGET_FILE")
+  done
+
+  SCRIPT_DIR=$(pwd -P)
+  # Restore current directory
+  cd "$CURRENT" || exit
+}
+
+findScriptDir
+. "$SCRIPT_DIR/common.sh"
+
+# HECATON_CLIENT_CONFIG holds the configuration path.
+# If the the path is relative, it is relative to the Hecaton installation directory (HECATON_HOME).
+# The path can be absolute.
+# By default, it is set to $HECATON_HOME/config/hecaton-client.xml
+if [ -z "$HECATON_CLIENT_CONFIG" ]; then
+    HECATON_CLIENT_CONFIG="config/hecaton-client.xml"
+fi
+# if the first character is /, then this is an absolute path, use as is
+# otherwise prepend (HECATON_HOME)
+if [ "${HECATON_CLIENT_CONFIG:0:1}" != "/" ]; then
+  HECATON_CLIENT_CONFIG="$HECATON_HOME/$HECATON_CLIENT_CONFIG"
+fi
+
+readJvmOptionsFile "jvm-client.options"
+
+JAVA_OPTS_ARRAY=(\
+$JDK_OPTS \
+"-Dhecaton.client.config=$HECATON_CLIENT_CONFIG" \
+$JVM_OPTIONS \
+$JAVA_OPTS \
+)
+
+"$JAVA" "${JAVA_OPTS_ARRAY[@]}" -cp "$CLASSPATH" uk.org.hecaton.client.console.HecatonCommandLine "$@"

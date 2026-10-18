@@ -111,7 +111,7 @@ The change does not aim to protect against "zombie" operations
 ### IMap changes
 
 `IMap` modifying operations will throw `IndeterminateOperationStateException` 
-after `hazelcast.operation.backup.timeout.millis` if not all sync backups have been acked in time.
+after `hecaton.operation.backup.timeout.millis` if not all sync backups have been acked in time.
 Currently, in such case `IMap` operations return success.
 This behavior will be configurable using private `IMap` API on IMap-proxy level.
 This setting will apply only to single-key operations, it will not affect multi-key operations, for example `clear`.
@@ -238,7 +238,7 @@ Updated algorithm guarantees correctness by preserving the following invariants:
 6. There are no rolled back transactions for successful snapshot for which `JobExecutionRecord` is maybe safe or safe.
 7. There is never > 1 snapshot in progress for given job.
 8. Snapshot restore is never performed concurrently with snapshot taking or another restore for given job.
-   (guaranteed by various mechanisms in Hazelcast and Jet, among others
+   (guaranteed by various mechanisms in Hecaton and Jet, among others
    `MasterJobContext.scheduleRestartIfClusterIsNotSafe` and split-brain protection).
 
 To preserve them the following mechanisms are used:

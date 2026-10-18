@@ -7,7 +7,7 @@
 
 ### Description
 
-Hazelcast divides user data into partitions and shares these partitions
+Hecaton divides user data into partitions and shares these partitions
 among nodes to provide high availability and fault tolerance. There are
 at most 7 nodes, which are called *replicas*, and are numbered from 0
 to 6, which keep the data for a partition. The node that is assigned to
@@ -77,16 +77,16 @@ We provide safety of user data by copying the data to multiple members
 based on the user's backup configuration. When cluster is running in
 normal state (no cluster membership changes), user data is safe as
 promised. As described above, member list changes trigger repartitioning
-mechanism, and Hazelcast performs migrations and backup synchronisations
+mechanism, and Hecaton performs migrations and backup synchronisations
 to maintain a balanced partition distribution and data safety. Current
-migration system has a weakness here. Hazelcast performs migrations only
+migration system has a weakness here. Hecaton performs migrations only
 for partition owners. When backup of a partition changes, old backup
 owner just clears its data without checking if the new backup owner has
 received the backup data or not which means that available data copy
 count is being decreased during migrations. This approach increases
 possibility of data loss when there are node crashes during migrations.
 This problem is reported in our infamous github
-issue [hazelcast/issues/5444](https://github.com/hazelcast/hazelcast/issues/5444) .
+issue [hecaton/issues/5444](https://github.com/hazelcast/hazelcast/issues/5444) .
   
 
 ### Solutions

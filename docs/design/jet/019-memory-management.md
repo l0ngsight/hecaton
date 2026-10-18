@@ -120,5 +120,5 @@ has precedence over `InstanceConfig`'s one.
 `ProcessorMetaSupplier.Context.maxProcessorAccumulatedRecords()`.
 
 `Processor`s track number of accumulated records individually and throw
-`com.hazelcast.jet.impl.memory.AccumulationLimitExceededException` if
+`uk.org.hecaton.jet.impl.memory.AccumulationLimitExceededException` if
 limit is exceeded which fails the job.

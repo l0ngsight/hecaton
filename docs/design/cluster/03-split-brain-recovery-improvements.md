@@ -19,7 +19,7 @@
 
 |||
 |---|---|
-|Related Jira|_https://hazelcast.atlassian.net/browse/HZ-922_|
+|Related Jira|_https://hecaton.atlassian.net/browse/HZ-922_|
 |Related Github issues|_https://github.com/hazelcast/hazelcast/issues/17489_ _https://github.com/hazelcast/hazelcast/issues/17490_ _https://github.com/hazelcast/hazelcast/issues/18661_ _https://github.com/hazelcast/hazelcast/issues/20331_|
 |Document Status / Completeness|DRAFT|
 |Requirement owner|_Jiri Holusa_|
@@ -34,7 +34,7 @@
 
 There are some mismatches between current cluster join and split-brain merge
 protocols and in some cases, those inconsistencies result in the issues that the
-Hazelcast members which initially can form a cluster (join to each other) are
+Hecaton members which initially can form a cluster (join to each other) are
 not able to recover from the split-brain even though the network failure which
 caused the split-brain is healed. This is because the master member of the
 smaller cluster fails to discover the master member of the other bigger cluster,
@@ -80,7 +80,7 @@ cluster master member, then member never discovers the master of the bigger
 cluster and the split-brain merge never begins.
 
 <!--
-In this comment block, we describe how the cluster join of Hazelcast members
+In this comment block, we describe how the cluster join of Hecaton members
  happens:
 - A new member starts and tries to connect to the member addresses it
   has in its join configuration's member list or discovered by using
@@ -103,7 +103,7 @@ caused by failing to discover the master member of bigger cluster.
 
 #### Motivation
 
-We want to improve the resiliency and stability of the Hazelcast cluster by
+We want to improve the resiliency and stability of the Hecaton cluster by
 enabling it to recover split-brain conditions even in certain corner cases.
 Until now, some of the customers had problems with that this split-brain cluster
 merge process did not complete, and we want to eliminate such issues. That
@@ -131,9 +131,9 @@ In this task, we introduce a new REST endpoint for getting and updating the
 member list of the tcp-ip join config on the members at the runtime.
 
 The new REST endpoint for getting and updating the member list is
-`hazelcast/rest/config/tcp-ip/member-list`. Users can send GET request to this
+`hecaton/rest/config/tcp-ip/member-list`. Users can send GET request to this
 endpoint to fetch the current member list from the member and POST request for
-updating the member (note that in Hazelcast we're always using HTTP POST
+updating the member (note that in Hecaton we're always using HTTP POST
 requests for updating different elements so I followed that convention). API
 documention for this request is as follow (example request/response for this
 endpoint): 
@@ -141,7 +141,7 @@ endpoint):
 Request the fetch current member list in the join config:
 ```
 Request: 
-curl -X GET http://<member IP address>:<port>/hazelcast/rest/config/tcp-ip/member-list
+curl -X GET http://<member IP address>:<port>/hecaton/rest/config/tcp-ip/member-list
 Response:
 {"status":"success","member-list":["<member-1-address>","<member-2-address>","<member-3-address>", ...]}
 ```
@@ -151,7 +151,7 @@ cluster members.
 Request to update the member list
 ```
 Request:
-curl -X POST -H "Content-Type: text/plain" --data-urlencode "<cluster-name>" --data-urlencode "<cluster-password>" --data-urlencode "<member1-address>,<member2-address>,<member3-address>" http://<member IP address>:<port>/hazelcast/rest/config/tcp-ip/member-list
+curl -X POST -H "Content-Type: text/plain" --data-urlencode "<cluster-name>" --data-urlencode "<cluster-password>" --data-urlencode "<member1-address>,<member2-address>,<member3-address>" http://<member IP address>:<port>/hecaton/rest/config/tcp-ip/member-list
 
 Response:
 {"status":"success","message":"The member list of TCP-IP join config is updated at run time. ","member-list":["<member1-address>","<member2-address>","<member3-address>"]
@@ -165,8 +165,8 @@ master will find the bigger cluster's master member and the split brain merge
 will be able to proceed. 
 
 Also, we integrated the tcp-ip member list update support to already existing
-config update APIs that are namely `hazelcast/rest/config/update` and
-`hazelcast/rest/config/reload`. See the docs for it
+config update APIs that are namely `hecaton/rest/config/update` and
+`hecaton/rest/config/reload`. See the docs for it
 [here](https://docs.hazelcast.com/hazelcast/latest/configuration/dynamic-config-update-and-reload)
 
 #### Technical Design
@@ -190,7 +190,7 @@ after a specific amount of time passed after the members left the cluster. The
 default value for this retention period is selected as 4 hours which I wanted
 to choose it same with the default missing CP member auto removal period. Also,
 we added a property for configuring this period namely
-`hazelcast.tcp.join.previously.joined.member.address.retention.seconds`.
+`hecaton.tcp.join.previously.joined.member.address.retention.seconds`.
 
 #### Proposed Solution 2
 

@@ -24,60 +24,60 @@
 
     <!-- Exclude all package-info.java files and all files that need any specific headers -->
     <suppress checks="RegexpHeader" files="package-info.java"/>
-    <suppress checks="RegexpHeader" files="com.hazelcast.internal.hotrestart.impl.gc.ChunkPriorityQueue.java"/>
+    <suppress checks="RegexpHeader" files="uk.org.hecaton.internal.hotrestart.impl.gc.ChunkPriorityQueue.java"/>
     <!-- Suppress strict duplicate code checking -->
     <suppress checks="StrictDuplicateCode" files="\.java" lines="1-15"/>
 
-    <suppress checks="IllegalImport" files="com[\\/]hazelcast[\\/]internal[\\/]tpcengine[\\/]"/>
+    <suppress checks="IllegalImport" files="com[\\/]hecaton[\\/]internal[\\/]tpcengine[\\/]"/>
 
     <!-- Suppress checking of copyright notice -->
     <suppress checks="Header" files="classloading[\\/]ThreadLocalLeakTestUtils"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]buildutils[\\/]ElementParser"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]logging[\\/]Log4j2Factory"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]concurrent[\\/]package-info"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]cluster[\\/]fd[\\/]PhiAccrualFailureDetector"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]instance[\\/]impl[\\/]MobyNames"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]buildutils[\\/]ElementParser"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]logging[\\/]Log4j2Factory"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]package-info"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]cluster[\\/]fd[\\/]PhiAccrualFailureDetector"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]instance[\\/]impl[\\/]MobyNames"/>
 
     <!--  Suppress checking of copyright notice, adapted from the MicroRaft project  -->
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]state[\\/]FollowerState"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]state[\\/]FollowerStateTest"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]SlowFollowerBackoffTest"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]state[\\/]FollowerState"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]state[\\/]FollowerStateTest"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]SlowFollowerBackoffTest"/>
 
     <!--  Suppress checking of copyright notice, adapted from Agrona project  -->
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]HashUtil"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]QuickMath"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]concurrent[\\/]AbstractConcurrentArrayQueue"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]concurrent[\\/]ManyToOneConcurrentArrayQueue"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]concurrent[\\/]QueuedPipe"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]concurrent[\\/]Pipe"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]concurrent[\\/]OneToOneConcurrentArrayQueue"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]Long2ObjectHashMap"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]Long2LongHashMap"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]IntIterator"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]Hashing"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]MapDelegatingSet"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]BiInt2ObjectMap"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]IntHashSet"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]LongIterator"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]LongHashSet"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]Int2ObjectHashMap"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]Int2ObjectHashMapTest"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]Long2ObjectHashMapTest"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]BiInt2ObjectMapTest"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]LongHashSetTest"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]IntHashSetTest"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]Long2LongHashMapTest"/>
-    <suppress checks="Header" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]graph[\\/]BronKerboschCliqueFinder"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]HashUtil"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]QuickMath"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]AbstractConcurrentArrayQueue"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]ManyToOneConcurrentArrayQueue"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]QueuedPipe"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]Pipe"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]OneToOneConcurrentArrayQueue"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2ObjectHashMap"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2LongHashMap"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntIterator"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Hashing"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]MapDelegatingSet"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]BiInt2ObjectMap"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntHashSet"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongIterator"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongHashSet"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Int2ObjectHashMap"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Int2ObjectHashMapTest"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2ObjectHashMapTest"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]BiInt2ObjectMapTest"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongHashSetTest"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntHashSetTest"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2LongHashMapTest"/>
+    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]graph[\\/]BronKerboschCliqueFinder"/>
 
     <!-- Suppress checking of copyright notice in a file derived from Apache Tez -->
     <suppress checks="Header" files="TopologicalSorter"/>
     <suppress checks="Header" files="generated"/>
 
     <!-- Exclude internal, implementation and template packages from JavaDoc checks -->
-    <suppress checks="Javadoc(Package|Method|Type|Variable)" files="com[\\/]hazelcast[\\/]internal[\\/]"/>
+    <suppress checks="Javadoc(Package|Method|Type|Variable)" files="com[\\/]hecaton[\\/]internal[\\/]"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="[\\/]impl[\\/]"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="[\\/]template[\\/]"/>
-    <suppress checks="Javadoc(Package|Method|Type|Variable)" files="com[\\/]hazelcast[\\/]cp[\\/]internal[\\/]"/>
+    <suppress checks="Javadoc(Package|Method|Type|Variable)" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="org[\\/]apache[\\/]calcite[\\/]"/>
 
     <!-- Exclude copied Calcite files from FileLength checks -->
@@ -87,75 +87,75 @@
     <suppress checks="OuterTypeNumber" files="AbstractConcurrentArrayQueue\.java"/>
 
     <!-- ConsoleApp -->
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]client[\\/]console[\\/]ClientConsoleApp"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]client[\\/]console[\\/]ClientConsoleApp"/>
 
     <!-- Config -->
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]config[\\/]Config"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]config[\\/]Config"/>
     <suppress checks="FileLength"
-              files="com[\\/]hazelcast[\\/]internal[\\/]dynamicconfig[\\/]DynamicConfigurationAwareConfig"/>
+              files="com[\\/]hecaton[\\/]internal[\\/]dynamicconfig[\\/]DynamicConfigurationAwareConfig"/>
     <suppress checks="FileLength"
-              files="com[\\/]hazelcast[\\/]internal[\\/]dynamicconfig[\\/]DynamicConfigYamlGenerator"/>
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]internal[\\/]config[\\/]MemberDomConfigProcessor"/>
+              files="com[\\/]hecaton[\\/]internal[\\/]dynamicconfig[\\/]DynamicConfigYamlGenerator"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]internal[\\/]config[\\/]MemberDomConfigProcessor"/>
 
     <!-- Memory -->
-    <suppress checks="IllegalImport" files="com[\\/]hazelcast[\\/]internal[\\/]memory[\\/]impl[\\/]UnsafeUtil"/>
+    <suppress checks="IllegalImport" files="com[\\/]hecaton[\\/]internal[\\/]memory[\\/]impl[\\/]UnsafeUtil"/>
 
     <!-- JSON -->
-    <suppress checks="" files="[\\/]com[\\/]hazelcast[\\/]internal[\\/]json[\\/]"/>
+    <suppress checks="" files="[\\/]com[\\/]hecaton[\\/]internal[\\/]json[\\/]"/>
 
     <!-- Client -->
     <suppress checks="FileLength"
-              files="com[\\/]hazelcast[\\/]client[\\/]impl[\\/]proxy[\\/]ClientMapProxy"/>
+              files="com[\\/]hecaton[\\/]client[\\/]impl[\\/]proxy[\\/]ClientMapProxy"/>
 
     <!-- Client Protocol (auto-generated) -->
     <suppress checks="Length"
-              files="com[\\/]hazelcast[\\/]client[\\/]impl[\\/]protocol[\\/]DefaultMessageTaskFactoryProvider"/>
-    <suppress checks="UnusedImport|DeclarationOrder|MethodLength" files="com[\\/]hazelcast[\\/]client[\\/]impl[\\/]protocol[\\/]codec[\\/]"/>
+              files="com[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]DefaultMessageTaskFactoryProvider"/>
+    <suppress checks="UnusedImport|DeclarationOrder|MethodLength" files="com[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]codec[\\/]"/>
     <suppress checks="LineLength|VisibilityModifier|AvoidStarImport|RegexpSingleline|ParameterNumber|TypeName"
-              files="src[\\/]main[\\/]java[\\/]com[\\/]hazelcast[\\/]client[\\/]impl[\\/]protocol[\\/]codec[\\/]"/>
+              files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]codec[\\/]"/>
     <suppress checks="UnusedImport|DeclarationOrder"
-              files="com[\\/]hazelcast[\\/]internal[\\/]longregister[\\/]client[\\/]codec[\\/]"/>
+              files="com[\\/]hecaton[\\/]internal[\\/]longregister[\\/]client[\\/]codec[\\/]"/>
     <suppress checks="LineLength|VisibilityModifier|AvoidStarImport|RegexpSingleline|ParameterNumber"
-              files="src[\\/]main[\\/]java[\\/]com[\\/]hazelcast[\\/]internal[\\/]longregister[\\/]client[\\/]codec[\\/]"/>
+              files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]internal[\\/]longregister[\\/]client[\\/]codec[\\/]"/>
     <suppress checks="UnusedImport|LineLength|VisibilityModifier|AvoidStarImport|RegexpSingleline|ParameterNumber"
-              files="src[\\/]main[\\/]java[\\/]com[\\/]hazelcast[\\/]jet[\\/]impl[\\/]client[\\/]protocol[\\/]codec[\\/]"/>
+              files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]impl[\\/]client[\\/]protocol[\\/]codec[\\/]"/>
 
     <!-- Instance -->
-    <suppress checks="Javadoc(Method|Type|Variable)" files="com[\\/]hazelcast[\\/]instance[\\/]"/>
+    <suppress checks="Javadoc(Method|Type|Variable)" files="com[\\/]hecaton[\\/]instance[\\/]"/>
     <suppress checks="FileLength"
-              files="com[\\/]hazelcast[\\/]instance[\\/]impl[\\/]EnterpriseNodeExtension"/>
+              files="com[\\/]hecaton[\\/]instance[\\/]impl[\\/]EnterpriseNodeExtension"/>
 
     <!-- SPI -->
     <suppress checks="FileLength"
-              files="com[\\/]hazelcast[\\/]spi[\\/]impl[\\/]AbstractInvocationFuture"/>
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]spi[\\/]properties[\\/]ClusterProperty"/>
+              files="com[\\/]hecaton[\\/]spi[\\/]impl[\\/]AbstractInvocationFuture"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]spi[\\/]properties[\\/]ClusterProperty"/>
 
     <!-- SQL -->
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]jet[\\/]sql[\\/]impl[\\/]SqlPlanImpl"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]jet[\\/]sql[\\/]impl[\\/]SqlPlanImpl"/>
 
     <!-- Security -->
-    <suppress checks="Javadoc(Method|Type|Variable)" files="com[\\/]hazelcast[\\/]security[\\/]"/>
+    <suppress checks="Javadoc(Method|Type|Variable)" files="com[\\/]hecaton[\\/]security[\\/]"/>
 
     <!-- Partition -->
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]internal[\\/]partition[\\/]impl[\\/]InternalPartitionServiceImpl"/>
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]internal[\\/]partition[\\/]impl[\\/]MigrationManager"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]internal[\\/]partition[\\/]impl[\\/]InternalPartitionServiceImpl"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]internal[\\/]partition[\\/]impl[\\/]MigrationManager"/>
 
     <!-- CP Subsystem -->
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]cp[\\/]internal[\\/]RaftService"/>
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]RaftNodeImpl"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]RaftService"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]RaftNodeImpl"/>
 
     <!-- Spring -->
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]spring[\\/]HazelcastConfigBeanDefinitionParser"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]spring[\\/]HecatonConfigBeanDefinitionParser"/>
 
     <!-- Map -->
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]map[\\/]IMap"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]map[\\/]IMap"/>
     <suppress checks="FileLength" files="RecordStore.java"/>
 
     <!-- Adopted public domain code with different style -->
     <suppress
             checks="MagicNumber|FileLength|DeclarationOrder|RedundantModifier|InnerAssignment|NPathComplexity|CyclomaticComplexity"
-            files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]ConcurrentReferenceHashMap"/>
-    <suppress checks="" files="com[\\/]hazelcast[\\/]internal[\\/]util[\\/]collection[\\/]Object2LongHashMap"/>
+            files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]ConcurrentReferenceHashMap"/>
+    <suppress checks="" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Object2LongHashMap"/>
 
     <!-- Test suppressions -->
     <suppress
@@ -181,35 +181,35 @@
     <suppress
             checks="ExplicitInitialization|EqualsHashCode|MissingSwitchDefault|TrailingComment"
             files="[\\/]src[\\/]test[\\/]"/>
-    <suppress checks="" files="src[\\/]test[\\/]java[\\/]com[\\/]hazelcast[\\/]client[\\/]protocol[\\/]compatibility[\\/]"/>
-    <suppress checks="" files="src[\\/]test[\\/]java[\\/]com[\\/]hazelcast[\\/]nio[\\/]serialization[\\/]compatibility[\\/]"/>
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]jet[\\/]pipeline[\\/]Sources.java"/>
-    <suppress checks="FileLength" files="com[\\/]hazelcast[\\/]jet[\\/]pipeline[\\/]Sinks.java"/>
+    <suppress checks="" files="src[\\/]test[\\/]java[\\/]com[\\/]hecaton[\\/]client[\\/]protocol[\\/]compatibility[\\/]"/>
+    <suppress checks="" files="src[\\/]test[\\/]java[\\/]com[\\/]hecaton[\\/]nio[\\/]serialization[\\/]compatibility[\\/]"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]jet[\\/]pipeline[\\/]Sources.java"/>
+    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]jet[\\/]pipeline[\\/]Sinks.java"/>
     <suppress checks="OuterTypeNumber"
-              files="src[\\/]test[\\/]java[\\/]com[\\/]hazelcast[\\/]internal[\\/]hotrestart[\\/]impl[\\/]di[\\/]DiContainerTest"/>
+              files="src[\\/]test[\\/]java[\\/]com[\\/]hecaton[\\/]internal[\\/]hotrestart[\\/]impl[\\/]di[\\/]DiContainerTest"/>
 
     <!-- module-info.java -->
     <suppress checks="" files="[\\/]module-info"/>
 
-    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hazelcast[\\/]jet[\\/]aggregate[\\/]AggregateOperations"/>
-    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hazelcast[\\/]jet[\\/]config[\\/]JobConfig"/>
-    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hazelcast[\\/]jet[\\/]impl[\\/]JobCoordinationService"/>
+    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]aggregate[\\/]AggregateOperations"/>
+    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]config[\\/]JobConfig"/>
+    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]impl[\\/]JobCoordinationService"/>
 
-    <suppress checks="InnerAssignment|JavadocType|TrailingComment|MethodCount|OperatorWrap|ClassDataAbstractionCoupling|ClassFanOutComplexity|CyclomaticComplexity|NPathComplexity|MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]hazelcast[\\/]jet[\\/]"/>
-    <suppress checks="OperatorWrap" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]hazelcast[\\/]jet[\\/]"/>
-    <suppress checks="VisibilityModifier" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]hazelcast[\\/]jet[\\/]impl[\\/]"/>
+    <suppress checks="InnerAssignment|JavadocType|TrailingComment|MethodCount|OperatorWrap|ClassDataAbstractionCoupling|ClassFanOutComplexity|CyclomaticComplexity|NPathComplexity|MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]"/>
+    <suppress checks="OperatorWrap" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]"/>
+    <suppress checks="VisibilityModifier" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]impl[\\/]"/>
 
     <suppress checks="" files="target[\\/]generated-sources"/>
     <suppress checks="" files="target[\\/]generated-test-sources"/>
 
     <!-- Javadoc suppressions -->
-    <suppress checks="JavadocPackage" files="com[\\/]hazelcast[\\/]security[\\/]"/>
+    <suppress checks="JavadocPackage" files="com[\\/]hecaton[\\/]security[\\/]"/>
     <!-- Split OS/EE package -->
-    <suppress checks="JavadocPackage" files="com[\\/]hazelcast[\\/]jet[\\/]pipeline[\\/][^\\/]*$"/>
+    <suppress checks="JavadocPackage" files="com[\\/]hecaton[\\/]jet[\\/]pipeline[\\/][^\\/]*$"/>
 
     <!-- Hot restart module -->
     <suppress checks="FileLength"
-              files="com[\\/]hazelcast[\\/]internal[\\/]hotrestart[\\/]cluster[\\/]ClusterMetadataManager\.java"/>
+              files="com[\\/]hecaton[\\/]internal[\\/]hotrestart[\\/]cluster[\\/]ClusterMetadataManager\.java"/>
   
     <!-- BPlusTree -->
     <suppress checks="FileLength" files="HDBPlusTree.java"/>

@@ -8,7 +8,7 @@ Provide an automated way of doing dynamic security scanning of the IMDG cluster.
 
 ## Goals
 
-* introduce automated dynamic security scanning of Hazelcast clusters;
+* introduce automated dynamic security scanning of Hecaton clusters;
 * define set of scenarios to be covered;
 * implement unified reporting;
 
@@ -19,11 +19,11 @@ Provide an automated way of doing dynamic security scanning of the IMDG cluster.
 
 ## Motivation
 
-Hazelcast users/customers may be bound by security requirements defined
+Hecaton users/customers may be bound by security requirements defined
 for libraries and tools used in their products. The requirements may
 require static and dynamic security scans.
 
-Hazelcast already has regular static scans (e.g. Sonar, Black Duck),
+Hecaton already has regular static scans (e.g. Sonar, Black Duck),
 but we are missing dynamic scans focused on evaluating a running cluster.
 
 This design document describes a dynamic security scanning approach that can be used.
@@ -45,16 +45,16 @@ Greenbone company also drives the development of related software:
 * Greenbone Security Assistant (GSA) - web interface developed
 * GVM tools - `gvm-cli` and Python library with helper `gvm-script` and `gvm-pyshell` launchers
 
-These tools can be utilized and development can be focused on the integration into the Hazelcast CI/CD toolchain.
+These tools can be utilized and development can be focused on the integration into the Hecaton CI/CD toolchain.
 
-### Scenarios (Hazelcast configurations)
+### Scenarios (Hecaton configurations)
 
 The security scanning will be performed on node configurations where additional
 protocols (REST, Memcached) will be explicitly enabled.
 
 The initial implementation should provide 3 networking configuration:
 * default networking
-* default networking + TLS (Hazelcast Enterprise only)
+* default networking + TLS (Hecaton Enterprise only)
 * advanced networking
 
 The sample network configurations for these items are listed later in this section.
@@ -131,7 +131,7 @@ After the security scan, the cluster will be checked if it's still in a safe sta
     <member-server-socket-endpoint-config>
         <port auto-increment="false">5701</port>
     </member-server-socket-endpoint-config>
-    <!-- server socket listening for connections from hazelcast clients -->
+    <!-- server socket listening for connections from hecaton clients -->
     <client-server-socket-endpoint-config>
         <port auto-increment="false" port-count="100">9999</port>
     </client-server-socket-endpoint-config>
@@ -161,7 +161,7 @@ its maintainability would be costly. Therefore this idea was abandoned.
 
 ## User Interaction
 
-New Jenkins CI jobs will be created and placed into a new view. These jobs will allow testing Hazelcast Docker images
+New Jenkins CI jobs will be created and placed into a new view. These jobs will allow testing Hecaton Docker images
 with custom configurations (basic config, advanced networking, TLS enabled).
 
 Greenbone security assistant web interface will be deployed so it's simple to define manual scans of systems and review
@@ -179,30 +179,30 @@ PORT_LISTs = comma-separated port definitions (e.g. T8080,T5701-5703)
 The optional third parameter is a path the result PDF file.
 ```
 
-Jenkins jobs will be responsible for starting the Hazelcast member (or cluster) and executing the `scan.gmp.py`
+Jenkins jobs will be responsible for starting the Hecaton member (or cluster) and executing the `scan.gmp.py`
 script against it.
 
 ```bash
 gvm-script --gmp-username "$GVM_USER" --gmp-password "$GVM_PASSWORD" tls --hostname $GVM_HOST \
-      scan.gmp.py "$HAZELCAST_ADDRESSES" "$PORT_LISTS" ${JOB_NAME}-report.pdf
+      scan.gmp.py "$HECATON_ADDRESSES" "$PORT_LISTS" ${JOB_NAME}-report.pdf
 ```
 
 Related links:
-* https://github.com/hazelcast/hazelcast-qe/tree/master/gvm - contains the `scan.gmp.py`, helper bash scripts for Jenkins and Hazelcast member configuration files.
+* https://github.com/hazelcast/hazelcast-qe/tree/master/gvm - contains the `scan.gmp.py`, helper bash scripts for Jenkins and Hecaton member configuration files.
 * http://jenkins.hazelcast.com/view/GVM/ - Jenkins view for security scan jobs
-* http://jenkins.hazelcast.com/view/GVM/job/gvm-trigger-for-hazelcast-docker-tag/ - Jenkins trigger job which runs security scans for several Hazelcast configurations and then puts result reports into a ZIP file
+* http://jenkins.hazelcast.com/view/GVM/job/gvm-trigger-for-hazelcast-docker-tag/ - Jenkins trigger job which runs security scans for several Hecaton configurations and then puts result reports into a ZIP file
 
 ### GVM Docker image
 
 Related links:
-* https://hub.docker.com/r/devopshazelcast/gvm - Docker repository with Greenbone Vulnerability Manager image (`devopshazelcast/gvm`)
-* https://github.com/hazelcast-dockerfiles/GVM-Docker - the `Dockerfile` source repository (for `devopshazelcast/gvm` Docker image)
+* https://hub.docker.com/r/devopshazelcast/gvm - Docker repository with Greenbone Vulnerability Manager image (`devopshecaton/gvm`)
+* https://github.com/hazelcast-dockerfiles/GVM-Docker - the `Dockerfile` source repository (for `devopshecaton/gvm` Docker image)
 
-### Snapshot Hazelcast Docker images
+### Snapshot Hecaton Docker images
 
 To have a possibility to scan the current codebase new Docker images will be published
-on Docker push to our repositories (`hazelcast`, `hazelcast-enterprise`).
-Each repository will have a "snapshot counterpart" in the `hazelcast-dockerfiles` GitHub organization.
+on Docker push to our repositories (`hecaton`, `hecaton-enterprise`).
+Each repository will have a "snapshot counterpart" in the `hecaton-dockerfiles` GitHub organization.
 The new snapshot repositories will contain `Dockerfiles` used to build the snapshot images.
 Branch names in snapshot repositories will mirror the names in the base repositories.
 
@@ -212,10 +212,10 @@ Docker tags will be based on branch names. E.g.:
 * `4.1.z` -> `4.1.z`
 
 Related links:
-* Hazelcast Docker snapshots:
+* Hecaton Docker snapshots:
   * https://github.com/hazelcast-dockerfiles/hazelcast-snapshot
   * https://hub.docker.com/r/devopshazelcast/hazelcast-snapshot
-* Hazelcast Enterprise Docker snapshots:
+* Hecaton Enterprise Docker snapshots:
   * https://github.com/hazelcast-dockerfiles/hazelcast-enterprise-snapshot
   * https://hub.docker.com/r/devopshazelcast/hazelcast-enterprise-snapshot
 

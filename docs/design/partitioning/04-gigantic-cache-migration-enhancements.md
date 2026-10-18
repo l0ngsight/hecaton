@@ -53,7 +53,7 @@ Two new user facing features are introduced. 
     promotes local member to a data member when invoked on a lite
     member.   
 
--   `hazelcast.partition.migration.fragments.enabled` property is
+-   `hecaton.partition.migration.fragments.enabled` property is
     introduced to enable/disable fragmented migrations.
 
 ## Technical Design
@@ -191,7 +191,7 @@ the migration flag so that there will be no further update in the
 partition data. Once migration is initiated and migration flag is set,
 until migration of the partition is completed, no updates are allowed on
 that partition. Reads are allowed unless it's explicitly disabled by
-system property `hazelcast.partition.migration.stale.read.disabled`.
+system property `hecaton.partition.migration.stale.read.disabled`.
 There is no change in this part, existing behaviour is kept as is. In
 the future, we can allow updates to pending namespaces, fragments of the
 partitions those are not migrated yet. 
@@ -265,6 +265,6 @@ applied the same way. On migration finalization, all migrated namespace
 replica versions are committed / rolled back. 
 
 Fragmented migration can be disabled by setting configuration
-property `hazelcast.partition.migration.fragments.enabled `to` false. `When
+property `hecaton.partition.migration.fragments.enabled `to` false. `When
 fragmented migration is disabled, partitions are migrated in a single
 chunk as it's done before.

@@ -1,0 +1,626 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.impl;
+
+import uk.org.hecaton.client.impl.ClientEngine;
+import uk.org.hecaton.client.impl.ClientEngineImpl;
+import uk.org.hecaton.client.impl.protocol.ClientExceptionFactory;
+import uk.org.hecaton.cluster.Address;
+import uk.org.hecaton.cluster.ClusterState;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.MapConfig;
+import uk.org.hecaton.config.MergePolicyConfig;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.function.BiFunctionEx;
+import uk.org.hecaton.instance.impl.HecatonBootstrap;
+import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.instance.impl.NodeState;
+import uk.org.hecaton.internal.cluster.ClusterStateListener;
+import uk.org.hecaton.internal.metrics.impl.MetricsService;
+import uk.org.hecaton.internal.nio.Packet;
+import uk.org.hecaton.internal.partition.InternalPartitionService;
+import uk.org.hecaton.internal.serialization.InternalSerializationService;
+import uk.org.hecaton.internal.services.ManagedService;
+import uk.org.hecaton.internal.services.MembershipAwareService;
+import uk.org.hecaton.internal.services.MembershipServiceEvent;
+import uk.org.hecaton.internal.util.InvocationUtil;
+import uk.org.hecaton.jet.JetException;
+import uk.org.hecaton.jet.JetService;
+import uk.org.hecaton.jet.config.JetConfig;
+import uk.org.hecaton.jet.config.JobConfig;
+import uk.org.hecaton.jet.core.JobNotFoundException;
+import uk.org.hecaton.jet.impl.execution.TaskletExecutionService;
+import uk.org.hecaton.jet.impl.metrics.JobMetricsPublisher;
+import uk.org.hecaton.jet.impl.operation.NotifyMemberShutdownOperation;
+import uk.org.hecaton.jet.impl.operation.PrepareForPassiveClusterOperation;
+import uk.org.hecaton.jet.impl.serialization.DelegatingSerializationService;
+import uk.org.hecaton.jet.impl.submitjob.memberside.JobMetaDataParameterObject;
+import uk.org.hecaton.jet.impl.submitjob.memberside.JobMultiPartParameterObject;
+import uk.org.hecaton.jet.impl.submitjob.memberside.JobUploadStatus;
+import uk.org.hecaton.jet.impl.submitjob.memberside.JobUploadStore;
+import uk.org.hecaton.jet.impl.submitjob.memberside.validator.JarOnClientValidator;
+import uk.org.hecaton.jet.impl.submitjob.memberside.validator.JarOnMemberValidator;
+import uk.org.hecaton.jet.impl.util.ExceptionUtil;
+import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.map.IMap;
+import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
+import uk.org.hecaton.spi.impl.operationservice.LiveOperations;
+import uk.org.hecaton.spi.impl.operationservice.LiveOperationsTracker;
+import uk.org.hecaton.spi.impl.operationservice.Operation;
+import uk.org.hecaton.spi.merge.DiscardMergePolicy;
+import uk.org.hecaton.spi.merge.LatestUpdateMergePolicy;
+import uk.org.hecaton.spi.properties.HecatonProperties;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.security.AccessControlException;
+import java.security.Permission;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
+import static uk.org.hecaton.cluster.ClusterState.PASSIVE;
+import static uk.org.hecaton.config.MapConfig.DISABLED_TTL_SECONDS;
+import static uk.org.hecaton.internal.util.ExceptionUtil.sneakyThrow;
+import static uk.org.hecaton.jet.impl.JobRepository.INTERNAL_JET_OBJECTS_PREFIX;
+import static uk.org.hecaton.jet.impl.JobRepository.JOB_METRICS_MAP_NAME;
+import static uk.org.hecaton.jet.impl.JobRepository.JOB_RESULTS_MAP_NAME;
+import static uk.org.hecaton.jet.impl.util.ExceptionUtil.rethrow;
+import static uk.org.hecaton.jet.impl.util.Util.memoizeConcurrent;
+import static uk.org.hecaton.spi.properties.ClusterProperty.JOB_RESULTS_TTL_SECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+public class JetServiceBackend implements ManagedService, MembershipAwareService, ClusterStateListener,
+        LiveOperationsTracker, Consumer<Packet> {
+
+    public static final String SERVICE_NAME = "hz:impl:jetService";
+    public static final String SQL_ARGUMENTS_KEY_NAME = "__sql.arguments";
+    public static final String SQL_CATALOG_MAP_NAME = "__sql.catalog";
+    public static final int MAX_PARALLEL_ASYNC_OPS = 1000;
+
+    private static final int NOTIFY_MEMBER_SHUTDOWN_DELAY = 5;
+    private static final int SHUTDOWN_JOBS_MAX_WAIT_SECONDS = 10;
+
+    private static final int JOB_UPLOAD_STORE_PERIOD = 30;
+
+    private NodeEngineImpl nodeEngine;
+    private final ILogger logger;
+    private final LiveOperationRegistry liveOperationRegistry;
+    private final AtomicReference<CompletableFuture<Void>> shutdownFuture = new AtomicReference<>();
+    private final JetConfig jetConfig;
+
+    private JetService jet;
+    private Networking networking;
+    private TaskletExecutionService taskletExecutionService;
+    private JobRepository jobRepository;
+    private JobCoordinationService jobCoordinationService;
+    private JobClassLoaderService jobClassLoaderService;
+    private JobExecutionService jobExecutionService;
+    private final AtomicInteger numConcurrentAsyncOps = new AtomicInteger();
+    private final Supplier<int[]> sharedPartitionKeys = memoizeConcurrent(this::computeSharedPartitionKeys);
+    private final JobUploadStore jobUploadStore = new JobUploadStore();
+    private final ConcurrentMap<String, Long> connectorInitializeCounts = new ConcurrentHashMap<>();
+    private ScheduledFuture<?> jobUploadStoreCheckerFuture;
+
+    public JetServiceBackend(Node node) {
+        this.logger = node.getLogger(getClass());
+        this.liveOperationRegistry = new LiveOperationRegistry();
+        this.jetConfig = node.getConfig().getJetConfig();
+    }
+
+    // ManagedService
+    @Override
+    public void init(NodeEngine engine, Properties hzProperties) {
+        this.nodeEngine = (NodeEngineImpl) engine;
+        this.jet = new JetInstanceImpl(nodeEngine.getNode().hecatonInstance, jetConfig);
+        jobRepository = new JobRepository(engine.getHecatonInstance());
+        taskletExecutionService = new TaskletExecutionService(
+                nodeEngine, jetConfig.getCooperativeThreadCount(), nodeEngine.getProperties()
+        );
+        jobCoordinationService = createJobCoordinationService();
+        jobClassLoaderService = new JobClassLoaderService(nodeEngine, jobRepository);
+        jobExecutionService = new JobExecutionService(nodeEngine, taskletExecutionService, jobClassLoaderService);
+
+        MetricsService metricsService = nodeEngine.getService(MetricsService.SERVICE_NAME);
+        metricsService.registerPublisher(nodeEngine ->
+                new JobMetricsPublisher(jobExecutionService, nodeEngine.getLocalMember()));
+        nodeEngine.getMetricsRegistry().registerDynamicMetricsProvider(jobCoordinationService);
+        nodeEngine.getMetricsRegistry().registerDynamicMetricsProvider(jobExecutionService);
+        networking = new Networking(engine, jobExecutionService, jetConfig.getFlowControlPeriodMs());
+
+        ClientEngine clientEngine = engine.getService(ClientEngineImpl.SERVICE_NAME);
+        ClientExceptionFactory clientExceptionFactory = clientEngine.getExceptionFactory();
+        if (clientExceptionFactory != null) {
+            ExceptionUtil.registerJetExceptions(clientExceptionFactory);
+        } else {
+            logger.fine("Jet exceptions are not registered to the ClientExceptionFactory%s",
+                    " since the ClientExceptionFactory is not accessible.");
+        }
+        logger.info("Setting number of cooperative threads and default parallelism to "
+                    + jetConfig.getCooperativeThreadCount());
+
+        // Run periodically to clean expired jar uploads
+        this.jobUploadStoreCheckerFuture = nodeEngine.getExecutionService().scheduleWithRepetition(
+                jobUploadStore::cleanExpiredUploads, 0, JOB_UPLOAD_STORE_PERIOD, SECONDS);
+    }
+
+    public ConcurrentMap<String, Long> getConnectorInitializeCounts() {
+        return connectorInitializeCounts;
+    }
+
+    public void configureJetInternalObjects(Config config, HecatonProperties properties) {
+        JetConfig jetConfig = config.getJetConfig();
+        MapConfig internalMapConfig = new MapConfig(INTERNAL_JET_OBJECTS_PREFIX + '*')
+                .setBackupCount(jetConfig.getBackupCount())
+                // we query creationTime of resources maps
+                .setStatisticsEnabled(true);
+
+        internalMapConfig.getMergePolicyConfig().setPolicy(DiscardMergePolicy.class.getName());
+
+        MapConfig resultsMapConfig = new MapConfig(internalMapConfig)
+                .setName(JOB_RESULTS_MAP_NAME)
+                .setTimeToLiveSeconds(properties.getSeconds(JOB_RESULTS_TTL_SECONDS));
+
+        MapConfig metricsMapConfig = new MapConfig(internalMapConfig)
+                .setName(JOB_METRICS_MAP_NAME)
+                .setTimeToLiveSeconds(properties.getSeconds(JOB_RESULTS_TTL_SECONDS));
+
+        config.addMapConfig(internalMapConfig)
+                .addMapConfig(resultsMapConfig)
+                .addMapConfig(metricsMapConfig)
+                .addMapConfig(createSqlCatalogConfig());
+    }
+
+    // visible for tests
+    static MapConfig createSqlCatalogConfig() {
+        // TODO HZ-1743 when implemented properly align this with the chosen
+        //  approach that HZ-1743 follows
+        return new MapConfig(SQL_CATALOG_MAP_NAME)
+                .setBackupCount(MapConfig.MAX_BACKUP_COUNT)
+                .setAsyncBackupCount(MapConfig.MIN_BACKUP_COUNT)
+                .setTimeToLiveSeconds(DISABLED_TTL_SECONDS)
+                .setReadBackupData(true)
+                .setMergePolicyConfig(new MergePolicyConfig().setPolicy(LatestUpdateMergePolicy.class.getName()))
+                .setPerEntryStatsEnabled(true);
+    }
+
+    /**
+     * Tells master to gracefully terminate jobs on this member. Blocks until
+     * all are down.
+     */
+    public void shutDownJobs() {
+        if (shutdownFuture.compareAndSet(null, new CompletableFuture<>())) {
+            notifyAllMembersWeAreShuttingDown(shutdownFuture.get());
+        }
+        try {
+            CompletableFuture<Void> future = shutdownFuture.get();
+            future.get(SHUTDOWN_JOBS_MAX_WAIT_SECONDS, SECONDS);
+            // Note that at this point there can still be executions running - those for light jobs
+            // or those created automatically after a packet was received.
+            // They are all non-fault-tolerant or contain only the packets, that will be dropped
+            // when this member actually shuts down.
+        } catch (Exception e) {
+            logger.severe("Shutdown jobs timeout", e);
+        }
+    }
+
+    private void notifyNonMasterMembersWeAreShuttingDown(Address masterAddress) {
+        Supplier<Operation> operationSupplier = NotifyMemberShutdownOperation::new;
+        var localAddress = nodeEngine.getThisAddress();
+        InvocationUtil.invokeOnStableClusterParallel(
+                nodeEngine,
+                operationSupplier,
+                0,
+                member -> !member.getAddress().equals(masterAddress) && !member.getAddress().equals(localAddress)
+        ).whenComplete((r, t) -> {
+            if (t != null) {
+                logger.warning(
+                        "Some non-master members encountered errors during the notification process about the shutdown member "
+                                + nodeEngine.getNode().getThisUuid(),
+                        t
+                );
+            } else {
+                logger.fine("All non-master members were informed about the shutdown of member %s",
+                        nodeEngine.getNode().getThisUuid());
+            }
+        });
+    }
+
+    private void notifyAllMembersWeAreShuttingDown(CompletableFuture<Void> future) {
+        var fixedMasterAddress = nodeEngine.getMasterAddress();
+        // we not guarantee the delivery of information to non-master members
+        // in order not to delay shutdown of this member. If the notification is lost
+        // some light jobs coordinated by those members can fail.
+        notifyNonMasterMembersWeAreShuttingDown(fixedMasterAddress);
+        // we guarantee delivery of information to the master
+        notifyMasterWeAreShuttingDown(future, fixedMasterAddress);
+    }
+
+    private void notifyMasterWeAreShuttingDown(CompletableFuture<Void> future, Address masterAddress) {
+        Operation op = new NotifyMemberShutdownOperation();
+        nodeEngine.getOperationService()
+                .invokeOnTarget(JetServiceBackend.SERVICE_NAME, op, masterAddress)
+                .whenCompleteAsync((response, throwable) -> {
+                    // if there is an error and the node is still ACTIVE, try again. If the node isn't ACTIVE, log & ignore.
+                    NodeState nodeState = nodeEngine.getNode().getState();
+                    if (throwable != null && nodeState == NodeState.ACTIVE) {
+                        logger.warning("Failed to notify master member that this member is shutting down," +
+                                " will retry in " + NOTIFY_MEMBER_SHUTDOWN_DELAY + " seconds", throwable);
+                        // recursive call
+                        nodeEngine.getExecutionService().schedule(
+                                () -> notifyMasterWeAreShuttingDown(future, nodeEngine.getMasterAddress()),
+                                NOTIFY_MEMBER_SHUTDOWN_DELAY,
+                                SECONDS
+                        );
+                    } else {
+                        if (throwable != null) {
+                            logger.warning("Failed to notify master member that this member is shutting down," +
+                                    " but this member is " + nodeState + ", so not retrying", throwable);
+                        }
+                        future.complete(null);
+                    }
+                });
+
+    }
+
+    @Override
+    public void shutdown(boolean forceful) {
+        // Cancel timer
+        if (jobUploadStoreCheckerFuture != null) {
+            jobUploadStoreCheckerFuture.cancel(true);
+        }
+
+        if (jobExecutionService != null) {
+            jobExecutionService.shutdown();
+        }
+
+        if (taskletExecutionService != null) {
+            taskletExecutionService.shutdown();
+            taskletExecutionService.awaitWorkerTermination();
+        }
+
+        if (networking != null) {
+            networking.shutdown();
+        }
+    }
+
+    @Override
+    public void reset() {
+        jobExecutionService.reset();
+        jobCoordinationService.reset();
+    }
+
+    // Overridden in EE with EnterpriseJobCoordinationService
+    JobCoordinationService createJobCoordinationService() {
+        return new JobCoordinationService(nodeEngine, this, jetConfig, jobRepository);
+    }
+
+    public InternalSerializationService createSerializationService(Map<String, String> serializerConfigs) {
+        return DelegatingSerializationService
+                .from(getNodeEngine().getSerializationService(), serializerConfigs);
+    }
+
+    @SuppressWarnings("unused") // parameters are used from jet-enterprise
+    public Operation createExportSnapshotOperation(long jobId, String name, boolean cancelJob) {
+        throw new UnsupportedOperationException("You need Hecaton Enterprise to use this feature");
+    }
+
+    public JetService getJet() {
+        return this.jet;
+    }
+
+    public LiveOperationRegistry getLiveOperationRegistry() {
+        return liveOperationRegistry;
+    }
+
+    public JobRepository getJobRepository() {
+        return jobRepository;
+    }
+
+    public static boolean isNamespaceReferencedInActiveJobs(NodeEngine nodeEngine, String namespace) {
+        JetServiceBackend jet = nodeEngine.getServiceOrNull(JetServiceBackend.SERVICE_NAME);
+        return jet != null && jet.isNamespaceReferencedInActiveJobs(namespace);
+    }
+
+    public boolean isNamespaceReferencedInActiveJobs(String namespace) {
+        return false;
+    }
+
+    public NodeEngineImpl getNodeEngine() {
+        return nodeEngine;
+    }
+
+    public JetConfig getJetConfig() {
+        return jetConfig;
+    }
+
+    public JobCoordinationService getJobCoordinationService() {
+        return jobCoordinationService;
+    }
+
+    public JobClassLoaderService getJobClassLoaderService() {
+        return jobClassLoaderService;
+    }
+
+    public JobExecutionService getJobExecutionService() {
+        return jobExecutionService;
+    }
+
+    /**
+     * Returns the job config or fails with {@link JobNotFoundException}
+     * if the requested job is not found.
+     */
+    public JobConfig getJobConfig(long jobId, boolean isLightJob) {
+        if (isLightJob) {
+            return jobCoordinationService.getLightJobConfig(jobId);
+        }
+
+        JobRecord jobRecord = jobRepository.getJobRecord(jobId);
+        if (jobRecord != null) {
+            return jobRecord.getConfig();
+        }
+
+        JobResult jobResult = jobRepository.getJobResult(jobId);
+        if (jobResult != null) {
+            return jobResult.getJobConfig();
+        }
+
+        throw new JobNotFoundException(jobId);
+    }
+
+    @Override
+    public void accept(Packet packet) {
+        try {
+            networking.handle(packet);
+        } catch (IOException e) {
+            throw sneakyThrow(e);
+        }
+    }
+
+    @Override
+    public void memberRemoved(MembershipServiceEvent event) {
+        jobExecutionService.onMemberRemoved(event.getMember());
+        jobCoordinationService.onMemberRemoved(event.getMember().getUuid());
+    }
+
+    @Override
+    public void memberAdded(MembershipServiceEvent event) {
+        jobCoordinationService.onMemberAdded(event.getMember());
+    }
+
+    @Override
+    public void onClusterStateChange(ClusterState newState) {
+        getJobCoordinationService().clusterChangeDone();
+    }
+
+    public AtomicInteger numConcurrentAsyncOps() {
+        return numConcurrentAsyncOps;
+    }
+
+    @Override
+    public void populate(LiveOperations liveOperations) {
+        liveOperationRegistry.populate(liveOperations);
+    }
+
+    /**
+     * Returns an array of pre-generated keys, one for each partition. At index
+     * <em>i</em> there's a key, that we know will go to partition <em>i</em>.
+     */
+    public int[] getSharedPartitionKeys() {
+        return sharedPartitionKeys.get();
+    }
+
+    private int[] computeSharedPartitionKeys() {
+        InternalPartitionService partitionService = nodeEngine.getPartitionService();
+        int[] keys = new int[partitionService.getPartitionCount()];
+        int remainingCount = partitionService.getPartitionCount();
+        for (int i = 1; remainingCount > 0; i++) {
+            int partitionId = partitionService.getPartitionId(i);
+            if (keys[partitionId] == 0) {
+                keys[partitionId] = i;
+                remainingCount--;
+            }
+        }
+        return keys;
+    }
+
+    public TaskletExecutionService getTaskletExecutionService() {
+        return taskletExecutionService;
+    }
+
+    public void beforeClusterStateChange(ClusterState requestedState) {
+        if (requestedState == PASSIVE) {
+            try {
+                nodeEngine.getOperationService().createMasterInvocationBuilder(JetServiceBackend.SERVICE_NAME,
+                                new PrepareForPassiveClusterOperation())
+                        .invoke().get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw rethrow(e);
+            }
+        }
+    }
+
+    public void startScanningForJobs() {
+        jobCoordinationService.startScanningForJobs();
+    }
+
+    /**
+     * Execute the given jar
+     */
+    public void jarOnMember(JobMetaDataParameterObject jobMetaDataParameterObject) {
+        // Performs validations before processing the request
+        JarOnMemberValidator.validate(jobMetaDataParameterObject);
+
+        executeJar(jobMetaDataParameterObject);
+    }
+
+    /**
+     * Store the metadata about the jar that is uploaded from client side
+     */
+    public void jarOnClient(JobMetaDataParameterObject jobMetaDataParameterObject) {
+        // Performs validations before processing the request
+        checkResourceUploadEnabled();
+        JarOnClientValidator.validate(jobMetaDataParameterObject);
+
+        try {
+            // Delegate processing to store
+            jobUploadStore.processJobMetaData(jobMetaDataParameterObject);
+        } catch (Exception exception) {
+            // Upon exception, remove from the store
+            jobUploadStore.removeBadSession(jobMetaDataParameterObject.getSessionId());
+
+            throwJetExceptionFromJobMetaData(jobMetaDataParameterObject, exception);
+        }
+    }
+
+    /**
+     * Store a part of jar that is uploaded
+     */
+    public void storeJobMultiPart(JobMultiPartParameterObject jobMultiPartParameterObject) {
+        try {
+            JobMetaDataParameterObject partsComplete = jobUploadStore.processJobMultipart(jobMultiPartParameterObject);
+            // If parts are complete
+            if (partsComplete != null) {
+                // Execute the jar
+                executeJar(partsComplete);
+            }
+        } catch (Exception exception) {
+            // Upon exception, remove from the store
+            JobUploadStatus jobUploadStatus = jobUploadStore.removeBadSession(jobMultiPartParameterObject.getSessionId());
+
+            // Check null. Maybe  non-existing session id is given
+            if (jobUploadStatus != null) {
+
+                JobMetaDataParameterObject jobMetaDataParameterObject = jobUploadStatus.getJobMetaDataParameterObject();
+                if (jobMetaDataParameterObject != null) {
+                    throwJetExceptionFromJobMetaData(jobMetaDataParameterObject, exception);
+                }
+            } else {
+                // Only throw a JetException
+                wrapWithJetException(exception);
+            }
+        }
+    }
+
+    /**
+     * Used to collect phone home data about jet connector initialization.
+     * Sets count to 1 if it's absent in the map, otherwise increment it by 1.
+     * @param connectorName Name of the connector.
+     */
+    public void onConnectorInitialize(String connectorName) {
+        BiFunctionEx<String, Long, Long> incrementFn = (k, v) -> v == null ? 1L : v + 1L;
+        connectorInitializeCounts.compute(connectorName, incrementFn);
+    }
+
+    private void throwJetExceptionFromJobMetaData(JobMetaDataParameterObject jobMetaDataParameterObject, Exception exception) {
+        // Enrich exception with metadata
+        String exceptionString = jobMetaDataParameterObject.exceptionString();
+        JetException jetExceptionWithMetaData = new JetException(exceptionString, exception);
+
+        // Only throw a JetException
+        wrapWithJetException(jetExceptionWithMetaData);
+
+    }
+
+    /**
+     * If exception is not JetException e.g. IOException, FileSystemException etc., wrap it with JetException
+     */
+    static void wrapWithJetException(Exception exception) {
+        // Exception is not JetException
+        if (!(exception instanceof JetException)) {
+            // Get the root cause and wrap it with JetException
+            throw rethrow(exception);
+        } else {
+            // Just throw the JetException as is
+            sneakyThrow(exception);
+        }
+    }
+
+    private void checkResourceUploadEnabled() {
+        if (!jetConfig.isResourceUploadEnabled()) {
+            throw new JetException("Resource upload is not enabled");
+        }
+    }
+
+    /**
+     * Run the given jar as Jet job. Triggered by both client and member side
+     */
+    public void executeJar(JobMetaDataParameterObject jobMetaDataParameterObject) {
+        if (logger.isInfoEnabled()) {
+            String message = String.format("Try executing jar file %s for session %s", jobMetaDataParameterObject.getJarPath(),
+                    jobMetaDataParameterObject.getSessionId());
+            logger.info(message);
+        }
+
+        checkResourceUploadEnabled();
+
+        try {
+            HecatonBootstrap.executeJarOnMember(this::getHecatonInstance,
+                    jobMetaDataParameterObject.getJarPath().toString(),
+                    jobMetaDataParameterObject.getSnapshotName(),
+                    jobMetaDataParameterObject.getJobName(),
+                    jobMetaDataParameterObject.getMainClass(),
+                    jobMetaDataParameterObject.getJobParameters()
+            );
+            if (logger.isInfoEnabled()) {
+                String message = String.format("executing jar file %s for session %s finished successfully",
+                        jobMetaDataParameterObject.getJarPath(), jobMetaDataParameterObject.getSessionId());
+                logger.info(message);
+            }
+        } catch (Exception exception) {
+            logger.severe("caught exception when running the jar", exception);
+            // Rethrow the exception back to client to notify  that job did not run
+            throwJetExceptionFromJobMetaData(jobMetaDataParameterObject, exception);
+        } finally {
+            JobUploadStatus.cleanup(jobMetaDataParameterObject);
+        }
+    }
+
+    private HecatonInstance getHecatonInstance() {
+        return getNodeEngine().getHecatonInstance();
+    }
+
+    /**
+     * Add permission checks to given IMap if needed.
+     * Should check permissions except create and read permissions
+     * which are checked by the {@link uk.org.hecaton.jet.pipeline.ServiceFactory} itself.
+     *
+     * @param imap              IMap to wrap
+     * @param permissionChecker consumer that will check if given permission is granted
+     *                          and throw {@link AccessControlException} if it is not
+     * @param <K>               key type
+     * @param <V>               value type
+     * @return wrapped IMap
+     *
+     * @see uk.org.hecaton.jet.pipeline.ServiceFactory
+     * @see uk.org.hecaton.security.SecureCallable
+     */
+    @Nonnull
+    public <K, V> IMap<K, V> wrapInPermissions(@Nonnull IMap<K, V> imap, @Nonnull Consumer<Permission> permissionChecker) {
+        // security is not enabled - do not wrap
+        return imap;
+    }
+}

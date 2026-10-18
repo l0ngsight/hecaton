@@ -294,16 +294,16 @@ Example code for Pulsar Reader Source can be found in this
 
 The program below creates a job that connects the local Pulsar cluster
 located at `localhost:6650`(default address) and then consumes messages
-from the pulsar topic, `hazelcast-demo-topic`,
+from the pulsar topic, `hecaton-demo-topic`,
 
 ```java
-package com.hazelcast.jet.contrib.pulsar;
+package uk.org.hecaton.jet.contrib.pulsar;
 
-import com.hazelcast.jet.Jet;
-import com.hazelcast.jet.JetInstance;
-import com.hazelcast.jet.pipeline.Pipeline;
-import com.hazelcast.jet.pipeline.Sinks;
-import com.hazelcast.jet.pipeline.StreamSource;
+import uk.org.hecaton.jet.Jet;
+import uk.org.hecaton.jet.JetInstance;
+import uk.org.hecaton.jet.pipeline.Pipeline;
+import uk.org.hecaton.jet.pipeline.Sinks;
+import uk.org.hecaton.jet.pipeline.StreamSource;
 import org.apache.pulsar.client.api.BatchReceivePolicy;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -320,7 +320,7 @@ public class PulsarConsumerDemo {
     public static void main(String[] args) {
         JetInstance jet = Jet.bootstrappedInstance();
         final StreamSource<Integer> pulsarConsumerSource = PulsarSources.pulsarConsumerBuilder(
-                "hazelcast-demo-topic",
+                "hecaton-demo-topic",
                 () -> PulsarClient.builder().serviceUrl("pulsar://localhost:6650").build(),
                 () -> Schema.INT32,
                 Message::getValue).build();
@@ -340,20 +340,20 @@ change them by using builder methods.
 
 The program below creates a job that connects the local Pulsar cluster
 located at `localhost:6650`(default address) and then publishes messages
-to the pulsar topic, `hazelcast-demo-topic`,
+to the pulsar topic, `hecaton-demo-topic`,
 
 ```java
-package com.hazelcast.jet.contrib.pulsar;
+package uk.org.hecaton.jet.contrib.pulsar;
 
-import com.hazelcast.function.FunctionEx;
-import com.hazelcast.jet.Jet;
-import com.hazelcast.jet.JetInstance;
+import uk.org.hecaton.function.FunctionEx;
+import uk.org.hecaton.jet.Jet;
+import uk.org.hecaton.jet.JetInstance;
 
-import com.hazelcast.jet.config.JobConfig;
-import com.hazelcast.jet.pipeline.Pipeline;
-import com.hazelcast.jet.pipeline.Sink;
+import uk.org.hecaton.jet.config.JobConfig;
+import uk.org.hecaton.jet.pipeline.Pipeline;
+import uk.org.hecaton.jet.pipeline.Sink;
 
-import com.hazelcast.jet.pipeline.test.TestSources;
+import uk.org.hecaton.jet.pipeline.test.TestSources;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.Schema;
 
@@ -366,7 +366,7 @@ public class PulsarProducerDemo {
         JetInstance jet = Jet.bootstrappedInstance();
         Pipeline p = Pipeline.create();
         Sink<Integer> pulsarSink = PulsarSinks.builder(
-                "hazelcast-demo-topic",
+                "hecaton-demo-topic",
                 () -> PulsarClient.builder()
                                   .serviceUrl("pulsar://localhost:6650")
                                   .build(),
@@ -378,7 +378,7 @@ public class PulsarProducerDemo {
          .writeTo(pulsarSink);
 
         JobConfig jobConfig = new JobConfig();
-        jobConfig.setName("hazelcast-pulsar-producer");
+        jobConfig.setName("hecaton-pulsar-producer");
         jet.newJob(p, jobConfig).join();
     }
 }

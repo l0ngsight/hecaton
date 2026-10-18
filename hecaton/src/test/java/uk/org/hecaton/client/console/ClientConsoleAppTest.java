@@ -1,0 +1,194 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.console;
+
+import uk.org.hecaton.client.config.ClientConfig;
+import uk.org.hecaton.client.test.TestHecatonFactory;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.map.IMap;
+import uk.org.hecaton.test.HecatonSerialClassRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+/**
+ * Tests for demo client console application.
+ */
+@RunWith(HecatonSerialClassRunner.class)
+@Category({QuickTest.class})
+public class ClientConsoleAppTest extends HecatonTestSupport {
+
+    private static ByteArrayOutputStream baos;
+    private static PrintWriter printWriter;
+
+    private HecatonInstance hecatonInstance;
+    private final TestHecatonFactory hecatonFactory = new TestHecatonFactory();
+
+    @BeforeClass
+    public static void beforeClass() {
+        baos = new ByteArrayOutputStream();
+        printWriter = new PrintWriter(baos, true);
+    }
+
+    @Before
+    public void before() {
+        resetSystemOut();
+        hecatonInstance = hecatonFactory.newHecatonInstance(new Config());
+    }
+
+    @After
+    public void after() {
+        hecatonInstance.shutdown();
+        hecatonFactory.terminateAll();
+    }
+
+    @Test
+    public void executeOnKey() {
+        ClientConsoleApp consoleApp = new ClientConsoleApp(hecatonFactory.newHecatonClient(new ClientConfig()), printWriter);
+        for (int i = 0; i < 100; i++) {
+            consoleApp.handleCommand(String.format("executeOnKey message%d key%d", i, i));
+            assertTextInSystemOut("message" + i);
+        }
+    }
+
+    /**
+     * Tests m.put operation.
+     */
+    @Test
+    public void mapPut() {
+        HecatonInstance hz = hecatonFactory.newHecatonClient(new ClientConfig());
+        ClientConsoleApp consoleApp = new ClientConsoleApp(hz, printWriter);
+
+        IMap<String, String> map = hz.getMap("default");
+
+        assertEquals("Unexpected map size", 0, map.size());
+
+        consoleApp.handleCommand("m.put putTestKey testValue");
+        assertTextInSystemOut("null"); // original value for the key
+        assertEquals("Unexpected map size", 1, map.size());
+        assertThat(map.get("putTestKey")).contains("testValue");
+
+        consoleApp.handleCommand("m.put putTestKey testXValue");
+        assertTextInSystemOut("testValue"); // original value for the key
+        assertThat(map.get("putTestKey")).contains("testXValue");
+        consoleApp.handleCommand("m.put putTestKey2 testValue");
+        assertEquals("Unexpected map size", 2, map.size());
+    }
+
+    /**
+     * Tests m.remove operation.
+     */
+    @Test
+    public void mapRemove() {
+        HecatonInstance hz = hecatonFactory.newHecatonClient(new ClientConfig());
+        ClientConsoleApp consoleApp = new ClientConsoleApp(hz, printWriter);
+        IMap<String, String> map = hz.getMap("default");
+        map.put("a", "valueOfA");
+        map.put("b", "valueOfB");
+        resetSystemOut();
+        consoleApp.handleCommand("m.remove b");
+        assertTextInSystemOut("valueOfB"); // original value for the key
+        assertEquals("Unexpected map size", 1, map.size());
+        assertFalse("Unexpected entry in the map", map.containsKey("b"));
+    }
+
+    /**
+     * Tests m.delete operation.
+     */
+    @Test
+    public void mapDelete() {
+        HecatonInstance hz = hecatonFactory.newHecatonClient(new ClientConfig());
+        ClientConsoleApp consoleApp = new ClientConsoleApp(hz, printWriter);
+        IMap<String, String> map = hz.getMap("default");
+        map.put("a", "valueOfA");
+        map.put("b", "valueOfB");
+        resetSystemOut();
+        consoleApp.handleCommand("m.delete b");
+        assertTextInSystemOut("true"); // result of successful operation
+        assertEquals("Unexpected map size", 1, map.size());
+        assertFalse("Unexpected entry in the map", map.containsKey("b"));
+    }
+
+    /**
+     * Tests m.get operation.
+     */
+    @Test
+    public void mapGet() {
+        HecatonInstance hz = hecatonFactory.newHecatonClient(new ClientConfig());
+        ClientConsoleApp consoleApp = new ClientConsoleApp(hz, printWriter);
+        hz.<String, String>getMap("default").put("testGetKey", "testGetValue");
+        consoleApp.handleCommand("m.get testGetKey");
+        assertTextInSystemOut("testGetValue");
+    }
+
+    /**
+     * Tests m.putmany operation.
+     */
+    @Test
+    public void mapPutMany() {
+        HecatonInstance hz = hecatonFactory.newHecatonClient(new ClientConfig());
+        ClientConsoleApp consoleApp = new ClientConsoleApp(hz, printWriter);
+        IMap<String, ?> map = hz.getMap("default");
+        consoleApp.handleCommand("m.putmany 100 8 1000");
+        assertEquals("Unexpected map size", 100, map.size());
+        assertFalse(map.containsKey("key999"));
+        assertTrue(map.containsKey("key1000"));
+        assertTrue(map.containsKey("key1099"));
+        assertFalse(map.containsKey("key1100"));
+        assertEquals(8, ((byte[]) map.get("key1050")).length);
+    }
+
+    /**
+     * Asserts that given substring in in standard output buffer. Calling this method resets the buffer.
+     */
+    private void assertTextInSystemOut(String substring) {
+        assertThat(resetSystemOut()).contains(substring);
+    }
+
+    /**
+     * Gets content of standard output buffer.
+     */
+    private static String getSystemOut() {
+        return new String(baos.toByteArray(), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Clears standard output buffer.
+     *
+     * @return original content of the standard output
+     */
+    private static String resetSystemOut() {
+        final String result = getSystemOut();
+        baos.reset();
+        return result;
+    }
+}

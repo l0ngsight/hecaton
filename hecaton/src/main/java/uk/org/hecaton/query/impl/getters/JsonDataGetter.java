@@ -1,0 +1,57 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.query.impl.getters;
+
+import tools.jackson.core.JsonParser;
+import uk.org.hecaton.internal.serialization.InternalSerializationService;
+import uk.org.hecaton.internal.serialization.impl.DataInputNavigableJsonAdapter;
+import uk.org.hecaton.internal.serialization.impl.NavigableJsonInputAdapter;
+import uk.org.hecaton.internal.serialization.Data;
+import tools.jackson.core.json.JsonFactory;
+
+import java.io.IOException;
+
+import static uk.org.hecaton.internal.serialization.impl.HeapData.HEAP_DATA_OVERHEAD;
+
+public final class JsonDataGetter extends AbstractJsonGetter {
+
+    private static final int UTF_CHARACTER_COUNT_FIELD_SIZE = 4;
+
+    private final JsonFactory factory = new JsonFactory();
+
+    private final InternalSerializationService ss;
+
+    JsonDataGetter(InternalSerializationService ss) {
+        super(null);
+        this.ss = ss;
+    }
+
+    @Override
+    protected JsonParser createParser(Object obj) throws IOException {
+        Data data = (Data) obj;
+        return factory.createParser(data.toByteArray(),
+                HEAP_DATA_OVERHEAD + UTF_CHARACTER_COUNT_FIELD_SIZE,
+                data.dataSize() - UTF_CHARACTER_COUNT_FIELD_SIZE);
+    }
+
+    @Override
+    protected NavigableJsonInputAdapter annotate(Object object) {
+        Data data = (Data) object;
+        return new DataInputNavigableJsonAdapter(ss.createObjectDataInput(data),
+                HEAP_DATA_OVERHEAD + UTF_CHARACTER_COUNT_FIELD_SIZE);
+    }
+}

@@ -1,0 +1,203 @@
+/*
+ * Copyright 2026 Hazelcast Inc.
+ *
+ * Licensed under the Hazelcast Community License (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://hazelcast.com/hazelcast-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.hadoop.file;
+
+import uk.org.hecaton.jet.hadoop.file.model.User;
+import uk.org.hecaton.jet.pipeline.file.FileFormat;
+import uk.org.hecaton.jet.pipeline.file.FileSourceBuilder;
+import uk.org.hecaton.jet.pipeline.file.FileSources;
+import uk.org.hecaton.jet.test.IgnoreInJenkinsOnWindows;
+import uk.org.hecaton.test.annotation.NightlyTest;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.core.exc.UnexpectedEndOfInputException;
+
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assumptions.assumeThat;
+
+@Category({NightlyTest.class, ParallelJVMTest.class, IgnoreInJenkinsOnWindows.class})
+public class JsonFileFormatTest extends BaseFileFormatTest {
+
+    @Test
+    public void shouldReadJsonFile() {
+        FileSourceBuilder<Map<String, Object>> source = FileSources.files(currentDir + "/src/test/resources")
+                                                                   .glob("file.jsonl")
+                                                                   .format(FileFormat.json());
+
+        assertItemsInSource(source,
+                collected -> assertThat(collected).usingRecursiveFieldByFieldElementComparator()
+                                                  .containsOnly(
+                                                          Map.of(
+                                                                  "name", "Frantisek",
+                                                                  "favoriteNumber", 7
+                                                          ),
+                                                          Map.of(
+                                                                  "name", "Ali",
+                                                                  "favoriteNumber", 42
+                                                          )
+                                                  )
+        );
+    }
+
+    @Test
+    public void shouldReadLargeJsonFile() {
+        FileSourceBuilder<Map<String, Object>> source =
+                FileSources.files(currentDir + "/src/test/resources")
+                           .glob("file-200-entries-with-header.jsonl")
+                           .sharedFileSystem(true)
+                           .option("mapreduce.input.fileinputformat.split.minsize", "32")
+                           .option("mapreduce.input.fileinputformat.split.maxsize", "64")
+                           .format(FileFormat.<Map<String, Object>>json().multiline(false));
+
+        assertItemsInSource(source, (collected) -> assertThat(collected).hasSize(200));
+    }
+
+    @Test
+    public void shouldReadLargeJsonFileCompressed() {
+        assumeThat(useHadoop).isTrue();
+
+        FileSourceBuilder<Map<String, Object>> source =
+                FileSources.files(currentDir + "/src/test/resources")
+                           .glob("file-200-entries-with-header.jsonl.gz")
+                           .sharedFileSystem(true)
+                           .option("mapreduce.input.fileinputformat.split.minsize", "32")
+                           .option("mapreduce.input.fileinputformat.split.maxsize", "64")
+                           .format(FileFormat.<Map<String, Object>>json().multiline(false));
+
+        assertItemsInSource(source, (collected) -> assertThat(collected).hasSize(200));
+    }
+
+    @Test
+    public void shouldReadLargeJsonFileCompressedSplittable() {
+        assumeThat(useHadoop).isTrue();
+
+        FileSourceBuilder<Map<String, Object>> source =
+                FileSources.files(currentDir + "/src/test/resources")
+                           .glob("file-200-entries-with-header.jsonl.bz2")
+                           .sharedFileSystem(true)
+                           .option("mapreduce.input.fileinputformat.split.minsize", "32")
+                           .option("mapreduce.input.fileinputformat.split.maxsize", "64")
+                           .format(FileFormat.<Map<String, Object>>json().multiline(false));
+
+        assertItemsInSource(source, (collected) -> assertThat(collected).hasSize(200));
+    }
+
+    @Test
+    public void shouldReadJsonFileToObject() {
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("file.jsonl")
+                                                    .format(FileFormat.json(User.class));
+
+        assertItemsInSource(source,
+                new User("Frantisek", 7),
+                new User("Ali", 42)
+        );
+    }
+
+    @Test
+    public void shouldReadPrettyPrintedJsonFile() {
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("pretty-printed-file-*.json")
+                                                    .format(FileFormat.json(User.class));
+
+        assertItemsInSource(source,
+                new User("Frantisek", 7),
+                new User("Ali", 42)
+        );
+    }
+
+    @Test
+    public void shouldReadJsonFileWithMoreAttributesThanTargetClass() {
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("file-more-attributes.jsonl")
+                                                    .format(FileFormat.json(User.class));
+
+        assertItemsInSource(source,
+                new User("Frantisek", 7),
+                new User("Ali", 42)
+        );
+    }
+
+    @Test
+    public void shouldReadJsonFileWithLessColumnsThanTargetClass() {
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("file-less-attributes.jsonl")
+                                                    .format(FileFormat.json(User.class));
+
+        assertItemsInSource(source,
+                new User("Frantisek", 0),
+                new User("Ali", 0)
+        );
+    }
+
+    @Test
+    public void shouldReadEmptyJsonFile() {
+
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("file-empty.json")
+                                                    .format(FileFormat.json(User.class));
+
+        assertItemsInSource(source, items -> assertThat(items).isEmpty());
+    }
+
+    @Test
+    public void shouldThrowWhenInvalidFileType() {
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("invalid-data.png")
+                                                    .format(FileFormat.json(User.class));
+
+        assertJobFailed(source, StreamReadException.class, "Unexpected character");
+    }
+
+    @Test
+    public void shouldThrowWhenWrongFormatting() {
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("file-invalid.jsonl")
+                                                    .format(FileFormat.json(User.class));
+
+        assertJobFailed(source, StreamReadException.class, "Unexpected character");
+    }
+
+    @Test
+    public void shouldReadFileWithRecordsOnMultipleLines() {
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("file-multiline.jsonl")
+                                                    .format(FileFormat.json(User.class));
+
+        assertItemsInSource(source,
+                new User("Frantisek", 7),
+                new User("Ali", 42)
+        );
+    }
+
+    @Test
+    public void shouldFailReadingFileWithRecordsOnMultipleLinesWhenMultilineOff() {
+        assumeThat(useHadoop)
+                .describedAs("multiline(false) has no effect for local connector")
+                .isTrue();
+
+        FileSourceBuilder<User> source = FileSources.files(currentDir + "/src/test/resources")
+                                                    .glob("file-multiline.jsonl")
+                                                    .format(FileFormat.json(User.class).multiline(false));
+
+        assertJobFailed(source, UnexpectedEndOfInputException.class, "Unexpected end-of-input: expected close marker for Object ");
+    }
+}

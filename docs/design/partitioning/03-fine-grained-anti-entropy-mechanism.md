@@ -39,7 +39,7 @@ API changes are planned. 
 
 ### Anti Entropy Mechanism Before 3.9
 
-Before Hazelcast 3.9, each primary partition manages its own backup
+Before Hecaton 3.9, each primary partition manages its own backup
 replica version vector. Since there are at most 6 backup replicas,
 length of vector is also 6. Each element of the vector shows version of
 the specific replica with the same index. For a replica version vector
@@ -120,7 +120,7 @@ operation and/or to set versions;  
 
 Apart from backup operation execution, there's also periodic task
 running on each primary replica (with the interval of
-`hazelcast.partition.backup.sync.interval`, default 30 seconds) which
+`hecaton.partition.backup.sync.interval`, default 30 seconds) which
 sends replica versions to each backup replica. When this task detects a
 missing backup, then anti entropy again triggers replica sync from
 primary.

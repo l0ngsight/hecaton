@@ -14,7 +14,7 @@
 The Predicate API, which SQL is aiming to replace, allowed access to nested
 fields of the keys or values. SQL so far lacks this feature.
 
-Hazelcast is most commonly used by Java shops, which tend to store complex
+Hecaton is most commonly used by Java shops, which tend to store complex
 objects. This is contrary to traditional RDBMS, where denormalized structures
 are typically used. This made the feature very useful for our user base.
 
@@ -184,7 +184,7 @@ Here we need to note that identifiers in SQL are always case-sensitive, however,
 many SQL implementations convert unquoted identifiers to canonical case, which
 gives the impression that identifiers are case-insensitive. Quoted identifiers
 are always case-sensitive. The conversion to canonical case is optional in the
-SQL standard, Hazelcast doesn't do it for legacy reasons.
+SQL standard, Hecaton doesn't do it for legacy reasons.
 
 ## UDTs and the top-level fields
 

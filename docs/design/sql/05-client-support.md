@@ -18,7 +18,7 @@ Therefore, data should be returned to the client in pages.
 
 ### 1.2 Message Routing
 
-The Hazelcast Mustang engine is a distributed SQL query engine. When a query is submitted for execution, the engine splits
+The Hecaton Mustang engine is a distributed SQL query engine. When a query is submitted for execution, the engine splits
 it into several fragments. The fragments are executed on cluster members. 
 
 Members executing one or more fragments of the given query are called **participants**. The participant that started execution 
@@ -30,7 +30,7 @@ Therefore, the implementation should be able to route all requests related to th
 ### 1.3 Lite Members
 
 At the moment lite members cannot start queries. I.e. a lite member can never be a query initiator. Note that this limitation
-is different from other Hazelcast subsystems. Normally, if the operation cannot be executed on the lite member, it is handed 
+is different from other Hecaton subsystems. Normally, if the operation cannot be executed on the lite member, it is handed 
 over to the normal member transparently. This is not the case for the SQL purely due to time constraints: we do no have enough
 time to implement it in 4.1. This limitation will be removed in future versions.
 

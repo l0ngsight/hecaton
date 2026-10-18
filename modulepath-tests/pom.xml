@@ -21,12 +21,12 @@
 
     <name>modulepath-tests</name>
     <artifactId>modulepath-tests</artifactId>
-    <description>Hazelcast modulepath tests</description>
+    <description>Hecaton modulepath tests</description>
     <packaging>jar</packaging>
 
     <parent>
-        <groupId>com.hazelcast</groupId>
-        <artifactId>hazelcast-root</artifactId>
+        <groupId>uk.org.hecaton</groupId>
+        <artifactId>hecaton-root</artifactId>
         <version>5.7.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -57,8 +57,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

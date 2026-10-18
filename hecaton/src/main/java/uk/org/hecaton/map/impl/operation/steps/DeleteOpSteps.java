@@ -1,0 +1,97 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.map.impl.operation.steps;
+
+import uk.org.hecaton.map.impl.MapContainer;
+import uk.org.hecaton.map.impl.MapServiceContext;
+import uk.org.hecaton.map.impl.mapstore.MapDataStore;
+import uk.org.hecaton.map.impl.operation.steps.engine.State;
+import uk.org.hecaton.map.impl.operation.steps.engine.Step;
+import uk.org.hecaton.map.impl.record.Record;
+import uk.org.hecaton.map.impl.recordstore.DefaultRecordStore;
+
+public enum DeleteOpSteps implements IMapOpStep {
+
+    READ() {
+        @Override
+        public void runStep(State state) {
+            DefaultRecordStore recordStore = ((DefaultRecordStore) state.getRecordStore());
+            MapContainer mapContainer = recordStore.getMapContainer();
+            MapServiceContext mapServiceContext = mapContainer.getMapServiceContext();
+
+            Record record = recordStore.getRecordOrNull(state.getKey(), false, true);
+            state.setOldValue(record == null ? null : record.getValue());
+            state.setRecordExistsInMemory(record != null);
+
+            if (record != null) {
+                Object oldValue = record.getValue();
+                oldValue = mapServiceContext.interceptRemove(mapContainer.getInterceptorRegistry(), oldValue);
+                if (oldValue != null) {
+                    state.setOldValue(oldValue);
+                }
+            }
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return DeleteOpSteps.DELETE;
+        }
+    },
+
+    DELETE() {
+        @Override
+        public boolean isStoreStep() {
+            return true;
+        }
+
+        @Override
+        public void runStep(State state) {
+            DefaultRecordStore recordStore = ((DefaultRecordStore) state.getRecordStore());
+            if (recordStore.persistenceEnabledFor(state.getCallerProvenance())) {
+                MapDataStore mapDataStore = recordStore.getMapDataStore();
+                mapDataStore.remove(state.getKey(), state.getNow(), state.getTxnId());
+
+                if (state.getOldValue() != null) {
+                    recordStore.updateStatsOnRemove(state.getNow());
+                }
+            }
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return state.isRecordExistsInMemory()
+                    ? DeleteOpSteps.ON_DELETE : UtilSteps.FINAL_STEP;
+        }
+    },
+
+    ON_DELETE() {
+        @Override
+        public void runStep(State state) {
+            DefaultRecordStore recordStore = (DefaultRecordStore) state.getRecordStore();
+            recordStore.onStore(recordStore.getRecord(state.getKey()));
+            recordStore.removeByKey(state.getKey(), false);
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return UtilSteps.FINAL_STEP;
+        }
+    };
+
+    DeleteOpSteps() {
+    }
+}

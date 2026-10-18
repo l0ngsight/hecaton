@@ -21,17 +21,17 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.hazelcast</groupId>
-    <artifactId>hazelcast-mapstore</artifactId>
+    <groupId>uk.org.hecaton</groupId>
+    <artifactId>hecaton-mapstore</artifactId>
 
     <packaging>jar</packaging>
-    <name>hazelcast-mapstore</name>
-    <description>Ready made MapStore using Hazelcast SQL</description>
+    <name>hecaton-mapstore</name>
+    <description>Ready made MapStore using Hecaton SQL</description>
     <url>http://www.hazelcast.com/</url>
 
     <parent>
-        <groupId>com.hazelcast.jet</groupId>
-        <artifactId>hazelcast-jet-extensions</artifactId>
+        <groupId>uk.org.hecaton.jet</groupId>
+        <artifactId>hecaton-jet-extensions</artifactId>
         <version>5.7.0</version>
     </parent>
 
@@ -47,7 +47,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.hazelcast.mapstore</Automatic-Module-Name>
+                            <Automatic-Module-Name>uk.org.hecaton.mapstore</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -57,16 +57,16 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-sql</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-sql</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <!-- Test dependencies -->
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-sql</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-sql</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
             <scope>test</scope>
@@ -141,8 +141,8 @@
 
         <!-- MongoDB -->
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-mongodb</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-mongodb</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

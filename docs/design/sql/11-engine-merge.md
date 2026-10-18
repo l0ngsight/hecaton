@@ -2,7 +2,7 @@
 
 ## Current Situation
 
-Historically, Hazelcast has two separate engines: one in the IMDG module
+Historically, Hecaton has two separate engines: one in the IMDG module
 and another in Jet module. They provide very similar execution model
 based on a DAG, however they differ in many details. The main reason was
 that IMDG and Jet were two products so we needed another engine that
@@ -259,25 +259,25 @@ it indicates that the engines are in the same arena.
 
 Benchmark code:
 ```java
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.jet.Jet;
-import com.hazelcast.jet.JetInstance;
-import com.hazelcast.jet.core.DAG;
-import com.hazelcast.jet.core.Vertex;
-import com.hazelcast.jet.core.processor.Processors;
-import com.hazelcast.jet.core.processor.SourceProcessors;
-import com.hazelcast.jet.function.RunnableEx;
-import com.hazelcast.jet.pipeline.Pipeline;
-import com.hazelcast.jet.pipeline.Sinks;
-import com.hazelcast.jet.pipeline.Sources;
-import com.hazelcast.map.IMap;
+import uk.org.hecaton.client.HecatonClient;
+import uk.org.hecaton.client.config.ClientConfig;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.jet.Jet;
+import uk.org.hecaton.jet.JetInstance;
+import uk.org.hecaton.jet.core.DAG;
+import uk.org.hecaton.jet.core.Vertex;
+import uk.org.hecaton.jet.core.processor.Processors;
+import uk.org.hecaton.jet.core.processor.SourceProcessors;
+import uk.org.hecaton.jet.function.RunnableEx;
+import uk.org.hecaton.jet.pipeline.Pipeline;
+import uk.org.hecaton.jet.pipeline.Sinks;
+import uk.org.hecaton.jet.pipeline.Sources;
+import uk.org.hecaton.map.IMap;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.hazelcast.jet.core.Edge.between;
+import static uk.org.hecaton.jet.core.Edge.between;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 public class JetImdgBenchmark {
@@ -287,7 +287,7 @@ public class JetImdgBenchmark {
     private static int warmUpIterations;
     private static int measuredIterations;
 
-    private static HazelcastInstance hzInst;
+    private static HecatonInstance hzInst;
 
     public static void main(String[] args) {
         if (args.length != 5) {
@@ -312,7 +312,7 @@ public class JetImdgBenchmark {
     public static void testJet() {
         JetInstance inst = Jet.newJetClient();
         try {
-            hzInst = inst.getHazelcastInstance();
+            hzInst = inst.getHecatonInstance();
             prepareData();
 
             DAG dag = new DAG();
@@ -334,7 +334,7 @@ public class JetImdgBenchmark {
     public static void testImdg() {
         ClientConfig config = new ClientConfig()
                 .setClusterName("jet");
-        hzInst = HazelcastClient.newHazelcastClient(config);
+        hzInst = HecatonClient.newHecatonClient(config);
         try {
             prepareData();
 

@@ -70,7 +70,7 @@ Provide functional design details that are pertinent to this specific design spe
 
 - Document notes, questions, and issues identified with this functional design topic.
 - List drawbacks - why should we *not* do this? If applicable, list mitigating factors that may make each drawback acceptable. Investigate the consequences of the proposed change onto other areas
-  of Hazelcast. If other features are impacted, especially UX, list this impact as a reason not to do the change. If possible, also investigate and suggest mitigating actions that would reduce the impact. You can for example consider additional validation testing, additional documentation or doc changes, new user research, etc.
+  of Hecaton. If other features are impacted, especially UX, list this impact as a reason not to do the change. If possible, also investigate and suggest mitigating actions that would reduce the impact. You can for example consider additional validation testing, additional documentation or doc changes, new user research, etc.
 - What parts of the design do you expect to resolve through the design process before this gets merged?
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
 - What related issues do you consider out of scope for this document that could be addressed in the future independently of the solution that comes out of this change?
@@ -84,7 +84,7 @@ Use the ⚠️ or ❓icon to indicate an outstanding issue or question, and use 
 
 Listing of associated prototypes (latest versions) and any API design samples. How do we teach this?
 
-Explain the proposal as if it was already included in the project and you were teaching it to an end-user, or a Hazelcast team member in a different project area.
+Explain the proposal as if it was already included in the project and you were teaching it to an end-user, or a Hecaton team member in a different project area.
 
 Consider the following writing prompts:
 - Which new concepts have been introduced to end-users? Can you provide examples for each?
@@ -110,16 +110,16 @@ Important writing prompts follow. You do not need to answer them in this particu
 Some of these prompts may not be relevant to your design document; in which case you can spell out “this change does not affect ...” or answer “N/A” (not applicable) next to the question.
 
 - Questions about the change:
-  - What components in Hazelcast need to change? How do they change? This section outlines the implementation strategy: for each component affected, outline how it is changed.
+  - What components in Hecaton need to change? How do they change? This section outlines the implementation strategy: for each component affected, outline how it is changed.
   - Are there new abstractions introduced by the change? New concepts? If yes, provide definitions and examples.
   - How does this work in a on-prem deployment? 
   - How about on AWS and Kubernetes, platform operator?
   - How does this work in Cloud Viridan clusters? 
   - How does the change behave in mixed-version deployments? During a version upgrade? Which migrations are needed?
-  - What are the possible interactions with other features or sub-systems inside Hazelcast? How does the behavior of other code change implicitly as a result of the changes outlined in the design document? (Provide examples if relevant.)
+  - What are the possible interactions with other features or sub-systems inside Hecaton? How does the behavior of other code change implicitly as a result of the changes outlined in the design document? (Provide examples if relevant.)
   - Is there other ongoing or recent work that is related? (Cross-reference the relevant design documents.)
   - What are the edge cases? What are example uses or inputs that we think are uncommon but are still possible and thus need to be handled? How are these edge cases handled? Provide examples.
-  - What are the effect of possible mistakes by other Hazelcast team members trying to use the feature in their own code? How does the change impact how they will troubleshoot things?
+  - What are the effect of possible mistakes by other Hecaton team members trying to use the feature in their own code? How does the change impact how they will troubleshoot things?
   - Mention alternatives, risks and assumptions. Why is this design the best in the space of possible designs? What other designs have been considered and what is the rationale for not choosing them?
   - Add links to any similar functionalities by other vendors, similarities and differentiators
 
@@ -157,7 +157,7 @@ Some of these prompts may not be relevant to your design document; in which case
     - What are the other components or teams that need to know about the new APIs and changes?
     - Which principles did you apply to ensure the APIs are consistent with other related features / APIs? (Cross-reference other APIs that are similar or related, for comparison.)
 
-  - Is the change visible to users of Hazelcast or operators who run Hazelcast clusters?
+  - Is the change visible to users of Hecaton or operators who run Hecaton clusters?
     - Are there any user experience (UX) changes needed as a result of this change?
     - Are the UX changes necessary or clearly beneficial? (Cross-reference the motivation section.)
     - Which principles did you apply to ensure the user experience (UX) is consistent with other related features? (Cross-reference other features that have related UX, for comparison.)
@@ -177,7 +177,7 @@ Describe testing approach to developed functionality
 - Security related tests?
 - Negative tests?
 - Stress tests?
-- Tests related to deployment on AWS or Kubernetes? See [Hazelcast Guides](https://guides.hazelcast.org/home/) for examples on deployments, [Connect To Hazelcast Running on Kubernetes from Outside](https://guides.hazelcast.org/kubernetes-external-client/) and [GH workflow](https://github.com/hazelcast-guides/kubernetes-external-client/blob/main/.github/workflows/integrational-tests.yml) for example of automated tests and [Create automated tests in Kubernetes/OpenShift for enterprise features](https://hazelcast.atlassian.net/browse/CN-150) for JIRA task on automated testing of EE features. For more information about testing in kubernetes please see [here](https://guides.hazelcast.org/kubernetes/) and [here](https://docs.hazelcast.com/hazelcast/latest/deploy/deploying-in-kubernetes), for testing in AWS, GCP and Azure please see [here](https://guides.hazelcast.org/terraform-quickstarts/).
+- Tests related to deployment on AWS or Kubernetes? See [Hecaton Guides](https://guides.hazelcast.org/home/) for examples on deployments, [Connect To Hecaton Running on Kubernetes from Outside](https://guides.hazelcast.org/kubernetes-external-client/) and [GH workflow](https://github.com/hazelcast-guides/kubernetes-external-client/blob/main/.github/workflows/integrational-tests.yml) for example of automated tests and [Create automated tests in Kubernetes/OpenShift for enterprise features](https://hazelcast.atlassian.net/browse/CN-150) for JIRA task on automated testing of EE features. For more information about testing in kubernetes please see [here](https://guides.hazelcast.org/kubernetes/) and [here](https://docs.hazelcast.com/hazelcast/latest/deploy/deploying-in-kubernetes), for testing in AWS, GCP and Azure please see [here](https://guides.hazelcast.org/terraform-quickstarts/).
 
 Provide references to Testlink or Testing artifacts.
 

@@ -1,0 +1,58 @@
+{
+  "instance": {
+    "hecaton": {
+      "user-code-namespaces": {
+        "enabled": false,
+        "class-filter": {
+          "defaults-disabled": true,
+          "blacklist": {
+            "class": [
+              "com.acme.app.BeanComparator"
+            ]
+          },
+          "whitelist": {
+            "class": [
+              "java.lang.String",
+              "example.Foo"
+            ],
+            "package": [
+              "com.acme.app",
+              "com.acme.app.subpkg"
+            ],
+            "prefix": [
+              "uk.org.hecaton.",
+              "java"
+            ]
+          }
+        },
+        "namespace1": [
+          {
+            "jar": {
+              "id": "test",
+              "url": "file://home/hecaton/test.jar"
+            }
+          },
+          {
+            "jar": {
+              "id": "test2",
+              "url": "file://home/hecaton/test2.jar"
+            }
+          },
+          {
+            "jars-in-zip": {
+              "id": "test3",
+              "url": "file://home/hecaton/test3.zip"
+            }
+          },
+          {
+            "class": {
+              "id": "test4",
+              "url": "file://home/hecaton/MyClass.class"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "error": null
+}

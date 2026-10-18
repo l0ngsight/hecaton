@@ -1,0 +1,38 @@
+{
+  "instance": {
+    "hecaton": {
+      "cluster-name": 22,
+      "license-key": [],
+      "instance-name": false
+    }
+  },
+  "error": {
+    "schemaLocation": "#/properties/hecaton",
+    "pointerToViolation": "#/hecaton",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/properties/hecaton/properties/instance-name",
+        "pointerToViolation": "#/hecaton/instance-name",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: String, found: Boolean"
+      },
+      {
+        "schemaLocation": "#/properties/hecaton/properties/license-key",
+        "pointerToViolation": "#/hecaton/license-key",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: String, found: JSONArray"
+      },
+      {
+        "schemaLocation": "#/properties/hecaton/properties/cluster-name",
+        "pointerToViolation": "#/hecaton/cluster-name",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: String, found: Integer"
+      }
+    ],
+    "message": "3 schema violations found"
+  }
+
+}

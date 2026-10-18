@@ -136,7 +136,7 @@ that SQL queries can't be submitted from lite members.
 
 ### LoadBalancer changes
 
-`com.hazelcast.client.LoadBalancer` is public API. Has 3
+`uk.org.hecaton.client.LoadBalancer` is public API. Has 3
 implementations: `StaticLB`, `RoundRobinLB` and `RandomLB`. The
 `AbstractLoadBalancer` base implementation is also public API.
 
@@ -175,7 +175,7 @@ leaves
 
 ### Client security
 
-If security in Hazelcast Enterprise is enabled, for queries submitted
+If security in Hecaton Enterprise is enabled, for queries submitted
 from a client we must check permissions. However, the member handling
 the client request isn't able to check them until it parses and
 validates the query. And since the query can be forwarded to a different

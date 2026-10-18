@@ -7,8 +7,8 @@ From the [Confluent documentation](https://docs.confluent.io/current/connect/ind
 > implementations for common data sources and sinks to move data into and out of
 > Kafka.
 
-Take an existing Kafka Connect source and use it as a source for Hazelcast Jet
-without the need to have a Kafka deployment. Hazelcast Jet will drive the
+Take an existing Kafka Connect source and use it as a source for Hecaton Jet
+without the need to have a Kafka deployment. Hecaton Jet will drive the
 Kafka Connect connector and bring the data from external systems to the pipeline
 directly.
 
@@ -40,8 +40,8 @@ Add the following lines to your pom.xml to include it as a dependency to your pr
 
 ```
 <dependency>
-    <groupId>com.hazelcast.jet</groupId>
-    <artifactId>hazelcast-jet-kafka-connect</artifactId>
+    <groupId>uk.org.hecaton.jet</groupId>
+    <artifactId>hecaton-jet-kafka-connect</artifactId>
     <version>${version}</version>
 </dependency>
 ```
@@ -49,7 +49,7 @@ Add the following lines to your pom.xml to include it as a dependency to your pr
 or if you are using Gradle:
 
 ```
-compile group: 'com.hazelcast.jet', name: 'hazelcast-jet-kafka-connect', version: ${version}
+compile group: 'uk.org.hecaton.jet', name: 'hecaton-jet-kafka-connect', version: ${version}
 ```
 
 ### Usage
@@ -59,7 +59,7 @@ create a source by calling `KafkaConnectSources.connect()` method with the
 `Properties` object. After that you can use your pipeline like any other source
 in the Jet pipeline. The source will emit items in `SourceRecord` type from
 Kafka Connect API, where you can access the key and value along with their
-corresponding schemas. Hazelcast Jet will instantiate a single task for the
+corresponding schemas. Hecaton Jet will instantiate a single task for the
 specified source in the cluster.
 
 Following is an example pipeline which stream events from RabbitMQ, maps the
@@ -88,7 +88,7 @@ choice with the job that you are submitting.
         JobConfig jobConfig = new JobConfig();
         jobConfig.addJarsInZip("/path/to/kafka-connect-rabbitmq-0.0.2-SNAPSHOT.zip");
 
-        Job job=createHazelcastInstance().getJet().newJob(pipeline,jobConfig);
+        Job job=createHecatonInstance().getJet().newJob(pipeline,jobConfig);
         job.join();
 ```
 

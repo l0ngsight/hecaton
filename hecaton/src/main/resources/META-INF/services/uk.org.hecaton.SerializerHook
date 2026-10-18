@@ -1,0 +1,42 @@
+#
+# Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+uk.org.hecaton.jet.accumulator.AccumulatorSerializerHooks$LongAccHook
+uk.org.hecaton.jet.accumulator.AccumulatorSerializerHooks$DoubleAccHook
+uk.org.hecaton.jet.accumulator.AccumulatorSerializerHooks$MutableReferenceHook
+uk.org.hecaton.jet.accumulator.AccumulatorSerializerHooks$LinTrendAccHook
+uk.org.hecaton.jet.accumulator.AccumulatorSerializerHooks$LongLongAccHook
+uk.org.hecaton.jet.accumulator.AccumulatorSerializerHooks$LongDoubleAccHook
+uk.org.hecaton.jet.accumulator.AccumulatorSerializerHooks$PickAnyAccHook
+uk.org.hecaton.jet.core.CoreSerializerHooks$WatermarkHook
+uk.org.hecaton.jet.core.CoreSerializerHooks$JetEventHook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$WindowResultHook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$KeyedWindowResultHook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$Tuple2Hook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$Tuple3Hook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$Tuple4Hook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$Tuple5Hook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$TagHook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$ItemsByTagHook
+uk.org.hecaton.jet.datamodel.DataModelSerializerHooks$TimestampedItemHook
+uk.org.hecaton.jet.impl.execution.ExecutionSerializerHooks$SnapshotBarrierHook
+uk.org.hecaton.jet.impl.execution.ExecutionSerializerHooks$BroadcastEntryHook
+uk.org.hecaton.jet.impl.execution.ExecutionSerializerHooks$BroadcastKeyHook
+uk.org.hecaton.jet.impl.execution.ExecutionSerializerHooks$DoneItemHook
+uk.org.hecaton.jet.impl.execution.init.CustomClassLoadedObject$Hook
+uk.org.hecaton.jet.impl.metrics.JetMetricsDataSerializerHook
+uk.org.hecaton.jet.impl.observer.JetObserverDataSerializerHook
+uk.org.hecaton.jet.json.JsonSerializerHooks$DeferredMapHook

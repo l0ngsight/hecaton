@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-open module com.hazelcast.test.modulepath {
-    requires com.hazelcast.core;
+open module uk.org.hecaton.test.modulepath {
+    requires uk.org.hecaton.core;
 }

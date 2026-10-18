@@ -47,7 +47,7 @@ not.
 
 In Calcite, the validation logic is encapsulated and orchestrated by
 implementations of `SqlValidator`. Specifically, `SqlValidatorImpl`
-extended by `HazelcastSqlValidator` is used to customize the validation
+extended by `HecatonSqlValidator` is used to customize the validation
 logic to align it with our requirements: the narrowest integer type is
 assigned to integer literals and to `CAST` operators involving integer
 types.
@@ -65,9 +65,9 @@ Normally, Calcite's parser inspects the hardcoded `SqlStdOperatorTable`
 implementation of `SqlOperatorTable` to resolve a certain operator, so
 it's hard to customize the pre-existing operators. To make the
 customization possible, operators from `SqlStdOperatorTable` are patched
-to the ones from `HazelcastSqlOperatorTable` during the AST rewriting
-process (see `HazelcastSqlValidator.performUnconditionalRewrites` and
-`HazelcastOperatorTableVisitor`).
+to the ones from `HecatonSqlOperatorTable` during the AST rewriting
+process (see `HecatonSqlValidator.performUnconditionalRewrites` and
+`HecatonOperatorTableVisitor`).
 
 Usually, semantic validation requires assigning types to every
 expression and its operand expressions, if any. In Calcite, that type
@@ -96,7 +96,7 @@ assignment behavior may be customized in several ways:
   a certain type. For instance, `=` operator requires both of its sides
   to be of the same type. In Calcite, such coercion services are
   provided by `TypeCoercion` implementations. Specifically,
-  `TypeCoercionImpl` extended by `HazelcastTypeCoercion` is used to
+  `TypeCoercionImpl` extended by `HecatonTypeCoercion` is used to
   customize the coercion logic.
 
 The following general rules apply when assigning types:
@@ -156,7 +156,7 @@ Each operator validates that it has a proper number of operands of
 proper types. The validation process can be customized by overriding
 `SqlOperator.checkOperandTypes` and `SqlOperator.getOperandCountRange`,
 or by providing a custom `SqlOperandTypeChecker` strategy for an
-operator. For instance, `HazelcastSqlCastFunction` overrides
+operator. For instance, `HecatonSqlCastFunction` overrides
 `checkOperandTypes` to make sure the casting behaviour is exactly the
 same as defined by Type System conversion rules. Calcite provides a
 collection of `SqlOperandTypeChecker` strategies in `OperandTypes`
@@ -177,7 +177,7 @@ subclasses of `RexNode`.
 
 During conversion Calcite also applies various simplifications and
 optimizations to expressions (see `SqlToRelConverter` and
-`HazelcastSqlToRelConverter`). After the conversion all references to
+`HecatonSqlToRelConverter`). After the conversion all references to
 the original textual SQL query representation are irreversibly lost. In
 other words, it's impossible to recover a `SqlNode` from a certain
 `RexNode` or `RelNode`.

@@ -19,7 +19,7 @@ target/
 *.iws
 atlassian-ide-plugin.xml
 *dependency-reduced-pom.xml
-hazelcast/src/main/java/com/hazelcast/instance/GeneratedBuildProperties.java
+hecaton/src/main/java/uk/org/hecaton/instance/GeneratedBuildProperties.java
 diagnostics-*.log
 performance*.log
 build/

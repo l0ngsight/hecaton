@@ -1,0 +1,5 @@
+hecaton-client-failover:
+  try-count: ${try-count}
+  clients:
+    - hecaton-client-c1.yaml
+    - hecaton-client-c2.yaml

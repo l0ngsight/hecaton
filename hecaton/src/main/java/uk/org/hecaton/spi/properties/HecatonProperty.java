@@ -1,0 +1,206 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.spi.properties;
+
+import javax.annotation.Nonnull;
+
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+import static uk.org.hecaton.internal.util.Preconditions.checkHasText;
+import static java.lang.String.format;
+
+/**
+ * Interface for Hecaton Member and Client properties.
+ */
+public final class HecatonProperty {
+    @Nonnull
+    private final String name;
+    private final String defaultValue;
+    private final TimeUnit timeUnit;
+    private final HecatonProperty parent;
+    private final Function<HecatonProperties, ?> function;
+    private volatile String deprecatedName;
+
+    public HecatonProperty(String name) {
+        this(name, (String) null);
+    }
+
+    public HecatonProperty(@Nonnull String name, Function<HecatonProperties, ?> function) {
+        this.name = checkHasText(name, "The property name cannot be null or empty!");
+        this.function = function;
+        this.defaultValue = null;
+        this.deprecatedName = null;
+        this.parent = null;
+        this.timeUnit = null;
+    }
+
+    public HecatonProperty(String name, Enum<?> defaultEnum) {
+        this(name, defaultEnum.name());
+    }
+
+    public HecatonProperty(String name, boolean defaultValue) {
+        this(name, defaultValue ? "true" : "false");
+    }
+
+    public HecatonProperty(String name, Integer defaultValue) {
+        this(name, String.valueOf(defaultValue));
+    }
+
+    public HecatonProperty(String name, Long defaultValue) {
+        this(name, String.valueOf(defaultValue));
+    }
+
+    public HecatonProperty(String name, Double defaultValue) {
+        this(name, String.valueOf(defaultValue));
+    }
+
+    public HecatonProperty(String name, Float defaultValue) {
+        this(name, String.valueOf(defaultValue));
+    }
+
+    public HecatonProperty(String name, Byte defaultValue) {
+        this(name, String.valueOf(defaultValue));
+    }
+
+    public HecatonProperty(String name, Integer defaultValue, TimeUnit timeUnit) {
+        this(name, String.valueOf(defaultValue), timeUnit);
+    }
+
+    public HecatonProperty(String name, Long defaultValue, TimeUnit timeUnit) {
+        this(name, Long.toString(defaultValue), timeUnit);
+    }
+
+    public HecatonProperty(String name, HecatonProperty property) {
+        this(name, property.getDefaultValue(), property.timeUnit, property);
+    }
+
+    public HecatonProperty(String name, String defaultValue) {
+        this(name, defaultValue, null);
+    }
+
+    protected HecatonProperty(String name, String defaultValue, TimeUnit timeUnit) {
+        this(name, defaultValue, timeUnit, null);
+    }
+
+    public HecatonProperty(@Nonnull String name, String defaultValue, TimeUnit timeUnit, HecatonProperty parent) {
+        this.name = checkHasText(name, "The property name cannot be null or empty!");
+        this.defaultValue = defaultValue;
+        this.function = null;
+        this.timeUnit = timeUnit;
+        this.parent = parent;
+    }
+
+    /**
+     * Sets the deprecated name of this property. Useful if compatibility needs to be provided on property names.
+     *
+     * This method is thread-safe, but is expected to be called immediately after the HecatonProperty is constructed.
+     *
+     * <code>
+     * HecatonProperty property = new HecatonProperty("newname").setDeprecatedName("oldname");
+     * </code>
+     *
+     * @param deprecatedName the deprecated name of the property
+     * @return the updated {@link HecatonProperty}
+     * @throws IllegalArgumentException if the deprecatedName is null or an empty string.
+     */
+    public HecatonProperty setDeprecatedName(String deprecatedName) {
+        this.deprecatedName = checkHasText(deprecatedName, "a valid string should be provided");
+        return this;
+    }
+
+    public Function<HecatonProperties, ?> getFunction() {
+        return function;
+    }
+
+    public String getDeprecatedName() {
+        return deprecatedName;
+    }
+
+    /**
+     * Returns the property name.
+     *
+     * @return the property name
+     */
+    @Nonnull
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Returns the default value of the property.
+     *
+     * @return the default value or <code>null</code> if none is defined
+     */
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    /**
+     * Returns the {@link TimeUnit} of the property.
+     *
+     * @return the {@link TimeUnit}
+     * @throws IllegalArgumentException if no {@link TimeUnit} is defined
+     */
+    public TimeUnit getTimeUnit() {
+        if (timeUnit == null) {
+            throw new IllegalArgumentException(format("Cluster property %s has no TimeUnit defined!", this));
+        }
+
+        return timeUnit;
+    }
+
+    /**
+     * Returns the parent {@link ClusterProperty} of the property.
+     *
+     * @return the parent {@link ClusterProperty} or <code>null</code> if none is defined
+     */
+    public HecatonProperty getParent() {
+        return parent;
+    }
+
+    /**
+     * Sets the system property value of the property.
+     *
+     * @param value the value to set
+     */
+    public void setSystemProperty(String value) {
+        System.setProperty(name, value);
+    }
+
+    /**
+     * Gets the system property value of the property.
+     *
+     * @return the value of the property
+     */
+    public String getSystemProperty() {
+        return System.getProperty(name);
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    /**
+     * Clears the value of this property
+     */
+    @Deprecated(since = "5.6", forRemoval = true)
+    public void clearSystemProperty() {
+        System.clearProperty(name);
+    }
+}

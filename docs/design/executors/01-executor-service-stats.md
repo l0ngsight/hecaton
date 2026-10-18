@@ -7,7 +7,7 @@
 
 ### Description
 
-Hazelcast has 3 different executor service implementations exposed with 
+Hecaton has 3 different executor service implementations exposed with 
 public api. These three different types of executor services are called
 as executor service, scheduled executor service and durable executor 
 service. Only executor type which has statistics available 

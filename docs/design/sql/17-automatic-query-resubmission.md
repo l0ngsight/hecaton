@@ -11,7 +11,7 @@
 ### Background
 #### Description
 
-A customer perceives that AP is NOT implemented correctly in Hazelcast. If the
+A customer perceives that AP is NOT implemented correctly in Hecaton. If the
 member hosting the primary partition is NOT available, their expectation is that
 data should be transparently served from the backup. When the cluster is
 changing topology, e.g., cluster member that contains the primary data is
@@ -110,8 +110,8 @@ However, there can be an ongoing blocking call to `next()` in another thread.
 The Java client retries invocations in this way: first 5 invocations are retried
 without a delay (hardcoded value). Afterwards the delay is `2^<failureCount>`
 ms, up to 1000 ms (configurable by the
-`hazelcast.client.invocation.retry.pause.millis` property). After 120 seconds
-(configurable by the `hazelcast.client.invocation.timeout.seconds` property), a
+`hecaton.client.invocation.retry.pause.millis` property). After 120 seconds
+(configurable by the `hecaton.client.invocation.timeout.seconds` property), a
 failure is reported to the user.
 
 We think this scheme can be also used for SQL retries and there's no need to

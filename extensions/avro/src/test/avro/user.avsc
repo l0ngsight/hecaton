@@ -1,5 +1,5 @@
 {
-"namespace": "com.hazelcast.jet.avro.generated",
+"namespace": "uk.org.hecaton.jet.avro.generated",
   "type": "record",
   "name": "SpecificUser",
   "fields": [

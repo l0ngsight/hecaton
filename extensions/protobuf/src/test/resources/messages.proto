@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package com.hazelcast.jet.protobuf;
+package uk.org.hecaton.jet.protobuf;
 
 message Person {
     string name = 1;

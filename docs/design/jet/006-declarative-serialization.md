@@ -11,8 +11,8 @@ In Jet 4.0 we support 4 interfaces to serialize custom types. However,
 either implementations are slow (`java.io.Serializable` &
 `java.io.Externalizable`) or must depend on IMDG specific classes and
 require hand crafted code from the user which is cumbersome and error
-prone (`com.hazelcast.nio.serialization.Portable` &
-`com.hazelcast.nio.serialization.StreamSerializer`).
+prone (`uk.org.hecaton.nio.serialization.Portable` &
+`uk.org.hecaton.nio.serialization.StreamSerializer`).
 
 There are already fast and declarative serialization libraries out
 there, such as Avro or Google Protocol Buffers. We would like to reduce
@@ -124,7 +124,7 @@ serializers and hooks.
 
 ### Protocol Buffers
 
-An extension *hazelcast-jet-protobuf* including basic support for Protocol
+An extension *hecaton-jet-protobuf* including basic support for Protocol
 Buffers has been created. To implement a Protocol Buffers serializer it's
 now enough to extend:
 
@@ -140,7 +140,7 @@ class PersonSerializer extends ProtobufSerializer<Person> {
 ```
 
 Such serializer is an IMDG
-`com.hazelcast.nio.serialization.StreamSerializer` and as such can be
+`uk.org.hecaton.nio.serialization.StreamSerializer` and as such can be
 registered for the job:
 
 ```java

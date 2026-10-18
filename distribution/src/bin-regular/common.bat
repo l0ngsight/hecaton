@@ -17,11 +17,11 @@ if "x%JAVA_HOME%" == "x" (
 )
 
 :: %~dp0 is the drive+path where this script lives
-if "x%HAZELCAST_HOME%" == "x" (
-    echo HAZELCAST_HOME is not set, expecting Hazelcast at '%~dp0..'
-    set HAZELCAST_HOME=%~dp0..
+if "x%HECATON_HOME%" == "x" (
+    echo HECATON_HOME is not set, expecting Hecaton at '%~dp0..'
+    set HECATON_HOME=%~dp0..
 ) else (
-    echo HAZELCAST_HOME is set, expecting Hazelcast at '%HAZELCAST_HOME%'
+    echo HECATON_HOME is set, expecting Hecaton at '%HECATON_HOME%'
 )
 
 :: options
@@ -45,7 +45,7 @@ if NOT "%MAX_HEAP_SIZE%" == "" (
 
 :: options
 
-FOR /F "tokens=* USEBACKQ" %%F IN (`CALL "%RUN_JAVA%" -cp "%HAZELCAST_HOME%\lib\*" com.hazelcast.internal.util.JavaVersion`) DO SET JAVA_VERSION=%%F
+FOR /F "tokens=* USEBACKQ" %%F IN (`CALL "%RUN_JAVA%" -cp "%HECATON_HOME%\lib\*" uk.org.hecaton.internal.util.JavaVersion`) DO SET JAVA_VERSION=%%F
 
 IF %JAVA_VERSION% GEQ 9 (
     SET JAVA_OPTS=%JAVA_OPTS%%=%--add-modules java.se^
@@ -67,29 +67,29 @@ IF %JAVA_VERSION% GEQ 9 (
     )
 )
 REM Disable the log4j2 shutdown hook, otherwise log lines during node shutdown might be lost
-set JAVA_OPTS=%JAVA_OPTS% -Dlog4j.shutdownHookEnabled=false -Dhazelcast.logging.shutdown=true
+set JAVA_OPTS=%JAVA_OPTS% -Dlog4j.shutdownHookEnabled=false -Dhecaton.logging.shutdown=true
 
-:: HAZELCAST_CONFIG holds path to the configuration file. The path is relative to the Hazelcast installation (HAZELCAST_HOME).
-if "x%HAZELCAST_CONFIG%" == "x" (
-    set HAZELCAST_CONFIG=config\hazelcast.xml
-    if not exist "%HAZELCAST_HOME%\!HAZELCAST_CONFIG!" (
-      set HAZELCAST_CONFIG=config\hazelcast.yaml
+:: HECATON_CONFIG holds path to the configuration file. The path is relative to the Hecaton installation (HECATON_HOME).
+if "x%HECATON_CONFIG%" == "x" (
+    set HECATON_CONFIG=config\hecaton.xml
+    if not exist "%HECATON_HOME%\!HECATON_CONFIG!" (
+      set HECATON_CONFIG=config\hecaton.yaml
     )
-    if not exist "%HAZELCAST_HOME%\!HAZELCAST_CONFIG!" (
-      set HAZELCAST_CONFIG=config\hazelcast.yml
+    if not exist "%HECATON_HOME%\!HECATON_CONFIG!" (
+      set HECATON_CONFIG=config\hecaton.yml
     )
-    if not exist "%HAZELCAST_HOME%\!HAZELCAST_CONFIG!" (
-      echo "Configuration file is missing. Create hazelcast.[xml|yaml|yml] in %HAZELCAST_HOME%\config or set the HAZELCAST_CONFIG environment variable."
+    if not exist "%HECATON_HOME%\!HECATON_CONFIG!" (
+      echo "Configuration file is missing. Create hecaton.[xml|yaml|yml] in %HECATON_HOME%\config or set the HECATON_CONFIG environment variable."
       exit /b 2
     )
-    echo HAZELCAST_CONFIG is not set, using '%HAZELCAST_HOME%\!HAZELCAST_CONFIG!'
+    echo HECATON_CONFIG is not set, using '%HECATON_HOME%\!HECATON_CONFIG!'
 ) else (
-    echo HAZELCAST_CONFIG is set, using configuration file at '!HAZELCAST_CONFIG!'
+    echo HECATON_CONFIG is set, using configuration file at '!HECATON_CONFIG!'
 )
 
-set JAVA_OPTS=%JAVA_OPTS% -Dhazelcast.config="%HAZELCAST_HOME%\!HAZELCAST_CONFIG!"
+set JAVA_OPTS=%JAVA_OPTS% -Dhecaton.config="%HECATON_HOME%\!HECATON_CONFIG!"
 :: Suppress Java 24 and 25 warnings for deprecated Unsafe methods.
-:: This is required because Hazelcast and JCTools internally use Unsafe API.
+:: This is required because Hecaton and JCTools internally use Unsafe API.
 :: Java 23: 'allow' is the default, so no explicit setting is needed.
 :: Java 24-25: 'warn' is the default, so we explicitly set it to 'allow'.
 :: Java 26 or later: 'deny' will be the default, and 'allow' option will no longer be supported.
@@ -98,7 +98,7 @@ IF %JAVA_VERSION% GEQ 24 IF %JAVA_VERSION% LEQ 25 (
 )
 :: classpath
 
-set CLASSPATH="%HAZELCAST_HOME%\lib\*;%HAZELCAST_HOME%\bin\user-lib;%HAZELCAST_HOME%\bin\user-lib\*;%CLASSPATH%"
+set CLASSPATH="%HECATON_HOME%\lib\*;%HECATON_HOME%\bin\user-lib;%HECATON_HOME%\bin\user-lib\*;%CLASSPATH%"
 
 REM Mask sensitive options in JAVA_OPTS
 set "maskKeys="

@@ -12,7 +12,7 @@
 
 ## Background
 
-Before Hazelcast Platform 5.4, Jet job was always deployed to all data members, specifically all non-lite members.
+Before Hecaton Platform 5.4, Jet job was always deployed to all data members, specifically all non-lite members.
 If some DAG vertex is not using all members, it creates no-op processors on others and Jet still creates queues
 to/from those vertices and starts the processors, even though it completes immediately and the queues are closed with a `DONE_ITEM`.
 If some member is not used at all, the DAG is still deployed to it, and the coordinator has to send `InitExecutionOperation` to it and wait for

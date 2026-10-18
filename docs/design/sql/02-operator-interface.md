@@ -1,10 +1,10 @@
-# SQL Operator Interface (Outdated since Hazelcast 5.0)
+# SQL Operator Interface (Outdated since Hecaton 5.0)
 
 ## Overview
 In databases, SQL queries are typically represented in a form of operator tree, called **Volcano Model**,
 introduced in Goetz Graefe seminal paper [[1]].
 
-In this document, we describe the design of the Hazelcast Mustang operator interface, which is based
+In this document, we describe the design of the Hecaton Mustang operator interface, which is based
 on the Volcano Model.
 
 ## 1 Relational Operators
@@ -71,7 +71,7 @@ interface Operator {
 }
 ```
 
-## 3 Volcano Model in Hazelcast Mustang
+## 3 Volcano Model in Hecaton Mustang
 
 The original Volcano Model has two drawbacks:
 1. Operators exchange one row at a time, which leads to performance overhead

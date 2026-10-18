@@ -19,7 +19,7 @@
 
 |                                |                                                  |
 |--------------------------------|--------------------------------------------------|
-| Related Jira                   | _https://hazelcast.atlassian.net/browse/HZ-1455_ |
+| Related Jira                   | _https://hecaton.atlassian.net/browse/HZ-1455_ |
 | Related Github issues          | _None_                                           |
 | Document Status / Completeness | DRAFT                                            |
 | Requirement owner              | _TBD_                                            |
@@ -33,7 +33,7 @@
 
 #### Description
 
-- Currently, the job upload can only be performed by hz-cli command. This command requires a JVM on the host machine.
+- Currently, the job upload can only be performed by hc-cli command. This command requires a JVM on the host machine.
   The first purpose of this feature is to enable non-java clients to upload a jar to a cluster member and execute it
   with some parameters
 - The second purpose of this feature is to enable a cluster member to execute an already existing jar with some
@@ -43,7 +43,7 @@
 
 | Term                   | Definition                                                              |
 |------------------------|-------------------------------------------------------------------------|
-| Client Binary Protocol | The binary messages used between Hazelcast Clients and Hazelcast Server |
+| Client Binary Protocol | The binary messages used between Hecaton Clients and Hecaton Server |
 
 #### Actors and Scenarios
 
@@ -55,8 +55,8 @@ Any language that implements Client Binary Protocol
 
 Provide a list of functions user(s) can perform.
 
-- Upload a jar file that is on the client and pass the same parameters that can be used with hz-cli
-- Execute a jar file that is on the cluster member and pass the same parameters that can be used with hz-cli
+- Upload a jar file that is on the client and pass the same parameters that can be used with hc-cli
+- Execute a jar file that is on the cluster member and pass the same parameters that can be used with hc-cli
 
 #### Additional Functional Design Topics
 
@@ -85,7 +85,7 @@ This feature uses private API. Therefore, the client needs to cast JetService to
 for Jar Upload
 
 ```java
-HazelcastInstance client=...;
+HecatonInstance client=...;
 JetClientInstanceImpl jetService=(JetClientInstanceImpl)client.getJet();
 
 SubmitJobParameters submitJobParameters=SubmitJobParameters.withJarOnClient()
@@ -97,7 +97,7 @@ jetService.submitJobFromJar(submitJobParameters);
 for Jar Execution
 
 ```java
-HazelcastInstance client=...;
+HecatonInstance client=...;
 JetClientInstanceImpl jetService=(JetClientInstanceImpl)client.getJet();
 
 SubmitJobParameters submitJobParameters=SubmitJobParameters.withJarOnMember()
@@ -199,7 +199,7 @@ Some checks are
 - Validate checksum
   Upon reception of the first message a new temporary file is created. For every message the partData byte[] is appended
   to this file. The length of partData field is specified by the partSize field
-  When all the parts are complete, a new job is started using HazelcastBootstrap class. This class executes the jar
+  When all the parts are complete, a new job is started using HecatonBootstrap class. This class executes the jar
   within the same JVM as the member.
 
 **Pros of using the same JVM**
@@ -216,7 +216,7 @@ The uploadJobMultipart by default allocates a buffer of 10_000_000 bytes. The si
 **ClientProperty.JOB_UPLOAD_PART_SIZE** property. So clients that want to allocate less memory may prefer to send a
 bigger total number of messages
 
-HazelcastBootstrap was designed to work only by the **hz-client command**. With this PR it is modified to work on the
+HecatonBootstrap was designed to work only by the **hz-client command**. With this PR it is modified to work on the
 server side. However, it is still a singleton.
 
 If an exception is thrown by the server the upload operation fails. A timer in JetServiceBackend cleans the expired

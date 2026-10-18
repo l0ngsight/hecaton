@@ -26,7 +26,7 @@
 #### Description
 
 This document describes SQL `CREATE VIEW` and `DROP VIEW` statements semantics and design. It's a step to improve
-Hazelcast ANSI SQL standard compatibility and enrich available SQL features.
+Hecaton ANSI SQL standard compatibility and enrich available SQL features.
 
 ### Functional Design
 
@@ -111,7 +111,7 @@ select * from m
 will be stored as:
 
 ```sql
-SELECT column1, column2 FROM hazelcast.public.m
+SELECT column1, column2 FROM hecaton.public.m
 ```
 
 If the table `m` doesn't exist at the time the view is created, the view creation will fail.

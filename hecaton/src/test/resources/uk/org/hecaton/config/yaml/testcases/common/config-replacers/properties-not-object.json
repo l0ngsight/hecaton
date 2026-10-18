@@ -1,0 +1,22 @@
+{
+  "instance": {
+    "hecaton": {
+      "config-replacers": {
+        "fail-if-value-missing": false,
+        "replacers": [
+          {
+            "class-name": "uk.org.hecaton.config.replacer.EncryptionReplacer",
+            "properties": []
+          }
+        ]
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/ConfigReplacers/properties/replacers/items/properties/properties",
+    "pointerToViolation": "#/hecaton/config-replacers/replacers/0/properties",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: JSONObject, found: JSONArray"
+  }
+}

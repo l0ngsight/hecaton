@@ -51,7 +51,7 @@ MapStoreConfig#setOffload
 ```xml
 <map-store enabled="true" initial-mode="LAZY">
     <offload>true</offload>
-    <class-name>com.hazelcast.examples.DummyStore</class-name>
+    <class-name>uk.org.hecaton.examples.DummyStore</class-name>
     <write-delay-seconds>60</write-delay-seconds>
     <write-batch-size>1000</write-batch-size>
     <write-coalescing>true</write-coalescing>
@@ -61,7 +61,7 @@ MapStoreConfig#setOffload
 map-store:
   enabled: true
   initial-mode: LAZY
-  class-name: com.hazelcast.examples.DummyStore
+  class-name: uk.org.hecaton.examples.DummyStore
   offload: true
   write-delay-seconds: 60
   write-batch-size: 1000
@@ -70,7 +70,7 @@ map-store:
 ##### Configuring Offloadable Executor
 `hz:map-store-offloadable` is the name of executor
 which `Step`s are offloaded on. It can be configured
-like regular Hazelcast executors via `ExecutorConfig`
+like regular Hecaton executors via `ExecutorConfig`
 
 #### Implementation
 We divide MapStore interaction needed operations into parts which can be executed separately.
@@ -109,7 +109,7 @@ executed in partition thread and no offloading is done.
 `State` is used to pass state between `Step`s.
 
 #### Improvement for Ordering of Operations
-In previous Hazelcast versions, all map operations wait end of
+In previous Hecaton versions, all map operations wait end of
 blocking MapStore operation than they progress. This provides an
 order of execution between operations. Not to break this behavior,
 in this new implementation, there are offloaded operation queues,

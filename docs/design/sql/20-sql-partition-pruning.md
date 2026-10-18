@@ -211,7 +211,7 @@ Current plan:
 CalcPhysicalRel(expr#0..2=[{inputs}], EXPR$0=[$t1], EXPR$1=[$t2], priority=[$t0])
   AggregateCombineByKeyPhysicalRel(group=[{0}], EXPR$0=[COUNT()], EXPR$1=[SUM($1)])
     AggregateAccumulateByKeyPhysicalRel(group=[{0}])
-      FullScanPhysicalRel(table=[[hazelcast, public, orders[projects=[$7, $4], filter==($1, _UTF-16LE'C2')]]], discriminator=[0])
+      FullScanPhysicalRel(table=[[hecaton, public, orders[projects=[$7, $4], filter==($1, _UTF-16LE'C2')]]], discriminator=[0])
 ```
 
 Desired plan:
@@ -220,7 +220,7 @@ Desired plan:
 CalcPhysicalRel(expr#0..2=[{inputs}], EXPR$0=[$t1], EXPR$1=[$t2], priority=[$t0])
   AggregateCombineByKeyPhysicalRel(group=[{0}], EXPR$0=[COUNT()], EXPR$1=[SUM($1)])
     AggregateAccumulateByKeyPhysicalRel(group=[{0}])
-      FullScanPhysicalRel(table=[[hazelcast, public, orders[projects=[$7, $4], filter==($1, _UTF-16LE'C2')]]], partitioningKey=[$1], partitioningKeyValues=[_UTF-16LE'C2'], discriminator=[0])
+      FullScanPhysicalRel(table=[[hecaton, public, orders[projects=[$7, $4], filter==($1, _UTF-16LE'C2')]]], partitioningKey=[$1], partitioningKeyValues=[_UTF-16LE'C2'], discriminator=[0])
 ```
 
 #### Filter Analysis and Transformation for Partition Pruning
@@ -353,8 +353,8 @@ to accept extracted all partition pruning candidates as a parameter and calculat
     @Nonnull
     public Vertex fullScanReader(
             @Nonnull DagBuildContext context,
-            @Nullable HazelcastRexNode predicate,
-            @Nonnull List<HazelcastRexNode> projection,
+            @Nullable HecatonRexNode predicate,
+            @Nonnull List<HecatonRexNode> projection,
             @Nullable List<Map<String, Expression<?>>> partitionPruningCandidates, // <-- new parameter
             @Nullable FunctionEx<ExpressionEvalContext, EventTimePolicy<JetSqlRow>> eventTimePolicyProvider)
 ```

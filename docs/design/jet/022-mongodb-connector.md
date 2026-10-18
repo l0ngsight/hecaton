@@ -15,7 +15,7 @@
 
 |                                |                                                  |
 |--------------------------------|--------------------------------------------------|
-| Related Jira                   | _https://hazelcast.atlassian.net/browse/HZ-1508_ |
+| Related Jira                   | _https://hecaton.atlassian.net/browse/HZ-1508_ |
 | Related Github issues          | _None_                                           |
 | Document Status / Completeness | DRAFT                                            |
 | Requirement owner              | _TBD_                                            |
@@ -30,13 +30,13 @@
 ### Terminology
 | Term          | Definition                                                                                                           |
 |---------------|----------------------------------------------------------------------------------------------------------------------|
- | Jet connector | A set of classes that can be used as a Hazelcast Jet's source and/or sink.                                           | 
+ | Jet connector | A set of classes that can be used as a Hecaton Jet's source and/or sink.                                           | 
  | SQL Connector | A set of classes (one implementing SqlConnector) that will add functionality to use given source/sink in SQL queries |
 
 ### Description
 MongoDB is a widely used NoSQL, document-based database. Although there
 was a Jet sink and source connector implemented in 
-the `hazelcast-jet-contrib` repository, users didn't really have 
+the `hecaton-jet-contrib` repository, users didn't really have 
 properly tested and supported connector for this database.
 
 
@@ -158,7 +158,7 @@ instance().getConfig().addMapConfig(mapConfig);
 ### Technical Design
 
 #### Source and sink
-The `hazelcast-jet-contrib` repository contained MongoDB connector. It was
+The `hecaton-jet-contrib` repository contained MongoDB connector. It was
 based on the `SourceBuilder`, which is nice in general, but for more 
 flexibility we need to rework this connector to low-level Processor/
 ProcessorSupplier/ProcessorMetaSupplier:
@@ -240,7 +240,7 @@ The implementation will be split into 4 parts:
 
 #### Questions about the change:
 
-  - What components in Hazelcast need to change? How do they change?
+  - What components in Hecaton need to change? How do they change?
     * N/A
 
   - How does this work in an on-prem deployment?
@@ -261,21 +261,21 @@ The implementation will be split into 4 parts:
   - How does the change behave in mixed-version deployments? During a version upgrade? Which migrations are needed?
     * Support for hot updates is not planned. All nodes should have the same version of processors.
     
-  - What are the possible interactions with other features or sub-systems inside Hazelcast? How does the behavior of other code change implicitly as a result of the changes outlined in the design document?
+  - What are the possible interactions with other features or sub-systems inside Hecaton? How does the behavior of other code change implicitly as a result of the changes outlined in the design document?
     * This feature will use GenericMapStore and Data Connections, as mentioned in the examples above.
     
   - What are the edge cases? What are example uses or inputs that we think are uncommon but are still possible and thus need to be handled? How are these edge cases handled?
     * User may have documents of very different schemas in one collection. In such cases the connector should not fail - for inserts
       it should just put new documents, for reading it should use `null` for missing fields and omit all additional fields.
     
-  - What are the effect of possible mistakes by other Hazelcast team members trying to use the feature in their own code? How does the change impact how they will troubleshoot things?
+  - What are the effect of possible mistakes by other Hecaton team members trying to use the feature in their own code? How does the change impact how they will troubleshoot things?
     * It won't be reusable in other context. Troubleshooting will be the same as any other source/sink/connector for Jet. 
     
   - Mention alternatives, risks and assumptions. Why is this design the best in the space of possible designs? What other designs have been considered and what is the rationale for not choosing them?
     
     * Other alternatives:
       - leave implementation to users (bad: requires code duplication, no official support is also not good)
-      - keep connector in `hazelcast-jet-contrib` repository - but it's not as well tested as main repo and less visible
+      - keep connector in `hecaton-jet-contrib` repository - but it's not as well tested as main repo and less visible
     There is also a debatable change, that source and sink will now be a processor implementation, not using
       `SourceBuilder`. However, as mentioned in [Technical design](#Source-and-sink), it's a preferred way to 
       create a SQL connector.
@@ -330,7 +330,7 @@ The implementation will be split into 4 parts:
 - Which principles did you apply to ensure the APIs are consistent with other related features / APIs? (Cross-reference other APIs that are similar or related, for comparison.)
   * Processors will be done in similar manner to other extensions' processors.
 
-- Is the change visible to users of Hazelcast or operators who run Hazelcast clusters?
+- Is the change visible to users of Hecaton or operators who run Hecaton clusters?
   * No if not used.
 - Are there any user experience (UX) changes needed as a result of this change?
   * No

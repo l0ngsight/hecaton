@@ -21,16 +21,16 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>hazelcast-jet-mongodb</artifactId>
+    <artifactId>hecaton-jet-mongodb</artifactId>
 
     <packaging>jar</packaging>
-    <name>hazelcast-jet-mongodb</name>
+    <name>hecaton-jet-mongodb</name>
     <description>Ready made MongoDB connector</description>
     <url>http://www.hazelcast.com/</url>
 
     <parent>
-        <groupId>com.hazelcast.jet</groupId>
-        <artifactId>hazelcast-jet-extensions</artifactId>
+        <groupId>uk.org.hecaton.jet</groupId>
+        <artifactId>hecaton-jet-extensions</artifactId>
         <version>5.7.0</version>
     </parent>
 
@@ -47,7 +47,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Automatic-Module-Name>com.hazelcast.jet.mongodb</Automatic-Module-Name>
+                            <Automatic-Module-Name>uk.org.hecaton.jet.mongodb</Automatic-Module-Name>
                         </manifestEntries>
                     </archive>
                     <forceCreation>true</forceCreation>
@@ -76,12 +76,12 @@
                             </relocations>
                             <artifactSet>
                                 <includes>
-                                    <include>com.hazelcast.jet:hazelcast-jet-mongodb</include>
+                                    <include>uk.org.hecaton.jet:hecaton-jet-mongodb</include>
                                 </includes>
                                 <excludes>
                                     <exclude>com.mongodb:*</exclude>
                                     <exclude>org.apache.calcite:*</exclude>
-                                    <exclude>com.hazelcast:*</exclude>
+                                    <exclude>uk.org.hecaton:*</exclude>
                                 </excludes>
                             </artifactSet>
                         </configuration>
@@ -104,8 +104,8 @@
                 </executions>
                 <dependencies>
                     <dependency>
-                        <groupId>com.hazelcast</groupId>
-                        <artifactId>hazelcast-build-utils</artifactId>
+                        <groupId>uk.org.hecaton</groupId>
+                        <artifactId>hecaton-build-utils</artifactId>
                         <version>${project.version}</version>
                     </dependency>
                 </dependencies>
@@ -138,8 +138,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-sql</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-sql</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
@@ -172,15 +172,15 @@
         </dependency>
 
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-sql</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-sql</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>

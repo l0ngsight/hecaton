@@ -37,7 +37,7 @@ some issue.
 
 #### Internal API
 
-Hazelcast supports multiple logger frameworks out of the box. The difference
+Hecaton supports multiple logger frameworks out of the box. The difference
 between logging backends is abstracted away by `LoggerFactory` and `ILogger`
 interfaces which belong to the public API. Since we don't want to provide any
 public API for the log level adjustment, internal counterparts should be
@@ -81,7 +81,7 @@ public interface InternalLogger {
 }
 ```
 
-For each logging backend Hazelcast provides a `LoggerFactory` implementation
+For each logging backend Hecaton provides a `LoggerFactory` implementation
 which in turn provides an `ILogger` implementation. To support dynamic log level
 changing the implementations should additionally implement the internal
 counterpart (`InternalLoggerFactory` and `InternalLogger`). The following
@@ -124,7 +124,7 @@ public @Nullable Level getLevel();
   * may severely affect the performance.
   *
   * @param level the level to set.
-  * @throws HazelcastException if the underlying {@link LoggerFactory} doesn't
+  * @throws HecatonException if the underlying {@link LoggerFactory} doesn't
   *                            implement {@link InternalLoggerFactory} required
   *                            for dynamic log level changing.
   */
@@ -154,10 +154,10 @@ log.
 
 #### REST endpoint
 
-REST endpoint at `/hazelcast/rest/log-level` should be exposed to users; users
+REST endpoint at `/hecaton/rest/log-level` should be exposed to users; users
 should be able to: GET it to learn the current log level set, POST to it to set
 the log level to the value they want to. REST endpoint at
-`/hazelcast/rest/log-level/reset` should be exposed to users; users should be
+`/hecaton/rest/log-level/reset` should be exposed to users; users should be
 able to POST to it to reset the log level back.
 
 The endpoints should have a proper `RestEndpointGroup` assigned to control the

@@ -44,7 +44,7 @@ non-blocking I/O functionality is provided by the java.nio.Selector.
 In the 5.4 release, we will also add the IOUringEventloop (and
 IOUringReactor) that can do both networking and storage and will rely on
 the io_uring for non-blocking I/O. Probably the IOUringReactor will be
-part of the Hazelcast enterprise. The IOUringEventloop is specific to
+part of the Hecaton enterprise. The IOUringEventloop is specific to
 Linux and requires linux 5.7+.
 
 The eventloop can spin instead of block on the I/O multiplexer, but that
@@ -72,7 +72,7 @@ Reactors can be used directly without the need for a TPCEngine. This
 makes testing a lot less cumbersome.
 
 The functionality of the tpc-engine doesn't know anything about
-functionality running on top like Alto or Hazelcast classic.
+functionality running on top like Alto or Hecaton classic.
 
 The TpcEngine is created using the TpcEngineBuilder.
 

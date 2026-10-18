@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.impl.pipeline.transform;
+
+import uk.org.hecaton.function.ComparatorEx;
+import uk.org.hecaton.jet.core.Edge;
+import uk.org.hecaton.jet.core.ProcessorMetaSupplier;
+import uk.org.hecaton.jet.core.ProcessorSupplier;
+import uk.org.hecaton.jet.core.Vertex;
+import uk.org.hecaton.jet.impl.pipeline.PipelineImpl.Context;
+import uk.org.hecaton.jet.impl.pipeline.Planner;
+import uk.org.hecaton.jet.impl.pipeline.Planner.PlannerVertex;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import java.io.Serial;
+
+import static uk.org.hecaton.function.FunctionEx.identity;
+import static uk.org.hecaton.jet.core.Edge.between;
+import static uk.org.hecaton.jet.core.Vertex.LOCAL_PARALLELISM_USE_DEFAULT;
+import static uk.org.hecaton.jet.core.processor.Processors.mapP;
+import static uk.org.hecaton.jet.core.processor.Processors.sortP;
+
+
+public class SortTransform<T> extends AbstractTransform {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private static final String COLLECT_STAGE_SUFFIX = "-collect";
+    private final ComparatorEx<? super T> comparator;
+
+    @SuppressWarnings("unchecked")
+    public SortTransform(@Nonnull Transform upstream, @Nullable ComparatorEx<? super T> comparator) {
+        super("sort", upstream);
+        if (comparator == null) {
+            this.comparator = (ComparatorEx<? super T>) ComparatorEx.naturalOrder();
+        } else {
+            this.comparator = comparator;
+        }
+    }
+
+    @Override
+    public void addToDag(Planner p, Context context) {
+        String vertexName = name();
+        determineLocalParallelism(LOCAL_PARALLELISM_USE_DEFAULT, context, p.isPreserveOrder());
+        Vertex v1 = p.dag.newVertex(vertexName, sortP(comparator))
+                         .localParallelism(determinedLocalParallelism());
+        if (p.isPreserveOrder()) {
+            p.addEdges(this, v1, Edge::isolated);
+        } else {
+            p.addEdges(this, v1);
+        }
+        determinedLocalParallelism(1);
+        PlannerVertex pv2 = p.addVertex(this, vertexName + COLLECT_STAGE_SUFFIX, determinedLocalParallelism(),
+                ProcessorMetaSupplier.forceTotalParallelismOne(ProcessorSupplier.of(mapP(identity())), vertexName));
+        p.dag.edge(between(v1, pv2.v)
+                .distributed()
+                .allToOne(vertexName)
+                .ordered(comparator));
+    }
+}

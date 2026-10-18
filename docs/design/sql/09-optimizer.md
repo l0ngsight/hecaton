@@ -1,15 +1,15 @@
-# SQL Optimizer (Outdated since Hazelcast 5.0)
+# SQL Optimizer (Outdated since Hecaton 5.0)
 
 ## Overview
 
 When a query string is submitted for execution, it is first parsed, converted to a tree of relational operators, and then 
 passed to the optimizer in order to find the best execution path.
 
-In this document, we describe the design of the Hazelcast Mustang query optimizer that is based on Apache Calcite.
+In this document, we describe the design of the Hecaton Mustang query optimizer that is based on Apache Calcite.
 
 ## 1 Theory
 
-In this section we describe the theoretical aspects of query optimization that form the basis of the Hazelcast Mustang query 
+In this section we describe the theoretical aspects of query optimization that form the basis of the Hecaton Mustang query 
 optimizer.
 
 ### 1.1 Definitions
@@ -502,9 +502,9 @@ Once the optimization is finished, it is necessary to produce the resulting plan
 top-bottom dive from the top `RelSubset` is performed. All `RelSubset` instances already have a node with the best cost at 
 this point (aka "winner"). To construct the final plan, the optimizer recursively finds winners bottom-up.
 
-## 3 Hazelcast Mustang Optimizer
+## 3 Hecaton Mustang Optimizer
 
-We now discuss how the query optimization is organized in the Hazelcast Mustang. The process is split into the following
+We now discuss how the query optimization is organized in the Hecaton Mustang. The process is split into the following
 phases:
 
 *Table 2: Optimization Phases*
@@ -582,10 +582,10 @@ We define the following logical operators and rules:
 |---|---|---|
 | `FilterMergeRule` | Calcite | Merges two adjacent `LogicalFilter` into one to make the operator tree simpler |
 | `FilterProjectTransposeRule` | Calcite | Moves `LogicalFilter` past `LogicalProject` (aka "filter pushdown") to allow for further optimizations, such as `FilterIntoScanLogicalRule` |
-| `FilterIntoScanLogicalRule` | Hazelcast | Moves a `LogicalFilter` in the table of the `LogicalScan` to make the operator tree simpler |
+| `FilterIntoScanLogicalRule` | Hecaton | Moves a `LogicalFilter` in the table of the `LogicalScan` to make the operator tree simpler |
 | `ProjectMergeRule` | Calcite | Merges two adjacent `LogicalProject` into one to make the operator tree simpler |
 | `ProjectFilterTransposeRule` | Calcite | Moves `LogicalProject` past `LogicalFilter` to allow for further optimizations, such as `ProjectIntoScanLogicalRule` |
-| `ProjectIntoScanLogicalRule` | Hazelcast | Gets the list of required input fields from the `LogicalProject` and ensures that the child `LogicalScan` doesn't return unused fields |
+| `ProjectIntoScanLogicalRule` | Hecaton | Gets the list of required input fields from the `LogicalProject` and ensures that the child `LogicalScan` doesn't return unused fields |
 | `ProjectRemoveRule` | Calcite | Removes a `LogicalProject` if it doesn't do anything, e.g. `SELECT a, b FROM (SELECT a, b FROM table)` |
 | `PruneEmptyRules` | Calcite | Removes `LogicalProject` and `LogicalProject` if their input is known to be empty, e.g. `SELECT a, b FROM table WHERE 1 != 1` |
 
@@ -610,7 +610,7 @@ field trimming, and filter pushdowns produces better plans in almost all cases, 
 stage.
 
 As a part of the logical optimization process, we convert the Calcite operators with the convention `Convention.NONE` 
-to our own logical operators with the convention `HazelcastConvention.LOGICAL`. We do this through a special conversion
+to our own logical operators with the convention `HecatonConvention.LOGICAL`. We do this through a special conversion
 rules that extend Calcite's `ConverterRule`.  
 
 If there is a Calcite operator in the tree that doesn't have a logical counterpart, it indicates that there is either an 
@@ -619,7 +619,7 @@ thrown in this case.
 
 *Table 5: Logical Conversion Rules*
 
-| Name | From (Calcite) | To (Hazelcast) |
+| Name | From (Calcite) | To (Hecaton) |
 |---|---|---|
 | `MapScanLogicalRule` | `LogicalTableScan` | `MapScanLogicalRel` |
 | `FilterLogicalRule` | `LogicalFilter` | `FilterPhysicalRel` |
@@ -629,7 +629,7 @@ thrown in this case.
 Last, we manually add a special `RootLogicalRel` on top of the result. This operator is an abstraction of a user query
 cursor that returns results on the initiator member. 
 
-The result of the logical optimization is an optimized tree of operators with the `HazelcastConvention.LOGICAL` convention, 
+The result of the logical optimization is an optimized tree of operators with the `HecatonConvention.LOGICAL` convention, 
 that has `RootLogicalRel` at the root.
 
 ### 3.5 Physical Optimization
@@ -640,7 +640,7 @@ have 1-to-1 mapping to their logical counterparts (e.g. project), while others m
 
 #### 3.5.1 Distribution Trait
 
-Since Hazelcast stores data on multiple nodes, we should take the data distribution in count during planning. This is achieved
+Since Hecaton stores data on multiple nodes, we should take the data distribution in count during planning. This is achieved
 through the `DistributionTrait` property that is assigned to physical operators during planning.   
 
 *Table 6: Distribution Types*
@@ -703,7 +703,7 @@ Then the root node enforces the `ROOT` distribution on the input, adding the `Ro
 The `VolcanoPlanner` is not suitable to work in the bottom-up trait propagation out-of-the-box. Therefore, we adjust our 
 integration with the Apache Calcite as follows:
 1. During the physical optimization, we gradually convert nodes from the `LOGICAL` convention to `PHYSICAL`. For the 
-`PHYSICAL` convention we override a couple of methods (see `HazelcastConventions.PHYSICAL`) that roughly forces the optimizer
+`PHYSICAL` convention we override a couple of methods (see `HecatonConventions.PHYSICAL`) that roughly forces the optimizer
 to do the following: when a new `PHYSICAL` node is created, force re-optimization of the `LOGICAL` parent. This way, whenever a 
 new `PHYSICAL` node is added to MEMO, the rules for the `LOGICAL` parent node is added to the execution queue. 
 1. Optimization rules for intermediate nodes (i.e., not leaves, and not root) follow a similar pattern: get the input's 
@@ -731,7 +731,7 @@ Currently, we have the following physical optimizations.
 | `ValuesPhysicalRule` | `ValuesPhysicalRel` | Convert logical values to physical values, assign `REPLICATED` distribution |
 | `MapScanPhysicalRule` | `MapScanPhysicalRel`, `MapIndexScanPhysicalRel` | Convert logical map scan to physical map scan or physical map index scan based on the filter condition, assign `PARTITIONED` distribution |
 
-The result of the physical optimization is an optimized tree of operators with the `HazelcastConvention.PHYSICAL` convention, 
+The result of the physical optimization is an optimized tree of operators with the `HecatonConvention.PHYSICAL` convention, 
 that has `RootPhysicalRel` at the root, and has zero or more `Exchange` operators that move data within the cluster.
 
 ### 3.6 Splitting

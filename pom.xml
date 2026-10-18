@@ -21,13 +21,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.hazelcast</groupId>
-        <artifactId>hazelcast-parent</artifactId>
+        <groupId>uk.org.hecaton</groupId>
+        <artifactId>hecaton-parent</artifactId>
         <version>5.7.0</version>
-        <relativePath>hazelcast-parent/pom.xml</relativePath>
+        <relativePath>hecaton-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>hazelcast-root</artifactId>
+    <artifactId>hecaton-root</artifactId>
     <!--
         This is duplicated and could instead be inferred from the parent version
         But versions-maven-plugin does not support this and breaks
@@ -36,20 +36,20 @@
     -->
     <version>5.7.0</version>
     <packaging>pom</packaging>
-    <name>Hazelcast Root</name>
-    <description>Hazelcast In-Memory DataGrid</description>
+    <name>Hecaton Root</name>
+    <description>Hecaton In-Memory DataGrid</description>
     <url>http://www.hazelcast.com/</url>
 
     <modules>
-        <module>hazelcast-parent</module>
-        <module>hazelcast-tpc-engine</module>
-        <module>hazelcast</module>
-        <module>hazelcast-archunit-rules</module>
-        <module>hazelcast-spring</module>
-        <module>hazelcast-spring-boot-autoconfiguration</module>
-        <module>hazelcast-spring-tests</module>
-        <module>hazelcast-build-utils</module>
-        <module>hazelcast-sql</module>
+        <module>hecaton-parent</module>
+        <module>hecaton-tpc-engine</module>
+        <module>hecaton</module>
+        <module>hecaton-archunit-rules</module>
+        <module>hecaton-spring</module>
+        <module>hecaton-spring-boot-autoconfiguration</module>
+        <module>hecaton-spring-tests</module>
+        <module>hecaton-build-utils</module>
+        <module>hecaton-sql</module>
     </modules>
 
     <properties>
@@ -57,14 +57,14 @@
         <target.dir>target</target.dir>
         <timestamp>${maven.build.timestamp}</timestamp>
 
-        <hazelcast.serialization.version>1</hazelcast.serialization.version>
-        <hazelcast.serverMainClass>com.hazelcast.core.server.HazelcastMemberStarter</hazelcast.serverMainClass>
+        <hecaton.serialization.version>1</hecaton.serialization.version>
+        <hecaton.serverMainClass>uk.org.hecaton.core.server.HecatonMemberStarter</hecaton.serverMainClass>
 
         <!-- Additional JVM system arguments -->
         <extraVmArgs/>
         <vmHeapSettings>-Xms512m -Xmx2G</vmHeapSettings>
         <!-- Java 9+ module system args to be appended during surefire/failsafe executions. -->
-        <hazelcast.module.name>ALL-UNNAMED</hazelcast.module.name>
+        <hecaton.module.name>ALL-UNNAMED</hecaton.module.name>
 
         <!-- needed for CheckStyle -->
         <checkstyle.configLocation>${main.basedir}/checkstyle/checkstyle.xml</checkstyle.configLocation>
@@ -90,11 +90,11 @@
         NOTE: There are additional arguments for IBM OpenJ9, see the specific profile
         -->
         <javaStandardModuleArgs>
-            --add-exports java.base/jdk.internal.ref=${hazelcast.module.name}
-            --add-opens jdk.management/com.sun.management.internal=${hazelcast.module.name}
-            --add-opens java.base/sun.nio.ch=${hazelcast.module.name}
-            --add-opens java.base/java.lang=${hazelcast.module.name}
-            --add-opens java.management/sun.management=${hazelcast.module.name}
+            --add-exports java.base/jdk.internal.ref=${hecaton.module.name}
+            --add-opens jdk.management/com.sun.management.internal=${hecaton.module.name}
+            --add-opens java.base/sun.nio.ch=${hecaton.module.name}
+            --add-opens java.base/java.lang=${hecaton.module.name}
+            --add-opens java.management/sun.management=${hecaton.module.name}
         </javaStandardModuleArgs>
         <javaModuleArgs>${javaStandardModuleArgs}</javaModuleArgs>
     </properties>
@@ -107,13 +107,13 @@
     </licenses>
     <scm>
         <connection>scm:git:git://github.com/hazelcast/hazelcast.git</connection>
-        <developerConnection>scm:git:git@github.com:hazelcast/hazelcast.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:hecaton/hecaton.git</developerConnection>
         <url>https://github.com/hazelcast/hazelcast/</url>
     </scm>
     <developers>
         <developer>
-            <id>hazelcast-team</id>
-            <name>Hazelcast team</name>
+            <id>hecaton-team</id>
+            <name>Hecaton team</name>
             <email>info@hazelcast.com</email>
             <organization>Hazelcast, Inc.</organization>
             <organizationUrl>https://hazelcast.com</organizationUrl>
@@ -122,7 +122,7 @@
 
     <contributors>
         <contributor>
-            <name>Hazelcast Community</name>
+            <name>Hecaton Community</name>
             <email>info@hazelcast.com</email>
             <url>https://hazelcast.atlassian.net/wiki/display/COM/Hazelcast+Contributor+Agreement</url>
         </contributor>
@@ -157,7 +157,7 @@
                     <include>**/*.yaml</include>
                     <include>**/*.xsd</include>
                     <include>**/*.txt</include>
-                    <include>**/hazelcast-config-*.json</include>
+                    <include>**/hecaton-config-*.json</include>
                     <include>**/*.handlers</include>
                     <include>**/*.schemas</include>
                 </includes>
@@ -180,7 +180,7 @@
             <testResource>
                 <directory>src/test/resources</directory>
                 <excludes>
-                    <exclude>com/hazelcast/jet/server/testjob/**</exclude>
+                    <exclude>uk/org/hecaton/jet/server/testjob/**</exclude>
                 </excludes>
             </testResource>
         </testResources>
@@ -218,8 +218,8 @@
                     <argLine>
                         ${vmHeapSettings}
                         ${javaModuleArgs}
-                        -Dhazelcast.phone.home.enabled=false
-                        -Dhazelcast.test.use.network=false
+                        -Dhecaton.phone.home.enabled=false
+                        -Dhecaton.test.use.network=false
                         -Dlog4j.skipJansi=true
                         ${extraVmArgs}
                     </argLine>
@@ -231,8 +231,8 @@
                         <exclude>**/**IT.java</exclude>
                     </excludes>
                     <excludedGroups>
-                        com.hazelcast.test.annotation.SlowTest,
-                        com.hazelcast.test.annotation.NightlyTest
+                        uk.org.hecaton.test.annotation.SlowTest,
+                        uk.org.hecaton.test.annotation.NightlyTest
                     </excludedGroups>
                     <!-- Use TCP for IPC communication to avoid warnings: Corrupted STDOUT by directly writing... -->
                     <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
@@ -252,16 +252,16 @@
                     <argLine>
                         ${vmHeapSettings}
                         ${javaModuleArgs}
-                        -Dhazelcast.phone.home.enabled=false
-                        -Dhazelcast.test.use.network=true
+                        -Dhecaton.phone.home.enabled=false
+                        -Dhecaton.test.use.network=true
                         -Dlog4j.skipJansi=true
                         ${extraVmArgs}
                     </argLine>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <useSystemClassLoader>true</useSystemClassLoader>
                     <excludedGroups>
-                        com.hazelcast.test.annotation.SlowTest,
-                        com.hazelcast.test.annotation.NightlyTest
+                        uk.org.hecaton.test.annotation.SlowTest,
+                        uk.org.hecaton.test.annotation.NightlyTest
                     </excludedGroups>
                     <!-- Use TCP for IPC communication to avoid warnings: Corrupted STDOUT by directly writing... -->
                     <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
@@ -295,8 +295,8 @@
                                 </resource>
                                 <resource>
                                     <!-- Don't include the top level LICENSE file which is valid for whole repository
-                                         use rather the ASF license file located in hazelcast-build-utils module.-->
-                                    <directory>../hazelcast-build-utils/src/main/resources</directory>
+                                         use rather the ASF license file located in hecaton-build-utils module.-->
+                                    <directory>../hecaton-build-utils/src/main/resources</directory>
                                     <includes>
                                         <include>LICENSE</include>
                                     </includes>
@@ -381,9 +381,9 @@
                                         ${vmHeapSettings}
                                         ${javaModuleArgs}
                                         -ea
-                                        -Dhazelcast.phone.home.enabled=false
-                                        -Dhazelcast.test.use.network=false
-                                        -Dhazelcast.test.multiple.jvm=true
+                                        -Dhecaton.phone.home.enabled=false
+                                        -Dhecaton.test.use.network=false
+                                        -Dhecaton.test.multiple.jvm=true
                                         -Dlog4j.configurationFile=log4j2.xml
                                         -Dlog4j.skipJansi=true
                                         ${extraVmArgs}
@@ -396,11 +396,11 @@
                                         <exclude>**/**IT.java</exclude>
                                     </excludes>
                                     <groups>
-                                        com.hazelcast.test.annotation.ParallelJVMTest
+                                        uk.org.hecaton.test.annotation.ParallelJVMTest
                                     </groups>
                                     <excludedGroups>
-                                        com.hazelcast.test.annotation.SlowTest,
-                                        com.hazelcast.test.annotation.NightlyTest
+                                        uk.org.hecaton.test.annotation.SlowTest,
+                                        uk.org.hecaton.test.annotation.NightlyTest
                                     </excludedGroups>
                                     <systemPropertyVariables>
                                         <multipleJVM>true</multipleJVM>
@@ -425,8 +425,8 @@
                                     <argLine>
                                         ${vmHeapSettings}
                                         ${javaModuleArgs}
-                                        -Dhazelcast.phone.home.enabled=false
-                                        -Dhazelcast.test.use.network=false
+                                        -Dhecaton.phone.home.enabled=false
+                                        -Dhecaton.test.use.network=false
                                         -Dlog4j.configurationFile=log4j2.xml
                                         -Dlog4j.skipJansi=true
                                         ${extraVmArgs}
@@ -439,9 +439,9 @@
                                         <exclude>**/**IT.java</exclude>
                                     </excludes>
                                     <excludedGroups>
-                                        com.hazelcast.test.annotation.SlowTest,
-                                        com.hazelcast.test.annotation.NightlyTest,
-                                        com.hazelcast.test.annotation.ParallelJVMTest
+                                        uk.org.hecaton.test.annotation.SlowTest,
+                                        uk.org.hecaton.test.annotation.NightlyTest,
+                                        uk.org.hecaton.test.annotation.ParallelJVMTest
                                     </excludedGroups>
                                     <!-- Fixes missing parameters in test name for tests run via mvn -->
                                     <statelessTestsetReporter
@@ -461,8 +461,8 @@
                             <argLine>
                                 ${vmHeapSettings}
                                 ${javaModuleArgs}
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.test.use.network=false
+                                -Dhecaton.phone.home.enabled=false
+                                -Dhecaton.test.use.network=false
                                 -Dlog4j.configurationFile=log4j2.xml
                                 -Dlog4j.skipJansi=true
                                 ${extraVmArgs}
@@ -470,8 +470,8 @@
                             <useManifestOnlyJar>false</useManifestOnlyJar>
                             <useSystemClassLoader>true</useSystemClassLoader>
                             <excludedGroups>
-                                com.hazelcast.test.annotation.SlowTest,
-                                com.hazelcast.test.annotation.NightlyTest
+                                uk.org.hecaton.test.annotation.SlowTest,
+                                uk.org.hecaton.test.annotation.NightlyTest
                             </excludedGroups>
                         </configuration>
                         <executions>
@@ -549,7 +549,7 @@
                 <vmHeapSettings>-Xms128m -Xmx1G</vmHeapSettings>
             </properties>
             <modules>
-                <module>hazelcast-coverage-report</module>
+                <module>hecaton-coverage-report</module>
             </modules>
             <build>
                 <plugins>
@@ -582,8 +582,8 @@
                             <argLine>
                                 ${vmHeapSettings}
                                 ${javaModuleArgs}
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.test.use.network=false
+                                -Dhecaton.phone.home.enabled=false
+                                -Dhecaton.test.use.network=false
                                 -Dlog4j.skipJansi=true
                                 ${extraVmArgs}
                             </argLine>
@@ -612,16 +612,16 @@
         <profile>
             <id>test-coverage</id>
             <modules>
-                <module>hazelcast-coverage-report</module>
+                <module>hecaton-coverage-report</module>
             </modules>
             <properties>
                 <argLine>
                     ${vmHeapSettings}
                     ${javaModuleArgs}
-                    -Dhazelcast.phone.home.enabled=false
-                    -Dhazelcast.test.use.network=false
-                    -Dhazelcast.operation.call.timeout.millis=120000
-                    -Dhazelcast.graceful.shutdown.max.wait=240
+                    -Dhecaton.phone.home.enabled=false
+                    -Dhecaton.test.use.network=false
+                    -Dhecaton.operation.call.timeout.millis=120000
+                    -Dhecaton.graceful.shutdown.max.wait=240
                     -Dlog4j.skipJansi=true
                     ${extraVmArgs}
                 </argLine>
@@ -665,7 +665,7 @@
                                 <exclude>**/**IT.java</exclude>
                             </excludes>
                             <excludedGroups>
-                                com.hazelcast.test.annotation.NightlyTest
+                                uk.org.hecaton.test.annotation.NightlyTest
                             </excludedGroups>
                             <!-- Fixes missing parameters in test name for tests run via mvn -->
                             <statelessTestsetReporter
@@ -683,13 +683,13 @@
                             <argLine>
                                 ${vmHeapSettings}
                                 ${javaModuleArgs}
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.test.use.network=true
+                                -Dhecaton.phone.home.enabled=false
+                                -Dhecaton.test.use.network=true
                                 -Dlog4j.skipJansi=true
                                 ${extraVmArgs}
                             </argLine>
                             <excludedGroups>
-                                com.hazelcast.test.annotation.NightlyTest
+                                uk.org.hecaton.test.annotation.NightlyTest
                             </excludedGroups>
                             <useManifestOnlyJar>false</useManifestOnlyJar>
                             <useSystemClassLoader>true</useSystemClassLoader>
@@ -791,14 +791,14 @@
                             <argLine>
                                 ${vmHeapSettings}
                                 ${javaModuleArgs}
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.test.use.network=false
+                                -Dhecaton.phone.home.enabled=false
+                                -Dhecaton.test.use.network=false
                                 -Dlog4j.skipJansi=true
                                 ${extraVmArgs}
                             </argLine>
                             <groups>
-                                com.hazelcast.test.annotation.NightlyTest,
-                                com.hazelcast.test.annotation.SlowTest
+                                uk.org.hecaton.test.annotation.NightlyTest,
+                                uk.org.hecaton.test.annotation.SlowTest
                             </groups>
                             <includes>
                                 <include>**/**Test.java</include>
@@ -822,8 +822,8 @@
                             <argLine>
                                 ${vmHeapSettings}
                                 ${javaModuleArgs}
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.test.use.network=true
+                                -Dhecaton.phone.home.enabled=false
+                                -Dhecaton.test.use.network=true
                                 -Dlog4j.skipJansi=true
                                 ${extraVmArgs}
                             </argLine>
@@ -833,8 +833,8 @@
                                 <include>**/*IT.java</include>
                             </includes>
                             <groups>
-                                com.hazelcast.test.annotation.NightlyTest,
-                                com.hazelcast.test.annotation.SlowTest
+                                uk.org.hecaton.test.annotation.NightlyTest,
+                                uk.org.hecaton.test.annotation.SlowTest
                             </groups>
                         </configuration>
                         <executions>
@@ -869,8 +869,8 @@
                             <argLine>
                                 ${vmHeapSettings}
                                 ${javaModuleArgs}
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.test.use.network=false
+                                -Dhecaton.phone.home.enabled=false
+                                -Dhecaton.test.use.network=false
                                 -Dlog4j.skipJansi=true
                                 ${extraVmArgs}
                             </argLine>
@@ -898,8 +898,8 @@
                             <argLine>
                                 ${vmHeapSettings}
                                 ${javaModuleArgs}
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.test.use.network=true
+                                -Dhecaton.phone.home.enabled=false
+                                -Dhecaton.test.use.network=true
                                 -Dlog4j.skipJansi=true
                                 ${extraVmArgs}
                             </argLine>
@@ -924,7 +924,7 @@
             Profile which allows to skip the modulepath-tests module.
             The module runs by default, but can be skipped by adding -Dskip-modulepath-tests property.
             This is used in PR builder when we run only `mvn test-compile` which is not possible due
-            to an automatic module name not being created in the hazelcast jar (no jar is built at all).
+            to an automatic module name not being created in the hecaton jar (no jar is built at all).
             -->
             <id>modulepath-tests</id>
             <activation>
@@ -953,7 +953,7 @@
                             <properties>
                                 <property>
                                     <name>listener</name>
-                                    <value>com.hazelcast.test.compatibility.SamplingTestExecutionListener</value>
+                                    <value>uk.org.hecaton.test.compatibility.SamplingTestExecutionListener</value>
                                 </property>
                             </properties>
                             <trimStackTrace>false</trimStackTrace>
@@ -961,9 +961,9 @@
                             <argLine>
                                 ${vmHeapSettings}
                                 ${javaModuleArgs}
-                                -Dhazelcast.phone.home.enabled=false
-                                -Dhazelcast.test.use.network=false
-                                -Dhazelcast.test.sample.serialized.objects=${target.dir}/serialized-objects-${project.version}-
+                                -Dhecaton.phone.home.enabled=false
+                                -Dhecaton.test.use.network=false
+                                -Dhecaton.test.sample.serialized.objects=${target.dir}/serialized-objects-${project.version}-
                                 -Dlog4j.skipJansi=true
                                 ${extraVmArgs}
                             </argLine>
@@ -981,9 +981,9 @@
                                 <exclude>**/*Jet*.java</exclude>
                             </excludes>
                             <excludedGroups>
-                                com.hazelcast.test.annotation.SlowTest,
-                                com.hazelcast.test.annotation.NightlyTest,
-                                com.hazelcast.test.annotation.SerializationSamplesExcluded
+                                uk.org.hecaton.test.annotation.SlowTest,
+                                uk.org.hecaton.test.annotation.NightlyTest,
+                                uk.org.hecaton.test.annotation.SerializationSamplesExcluded
                             </excludedGroups>
                             <!-- Fixes missing parameters in test name for tests run via mvn -->
                             <statelessTestsetReporter
@@ -1013,7 +1013,7 @@
             <modules>
                 <module>extensions</module>
                 <module>distribution</module>
-                <module>hazelcast-it</module>
+                <module>hecaton-it</module>
             </modules>
         </profile>
         <profile>
@@ -1027,7 +1027,7 @@
             <properties>
                 <javaModuleArgs>
                     ${javaStandardModuleArgs}
-                    --add-exports jdk.management/com.ibm.lang.management.internal=${hazelcast.module.name}
+                    --add-exports jdk.management/com.ibm.lang.management.internal=${hecaton.module.name}
                 </javaModuleArgs>
             </properties>
         </profile>

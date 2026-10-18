@@ -19,14 +19,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.hazelcast</groupId>
-        <artifactId>hazelcast-root</artifactId>
+        <groupId>uk.org.hecaton</groupId>
+        <artifactId>hecaton-root</artifactId>
         <version>5.7.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <name>hazelcast-distribution</name>
-    <artifactId>hazelcast-distribution</artifactId>
+    <name>hecaton-distribution</name>
+    <artifactId>hecaton-distribution</artifactId>
     <packaging>jar</packaging>
 
     <properties>
@@ -49,7 +49,7 @@
                         <phase>prepare-package</phase>
                         <configuration>
                             <fileTemplate>
-                                ${main.basedir}/hazelcast-build-utils/src/main/resources/hazelcast-thirdparty-template.ftl
+                                ${main.basedir}/hecaton-build-utils/src/main/resources/hecaton-thirdparty-template.ftl
                             </fileTemplate>
                             <includedLicenses combine.children="append">
                                 <includedLicense>CDDL</includedLicense>
@@ -76,8 +76,8 @@
                         <configuration>
                             <artifactItems>
                                 <artifactItem>
-                                    <groupId>com.hazelcast</groupId>
-                                    <artifactId>hazelcast</artifactId>
+                                    <groupId>uk.org.hecaton</groupId>
+                                    <artifactId>hecaton</artifactId>
                                     <outputDirectory>${configs.from.jar}</outputDirectory>
                                     <includes>**/*.xml,**/*.yaml,META-INF/NOTICE,**/*.txt</includes>
                                 </artifactItem>
@@ -91,13 +91,13 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>distro-assembly-hazelcast</id>
+                        <id>distro-assembly-hecaton</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>hazelcast-${project.version}</finalName>
+                            <finalName>hecaton-${project.version}</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptors>
                                 <descriptor>src/assembly/assembly-descriptor.xml</descriptor>
@@ -107,13 +107,13 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>distro-assembly-hazelcast-slim</id>
+                        <id>distro-assembly-hecaton-slim</id>
                         <phase>package</phase>
                         <goals>
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>hazelcast-${project.version}</finalName>
+                            <finalName>hecaton-${project.version}</finalName>
                             <appendAssemblyId>true</appendAssemblyId>
                             <descriptors>
                                 <descriptor>src/assembly/assembly-descriptor-slim.xml</descriptor>
@@ -127,28 +127,28 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-spring</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-spring</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-sql</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-sql</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- HazelcastCommandLine dependencies-->
+        <!-- HecatonCommandLine dependencies-->
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
@@ -203,129 +203,129 @@
             <version>5.1</version>
             <exclusions>
                 <exclusion>
-                    <groupId>com.hazelcast</groupId>
-                    <artifactId>hazelcast</artifactId>
+                    <groupId>uk.org.hecaton</groupId>
+                    <artifactId>hecaton</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
 
         <!-- Jet extensions -->
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-avro</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-avro</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-cdc-debezium</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-cdc-debezium</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-cdc-mysql</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-cdc-mysql</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-cdc-postgres</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-cdc-postgres</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-csv</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-csv</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-elasticsearch-7</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-elasticsearch-7</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-grpc</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-grpc</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-files-azure</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-files-azure</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-files-gcs</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-files-gcs</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-files-s3</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-files-s3</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-hadoop-all</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-hadoop-all</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-kafka</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-kafka</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-kinesis</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-kinesis</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-protobuf</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-protobuf</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-python</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-python</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
             <exclusions>
                 <exclusion>
-                    <groupId>com.hazelcast.jet</groupId>
-                    <artifactId>hazelcast-jet-grpc</artifactId>
+                    <groupId>uk.org.hecaton.jet</groupId>
+                    <artifactId>hecaton-jet-grpc</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-s3</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-s3</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-mapstore</artifactId>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-mapstore</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-mongodb</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-mongodb</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast.jet</groupId>
-            <artifactId>hazelcast-jet-kafka-connect</artifactId>
+            <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-kafka-connect</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>

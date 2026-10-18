@@ -1,0 +1,144 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.test;
+
+import com.google.common.collect.EvictingQueue;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.internal.util.ExceptionUtil;
+import uk.org.hecaton.logging.LogEvent;
+import uk.org.hecaton.logging.LogListener;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.logging.Level;
+
+import static java.lang.System.lineSeparator;
+import static java.util.Collections.synchronizedCollection;
+import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+
+/**
+ * Records exceptions logged by HecatonInstance via the logging service.
+ * <p>
+ * To use create a new instance and pass the instances you want to track the exceptions for.
+ * <p>
+ * NOTE: You can't use this class if you share the HecatonInstances between tests in
+ * {@link HecatonParallelClassRunner}.
+ */
+public class ExceptionRecorder implements LogListener {
+
+    private final HecatonInstance[] instances;
+
+    private final Collection<Throwable> throwables = synchronizedCollection(EvictingQueue.create(100));
+    private final List<Predicate<Throwable>> exclusions = new ArrayList<>();
+
+    public ExceptionRecorder(HecatonInstance instance, Level level) {
+        this(new HecatonInstance[]{instance}, level);
+    }
+
+    public ExceptionRecorder(HecatonInstance[] instances, Level level) {
+        this.instances = instances;
+        for (HecatonInstance instance : this.instances) {
+            instance.getLoggingService().addLogListener(level, this);
+        }
+    }
+
+    /**
+     * Unregister the recorder.
+     * Use e.g. when you want to track exceptions only for a single test,
+     * but you share the instance between multiple tests.
+     */
+    public void removeListener() {
+        for (HecatonInstance instance : instances) {
+            instance.getLoggingService().removeLogListener(this);
+        }
+    }
+
+    /**
+     * Ignore certain exceptions when invoking {@link #assertNoExceptions()}
+     * @param predicate an exception to ignore
+     * @return this ExceptionRecorder
+     */
+    public ExceptionRecorder ignore(Predicate<Throwable> predicate) {
+        if (predicate != null) {
+            exclusions.add(predicate);
+        }
+        return this;
+    }
+
+    public final void assertNoExceptions() {
+        List<Throwable> snapshot = exceptionsLogged();
+        if (snapshot.isEmpty()) {
+            return;
+        }
+
+        // Apply any configured exclusions
+        List<Throwable> relevant = exclusions.isEmpty()
+                ? snapshot
+                : snapshot.stream()
+                .filter(t -> exclusions.stream().noneMatch(p -> p.test(t)))
+                .toList();
+
+        if (relevant.isEmpty()) {
+            return;
+        }
+
+        String message = relevant.stream()
+                .map(ExceptionUtil::toString)
+                .distinct()
+                .collect(joining(lineSeparator() + "-".repeat(20) + lineSeparator()));
+
+        throw new AssertionError("Expected no exception, but found: " + lineSeparator() + message);
+    }
+
+    public List<Throwable> exceptionsLogged() {
+        return new ArrayList<>(throwables);
+    }
+
+    @SafeVarargs
+    public final List<Throwable> exceptionsOfTypes(@Nonnull Class<? extends Throwable>... exceptionClasses) {
+        return exceptionsLogged()
+                .stream()
+                .filter(e -> {
+                    for (Class<? extends Throwable> ec : exceptionClasses) {
+                        if (ec.isAssignableFrom(e.getClass())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                })
+                .collect(toList());
+    }
+
+    @Override
+    public void log(LogEvent logEvent) {
+        Throwable throwable = logEvent.getLogRecord().getThrown();
+        if (throwable != null) {
+            throwables.add(throwable);
+        }
+    }
+
+    /**
+     * Clears the recorded exceptions, should be used between tests
+     */
+    public void clear() {
+        throwables.clear();
+    }
+}

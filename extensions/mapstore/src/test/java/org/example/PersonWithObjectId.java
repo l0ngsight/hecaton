@@ -19,7 +19,7 @@ package org.example;
 import org.bson.types.ObjectId;
 
 /**
- * This class must be in other package than com.hazelcast.*
+ * This class must be in other package than uk.org.hecaton.*
  */
 public class PersonWithObjectId {
 

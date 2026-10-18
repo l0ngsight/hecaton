@@ -1,6 +1,6 @@
 ---
 title: Introduction
-description: Various Design Documents for Hazelcast Jet features
+description: Various Design Documents for Hecaton Jet features
 ---
 
 This section contains documents detailing technical design of Jet

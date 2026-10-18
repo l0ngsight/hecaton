@@ -22,15 +22,15 @@
         <format>zip</format>
         <format>tar.gz</format>
     </formats>
-    <baseDirectory>hazelcast-${project.version}-slim</baseDirectory>
+    <baseDirectory>hecaton-${project.version}-slim</baseDirectory>
 
     <dependencySets>
         <dependencySet>
             <includes>
-                <include>com.hazelcast:hazelcast</include>
-                <include>com.hazelcast:hazelcast-sql</include>
-                <include>com.hazelcast:hazelcast-wm</include>
-                <include>com.hazelcast:hazelcast-distribution</include>
+                <include>uk.org.hecaton:hecaton</include>
+                <include>uk.org.hecaton:hecaton-sql</include>
+                <include>uk.org.hecaton:hecaton-wm</include>
+                <include>uk.org.hecaton:hecaton-distribution</include>
                 <include>io.prometheus.jmx:jmx_prometheus_javaagent</include>
                 <include>javax.cache:cache-api</include>
                 <include>org.apache.logging.log4j:*</include>
@@ -52,13 +52,13 @@
 
         <!-- Full Example YAML config files -->
         <file>
-            <source>${configs.from.jar}/hazelcast-full-example.yaml</source>
-            <destName>hazelcast-full-example.yaml</destName>
+            <source>${configs.from.jar}/hecaton-full-example.yaml</source>
+            <destName>hecaton-full-example.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-client-full-example.yaml</source>
-            <destName>hazelcast-client-full-example.yaml</destName>
+            <source>${configs.from.jar}/hecaton-client-full-example.yaml</source>
+            <destName>hecaton-client-full-example.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
 
@@ -66,20 +66,20 @@
         <!-- We use a different default file for the assembly
              because of different settings, e.g. jet is enabled -->
         <file>
-            <source>${configs.from.jar}/hazelcast-default-assembly.xml</source>
-            <destName>hazelcast.xml</destName>
+            <source>${configs.from.jar}/hecaton-default-assembly.xml</source>
+            <destName>hecaton.xml</destName>
             <outputDirectory>config</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-docker-assembly.xml</source>
-            <destName>hazelcast-docker.xml</destName>
+            <source>${configs.from.jar}/hecaton-docker-assembly.xml</source>
+            <destName>hecaton-docker.xml</destName>
             <outputDirectory>config</outputDirectory>
         </file>
         <!-- We use a different default file for the assembly
              because of different settings, e.g. smart routing is disabled -->
         <file>
-            <source>${configs.from.jar}/hazelcast-client-default-assembly.xml</source>
-            <destName>hazelcast-client.xml</destName>
+            <source>${configs.from.jar}/hecaton-client-default-assembly.xml</source>
+            <destName>hecaton-client.xml</destName>
             <outputDirectory>config</outputDirectory>
         </file>
 
@@ -87,55 +87,55 @@
         <!-- We use a different default file for the assembly
              because of different settings, e.g. jet is enabled -->
         <file>
-            <source>${configs.from.jar}/hazelcast-default-assembly.yaml</source>
-            <destName>hazelcast.yaml</destName>
+            <source>${configs.from.jar}/hecaton-default-assembly.yaml</source>
+            <destName>hecaton.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-docker-assembly.yaml</source>
-            <destName>hazelcast-docker.yaml</destName>
+            <source>${configs.from.jar}/hecaton-docker-assembly.yaml</source>
+            <destName>hecaton-docker.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <!-- We use a different default file for the assembly
              because of different settings, e.g. smart routing is disabled -->
         <file>
-            <source>${configs.from.jar}/hazelcast-client-default-assembly.yaml</source>
-            <destName>hazelcast-client.yaml</destName>
+            <source>${configs.from.jar}/hecaton-client-default-assembly.yaml</source>
+            <destName>hecaton-client.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
 
         <!-- Full Example XML config files -->
         <file>
-            <source>${configs.from.jar}/hazelcast-full-example.xml</source>
-            <destName>hazelcast-full-example.xml</destName>
+            <source>${configs.from.jar}/hecaton-full-example.xml</source>
+            <destName>hecaton-full-example.xml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-client-full-example.xml</source>
-            <destName>hazelcast-client-full-example.xml</destName>
+            <source>${configs.from.jar}/hecaton-client-full-example.xml</source>
+            <destName>hecaton-client-full-example.xml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
 
         <!-- Other Example config files -->
         <file>
-            <source>${configs.from.jar}/hazelcast-security-hardened.yaml</source>
-            <destName>hazelcast-security-hardened.yaml</destName>
+            <source>${configs.from.jar}/hecaton-security-hardened.yaml</source>
+            <destName>hecaton-security-hardened.yaml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
         <file>
-            <source>${configs.from.jar}/hazelcast-security-hardened.xml</source>
-            <destName>hazelcast-security-hardened.xml</destName>
+            <source>${configs.from.jar}/hecaton-security-hardened.xml</source>
+            <destName>hecaton-security-hardened.xml</destName>
             <outputDirectory>config/examples</outputDirectory>
         </file>
 
-        <!-- NOTICE file from hazelcast.jar -->
+        <!-- NOTICE file from hecaton.jar -->
         <file>
             <source>${configs.from.jar}/META-INF/NOTICE</source>
             <destName>NOTICE</destName>
             <outputDirectory>/</outputDirectory>
         </file>
 
-        <!-- Release Notes from hazelcast.jar -->
+        <!-- Release Notes from hecaton.jar -->
         <file>
             <source>${configs.from.jar}/release_notes.txt</source>
             <destName>release_notes.txt</destName>

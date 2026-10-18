@@ -1,8 +1,8 @@
-# Distributed Scan (Outdated since Hazelcast 5.0)
+# Distributed Scan (Outdated since Hecaton 5.0)
 
 ## Overview
 
-The Hazelcast Mustang is a distributed query engine. When an SQL string is submitted for execution, it is converted into a 
+The Hecaton Mustang is a distributed query engine. When an SQL string is submitted for execution, it is converted into a 
 query plan, that contains the tree of relational operators, such as `scan`, `project` and `filter`. Leaf operators of the plan 
 act as data sources for the parent operators. The `scan` operator iterates over the `IMap` data structure. This document 
 explains how the distributed scan is performed.
@@ -12,7 +12,7 @@ and reaction to cluster reconfiguration.
 
 ## 1 Background
 
-The Hazelcast IMDG is a distributed in-memory key-value storage. Data is stored in distributed objects, such as an `IMap`.
+The Hecaton IMDG is a distributed in-memory key-value storage. Data is stored in distributed objects, such as an `IMap`.
 The cluster has a predefined number of partitions, 271 by default. Each partition is stored on a single member, and may have 
 zero, one or more backups on other members. Every distributed object is split across one or more partitions. Partitions may
 migrate between members due to topology change events, such as member leave or join.
@@ -20,7 +20,7 @@ migrate between members due to topology change events, such as member leave or j
 The `IMap` is a distributed map. It could be accessed either directly, or through a secondary index. The secondary index is 
 a distributed data structure. Every member stores part of the index that is built for the local entries of the member. 
 
-The goal of the Hazelcast Mustang engine is to pick the proper access method - direct scan or index scan, start execution of 
+The goal of the Hecaton Mustang engine is to pick the proper access method - direct scan or index scan, start execution of 
 the scan on members, and collect the results. In the above sections we describe how it is implemented.   
 
 ## 2 Access Path Selection

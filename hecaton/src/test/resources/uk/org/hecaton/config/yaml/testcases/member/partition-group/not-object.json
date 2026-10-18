@@ -1,0 +1,14 @@
+{
+  "instance": {
+    "hecaton": {
+      "partition-group": 2
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/PartitionGroup",
+    "pointerToViolation": "#/hecaton/partition-group",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: JSONObject, found: Integer"
+  }
+}

@@ -20,9 +20,9 @@ in the TLS configuration (`<ssl/>`).
 
 ## Motivation
 
-Hazelcast Enterprise allows using TLS protocol for data in transit protection.
+Hecaton Enterprise allows using TLS protocol for data in transit protection.
 We want to enable key material (keyStores and trustStores) rotation without
-needing a Hazelcast instance restart.
+needing a Hecaton instance restart.
 
 The current process required for the key material update is described in the
 [Updating Certificates in the Running Cluster](https://docs.hazelcast.com/hazelcast/latest/security/tls-configuration#updating-certificates-in-the-running-cluster)
@@ -62,7 +62,7 @@ A zero-value duration expression (e.g. `PT0s`) means the key material will not b
 The key material is cached indefinitely if the new property is not specified (default value).
 We keep the behavior backward-compatible.
 
-If the value has a wrong format, the Hazelcast instance won't start.
+If the value has a wrong format, the Hecaton instance won't start.
 
 The `OpenSSLEngineFactory` doesn't cache the key material when native key
 and certificate files are used (`keyFile`, `keyCertChainFile`,
@@ -132,13 +132,13 @@ to enable/disable a non-expiring cache altogether. As these approaches could imp
 
 ## Technical design
 
-The abstract class `com.hazelcast.internal.nio.ssl.SSLEngineFactorySupport`
-in `hazelcast-enterprise` repository will be extended to support the new property.
+The abstract class `uk.org.hecaton.internal.nio.ssl.SSLEngineFactorySupport`
+in `hecaton-enterprise` repository will be extended to support the new property.
 We will also align the implementations (i.e. child classes).
 
-Hazelcast sample full configuration will be extended. The property will be added to
-`hazelcast-full-example` and `hazelcast-client-full-example` files.
+Hecaton sample full configuration will be extended. The property will be added to
+`hecaton-full-example` and `hecaton-client-full-example` files.
 
 ## Testing
 
-New tests covering the new functionality will be added to the `hazelcast-enterprise` repository.
+New tests covering the new functionality will be added to the `hecaton-enterprise` repository.

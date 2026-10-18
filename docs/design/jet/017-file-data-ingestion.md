@@ -77,8 +77,8 @@ Sources
 We have the following possibilities
 
 1. enforce naming convention, e.g.
-`com.hazelcast.jet.x.XSources.x(...., formatY)`
-`com.hazelcast.jet.s3.S3Sources.s3(..., Avro)`
+`uk.org.hecaton.jet.x.XSources.x(...., formatY)`
+`uk.org.hecaton.jet.s3.S3Sources.s3(..., Avro)`
 
 2. new File API as a single entry point e.g.
 `FileSources.s3(&quot;...&quot;).withFormat(AVRO)`
@@ -108,8 +108,8 @@ Using Hadoop libs
 * `+` Supports advanced features - can take advantage of the structure
   of the formats - e.g. read avro file in parallel, or read specific
 columns in parquet.  +-? The hadoop api leaks (see
-`com.hazelcast.jet.hadoop.HadoopSources#inputFormat(org.apache.hadoop.conf.Configuration,
-com.hazelcast.function.BiFunctionEx<K,V,E>`) It is questionable if this
+`uk.org.hecaton.jet.hadoop.HadoopSources#inputFormat(org.apache.hadoop.conf.Configuration,
+uk.org.hecaton.function.BiFunctionEx<K,V,E>`) It is questionable if this
 is an issue, exposing the hadoop API gives users more power.  For
 performance difference see the benchmark below
 
@@ -177,8 +177,8 @@ We need to provide a way to configure each format as such.
 
 ## Design
 
-Entry point - `com.hazelcast.jet.pipeline.file.FileSources`. Returns
-`com.hazelcast.jet.pipeline.file.FileSourceBuilder`
+Entry point - `uk.org.hecaton.jet.pipeline.file.FileSources`. Returns
+`uk.org.hecaton.jet.pipeline.file.FileSourceBuilder`
 
 There are 2 required parameters - path and format.
 
@@ -203,11 +203,11 @@ other needs.
 ### Local files
 
 Reading from local file system is implemented in
-`com.hazelcast.jet.pipeline.file.impl.LocalFileSourceFactory`.
+`uk.org.hecaton.jet.pipeline.file.impl.LocalFileSourceFactory`.
 The current infrastructure is reused -
-`com.hazelcast.jet.core.processor.SourceProcessors.readFilesP
+`uk.org.hecaton.jet.core.processor.SourceProcessors.readFilesP
 (java.lang.String, java.lang.String, boolean,
- com.hazelcast.function.FunctionEx<? super java.nio.file.Path,?
+ uk.org.hecaton.function.FunctionEx<? super java.nio.file.Path,?
 extends java.util.stream.Stream<I>>)`
 
 Supporting a file format in LocalFileSourceFactory means implementing a
@@ -262,11 +262,11 @@ two modes:
 * using Hadoop local filesystem
 
 This means that the tests for the local filesystem are not part of the
-hazelcast-jet-core module where the implementation is.
+hecaton-jet-core module where the implementation is.
 On the other hand we reuse the same set of tests, so we have the same
 coverage for both implementations.
 
-Integrations tests are part of the hazelcast-qe pipeline, where the jobs
+Integrations tests are part of the hecaton-qe pipeline, where the jobs
 run in a cluster inside a docker container, with the connector fat jars.
 This ensures that the fat jars contain correct dependencies.
 

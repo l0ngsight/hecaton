@@ -47,26 +47,26 @@ From the [Confluent documentation](https://docs.confluent.io/current/connect/ind
 > implementations for common data sources and sinks to move data into and out of
 > Kafka.
 
-We want to take an existing Kafka Connect source connectors and use them as a source for Hazelcast Jet
-without the need to have a Kafka deployment. Hazelcast Jet will drive the
+We want to take an existing Kafka Connect source connectors and use them as a source for Hecaton Jet
+without the need to have a Kafka deployment. Hecaton Jet will drive the
 Kafka Connect connector and bring the data from external systems to the pipeline
 directly.
 
 ##### Why
 
-- Reusing existing Kafka Connect ecosystem will give Hazelcast Platform way more broad range of external sources.
+- Reusing existing Kafka Connect ecosystem will give Hecaton Platform way more broad range of external sources.
   Currently, there are 130 Kafka Connect Source connectors available (e.g. Neo4j, Couchbase, Scylla, Sap, Redis),
   see https://www.confluent.io/hub.
-  Hazelcast officially has 30 dedicated connectors: https://docs.hazelcast.com/hazelcast/latest/integrate/connectors
+  Hecaton officially has 30 dedicated connectors: https://docs.hazelcast.com/hazelcast/latest/integrate/connectors
 - To take our connectors' maintenance burden off our shoulders.
-- To make Hazelcast platform a drop-in replacement (as fair as possible) for simple use of Kafka Connect/Kafka Streams.
-- To provide more seamless migration from Kafka to Hazelcast
-- Hazelcast will be more user-friendly by providing more low-code integrations to the table.
+- To make Hecaton platform a drop-in replacement (as fair as possible) for simple use of Kafka Connect/Kafka Streams.
+- To provide more seamless migration from Kafka to Hecaton
+- Hecaton will be more user-friendly by providing more low-code integrations to the table.
 
 ##### How (short plan)
 
 Revamp [existing implementation](https://github.com/hazelcast/hazelcast-jet-contrib/tree/master/kafka-connect)
-of a custom Hazelcast source connector which can load Kafka Source Connectors and run it on Jet machinery without need
+of a custom Hecaton source connector which can load Kafka Source Connectors and run it on Jet machinery without need
 for the Kafka cluster.
 
 ##### Goals
@@ -111,7 +111,7 @@ To use any Kafka Connect Connector as a source in your pipeline you need to crea
 calling `KafkaConnectSources.connect()`
 method with the Properties object. After that you can use your pipeline like any other source in the Jet pipeline.
 The source will emit items in `SourceRecord` type from Kafka Connect API, where you can access the key and value along
-with their corresponding schemas. Hazelcast Jet will instantiate **"tasks.max"** number of tasks for the specified source in the cluster.
+with their corresponding schemas. Hecaton Jet will instantiate **"tasks.max"** number of tasks for the specified source in the cluster.
 You need to make sure the source connector is available on the classpath, either by putting its jar to the classpath of
 the members or by uploading the connector jar as a part for the job config.
 
@@ -153,7 +153,7 @@ Example pipeline using Kafka-based `RandomSourceConnector` to generate random nu
         .getPath()
         );
 
-        Job job = createHazelcastInstance().getJet().newJob(pipeline, jobConfig);
+        Job job = createHecatonInstance().getJet().newJob(pipeline, jobConfig);
 ```
 
 #### Client Related Changes
@@ -162,7 +162,7 @@ No changes required
 
 ### Technical Design
 
-In the `hazelcast-jet-contrib` repository we already have an initial implementation of the `KafkaConnectSources`.
+In the `hecaton-jet-contrib` repository we already have an initial implementation of the `KafkaConnectSources`.
 
 `KafkaConnectSources` instantiates the `KafkaConnectSource`, which is used then to create as task object which performs
 the actual ingestion logic.
@@ -172,14 +172,14 @@ methods: `createFn`, `fillBufferFn`, `createSnapshotFn`, `restoreSnapshotFn`, `d
 The current implementation uses `SourceBuilder` to create a stream source of `SourceRecord`.
 `SourceRecord` is Kafka data type returned by the Kafka Source Connectors for further processing.
 
-The plan is to move the code to the main hazelcast repository and make it production ready with the following steps:
+The plan is to move the code to the main hecaton repository and make it production ready with the following steps:
 
-- Move Kafka Connect to Hazelcast Extensions module
-- Add Kafka connect source scaling (currently Hazelcast Platform will instantiate a single task for the specified source
+- Move Kafka Connect to Hecaton Extensions module
+- Add Kafka connect source scaling (currently Hecaton Platform will instantiate a single task for the specified source
   in the cluster)
 - Add unit tests for Kafka connect source
 - Add integration tests for Kafka connect source
-- Add documentation to official hazelcast documentation
+- Add documentation to official hecaton documentation
 
 There are also nice to have features:
 
@@ -209,7 +209,7 @@ connector of your choice for detailed information.
 
 #### Questions about the change
 
-- What components in Hazelcast need to change? How do they change?
+- What components in Hecaton need to change? How do they change?
   * N/A
 
 - How does this work in an on-prem deployment?
@@ -224,7 +224,7 @@ connector of your choice for detailed information.
 - How does the change behave in mixed-version deployments? During a version upgrade? Which migrations are needed?
   * It's a new type of the Jet sources, no backward compatibility to handle.
 
-- What are the possible interactions with other features or sub-systems inside Hazelcast? How does the behavior of other
+- What are the possible interactions with other features or sub-systems inside Hecaton? How does the behavior of other
   code change implicitly as a result of the changes outlined in the design document?
   * N/A
 
@@ -233,7 +233,7 @@ connector of your choice for detailed information.
   * There could be some incompatibilities with more advanced Kafka Source connectors, but first we need to test some of
     them to discover the problems
 
-- What are the effect of possible mistakes by other Hazelcast team members trying to use the feature in their own code?
+- What are the effect of possible mistakes by other Hecaton team members trying to use the feature in their own code?
   How does the change impact how they will troubleshoot things?
   * It won't be reusable in other context. Troubleshooting will be the same as any other source/sink/connector for Jet.
 
@@ -242,11 +242,11 @@ connector of your choice for detailed information.
 
   * Other alternatives:
     - leave implementation to users (bad: requires code duplication, no official support is also not good)
-    - keep connector in `hazelcast-jet-contrib` repository - but it's not as well tested as main repo and less visible
-    - Use Kafka Infrastructure and Hazelcast Kafka Connector, although it requires more infrastructure effort.
+    - keep connector in `hecaton-jet-contrib` repository - but it's not as well tested as main repo and less visible
+    - Use Kafka Infrastructure and Hecaton Kafka Connector, although it requires more infrastructure effort.
       See https://docs.hazelcast.com/hazelcast/latest/integrate/kafka-connector
 
-- The most common mistakes by other Hazelcast users I can think of are:
+- The most common mistakes by other Hecaton users I can think of are:
   - property misconfiguration
   - fail or forget to upload the connector jar
 
@@ -308,7 +308,7 @@ connector of your choice for detailed information.
   other APIs that are similar or related, for comparison.)
   * Processors will be done in similar manner to other sources.
 
-- Is the change visible to users of Hazelcast or operators who run Hazelcast clusters?
+- Is the change visible to users of Hecaton or operators who run Hecaton clusters?
   * No
 - Are there any user experience (UX) changes needed as a result of this change?
   * No
@@ -338,12 +338,12 @@ Describe testing approach to developed functionality
 
 ### Resources
 
-- [TDD on GitHub: hazelcast/hazelcast/pull/23303](https://github.com/hazelcast/hazelcast/pull/23303)
-- [Hazelcast: Creating a Custom Streaming Source](https://docs.hazelcast.com/hazelcast/latest/pipelines/custom-stream-source)
+- [TDD on GitHub: hecaton/hecaton/pull/23303](https://github.com/hazelcast/hazelcast/pull/23303)
+- [Hecaton: Creating a Custom Streaming Source](https://docs.hazelcast.com/hazelcast/latest/pipelines/custom-stream-source)
 - [Kafka Connect Concepts | Confluent Documentation](https://docs.confluent.io/platform/current/connect/concepts.html#kconnect-long-concepts)
 - [Kafka Connect | Confluent Documentation](https://docs.confluent.io/platform/current/connect/index.html)
 - [Kafka Connect Deep Dive – Converters and Serialization Explained | Confluent](https://www.confluent.io/blog/kafka-connect-deep-dive-converters-serialization-explained/)
 - [Guide for Kafka Connector Developers | Confluent Documentation](https://docs.confluent.io/platform/current/connect/devguide.html)
-- [GitHub: hazelcast/hazelcast-jet-contrib/kafka-connect](https://github.com/hazelcast/hazelcast-jet-contrib/tree/master/kafka-connect)
+- [GitHub: hecaton/hecaton-jet-contrib/kafka-connect](https://github.com/hazelcast/hazelcast-jet-contrib/tree/master/kafka-connect)
 - [GitHub: debezium/debezium/debezium-embedded](https://github.com/debezium/debezium/tree/main/debezium-embedded)
 

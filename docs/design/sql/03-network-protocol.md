@@ -1,13 +1,13 @@
-# SQL Network Protocol (Outdated since Hazelcast 5.0)
+# SQL Network Protocol (Outdated since Hecaton 5.0)
 
 ## Overview
 
-Hazelcast Mustang is a distributed SQL engine. Network communication between nodes is required to produce the final result.
+Hecaton Mustang is a distributed SQL engine. Network communication between nodes is required to produce the final result.
 In this document, we describe the design of the communication protocol, that includes query start and cancel, data exchange,
 and maintenance operations.
 
 The remainder of this document is structured as follows. Section 1 describes the primary design considerations. Section 2
-discusses the existing networking infrastructure of the Hazelcast cluster and whether it satisfies our design
+discusses the existing networking infrastructure of the Hecaton cluster and whether it satisfies our design
 principles. Section 3 explains the protocol.
 
 ## 1 Design Considerations
@@ -19,7 +19,7 @@ In this section, we summarize the fundamental principles that influence the prot
 
 ### 1.1 Low Latency
 
-Hazelcast Mustang is a modern distributed SQL engine that targets the OLTP workloads for in-memory data. We expect
+Hecaton Mustang is a modern distributed SQL engine that targets the OLTP workloads for in-memory data. We expect
 that the engine will be used mostly for relatively short queries, taking milliseconds or seconds to complete. Because network
 latency is still relatively high as of 2020, the protocol should be designed to minimize the number of blocking network calls,
 when one member waits for the other.
@@ -35,7 +35,7 @@ users. Another approach is to persist intermediate state to disk, which is used 
 appropriate choice.
 
 While the idea of hiding intermittent failures from users is compelling from the usability point of view, it comes at a massive
-engineering cost, as mentioned by Google Spanner engineers. The Hazelcast Mustang engine is designed with the **fail-fast**
+engineering cost, as mentioned by Google Spanner engineers. The Hecaton Mustang engine is designed with the **fail-fast**
 behavior in mind: whenever a failure occurs, the query is terminated, and a proper transient error is delivered to the user.
 The user should restart the query manually then. The query will fail in the following scenarios:
 1. Member executing the query (participant) has left the cluster
@@ -48,7 +48,7 @@ the added value and implementation complexity.
 
 ### 1.3 Ordered Data Processing
 
-The Hazelcast Mustang engine employs the **Volcano Model** approach, as described in [[2]]. Data flows from children relational
+The Hecaton Mustang engine employs the **Volcano Model** approach, as described in [[2]]. Data flows from children relational
 operators to parents operators. The order of rows transferred between operators is essential for correctness. For example, a
 parent operator may expect the child operator to produce rows that are sorted on a particular attribute.
 
@@ -57,9 +57,9 @@ that the order of rows is preserved during processing.
 
 ## 2 Existing Infrastructure
 
-The Hazelcast Mustang engine is a part of the Hazelcast IMDG product, which is a distributed system with its own networking
-infrastructure built on top of TCP/IP protocol. In this section, we discuss the key networking abstractions used Hazelcast IMDG.
-which are `Packet`, `Connection` and `Operation`. We then analyze how they are used in Hazelcast Mustang.
+The Hecaton Mustang engine is a part of the Hecaton IMDG product, which is a distributed system with its own networking
+infrastructure built on top of TCP/IP protocol. In this section, we discuss the key networking abstractions used Hecaton IMDG.
+which are `Packet`, `Connection` and `Operation`. We then analyze how they are used in Hecaton Mustang.
 
 ### 2.1 Packet
 
@@ -67,7 +67,7 @@ which are `Packet`, `Connection` and `Operation`. We then analyze how they are u
 packet's data within the network stream of data. Several packets could be sent in a single network request. Likewise, a
 single packet could span multiple network requests. The original request is restored on the receiver side and submitted for
 processing. A packet has a **type** that defines the handler for the packet. Examples are partition handler, generic handler,
-Hazelcast Jet handler.
+Hecaton Jet handler.
 
 ### 2.2 Connection
 
@@ -83,7 +83,7 @@ The order of the delivery of messages sent over a single `Connection` object is 
 
 ### 2.3 Operation
 
-Most Hazelcast components don't operate on packets directly. Instead, the `Operation` abstraction is used, which encapsulates
+Most Hecaton components don't operate on packets directly. Instead, the `Operation` abstraction is used, which encapsulates
 the message and additional information such as the caller ID, timeouts, retries, etc.
 
 Operations are submitted to the `OperationService` which obtains the connection, serializes operations to packets, and manage
@@ -91,7 +91,7 @@ completion futures, timeouts, and retries.
 
 ### 2.4 Discussion
 
-The Hazelcast Mustang engine doesn't use `Operation` and `OperationService` abstractions for the following reasons:
+The Hecaton Mustang engine doesn't use `Operation` and `OperationService` abstractions for the following reasons:
 1, To satisfy the low-latency principle, the engine doesn't use the request-response messaging pattern for query initiation 
 and data exchange. 
 1. Due to fail-fast design choice, the engine doesn't need to keep data chunks on the sender side waiting for ack
@@ -102,7 +102,7 @@ from the connection manager.
 
 ## 3 Protocol
 
-This section describes the communication protocol of the Hazelcast Mustang engine. The protocol consists of 6 message types
+This section describes the communication protocol of the Hecaton Mustang engine. The protocol consists of 6 message types
 which we discuss in details below:
 1. `start`
 1. `cancel`
@@ -141,7 +141,7 @@ I               P1  P2
 ```
 
 When the participant receives the `start` message, it starts the execution of the query **immediately**. There is no single
-synchronization point, like in Hazelcast Jet, when either the initiator or participants know that all other participants
+synchronization point, like in Hecaton Jet, when either the initiator or participants know that all other participants
 started the execution of the query. This decreases latency because participants do not need to wait for another
 message to start actual query execution. On the other hand, it introduces inherent race conditions between query start,
 cancel, and data arrival, which are discussed in section 4.

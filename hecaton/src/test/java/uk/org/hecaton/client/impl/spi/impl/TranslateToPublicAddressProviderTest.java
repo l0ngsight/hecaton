@@ -1,0 +1,259 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.impl.spi.impl;
+
+import uk.org.hecaton.client.config.ClientConfig;
+import uk.org.hecaton.client.properties.ClientProperty;
+import uk.org.hecaton.cluster.Address;
+import uk.org.hecaton.cluster.Cluster;
+import uk.org.hecaton.cluster.InitialMembershipEvent;
+import uk.org.hecaton.cluster.Member;
+import uk.org.hecaton.cluster.impl.MemberImpl;
+import uk.org.hecaton.core.Hecaton;
+import uk.org.hecaton.instance.BuildInfoProvider;
+import uk.org.hecaton.instance.EndpointQualifier;
+import uk.org.hecaton.instance.ProtocolType;
+import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.spi.properties.HecatonProperties;
+import uk.org.hecaton.test.HecatonSerialClassRunner;
+import uk.org.hecaton.test.annotation.QuickTest;
+import uk.org.hecaton.version.MemberVersion;
+import org.junit.After;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import javax.annotation.Nonnull;
+import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
+@RunWith(HecatonSerialClassRunner.class)
+@Category(QuickTest.class)
+public class TranslateToPublicAddressProviderTest {
+    private static final MemberVersion VERSION = MemberVersion.of(BuildInfoProvider.getBuildInfo().getVersion());
+    public static final String REACHABLE_HOST = "127.0.0.1";
+    public static final String UNREACHABLE_HOST = "192.168.0.1";
+
+    private final ClientConfig config = new ClientConfig();
+
+    @After
+    public void teardown() {
+        Hecaton.shutdownAll();
+    }
+
+    @Test
+    public void propertyTrue() {
+        // given
+        config.setProperty(ClientProperty.DISCOVERY_SPI_PUBLIC_IP_ENABLED.toString(), "true");
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class), emptySet()));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertTrue(result);
+    }
+
+    @Test
+    public void propertyFalse() {
+        // given
+        config.setProperty(ClientProperty.DISCOVERY_SPI_PUBLIC_IP_ENABLED.toString(), "false");
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class), emptySet()));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    public void memberInternalAddressAsDefinedInClientConfig() {
+        // given
+        config.getNetworkConfig().addAddress("127.0.0.1");
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class),
+                Set.of(member("192.168.0.1"), member("127.0.0.1"))));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    public void memberInternalAddressAsDefinedInClientConfig_memberUsesHostName() {
+        // given
+        config.getNetworkConfig().addAddress("127.0.0.1");
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class),
+                Set.of(member("localhost"))));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    public void memberInternalAddressAsDefinedInClientConfig_clientUsesHostname() {
+        // given
+        config.getNetworkConfig().addAddress("localhost");
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class),
+                new HashSet<>(Collections.singletonList(member("127.0.0.1")))));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    public void memberInternalAddressAsDefinedInClientConfig_clientUsesHostnameAndIp() {
+        // given
+        config.getNetworkConfig().addAddress("localhost:5701");
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class),
+                new HashSet<>(Collections.singletonList(member("127.0.0.1")))));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    public void membersWithoutPublicAddresses() {
+        // given
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class),
+                new HashSet<>(Collections.singletonList(member("127.0.0.1")))));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    public void membersReachableViaInternalAddress() {
+        // given
+        Hecaton.newHecatonInstance();
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class),
+                Set.of(member(REACHABLE_HOST, UNREACHABLE_HOST),
+                        member(REACHABLE_HOST, UNREACHABLE_HOST))));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    public void membersUnreachable() {
+        // given
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class),
+                new HashSet<>(Collections.singletonList(member(UNREACHABLE_HOST, UNREACHABLE_HOST)))));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    public void membersReachableOnlyViaPublicAddress() {
+        // given
+        Hecaton.newHecatonInstance();
+        TranslateToPublicAddressProvider translateProvider = createTranslateProvider();
+
+        // when
+        translateProvider.init(new InitialMembershipEvent(mock(Cluster.class),
+                new HashSet<>(Collections.singletonList(member(UNREACHABLE_HOST, REACHABLE_HOST)))));
+        boolean result = translateProvider.getAsBoolean();
+
+        // then
+        assertTrue(result);
+    }
+
+    @Nonnull
+    private TranslateToPublicAddressProvider createTranslateProvider() {
+        return new TranslateToPublicAddressProvider(config.getNetworkConfig(),
+                new HecatonProperties(config.getProperties()), mock(ILogger.class));
+    }
+
+    @Nonnull
+    private Member member(String host) {
+        try {
+            MemberImpl.Builder memberBuilder;
+            memberBuilder = new MemberImpl.Builder(new Address(host, 5701));
+            return memberBuilder.version(VERSION)
+                    .uuid(UUID.randomUUID())
+                    .attributes(emptyMap())
+                    .liteMember(false).build();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Nonnull
+    private Member member(String host, String publicHost) {
+
+        try {
+            MemberImpl.Builder memberBuilder;
+
+            Address internalAddress = new Address(host, 5701);
+            Address publicAddress = new Address(publicHost, 5701);
+
+            Map<EndpointQualifier, Address> addressMap = new HashMap<>();
+            addressMap.put(EndpointQualifier.resolve(ProtocolType.CLIENT, "public"), publicAddress);
+            addressMap.put(EndpointQualifier.MEMBER, internalAddress);
+
+            memberBuilder = new MemberImpl.Builder(addressMap);
+            return memberBuilder.version(VERSION)
+                    .uuid(UUID.randomUUID())
+                    .attributes(emptyMap())
+                    .liteMember(false).build();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+}

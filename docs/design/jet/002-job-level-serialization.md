@@ -73,7 +73,7 @@ public interface Codec<T> {
 ```
 
 However, that's another interface in already overcrowded universe of
-Hazelcast serialization interfaces so whether it is valuable or not is
+Hecaton serialization interfaces so whether it is valuable or not is
 questionable. Another thing is that most probably it could not be used
 to work with data types stored in IMDG.
 

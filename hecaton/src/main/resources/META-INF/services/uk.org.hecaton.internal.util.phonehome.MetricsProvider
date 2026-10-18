@@ -1,0 +1,17 @@
+uk.org.hecaton.internal.util.phonehome.BuildInfoProvider
+uk.org.hecaton.internal.util.phonehome.CacheMetricsProvider
+uk.org.hecaton.internal.util.phonehome.ClientMetricsProvider
+uk.org.hecaton.internal.util.phonehome.CloudInfoProvider
+uk.org.hecaton.internal.util.phonehome.ClusterMetricsProvider
+uk.org.hecaton.internal.util.phonehome.DistributedObjectMetricsProvider
+uk.org.hecaton.internal.util.phonehome.DynamicConfigMetricsProvider
+uk.org.hecaton.internal.util.phonehome.JetMetricsProvider
+uk.org.hecaton.internal.util.phonehome.MapMetricsProvider
+uk.org.hecaton.internal.util.phonehome.OSInfoProvider
+uk.org.hecaton.internal.util.phonehome.RestApiMetricsProvider
+uk.org.hecaton.internal.util.phonehome.SqlMetricsProvider
+uk.org.hecaton.internal.util.phonehome.StorageMetricsProvider
+uk.org.hecaton.internal.util.phonehome.UserCodeNamespacesMetricsProvider
+uk.org.hecaton.internal.util.phonehome.VMMetricsProvider
+uk.org.hecaton.internal.util.phonehome.ClientRoutingModeMetricsProvider
+uk.org.hecaton.internal.util.phonehome.DiagnosticsMetricProvider

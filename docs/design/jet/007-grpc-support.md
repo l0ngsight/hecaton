@@ -44,7 +44,7 @@ apply these in a more generic way.
 
 ## Design
 
-The implementation includes a new module `hazelcast-jet-grpc` which
+The implementation includes a new module `hecaton-jet-grpc` which
 is added to the `extensions` folder. The module has one main entry
 point which is `GrpcServices` which provides the convenience for
 creating `ServiceFactory` for the corresponding the gRPC service.

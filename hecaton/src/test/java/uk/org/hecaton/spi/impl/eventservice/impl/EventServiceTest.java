@@ -1,0 +1,118 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.spi.impl.eventservice.impl;
+
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.ConfigAccessor;
+import uk.org.hecaton.config.ServiceConfig;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.spi.impl.eventservice.EventRegistration;
+import uk.org.hecaton.spi.impl.eventservice.EventService;
+import uk.org.hecaton.test.HecatonParallelClassRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.TestHecatonInstanceFactory;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Future;
+
+import static uk.org.hecaton.test.Accessors.getClusterService;
+import static uk.org.hecaton.test.Accessors.getNodeEngineImpl;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+
+@RunWith(HecatonParallelClassRunner.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class EventServiceTest extends HecatonTestSupport {
+
+    private final String serviceName = "dummy-service";
+    private final String topic = "dummy-topic";
+
+    @Test
+    public void test_registration_whileNewMemberJoining() throws Exception {
+        final TestHecatonInstanceFactory factory = createHecatonInstanceFactory();
+
+        HecatonInstance hz1 = factory.newHecatonInstance(newConfigWithDummyService());
+        HecatonInstance hz2 = factory.newHecatonInstance(newConfigWithDummyService());
+
+        Future<HecatonInstance> future = spawn(() -> factory.newHecatonInstance(newConfigWithDummyService()));
+
+        EventService eventService = getEventService(hz2);
+        Set<UUID> registrationIds = new HashSet<>();
+        Object listener = new Object();
+        while (getClusterService(hz2).getSize() < 3) {
+            EventRegistration registration = eventService.registerListener(serviceName, topic, listener);
+            registrationIds.add(registration.getId());
+        }
+
+        HecatonInstance hz3 = future.get();
+        EventService eventService3 = getEventService(hz3);
+        Collection<EventRegistration> registrations = eventService3.getRegistrations(serviceName, topic);
+
+        assertEquals(registrationIds.size(), registrations.size());
+        for (EventRegistration registration : registrations) {
+            assertThat(registrationIds).contains(registration.getId());
+        }
+    }
+
+    @Test
+    public void test_deregistration_whileNewMemberJoining() throws Exception {
+        final TestHecatonInstanceFactory factory = createHecatonInstanceFactory();
+
+        HecatonInstance hz1 = factory.newHecatonInstance(newConfigWithDummyService());
+        HecatonInstance hz2 = factory.newHecatonInstance(newConfigWithDummyService());
+
+        EventService eventService = getEventService(hz2);
+        Set<UUID> registrationIds = new HashSet<>();
+        Object listener = new Object();
+        for (int i = 0; i < 500; i++) {
+            EventRegistration registration = eventService.registerListener(serviceName, topic, listener);
+            registrationIds.add(registration.getId());
+        }
+
+        Future<HecatonInstance> future = spawn(() -> factory.newHecatonInstance(newConfigWithDummyService()));
+
+        for (UUID registrationId : registrationIds) {
+            eventService.deregisterListener(serviceName, topic, registrationId);
+        }
+
+        assertThat(eventService.getRegistrations(serviceName, topic)).isEmpty();
+
+        HecatonInstance hz3 = future.get();
+        EventService eventService3 = getEventService(hz3);
+        assertThat(eventService3.getRegistrations(serviceName, topic)).isEmpty();
+    }
+
+    private Config newConfigWithDummyService() {
+        final Config config = new Config();
+        ServiceConfig serviceConfig =
+                new ServiceConfig().setEnabled(true).setName(serviceName).setImplementation(new Object());
+        ConfigAccessor.getServicesConfig(config).addServiceConfig(serviceConfig);
+        return config;
+    }
+
+    public static EventService getEventService(HecatonInstance hz) {
+        return getNodeEngineImpl(hz).getEventService();
+    }
+}

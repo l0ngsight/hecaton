@@ -5,26 +5,26 @@
 
 ## Background
 
-In Hazelcast IMDG 3.9, we improved [the algorithms used in the cluster management
+In Hecaton IMDG 3.9, we improved [the algorithms used in the cluster management
 layer](01-clusterservice-consistency-improvements.md)
 and resolved several problems. With that work, our member list
 management logic procured a good set of consistency and safety
 guarantees. In short, the master member (the first member in the cluster
 member list) manages the cluster member list and publishes member list
 updates with version numbers. Other members apply these updates in the
-correct order by checking version numbers. In addition, each Hazelcast
+correct order by checking version numbers. In addition, each Hecaton
 member tracks the liveness of other members. The master member uses this
 mechanism to detect failures of other members, and other members use
 this mechanism to detect failure of the master member. This failure
 detection mechanism also works during network partitions to help
-Hazelcast clusters split into multiple sub-clusters and remain
+Hecaton clusters split into multiple sub-clusters and remain
 available. Please refer to the [aforementioned
 work](01-clusterservice-consistency-improvements.md)
 to learn more about these parts.
 
   
 
-Please see the following figures. In these figures, we have 4 Hazelcast
+Please see the following figures. In these figures, we have 4 Hecaton
 members in the cluster and N1 is the master members. The cluster is
 fully connected (i.e., every member has a connection to all other
 members). 
@@ -155,8 +155,8 @@ Two new system properties will be added:
      * set to at least 3 or 5 so that the master will wait long enough to collect heartbeat problem reports.
      * Otherwise, the master member can make sub-optimal decisions. 
      */
-    public static final HazelcastProperty PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT
-            = new HazelcastProperty("hazelcast.partial.member.disconnection.resolution.heartbeat.count", 0);
+    public static final HecatonProperty PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT
+            = new HecatonProperty("hecaton.partial.member.disconnection.resolution.heartbeat.count", 0);
 ```
 
 -
@@ -167,8 +167,8 @@ Two new system properties will be added:
      * in a large cluster with lots of random network disconnections, we use a timeout mechanism to stop
      * execution of the algorithm.
      */
-    public static final HazelcastProperty PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_ALGORITHM_TIMEOUT_SECONDS
-            = new HazelcastProperty("hazelcast.partial.member.disconnection.resolution.algorithm.timeout.seconds", 5);
+    public static final HecatonProperty PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_ALGORITHM_TIMEOUT_SECONDS
+            = new HecatonProperty("hecaton.partial.member.disconnection.resolution.algorithm.timeout.seconds", 5);
 ```
           
 
@@ -176,7 +176,7 @@ Two new system properties will be added:
 
 In the rest of this document, we use the terminology defined in [our
 previous work](01-clusterservice-consistency-improvements.md).
-In summary, the *master member* is the first member in the Hazelcast
+In summary, the *master member* is the first member in the Hecaton
 cluster member list. Other members are called *slave members (we just
 follow the terminology *¯\\\_(ツ)\_/¯*)*. Each member has a *local
 failure detector*. When the master member detects failure of another
@@ -247,7 +247,7 @@ that satisfies the given definition. The maximum clique problem is
 NP-hard, i.e, there is no known polynomial time solution. ﾉಥ益ಥ）ﾉ ┻━┻
 
 Thankfully, our problem is simpler than the maximum clique problem
-because we expect simple disconnection patterns between Hazelcast
+because we expect simple disconnection patterns between Hecaton
 members. For instance, suppose that we have the following 6-member
 cluster: \[A1, A2, B1, B2, C1, C2\] where each letter is a different
 rack. If there is a network problem between racks B and C, then B1 and
@@ -262,8 +262,8 @@ to A1), we consider it as a two-way disconnection and end up with a
 simpler final state.
 
 We use an implementation of the Bron–Kerbosch algorithm to find the
-maximum clique in a Hazelcast cluster member list given a set of slave
-member suspicions. This algorithm gives us the smallest set of Hazelcast
+maximum clique in a Hecaton cluster member list given a set of slave
+member suspicions. This algorithm gives us the smallest set of Hecaton
 members to kick from the cluster so that the remaining members are
 fully-connected to each other again. So the master member uses this
 algorithm to make this decision.

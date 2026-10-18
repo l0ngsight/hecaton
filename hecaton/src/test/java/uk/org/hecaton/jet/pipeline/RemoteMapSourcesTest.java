@@ -1,0 +1,275 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.pipeline;
+
+import uk.org.hecaton.client.config.ClientConfig;
+import uk.org.hecaton.config.CacheSimpleConfig;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.DataConnectionConfig;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.dataconnection.HecatonDataConnection;
+import uk.org.hecaton.instance.impl.HecatonInstanceFactory;
+import uk.org.hecaton.jet.config.JobConfig;
+import uk.org.hecaton.map.IMap;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map.Entry;
+
+import static uk.org.hecaton.jet.Util.entry;
+import static uk.org.hecaton.jet.pipeline.DataConnectionRef.dataConnectionRef;
+import static uk.org.hecaton.projection.Projections.singleAttribute;
+import static uk.org.hecaton.query.impl.predicates.TruePredicate.truePredicate;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+@Category(QuickTest.class)
+public class RemoteMapSourcesTest extends PipelineTestSupport {
+    private static HecatonInstance remoteHz;
+    private static ClientConfig clientConfig;
+
+    private static final String HC_CLIENT_DATA_CONNECTION_NAME = "hzclientexternalref";
+
+    @BeforeClass
+    public static void setUp() throws IOException {
+        // Create remote cluster
+        String clusterName = randomName();
+
+        Config remoteClusterConfig = new Config();
+        remoteClusterConfig.setClusterName(clusterName);
+        remoteClusterConfig.addCacheConfig(new CacheSimpleConfig().setName("*"));
+        remoteHz = createRemoteCluster(remoteClusterConfig, 2).get(0);
+
+        clientConfig = getClientConfigForRemoteCluster(remoteHz);
+
+        // Create local cluster
+        DataConnectionConfig dataConnectionConfig = new DataConnectionConfig(HC_CLIENT_DATA_CONNECTION_NAME);
+        dataConnectionConfig.setType("HZ");
+
+        // Read XML and set as DataConnectionConfig
+        String xmlString = readLocalClusterConfig("hecaton-client-test-external.xml", clusterName, remoteHz);
+        dataConnectionConfig.setProperty(HecatonDataConnection.CLIENT_XML, xmlString);
+
+        for (HecatonInstance hecatonInstance : allHecatonInstances()) {
+            Config hecatonInstanceConfig = hecatonInstance.getConfig();
+            hecatonInstanceConfig.addDataConnectionConfig(dataConnectionConfig);
+        }
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        HecatonInstanceFactory.terminateAll();
+    }
+
+    @Test
+    public void remoteMap() {
+        // Given
+        List<Integer> input = sequence(itemCount);
+        putToMap(remoteHz.getMap(srcName), input);
+
+        // When
+        BatchSource<Entry<String, Integer>> source = Sources.remoteMap(srcName, clientConfig);
+
+        // Then
+        p.readFrom(source).writeTo(sink);
+        execute();
+        List<Entry<String, Integer>> expected = input.stream()
+                .map(i -> entry(String.valueOf(i), i))
+                .collect(toList());
+        assertEquals(toBag(expected), sinkToBag());
+    }
+
+    @Test
+    public void remoteMap_withExternalConfig() {
+        // Given
+        List<Integer> input = sequence(itemCount);
+        putToMap(remoteHz.getMap(srcName), input);
+
+        // When
+        BatchSource<Entry<Object, Object>> source = Sources.remoteMap(srcName,
+                dataConnectionRef(HC_CLIENT_DATA_CONNECTION_NAME));
+
+        // Then
+        p.readFrom(source).writeTo(sink);
+        execute();
+        List<Entry<String, Integer>> expected = input.stream()
+                .map(i -> entry(String.valueOf(i), i))
+                .collect(toList());
+        assertEquals(toBag(expected), sinkToBag());
+    }
+
+    @Test
+    public void remoteMapWithFilterAndProjection() {
+        // Given
+        List<Integer> input = sequence(itemCount);
+        putToMap(remoteHz.getMap(srcName), input);
+
+        // When
+        BatchSource<?> source = Sources.remoteMap(
+                srcName, clientConfig,
+                truePredicate(),
+                singleAttribute("value"));
+
+        // Then
+        p.readFrom(source).writeTo(sink);
+        execute();
+        assertEquals(toBag(input), sinkToBag());
+    }
+
+    @Test
+    public void remoteMapWithFilterAndProjection_withExternalConfig() {
+        // Given
+        List<Integer> input = sequence(itemCount);
+        putToMap(remoteHz.getMap(srcName), input);
+
+        // When
+        BatchSource<?> source = Sources.remoteMap(
+                srcName,
+                dataConnectionRef(HC_CLIENT_DATA_CONNECTION_NAME),
+                truePredicate(),
+                singleAttribute("value"));
+
+        // Then
+        p.readFrom(source).writeTo(sink);
+        execute();
+        assertEquals(toBag(input), sinkToBag());
+    }
+
+    @Test
+    public void remoteMapWithFilterAndProjection_withExternalConfig_usingBuilder() {
+        // Given
+        List<Integer> input = sequence(itemCount);
+        putToMap(remoteHz.getMap(srcName), input);
+
+        // When
+        BatchSource<?> source = Sources.remoteMapBuilder(srcName)
+                .dataConnectionRef(dataConnectionRef(HC_CLIENT_DATA_CONNECTION_NAME))
+                .predicate(truePredicate())
+                .projection(singleAttribute("value"))
+                .build();
+
+        // Then
+        p.readFrom(source).writeTo(sink);
+        execute();
+        assertEquals(toBag(input), sinkToBag());
+    }
+
+    @Test
+    public void remoteMapWithFilterAndProjectionFn() {
+        // Given
+        List<Integer> input = sequence(itemCount);
+        putToMap(remoteHz.getMap(srcName), input);
+
+        // When
+        BatchSource<? extends Integer> source = Sources.remoteMap(
+                srcName, clientConfig, truePredicate(), Entry<String, Integer>::getValue);
+
+        // Then
+        p.readFrom(source).writeTo(sink);
+        execute();
+        assertEquals(toBag(input), sinkToBag());
+    }
+
+    @Test
+    public void remoteMapWithFilterAndProjectionFn_withExternalConfig() {
+        // Given
+        List<Integer> input = sequence(itemCount);
+        putToMap(remoteHz.getMap(srcName), input);
+
+        // When
+        BatchSource<Integer> source = Sources.remoteMap(
+                srcName,
+                dataConnectionRef(HC_CLIENT_DATA_CONNECTION_NAME),
+                truePredicate(),
+                Entry<String, Integer>::getValue);
+
+        // Then
+        p.readFrom(source).writeTo(sink);
+        execute();
+        assertEquals(toBag(input), sinkToBag());
+    }
+
+    @Test
+    public void remoteMapWithUnknownValueClass_whenQueryingIsNotNecessary() throws Exception {
+        // Given
+        URL jarResource = Thread.currentThread().getContextClassLoader()
+                .getResource("deployment/sample-pojo-1.0-car.jar");
+        assertNotNull("jar not found", jarResource);
+        Class<?> carClz;
+        try (URLClassLoader cl = new URLClassLoader(new URL[]{jarResource})) {
+            carClz = cl.loadClass("com.sample.pojo.car.Car");
+        }
+        Object carPojo = carClz.getConstructor(String.class, String.class)
+                .newInstance("make", "model");
+        IMap<String, Object> map = remoteHz.getMap(srcName);
+        // the class of the value is unknown to the remote IMDG member, it will be only known to Jet
+        map.put("key", carPojo);
+
+        // When
+        BatchSource<Entry<String, Object>> source = Sources.remoteMap(srcName, clientConfig);
+
+        // Then
+        p.readFrom(source).map(en -> en.getValue().toString()).writeTo(sink);
+        JobConfig jobConfig = new JobConfig();
+        jobConfig.addJar(jarResource);
+        hz().getJet().newJob(p, jobConfig).join();
+        List<Object> expected = singletonList(carPojo.toString());
+        List<Object> actual = new ArrayList<>(sinkList);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void remoteMapWithUnknownValueClass_whenQueryingIsNotNecessary_withExternalConfig() throws Exception {
+        // Given
+        URL jarResource = Thread.currentThread().getContextClassLoader()
+                .getResource("deployment/sample-pojo-1.0-car.jar");
+        assertNotNull("jar not found", jarResource);
+        Class<?> carClz;
+        try (URLClassLoader cl = new URLClassLoader(new URL[]{jarResource})) {
+            carClz = cl.loadClass("com.sample.pojo.car.Car");
+        }
+        Object carPojo = carClz.getConstructor(String.class, String.class)
+                .newInstance("make", "model");
+        IMap<String, Object> map = remoteHz.getMap(srcName);
+        // the class of the value is unknown to the remote IMDG member, it will be only known to Jet
+        map.put("key", carPojo);
+
+        // When
+        BatchSource<Entry<String, Object>> source = Sources.remoteMap(srcName,
+                dataConnectionRef(HC_CLIENT_DATA_CONNECTION_NAME));
+
+        // Then
+        p.readFrom(source).map(en -> en.getValue().toString()).writeTo(sink);
+        JobConfig jobConfig = new JobConfig();
+        jobConfig.addJar(jarResource);
+        hz().getJet().newJob(p, jobConfig).join();
+        List<Object> expected = singletonList(carPojo.toString());
+        List<Object> actual = new ArrayList<>(sinkList);
+        assertEquals(expected, actual);
+    }
+
+}
