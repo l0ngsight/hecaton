@@ -33,7 +33,7 @@ protect:
   # E-mail addresses and bare domains (but not property keys such as hazelcast.io.x).
   - '[\w.+-]+@[\w-]+(?:\.[\w-]+)+'
   - '(?i)\b[\w.-]*hazelcast\.(?:com|org|io|cloud|net|dev)(?!\w|\.\w|/schema/)'
-  - '(?i)\bgithub\.com/hazelcast[\w./-]*'
+  - '(?i)\bgithub\.com[:/]hazelcast[\w./-]*'
   # Third-party artifacts and packages that carry the Hazelcast name.
   - 'com\.hazelcast\.(?:jsurfer|maven)\b'
   - '(?s)<groupId>com\.hazelcast</groupId>\s*<artifactId>hazelcast-(?:hibernate53|wm)</artifactId>'
@@ -52,8 +52,9 @@ replace:
     to: 'https$1://hecaton.org.uk/schema/'
     scope: content
   # Root package, with any separator: com.hazelcast, com/hazelcast, com_hazelcast (JNI),
-  # com\\.hazelcast / com\.hazelcast (escaped regexes in Java strings, properties).
-  - from: 'com(\.|/|_|\\\\\.|\\\.)hazelcast'
+  # com\\.hazelcast / com\.hazelcast (escaped regexes), com[\\/]hazelcast (Checkstyle
+  # path regexes), com\\hazelcast / com\hazelcast (Windows paths).
+  - from: 'com(\.|/|_|\\\\\.|\\\.|\[\\\\/\]|\\\\|\\)hazelcast'
     to: 'uk$1org$1hecaton'
   # Product name in identifiers, file names, config roots, property keys and prose.
   - from: 'HAZELCAST'

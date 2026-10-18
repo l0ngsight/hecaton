@@ -41,11 +41,16 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-          # TODO(M1): add `cache: maven` once pom.xml exists (setup-java fails without one).
+          cache: maven
       - run: tools/ci/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hecaton-jar
+          path: hecaton/target/hecaton-*.jar
+          retention-days: 3
 
   client:
-    name: Client tests (JDK ${{ matrix.java }})
+    name: Client (JDK ${{ matrix.java }})
     needs: build
     runs-on: ubuntu-latest
     strategy:
@@ -54,12 +59,12 @@ jobs:
         java: ['17', '21', '25']
     steps:
       - uses: actions/checkout@v5
-      # JDK 25 is installed for the Maven toolchain (build); the matrix JDK is the
-      # default runtime because it is listed last.
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: |
-            25
-            ${{ matrix.java }}
+          java-version: ${{ matrix.java }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: hecaton-jar
+          path: hecaton/target
       - run: tools/ci/client-tests.sh
