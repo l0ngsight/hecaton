@@ -107,7 +107,7 @@
     </licenses>
     <scm>
         <connection>scm:git:git://github.com/hazelcast/hazelcast.git</connection>
-        <developerConnection>scm:git:git@github.com:hecaton/hecaton.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:hazelcast/hazelcast.git</developerConnection>
         <url>https://github.com/hazelcast/hazelcast/</url>
     </scm>
     <developers>
