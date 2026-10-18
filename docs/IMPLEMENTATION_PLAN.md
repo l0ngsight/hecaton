@@ -107,7 +107,7 @@ A standalone Java 25 CLI in `tools/rebrand/`. Deterministic and idempotent:
 |---|---|
 | `rename-table.yaml` | Single source of truth for §5: package prefix, identifier rules (`Hazelcast`→`Hecaton`, `hazelcast`→`hecaton`), file/path renames, property/env prefixes, XML namespaces, Maven coordinates, script names, metric/JMX/thread prefixes. |
 | **Keep-list** (must *not* be renamed; wire- or data-visible) | Distributed-object service names (`hz:impl:mapService`, `hz:impl:*`, `hz:core:*`, `hz:raft:*` …) that official clients send in protocol messages; protocol magic bytes (`HZC`, `CP2`); codec IDs; the server version string format; factory/class IDs; Compact type names; internal object names (`__sql.catalog`, `__jet.*`); copyright headers, `LICENSE`, `NOTICE`, third-party attributions. The keep-list is tested: a fixture of official-client traffic is replayed against the renamed member. |
-| Java transformer | Lexical, token-aware rewriting (identifiers, string literals, comments, `import`/`package` lines) driven by the table. Type attribution is not needed because all rules are prefix/substring based. Also covers `META-INF/services/*` file names and contents, reflection strings (e.g. `EXTENSION_PRIORITY_LIST`), `Automatic-Module-Name` (`com.hazelcast.core` → `org.hecatongrid.core`). |
+| Java transformer | Lexical, token-aware rewriting (identifiers, string literals, comments, `import`/`package` lines) driven by the table. Type attribution is not needed because all rules are prefix/substring based. Also covers `META-INF/services/*` file names and contents, reflection strings (e.g. `EXTENSION_PRIORITY_LIST`), `Automatic-Module-Name` (`com.hazelcast.core` → `uk.org.hecaton.core`). |
 | Path mover | `com/hazelcast/**` → `org/hecaton/**` in every source set; `hazelcast-*` module dirs and artifact IDs → `hecaton-*`; `hazelcast-config-*.xsd` → `hecaton-config-*.xsd`; `hz-*` scripts → `hc-*`. |
 | Resource rules | XML/YAML/XSD/properties/JSON/shell/bat/Dockerfile/Helm text rules; `<hazelcast>` root element; namespace URIs; `HZ_` env prefix; `hazelcast.*` property keys. |
 | Codec generator | The client-protocol codecs are checked in, so they are renamed like other sources. Fork the generator templates (`hazelcast-client-protocol`) only to change package lines. Codec layouts must not change. |
@@ -146,7 +146,7 @@ Est.: 3 ew.
 
 ### 1.3 Client library 17/21/25 (phase 1 of §8.3)
 
-- Publish `org.hecatongrid:hecaton-client`, which at this stage re-publishes the Java 17 core
+- Publish `uk.org.hecaton:hecaton-client`, which at this stage re-publishes the Java 17 core
   jar under the client coordinate.
 - Add a client-test profile (the upstream `client` test packages plus new smoke tests) to
   `client-matrix.yml` on Temurin 17, 21 and 25.
@@ -170,7 +170,7 @@ Est.: 2 ew.
 
 | Deliverable | Work |
 |---|---|
-| `hecaton-migrate-rewrite` | OpenRewrite recipe `org.hecatongrid.migrate.FromHazelcast`, generated from `rename-table.yaml`: `ChangePackage`, `ChangeType`, `ChangeMethodName`, Maven/Gradle dependency changes, Spring property keys. |
+| `hecaton-migrate-rewrite` | OpenRewrite recipe `uk.org.hecaton.migrate.FromHazelcast`, generated from `rename-table.yaml`: `ChangePackage`, `ChangeType`, `ChangeMethodName`, Maven/Gradle dependency changes, Spring property keys. |
 | `hecaton-migrate` CLI | Non-Java files: config XML/YAML, `.properties`, env files, Dockerfiles, Helm/K8s manifests, shell scripts. Dry-run diff mode. |
 | `hecaton-migrate data` | Client-based copier (Hazelcast cluster → Hecaton cluster) for IMap/ICache/MultiMap/ReplicatedMap, using official Hazelcast client + Hecaton client in one JVM. |
 | Acceptance | The §5.5 sample apps under `migration-tests/`. CI fails if anything beyond tool output had to change. |
@@ -307,8 +307,8 @@ consistency check are P1, in M9.)
 - External security review of `hecaton-ext-tls` and `hecaton-ext-security`.
 - Docs site: getting started, migration guide (Hazelcast CE → Hecaton, Hazelcast EE →
   Hecaton feature mapping), feature reference, operations guide.
-- Release process (needs `hecatongrid.org` registered, D7): signed artifacts to Maven Central
-  under `org.hecatongrid`, Docker image,
+- Release process (needs `hecaton.org.uk` registered, D7): signed artifacts to Maven Central
+  under `uk.org.hecaton`, Docker image,
   SBOM (CycloneDX), release notes generated from conventional commits. Kubernetes
   deployment is documented with plain manifests (StatefulSet, headless service,
   `kubernetes-rbac.yaml`); a Helm chart is not planned for 1.0.

@@ -4,7 +4,7 @@
 |---|---|
 | Status | Draft v0.1 |
 | Upstream base | Hazelcast Platform Community Edition **v5.7.0** (tag `v5.7.0`, commit `60c31e3`) |
-| Root package | `org.hecatongrid` |
+| Root package | `uk.org.hecaton` |
 | Build JDK / member runtime | **Java 25** |
 | Client runtime | **Java 17, 21, 25** |
 | Companion document | [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) |
@@ -15,7 +15,7 @@
 
 Hecaton is a fork of the latest Hazelcast Platform Community Edition (CE) that:
 
-1. **Rebrands** the code base under the `org.hecatongrid` root package. The rename is mechanical
+1. **Rebrands** the code base under the `uk.org.hecaton` root package. The rename is mechanical
    and reproducible, so migrating an application from Hazelcast to Hecaton is a
    find-and-replace of packages, a few class names, config file names and property prefixes
    (§5).
@@ -30,7 +30,7 @@ Hecaton is a fork of the latest Hazelcast Platform Community Edition (CE) that:
 
 ### 1.1 Goals
 
-- G1: Swapping `com.hazelcast` for `org.hecatongrid` (plus the rename table in §5) is the
+- G1: Swapping `com.hazelcast` for `uk.org.hecaton` (plus the rename table in §5) is the
   only change an existing Hazelcast application needs.
 - G2: Every feature in §6 is available in the open-source distribution, with no license key,
   node limit or time bomb.
@@ -103,13 +103,13 @@ Facts taken from the `v5.7.0` source tree:
 
 | Maven coordinate | Built from | Bytecode | License | Contents |
 |---|---|---|---|---|
-| `org.hecatongrid:hecaton` | upstream `hazelcast/` (renamed) | Java 17 | Apache 2.0 | Core API, member and client (same layout as upstream) |
-| `org.hecatongrid:hecaton-client` | slimmed copy of `hecaton` | Java 17 | Apache 2.0 | Client-only jar for Java 17/21/25 apps (§8.3) |
-| `org.hecatongrid:hecaton-ext-*` | new, Hecaton-owned | Java 25 | Apache 2.0 | The features in §6, one module per feature family (§7.3) |
-| `org.hecatongrid:hecaton-member` | new | Java 25 | Apache 2.0 | Convenience POM: `hecaton` plus every `hecaton-ext-*` module |
-| `org.hecatongrid:hecaton-sql` | upstream `hazelcast-sql` (renamed) | Java 17 | **HCL** | SQL engine, kept under its original license (§11.2) |
-| `org.hecatongrid:hecaton-spring`, `hecaton-spring-boot-autoconfiguration` | upstream (renamed) | Java 17 | Apache 2.0 | Spring integration |
-| `org.hecatongrid.jet:hecaton-jet-*` | upstream `extensions/*` (renamed) | Java 17 | Apache 2.0 / HCL per upstream header | Jet connectors |
+| `uk.org.hecaton:hecaton` | upstream `hazelcast/` (renamed) | Java 17 | Apache 2.0 | Core API, member and client (same layout as upstream) |
+| `uk.org.hecaton:hecaton-client` | slimmed copy of `hecaton` | Java 17 | Apache 2.0 | Client-only jar for Java 17/21/25 apps (§8.3) |
+| `uk.org.hecaton:hecaton-ext-*` | new, Hecaton-owned | Java 25 | Apache 2.0 | The features in §6, one module per feature family (§7.3) |
+| `uk.org.hecaton:hecaton-member` | new | Java 25 | Apache 2.0 | Convenience POM: `hecaton` plus every `hecaton-ext-*` module |
+| `uk.org.hecaton:hecaton-sql` | upstream `hazelcast-sql` (renamed) | Java 17 | **HCL** | SQL engine, kept under its original license (§11.2) |
+| `uk.org.hecaton:hecaton-spring`, `hecaton-spring-boot-autoconfiguration` | upstream (renamed) | Java 17 | Apache 2.0 | Spring integration |
+| `uk.org.hecaton.jet:hecaton-jet-*` | upstream `extensions/*` (renamed) | Java 17 | Apache 2.0 / HCL per upstream header | Jet connectors |
 | `hecaton-distribution` (zip/tar.gz), Docker `hecaton/hecaton` | — | — | mixed (NOTICE lists each) | Full member distribution |
 
 ### 3.2 Versioning
@@ -127,11 +127,11 @@ Facts taken from the `v5.7.0` source tree:
 
 ```
                  ┌──────────────────────────────────────────────────────────────┐
- Applications ─▶ │ org.hecatongrid:hecaton-client (Java 17+)  │ official HZ clients ─┐│
+ Applications ─▶ │ uk.org.hecaton:hecaton-client (Java 17+)  │ official HZ clients ─┐│
                  └──────────────────────────────────────────────────────────────┘│
                         client protocol 5.x (unchanged on the wire)               │
  ┌──────────────────────────────────────── Hecaton member (Java 25) ────────────▼┐
- │  org.hecatongrid:hecaton  (renamed upstream CE, minimal patches)                   │
+ │  uk.org.hecaton:hecaton  (renamed upstream CE, minimal patches)                   │
  │    NodeExtension SPI ◀── HecatonNodeExtension (hecaton-ext-core)               │
  │    ClientExtension SPI ◀── HecatonClientExtension                              │
  │                              │  FeatureProvider SPI (ServiceLoader)             │
@@ -152,7 +152,7 @@ Principles:
    fits, and each one is recorded as an upstream patch.
 3. **Edition gates become feature checks.** `BuildInfo#isEnterprise()` call sites are
    replaced by `Features.isAvailable(Feature.X)`. A config that asks for a missing module
-   fails with a precise message, e.g. "WAN replication requires `org.hecatongrid:hecaton-ext-wan`
+   fails with a precise message, e.g. "WAN replication requires `uk.org.hecaton:hecaton-ext-wan`
    on the classpath". `isEnterprise()` stays public for source compatibility and returns
    `true` when `hecaton-ext-core` is present.
 4. **No licensing code.** `license-key` config is accepted and ignored with an INFO log, so
@@ -166,7 +166,7 @@ A versioned **rename table** (`tools/rebrand/rename-table.yaml`) drives every re
 same table generates:
 
 - the fork itself (applied to upstream sources by `tools/rebrand`, §9), and
-- the user migration tooling: an **OpenRewrite recipe** `org.hecatongrid.migrate.FromHazelcast`
+- the user migration tooling: an **OpenRewrite recipe** `uk.org.hecaton.migrate.FromHazelcast`
   and a standalone `hecaton-migrate` CLI for non-Java files.
 
 Because both come from one table, "simple rename" is guaranteed by construction. Any
@@ -176,11 +176,11 @@ upstream symbol that would break the contract fails the rebrand CI job.
 
 | Kind | Hazelcast | Hecaton | Rule |
 |---|---|---|---|
-| Root package | `com.hazelcast.*` | `org.hecatongrid.*` | prefix swap, sub-packages kept 1:1 |
+| Root package | `com.hazelcast.*` | `uk.org.hecaton.*` | prefix swap, sub-packages kept 1:1 |
 | Type names | `Hazelcast`, `HazelcastInstance`, `HazelcastClient`, `HazelcastException`, `HazelcastJsonValue`, `HazelcastInstanceAware`, `HazelcastFailoverClient`, ... | `Hecaton`, `HecatonInstance`, `HecatonClient`, `HecatonException`, `HecatonJsonValue`, `HecatonInstanceAware`, `HecatonFailoverClient`, ... | `Hazelcast` → `Hecaton` within identifiers |
 | Members | `newHazelcastInstance()`, `getHazelcastInstance()`, `setHazelcastInstance()`, `HazelcastClient.newHazelcastClient()` | `newHecatonInstance()`, `getHecatonInstance()`, `setHecatonInstance()`, `HecatonClient.newHecatonClient()` | same rule |
 | Lower-case identifiers | `hazelcastInstance` | `hecatonInstance` | `hazelcast` → `hecaton` |
-| EE class names users put in config (login modules, SSL factories, ...) | e.g. `com.hazelcast.security.loginimpl.LdapLoginModule` | `org.hecatongrid.security.loginimpl.LdapLoginModule` | Hecaton ships a class at each renamed FQN listed in `docs/ee-class-map.md` |
+| EE class names users put in config (login modules, SSL factories, ...) | e.g. `com.hazelcast.security.loginimpl.LdapLoginModule` | `uk.org.hecaton.security.loginimpl.LdapLoginModule` | Hecaton ships a class at each renamed FQN listed in `docs/ee-class-map.md` |
 
 Names that do **not** change: `Jet`, `IMap`, `ICache`, `CP*`, `Config` classes,
 `DataSerializable`/`IdentifiedDataSerializable`, factory/class IDs, Compact type names.
@@ -194,15 +194,15 @@ These carry no brand and appear in user data.
 | Client config files | `hazelcast-client.xml/yaml`, `hazelcast-client-failover.xml/yaml` | `hecaton-client.xml/yaml`, `hecaton-client-failover.xml/yaml` |
 | XML root elements | `<hazelcast>`, `<hazelcast-client>`, `<hazelcast-client-failover>` | `<hecaton>`, `<hecaton-client>`, `<hecaton-client-failover>` |
 | YAML root keys | `hazelcast:`, `hazelcast-client:` | `hecaton:`, `hecaton-client:` |
-| XML namespace | `http://www.hazelcast.com/schema/config` (and `/client-config`, `/spring`) | `https://hecatongrid.org/schema/config` (and `/client-config`, `/spring`) |
+| XML namespace | `http://www.hazelcast.com/schema/config` (and `/client-config`, `/spring`) | `https://hecaton.org.uk/schema/config` (and `/client-config`, `/spring`) |
 | XSD files | `hazelcast-config-5.7.xsd` | `hecaton-config-5.7.xsd` |
 | System properties | `hazelcast.*` (≈400 keys, e.g. `hazelcast.config`, `hazelcast.logging.type`) | `hecaton.*` |
 | Env config override | `HZ_` / `HZCLIENT_` prefixes | `HC_` / `HCCLIENT_` |
-| JMX domain | `com.hazelcast` | `org.hecatongrid` |
+| JMX domain | `com.hazelcast` | `uk.org.hecaton` |
 | Metric prefix (Prometheus) | `hz_` / `hazelcast_` | `hc_` / `hecaton_` |
 | Thread names | `hz.<instance>.…` | `hc.<instance>.…` |
 | CLI scripts | `hz`, `hz-start`, `hz-stop`, `hz-cli`, `hz-cluster-admin`, `hz-cluster-cp-admin`, `hz-healthcheck` | `hc`, `hc-start`, `hc-stop`, `hc-cli`, `hc-cluster-admin`, `hc-cluster-cp-admin`, `hc-healthcheck` |
-| Maven | `com.hazelcast:hazelcast[-*]`, `com.hazelcast.jet:hazelcast-jet-*` | `org.hecatongrid:hecaton[-*]`, `org.hecatongrid.jet:hecaton-jet-*` |
+| Maven | `com.hazelcast:hazelcast[-*]`, `com.hazelcast.jet:hazelcast-jet-*` | `uk.org.hecaton:hecaton[-*]`, `uk.org.hecaton.jet:hecaton-jet-*` |
 | Spring Boot | `spring.hazelcast.config`, `HazelcastAutoConfiguration` | `spring.hecaton.config`, `HecatonAutoConfiguration` (shipped by `hecaton-spring-boot-autoconfiguration`; Spring Boot's own Hazelcast autoconfig does not trigger) |
 
 ### 5.3 Transitional compatibility (opt-in)
@@ -278,17 +278,17 @@ Every feature must:
 
 ### 7.1 `HecatonNodeExtension`
 
-- Lives in `hecaton-ext-core` as `org.hecatongrid.instance.impl.HecatonNodeExtension extends
+- Lives in `hecaton-ext-core` as `uk.org.hecaton.instance.impl.HecatonNodeExtension extends
   DefaultNodeExtension`.
 - Registered by one upstream patch: `EXTENSION_PRIORITY_LIST` becomes
-  `["org.hecatongrid.instance.impl.HecatonNodeExtension", "org.hecatongrid.instance.impl.DefaultNodeExtension"]`.
+  `["uk.org.hecaton.instance.impl.HecatonNodeExtension", "uk.org.hecaton.instance.impl.DefaultNodeExtension"]`.
 - Holds no feature logic. It discovers `FeatureProvider`s through `ServiceLoader` and
   delegates each SPI method to the provider that claims it, falling back to `super`.
 
 ### 7.2 `FeatureProvider` SPI
 
 ```java
-package org.hecatongrid.ext.spi;
+package uk.org.hecaton.ext.spi;
 
 public interface FeatureProvider {
     Set<Feature> features();                       // e.g. {TLS}
@@ -303,7 +303,7 @@ public interface FeatureProvider {
 - **Conflict rule:** at most one provider per capability. Startup fails if two claim the
   same one.
 - **Client side:** `HecatonClientExtension extends DefaultClientExtension` is registered via
-  `META-INF/services/org.hecatongrid.client.impl.ClientExtension` (TLS, socket interceptor, HD
+  `META-INF/services/uk.org.hecaton.client.impl.ClientExtension` (TLS, socket interceptor, HD
   near cache, failover).
 
 ### 7.3 Module map
@@ -499,57 +499,37 @@ main        ─────●──●──●──●──●──●─�
 | # | Decision | Status |
 |---|---|---|
 | D1 | Upstream base `v5.7.0` | Decided |
-| D2 | Root package `org.hecatongrid` (was `org.hecaton`; changed by D7), `Hazelcast*` → `Hecaton*`. Product name stays Hecaton. | Decided |
+| D2 | Root package `uk.org.hecaton` (reverse of the D7 domain), `Hazelcast*` → `Hecaton*`. Product name stays Hecaton. | Decided |
 | D3 | Build on JDK 25, members on 25, client 17/21/25 | Decided |
 | D4 | Repository license → Apache 2.0 (from MIT) | Decided (done in M0) |
 | D5 | Keep HCL SQL/connectors as separate optional artifacts | Decided |
 | D6 | Env prefix `HC_`/`HCCLIENT_`, CLI prefix `hc` | Decided |
-| D7 | Domain `hecatongrid.org`; package root, Maven `groupId` and XML namespace follow it (§13.1) | Decided; the owner is registering the domain |
+| D7 | Domain `hecaton.org.uk`; package root, Maven `groupId` and XML namespace follow it (§13.1) | Decided; the owner is registering the domain |
 | D8 | Upstream import as snapshots without history | Decided |
 | D9 | Drop cloud-provider support (AWS, Azure, GCP, Eureka, Hazelcast Cloud); keep Kubernetes discovery (NG6) | Decided |
 
 ### 13.1 Domain and Maven namespace (D7)
 
-**Name availability** (RDAP/registry lookups, 2026-10-18):
+**Decision:** the project domain is **`hecaton.org.uk`**, registered by the owner.
 
-- **Taken:** `hecaton.org` (registered 2024), `hecaton.com` (2007), `hecaton.io` (2026-06),
-  `hecaton.dev` (2026-03), `hecaton.net` (2026-04), `hecaton.app`, `hecaton.cloud`,
-  `hecaton.tech`, `gethecaton.com`. Three were registered in 2026, so another project may
-  be using the name "Hecaton". Check for trademark/name conflicts before 1.0.
-- **Free:** `hecatongrid` in .org, .com, .net, .io, .dev (re-checked 2026-10-18), and the
-  other variants checked (`hecatondb`, `hecaton-project`, `hecatonhq`, `hecat0n`,
-  `hecath0n`).
-- `hekaton` is the code name of Microsoft SQL Server's in-memory OLTP engine, the same
-  product space. Avoid it.
+| Item | Value |
+|---|---|
+| Java root package | `uk.org.hecaton` (reverse-DNS of the domain) |
+| Maven `groupId` | `uk.org.hecaton`. Maven Central verifies it with a DNS TXT record on `hecaton.org.uk`. |
+| XML namespace | `https://hecaton.org.uk/schema/config` (and `/client-config`, `/spring`) |
+| Unchanged | product name Hecaton, class names (`HecatonInstance`, ...), artifact IDs (`hecaton`, `hecaton-ext-*`), system properties (`hecaton.*`), env prefix `HC_`, scripts (`hc-*`) |
 
-**Price of `hecatongrid.<tld>`** in USD. Cloudflare Registrar sells at registry cost (list
-updated 2026-10-15); Porkbun is shown as a second source:
+**Availability and price** (Nominet RDAP and registrar price lists, 2026-10-18):
 
-| TLD | 1st year (CF / Porkbun) | Renewal (CF / Porkbun) | 3-year total (CF) | 5-year total (CF) |
-|---|---|---|---|---|
-| **.org** | **8.50** / 7.98 | 11.20 / 11.84 | **30.90** | 53.30 |
-| .com | 10.46 / 11.08 | **10.46** / 11.08 | 31.38 | **52.30** |
-| .dev | 8.20 / 8.75 | 12.20 / 12.87 | 32.60 | 57.00 |
-| .net | 11.86 / 12.52 | 11.86 / 12.52 | 35.58 | 59.30 |
-| .app | 8.20 / 8.75 | 14.20 / 14.93 | 36.60 | 65.00 |
-| .cloud | 20.20 / 3.88 | 20.20 / 21.11 | 60.60 | 101.00 |
-| .tech | 9.99 / 6.99 | 49.20 / 50.98 | 108.39 | 206.79 |
-| .io | 32.00 / 28.12 | 50.00 / 51.80 | 132.00 | 232.00 |
-| .sh | 45.00 / 31.20 | 45.00 / 46.65 | 135.00 | 225.00 |
+- `hecaton.org.uk`: free. About US$5.30/yr at Cloudflare (at cost), US$5.66/yr at Porkbun;
+  renewal is the same price.
+- `hecaton.uk`: also free, same price. Worth registering defensively; it is shorter for
+  the website.
+- `hecaton.co.uk`: taken.
+- Earlier candidates: every `hecaton.<gTLD>` checked (.org, .com, .io, .dev, .net, .app,
+  .cloud, .tech) is taken. Three were registered in 2026, so another project may be using
+  the name "Hecaton". Check for trademark/name conflicts before 1.0. `hecatongrid.*` was
+  considered and dropped.
 
-.org is cheapest for the first three years and .com from the fifth year (by about $1 over five
-years); they are effectively the same price. `.cloud` and `.tech` look cheap in year one but
-renew at 2–5× the price.
-
-**Decision:** `hecatongrid.org`. It is the cheapest option in years 1–3, essentially tied
-with .com after that, and .org is the usual choice for open-source foundations. Consequences:
-
-- Java root package **`org.hecatongrid`** (D2). The product name, class names
-  (`HecatonInstance`, ...), artifact IDs (`hecaton`, `hecaton-ext-*`), system properties
-  (`hecaton.*`) and scripts (`hc-*`) are unchanged.
-- Maven `groupId` **`org.hecatongrid`**, which matches the package. Maven Central verifies
-  it with a DNS TXT record on `hecatongrid.org`.
-- XML namespace **`https://hecatongrid.org/schema/...`**.
-- Defensive extras, optional: `hecatongrid.com` (~$10/yr), `hecatongrid.dev` (~$12/yr).
-- The owner is registering `hecatongrid.org`. It is needed for the Maven Central namespace
-  check before the first publish (M8). M1 can use the names without it.
+The domain is needed for the Maven Central namespace check before the first publish (M8).
+M1 can use the names without it.
