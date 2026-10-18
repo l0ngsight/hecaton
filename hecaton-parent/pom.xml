@@ -139,7 +139,6 @@
         <artemis.version>2.53.0</artemis.version>
         <bytebuddy.version>1.18.7</bytebuddy.version>
         <jsr107.tck.version>1.1.1</jsr107.tck.version>
-        <hecaton-hibernate53.version>5.2.0</hecaton-hibernate53.version>
         <system-stubs.version>2.1.8</system-stubs.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -180,16 +179,6 @@
         <public.api.check.break.build>true</public.api.check.break.build>
     </properties>
 
-    <distributionManagement>
-        <repository>
-            <id>private-repository</id>
-            <url>https://repository.hazelcast.com/release</url>
-        </repository>
-        <snapshotRepository>
-            <id>private-repository</id>
-            <url>https://repository.hazelcast.com/snapshot</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <dependencyManagement>
         <dependencies>
@@ -1671,40 +1660,6 @@
             <id>snapshot-repository</id>
             <name>Maven2 Snapshot Repository</name>
             <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>hecaton-security</id>
-            <name>Thirdparty security fixes</name>
-            <url>https://repository.hazelcast.com/security-maven/</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>hecaton-private-repository</id>
-            <name>Hecaton Private Repository</name>
-            <url>https://repository.hazelcast.com/release/</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>hecaton-private-snapshot-repository</id>
-            <name>Hecaton Private Repository</name>
-            <url>https://repository.hazelcast.com/snapshot/</url>
             <releases>
                 <enabled>false</enabled>
             </releases>

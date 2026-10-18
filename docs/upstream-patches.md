@@ -14,7 +14,9 @@ Budget: fewer than 40 patched upstream files (spec §7.4).
 
 | # | Files | Reason | Milestone |
 |---|---|---|---|
-| — | — | none yet | — |
+| 1 | `hecaton-parent/pom.xml` | Removed Hazelcast's private Maven repositories (`repository.hazelcast.com` release/snapshot/security) and `distributionManagement`. Clean room (CONTRIBUTING §1); Hecaton publishes to Maven Central (M8). | M1 |
+| 2 | `extensions/pom.xml`, `extensions/hadoop-dist/pom.xml`, `distribution/pom.xml`, `hecaton-coverage-report/pom.xml` | Dropped the cloud-provider modules left out at import (Kinesis, S3, files-azure/gcs/s3) and their dependencies (D9). | M1 |
+| 3 | `hecaton-spring-tests/pom.xml`, `hecaton-it/distribution-it/pom.xml`, `distribution/pom.xml`, `hecaton-parent/pom.xml`; deleted `TestHibernateApplicationContext`, `HibernateIT`, `AnnotatedEntity` and their resources | Removed the external `hazelcast-hibernate53` and `hazelcast-wm` integrations, which are built against `com.hazelcast` and cannot work with Hecaton. | M1 |
 
 ## Pending
 
@@ -25,7 +27,8 @@ Known follow-ups found while producing the renamed baseline. Each becomes an ent
 |---|---|---|
 | Cloud-provider removal (D9) | `config/AwsConfig`, `AzureConfig`, `GcpConfig`, `EurekaConfig`, `client/config/ClientCloudConfig`, `JoinConfig`, `ClientNetworkConfig`, `WanBatchPublisherConfig`, `AliasedDiscoveryConfigUtils`, config parsers/generators, XSD/JSON schemas, `META-INF/services/...DiscoveryStrategyFactory`, `HecatonCloudDiscovery`, `ViridianAddressProvider`, `extensions/pom.xml`, `extensions/hadoop-dist/pom.xml`, `distribution/pom.xml`, `hecaton-coverage-report/pom.xml` | Plan §1.6. The plugins themselves are left out at import. |
 | Old-version compatibility tests | root `pom.xml` (`get-hz-3`), `hecaton/src/test/.../test/starter/**`, tests using `HecatonStarter` | They load real Hazelcast releases (`com.hazelcast` classes) next to Hecaton; cross-version compatibility with Hazelcast is a non-goal (NG1). Remove or disable. |
-| Third-party Hazelcast integrations | `hecaton-spring-tests/pom.xml` (`hazelcast-hibernate53`), `distribution/pom.xml` (`hazelcast-wm`), tests importing `uk.org.hecaton.hibernate` | Built against `com.hazelcast`; cannot work with Hecaton. Remove. |
+| Spring Hibernate support | `hecaton-spring/.../hibernate/RegionFactoryBeanDefinitionParser` | Spring XML support for the removed Hibernate integration. Decide whether to keep. |
+| Kafka Connect test downloads | `extensions/kafka-connect/pom.xml` | Test connectors are downloaded from `repository.hazelcast.com/download/tests/`. Switch to the connectors' own distribution sites. |
 | Binary test fixtures | 10 test jars (e.g. `client/console/testjob-*.jar`, `jet/core/DataSerializableSuppliers.jar`, `deployment/sample-pojo-1.0-car.jar`) and `*.serialization.compatibility.binary` | Contain compiled `com.hazelcast` class names that rebrand cannot rewrite. Rebuild from source or regenerate. |
 | Native libraries | `hecaton-tpc-engine/src/main/resources/lib/linux-*/libaffinity_helper.so`, `libicmp_helper.so` | Prebuilt with JNI symbols `Java_com_hazelcast_*`; they no longer bind after the rename (thread affinity, ICMP ping). Rebuild from the renamed C sources. |
 | Hazelcast 3 serialization fixtures | `nio/hz-3.1.5-multicast-package.dump`, `testHz3Object`, `testHz3ObjectLittleEndian` | Serialized Hazelcast 3 objects with `com.hazelcast` class names. Remove the tests or regenerate the fixtures. |

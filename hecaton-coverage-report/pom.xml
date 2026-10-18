@@ -195,24 +195,6 @@
         </dependency>
         <dependency>
             <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-files-azure</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-files-gcs</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-files-s3</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
             <artifactId>hecaton-jet-hadoop</artifactId>
             <version>${project.version}</version>
             <type>pom</type>
@@ -231,12 +213,6 @@
         </dependency>
         <dependency>
             <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-kinesis</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
             <artifactId>hecaton-jet-mongodb</artifactId>
             <version>${project.version}</version>
             <type>pom</type>
@@ -244,12 +220,6 @@
         <dependency>
             <groupId>uk.org.hecaton</groupId>
             <artifactId>hecaton-mapstore</artifactId>
-            <version>${project.version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-s3</artifactId>
             <version>${project.version}</version>
             <type>pom</type>
         </dependency>

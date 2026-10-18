@@ -31,12 +31,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-hibernate53</artifactId>
-            <version>${hecaton-hibernate53.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
             <version>${hibernate-core.version}</version>

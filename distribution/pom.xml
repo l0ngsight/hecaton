@@ -197,18 +197,6 @@
             <version>${jsr107.api.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-wm</artifactId>
-            <version>5.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>uk.org.hecaton</groupId>
-                    <artifactId>hecaton</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- Jet extensions -->
         <dependency>
             <groupId>uk.org.hecaton.jet</groupId>
@@ -254,24 +242,6 @@
         </dependency>
         <dependency>
             <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-files-azure</artifactId>
-            <version>${project.version}</version>
-            <classifier>${fat.dependency.classifier}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-files-gcs</artifactId>
-            <version>${project.version}</version>
-            <classifier>${fat.dependency.classifier}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-files-s3</artifactId>
-            <version>${project.version}</version>
-            <classifier>${fat.dependency.classifier}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
             <artifactId>hecaton-jet-hadoop-all</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
@@ -279,12 +249,6 @@
         <dependency>
             <groupId>uk.org.hecaton.jet</groupId>
             <artifactId>hecaton-jet-kafka</artifactId>
-            <version>${project.version}</version>
-            <classifier>${fat.dependency.classifier}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-kinesis</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
@@ -305,12 +269,6 @@
                     <artifactId>hecaton-jet-grpc</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>uk.org.hecaton.jet</groupId>
-            <artifactId>hecaton-jet-s3</artifactId>
-            <version>${project.version}</version>
-            <classifier>${fat.dependency.classifier}</classifier>
         </dependency>
         <dependency>
             <groupId>uk.org.hecaton</groupId>

@@ -44,10 +44,8 @@
         <module>hadoop-dist</module>
         <module>kafka</module>
         <module>kafka-connect</module>
-        <module>kinesis</module>
         <module>mapstore</module>
         <module>mongodb</module>
-        <module>s3</module>
     </modules>
 
     <profiles>
