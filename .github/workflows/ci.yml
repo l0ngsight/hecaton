@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feature/**', 'sync/**', 'claude/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: tools/ci/check-repo-hygiene.sh
+
+  build:
+    name: Build (JDK 25)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - run: tools/ci/build.sh
+
+  client:
+    name: Client tests (JDK ${{ matrix.java }})
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: ['17', '21', '25']
+    steps:
+      - uses: actions/checkout@v4
+      # JDK 25 is installed for the Maven toolchain (build); the matrix JDK is the
+      # default runtime because it is listed last.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            25
+            ${{ matrix.java }}
+          cache: maven
+      - run: tools/ci/client-tests.sh

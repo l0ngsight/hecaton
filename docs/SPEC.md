@@ -373,7 +373,7 @@ Target: **fewer than 40 patched upstream files**. Expected entries:
 ## 9. Upstream synchronisation model
 
 ```
-upstream/main ──●──────────●────────────●  (mirror of hazelcast/hazelcast, untouched)
+upstream/main ──●──────────●────────────●  (one unmodified snapshot commit per upstream tag, no upstream history)
                 v5.7.0      v5.8.0
                  │ tools/rebrand          │ tools/rebrand
 rebrand/*   ─────●────────────────────────●  (generated only; never hand-edited)
@@ -381,15 +381,21 @@ rebrand/*   ─────●────────────────�
 main        ─────●──●──●──●──●──●──●───────●──…  (Hecaton patches + hecaton-ext modules)
 ```
 
-- `tools/rebrand` is a deterministic transformer: OpenRewrite for Java (type-aware renames),
-  plus path moves and text rules for XML/YAML/XSD/properties/scripts/docs. It is driven by
-  `rename-table.yaml`.
+- Upstream history is **not** imported (D8). `tools/upstream/import-snapshot.sh <tag>` adds
+  the tree of each release tag as one commit on `upstream/main`, recording `Upstream-Tag` and
+  `Upstream-Commit` trailers. The linear snapshot chain is enough for 3-way merges.
+- `tools/rebrand` is a deterministic, token-aware transformer (identifiers, string literals,
+  `package`/`import` lines) plus path moves and text rules for
+  XML/YAML/XSD/properties/scripts/docs. It is driven by `rename-table.yaml`. The
+  user-facing migration recipe (§5) is the type-aware OpenRewrite variant of the same
+  table.
 - It **never** modifies copyright/license headers, `LICENSE`, `NOTICE`, or third-party
   attribution text.
 - A new upstream release = run rebrand on the new tag → commit to `rebrand/` → merge into
   `main`. Conflicts appear only where Hecaton patched upstream (§7.4).
-- Security fixes that land on upstream `master` but in no CE release are cherry-picked
-  through the same rebrand step (`tools/rebrand --commit <sha>`).
+- Security fixes that land on upstream `master` but in no CE release are fetched from the
+  upstream repository as patches and cherry-picked through the same rebrand step
+  (`tools/rebrand --commit <sha>`). No local upstream history is needed for this.
 
 ---
 
@@ -414,9 +420,8 @@ main        ─────●──●──●──●──●──●─�
 
 ### 11.1 Repository license
 
-- Upstream code is Apache 2.0 and cannot be relicensed. The current `LICENSE` (MIT) is
-  replaced with **Apache 2.0** for the repository. The decision is recorded in
-  `IMPLEMENTATION_PLAN.md`, Phase 0.
+- Upstream code is Apache 2.0 and cannot be relicensed. The repository `LICENSE` was
+  changed from MIT to **Apache 2.0** in M0 (D4).
 - `NOTICE` keeps the full upstream NOTICE (Agrona, Koloboke, Akka, Calcite, Flink, ...) and
   adds: "This product includes software developed by Hazelcast, Inc., modified by the
   Hecaton project (package and product renaming, additional features)." This satisfies
@@ -475,8 +480,36 @@ main        ─────●──●──●──●──●──●─�
 | D1 | Upstream base `v5.7.0` | Decided |
 | D2 | Root package `org.hecaton`, `Hazelcast*` → `Hecaton*` | Decided |
 | D3 | Build on JDK 25, members on 25, client 17/21/25 | Decided |
-| D4 | Repository license → Apache 2.0 (from MIT) | **Proposed: needs owner confirmation** |
-| D5 | Keep HCL SQL/connectors as separate optional artifacts | Proposed |
-| D6 | Env prefix `HC_`/`HCCLIENT_`, CLI prefix `hc` | Proposed |
-| D7 | XML namespace `https://hecaton.org/schema/...` (needs the domain to be owned or reserved) | Proposed |
-| D8 | Import upstream git history (full) vs. squashed snapshot | Proposed: full history, for blame and cherry-picks |
+| D4 | Repository license → Apache 2.0 (from MIT) | Decided (done in M0) |
+| D5 | Keep HCL SQL/connectors as separate optional artifacts | Decided |
+| D6 | Env prefix `HC_`/`HCCLIENT_`, CLI prefix `hc` | Decided |
+| D7 | Project domain, XML namespace and Maven `groupId` (§13.1) | **Open: needs a domain purchase** |
+| D8 | Upstream import as snapshots without history | Decided |
+
+### 13.1 Domain and Maven namespace (D7)
+
+Checked via RDAP/registry lookups on 2026-10-18:
+
+- **Taken:** `hecaton.org` (registered 2024), `hecaton.com` (2007), `hecaton.io` (2026-06),
+  `hecaton.dev` (2026-03), `hecaton.net` (2026-04), `hecaton.app`, `hecaton.cloud`,
+  `hecaton.tech`, `gethecaton.com`. Three of these were registered in 2026, so another
+  project may be using the name. Check for trademark/name conflicts before 1.0.
+- **Free:** `hecaton.sh`; `hecatongrid.*`, `hecatondb.*`, `hecaton-project.*`,
+  `hecatonhq.*`, `hecat0n.*`, `hecath0n.*` (org/com/io/dev/net/app/cloud/tech/sh).
+- `hekaton.*` is mostly taken and is also the code name of Microsoft SQL Server's
+  in-memory OLTP engine, the same product space. Avoid it.
+- Zero-for-O spellings (`hecat0n`, `hecath0n`) are free but hard to say and search for.
+  Not recommended.
+
+Consequences:
+
+- **Maven Central** only grants a `groupId` namespace such as `org.hecaton` to someone who
+  proves control of `hecaton.org` (DNS TXT record). Unless that domain can be bought, the
+  `groupId` has to differ from the Java package.
+- **Recommendation:** register `hecatongrid.org` (plus `hecatongrid.io`/`.dev` defensively).
+  Keep the Java root package `org.hecaton` (D2). Publish under `groupId` `org.hecatongrid`
+  and use the XML namespace `https://hecatongrid.org/schema/...`. `groupId` and package root
+  are allowed to differ (Guava does the same: `com.google.guava` vs. `com.google.common`).
+  Fallback with no purchase: `groupId` `io.github.l0ngsight`.
+- The XML namespace and `groupId` are first needed in M1 (`rename-table.yaml`). Until D7 is
+  closed, the table uses placeholders.

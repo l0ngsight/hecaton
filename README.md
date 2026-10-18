@@ -9,4 +9,6 @@ replication, and more.
 - [Specification](docs/SPEC.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
 
-Status: design phase. No code has been imported yet.
+Status: M0 (foundation). The Hazelcast CE 5.7.0 snapshot is on the `upstream/main` branch; the renamed code base arrives in M1.
+
+Licensed under the [Apache License 2.0](LICENSE). See [NOTICE](NOTICE) and [CONTRIBUTING](CONTRIBUTING.md).

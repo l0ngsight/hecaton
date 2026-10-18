@@ -14,7 +14,7 @@ Companion to [`SPEC.md`](SPEC.md). Section references (§) point to the spec.
 
 | Milestone | Content | Exit criteria | Est. |
 |---|---|---|---|
-| **M0** Foundation | Repo license, upstream import, CI on JDK 25, contribution rules | CI green on an empty build; decisions D4–D8 confirmed | 1–2 ew |
+| **M0** Foundation | Repo license, upstream snapshot import, CI on JDK 25, contribution rules | CI green on an empty build; decisions D4–D6, D8 confirmed (D7 tracked separately) | 1–2 ew |
 | **M1** Rebranded CE (`5.7.0-hc.0`) | `tools/rebrand`, renamed code base, JDK 25 build, client 17/21/25 matrix, migration tooling | Upstream test suite passes (parity with upstream on JDK 25); official clients connect; migration acceptance test passes | 8–10 ew |
 | **M2** Extension framework | `hecaton-ext-spi`, `hecaton-ext-core`, feature gates, Java 25 member check, client failover, license no-op | All EE gates converted; "missing module" errors tested | 3–4 ew |
 | **M3** Security P0 | TLS (F1), authentication (F2, without LDAP/Kerberos), authorization (F3) | TLS conformance + security test suites green | 8–10 ew |
@@ -68,18 +68,25 @@ Upstream sync work uses `sync/vX.Y.Z`; generated rebrand output lives on `rebran
 
 ## Phase 0 — Foundation (M0)
 
-1. **Confirm the open decisions** D4–D8 (§13): Apache 2.0 relicense, HCL modules, env/CLI
-   prefixes, XML namespace domain, full upstream history import.
+1. **Decisions** (§13): D4 Apache 2.0 relicense, D5 HCL modules as optional artifacts,
+   D6 `HC_`/`hc` prefixes, D8 snapshot import without history are decided. D7 (domain,
+   XML namespace, Maven `groupId`) is open pending a domain purchase (§13.1) and blocks only
+   the final values in `rename-table.yaml` (M1).
 2. **License files:** replace `LICENSE` with Apache 2.0, add `NOTICE` (upstream NOTICE plus
    the Hecaton modification statement, §11.1), add `licenses/` with the Apache and HCL texts.
-3. **Upstream import:**
-   - `git remote add upstream https://github.com/hazelcast/hazelcast.git`
-   - fetch tags, create branch `upstream/main` pointing at `v5.7.0` (mirror, never edited).
-4. **CI skeleton** (GitHub Actions):
-   - `build.yml`: JDK 25 (Temurin) + Maven toolchains, `./mvnw -T1C verify -Pquick`.
-   - `client-matrix.yml`: client tests on JDK 17/21/25.
-   - `nightly.yml`: full test suites, crash-consistency, multi-cluster, compat clients.
-   - `rebrand-check.yml`: rebrand determinism (§9) and HCL file report.
+3. **Upstream snapshot import** (no history, D8):
+   `tools/upstream/import-snapshot.sh v5.7.0` creates the orphan branch `upstream/main` with
+   one commit holding the unmodified `v5.7.0` tree (`Upstream-Tag`/`Upstream-Commit`
+   trailers). Later releases are added the same way, one commit per tag.
+4. **CI skeleton** (GitHub Actions, `.github/workflows/ci.yml`; the logic lives in
+   `tools/ci/*.sh` so later milestones only change scripts):
+   - `hygiene`: Apache `LICENSE`/`NOTICE` present, no Hazelcast Enterprise artifacts or
+     repositories in build files, no `sun.misc.Unsafe` in Hecaton-owned code.
+   - `build`: JDK 25 (Temurin). Skips the Maven build until M1 adds `pom.xml`.
+   - `client`: JDK 17/21/25 matrix (JDK 25 also installed for the toolchain). M1 adds the
+     `client-tests` Maven profile it calls.
+   - Added later: `nightly.yml` (full suites, crash-consistency, multi-cluster, compat
+     clients) in M1, `rebrand-check.yml` (determinism, HCL file report) with `tools/rebrand`.
 5. **Contribution rules:** `CONTRIBUTING.md` with the clean-room policy (§11.3), DCO
    sign-off, PR template with a provenance checkbox, `CODEOWNERS`, `SECURITY.md`.
 
@@ -107,9 +114,14 @@ Est.: 3–4 ew (including edge-case triage on ~5,900 core files plus modules/tes
 ### 1.2 Renamed baseline on JDK 25
 
 1. Run rebrand on `v5.7.0` and commit the result to `rebrand/v5.7.0` (generated, one commit
-   on top of the upstream history).
+   on top of the `upstream/main` snapshot).
 2. Merge `rebrand/v5.7.0` into `main` (unrelated-history merge the first time; later
    merges are normal 3-way).
+   - **Binary test fixtures:** upstream ships 10 test jars (e.g.
+     `client/console/testjob-*.jar`, `jet/core/DataSerializableSuppliers.jar`) and
+     serialization-compatibility binaries that contain compiled `com.hazelcast` class names.
+     Rebrand cannot rewrite them; rebuild them from source (or regenerate the binaries) as
+     part of this step and list them in `docs/upstream-patches.md`.
 3. **Build on JDK 25:**
    - Add a Maven toolchains config; set `jdk.version`-style properties per module:
      `hecaton.release.client=17`, `hecaton.release.member=25`.
@@ -304,7 +316,7 @@ consistency check are P1, in M9.)
 
 For each upstream CE release (minor) and for upstream security fixes:
 
-1. `git fetch upstream --tags`, move `upstream/main` to the new tag.
+1. `tools/upstream/import-snapshot.sh vX.Y.Z` adds the new tag as one snapshot commit on `upstream/main`.
 2. `tools/rebrand --tag vX.Y.Z` → commit to `rebrand/vX.Y.Z`.
 3. Merge into a `sync/vX.Y.Z` branch from `main`. Resolve conflicts only in files listed in
    `docs/upstream-patches.md`. Run the SPI contract tests.
@@ -319,9 +331,11 @@ Budget: ~1–2 ew per upstream minor.
 
 ## Immediate next steps (first PRs)
 
-1. **PR #1 — Foundation:** Apache 2.0 `LICENSE` + `NOTICE` (after D4 is confirmed),
-   `CONTRIBUTING.md` with the clean-room policy, PR template, CI skeleton on JDK 25.
-2. **PR #2 — Upstream import:** `upstream/main` at `v5.7.0` (history import per D8).
+1. **PR #1 — Foundation (done, `feature/m0-foundation`):** Apache 2.0 `LICENSE` + `NOTICE`,
+   `CONTRIBUTING.md` with the clean-room policy, PR template, `SECURITY.md`, `CODEOWNERS`,
+   CI skeleton on JDK 25.
+2. **PR #2 — Upstream import (done):** `upstream/main` holds the `v5.7.0` snapshot, created
+   by `tools/upstream/import-snapshot.sh`.
 3. **PR #3 — `tools/rebrand` v1** + `rename-table.yaml` + keep-list + verification checks.
 4. **PR #4 — `rebrand/v5.7.0` merged into `main`**, JDK 25 build fixes, baseline test
    comparison report.
