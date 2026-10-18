@@ -199,7 +199,7 @@ These carry no brand and appear in user data.
 | System properties | `hazelcast.*` (≈400 keys, e.g. `hazelcast.config`, `hazelcast.logging.type`) | `hecaton.*` |
 | Env config override | `HZ_` / `HZCLIENT_` prefixes | `HC_` / `HCCLIENT_` |
 | JMX domain | `com.hazelcast` | `uk.org.hecaton` |
-| Metric prefix (Prometheus) | `hz_` / `hazelcast_` | `hc_` / `hecaton_` |
+| System-property config override prefix | `-Dhz.<path>` (e.g. `hz.network.port.port`) | `-Dhc.<path>` |
 | Thread names | `hz.<instance>.…` | `hc.<instance>.…` |
 | CLI scripts | `hz`, `hz-start`, `hz-stop`, `hz-cli`, `hz-cluster-admin`, `hz-cluster-cp-admin`, `hz-healthcheck` | `hc`, `hc-start`, `hc-stop`, `hc-cli`, `hc-cluster-admin`, `hc-cluster-cp-admin`, `hc-healthcheck` |
 | Maven | `com.hazelcast:hazelcast[-*]`, `com.hazelcast.jet:hazelcast-jet-*` | `uk.org.hecaton:hecaton[-*]`, `uk.org.hecaton.jet:hecaton-jet-*` |
@@ -223,7 +223,9 @@ These carry no brand and appear in user data.
 | Java-serialized **`com.hazelcast.*` classes** in user data (rare: e.g. a stored `HazelcastJsonValue`) | No | Documented. The migration CLI can rewrite such stores offline. |
 | Persistence / Hot Restart files | No (NG2) | |
 | Cloud-provider discovery config (`aws`, `azure`, `gcp`, `eureka`, client `hazelcast-cloud`) | No (NG6) | Config load fails with a targeted error. Client-protocol codecs that carry these configs (e.g. dynamic WAN config) keep their wire layout; non-empty cloud sections are rejected. |
-| REST / Memcache endpoints | Yes | Upstream paths kept; `/hecaton/...` aliases added for `/hazelcast/...` paths. |
+| REST endpoints | Renamed | Paths become `/hecaton/rest/...`, `/hecaton/health/...`. A `/hazelcast/...` alias for health checks and existing tooling is an M1 follow-up patch. Memcache is unchanged. |
+| SQL catalog name | Renamed | The catalog `hazelcast` becomes `hecaton`. Queries with unqualified or schema-qualified names (`mymap`, `public.mymap`) are unaffected; fully qualified names (`hazelcast.public.mymap`) must change. |
+| Kubernetes label key `hazelcast.com/service-per-pod` | Yes | Kept, so existing manifests still work. |
 
 ### 5.5 Migration acceptance test
 

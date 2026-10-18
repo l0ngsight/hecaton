@@ -37,7 +37,9 @@ protect:
   # Third-party artifacts and packages that carry the Hazelcast name.
   - 'com\.hazelcast\.(?:jsurfer|maven)\b'
   - '(?s)<groupId>com\.hazelcast</groupId>\s*<artifactId>hazelcast-(?:hibernate53|wm)</artifactId>'
-  - 'org\.springframework\.boot\.(?:autoconfigure\.)?hazelcast\b'
+  # Spring Boot's own Hazelcast auto-configuration (package, classes and artifact).
+  - 'org\.springframework\.boot\.(?:autoconfigure\.)?hazelcast(?:\.\w+)*'
+  - 'spring-boot-(?:starter-)?hazelcast\b'
   - 'hibernate\.cache\.hazelcast\b'
   # Released Hazelcast artifacts referenced by explicit version (old-version compatibility
   # tests download them), e.g. com.hazelcast:hazelcast:4.0.1:jar:tests.
