@@ -34,7 +34,7 @@ public class InvalidApplicationContextTest {
 
         String rootExpectedMessage = "Exactly one of 'class-name' or 'implementation' attributes is required to create LoadBalancer!";
         BeanDefinitionStoreException exception = assertThrows(BeanDefinitionStoreException.class,
-                () -> new ClassPathXmlApplicationContext("com\\hecaton\\spring\\customLoadBalancer-invalidApplicationContext.xml")
+                () -> new ClassPathXmlApplicationContext("uk\\org\\hecaton\\spring\\customLoadBalancer-invalidApplicationContext.xml")
         );
         assertThat(exception)
                 .hasMessageContaining(expectedMessage)

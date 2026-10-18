@@ -28,56 +28,56 @@
     <!-- Suppress strict duplicate code checking -->
     <suppress checks="StrictDuplicateCode" files="\.java" lines="1-15"/>
 
-    <suppress checks="IllegalImport" files="com[\\/]hecaton[\\/]internal[\\/]tpcengine[\\/]"/>
+    <suppress checks="IllegalImport" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]tpcengine[\\/]"/>
 
     <!-- Suppress checking of copyright notice -->
     <suppress checks="Header" files="classloading[\\/]ThreadLocalLeakTestUtils"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]buildutils[\\/]ElementParser"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]logging[\\/]Log4j2Factory"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]package-info"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]cluster[\\/]fd[\\/]PhiAccrualFailureDetector"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]instance[\\/]impl[\\/]MobyNames"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]buildutils[\\/]ElementParser"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]logging[\\/]Log4j2Factory"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]package-info"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]cluster[\\/]fd[\\/]PhiAccrualFailureDetector"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]instance[\\/]impl[\\/]MobyNames"/>
 
     <!--  Suppress checking of copyright notice, adapted from the MicroRaft project  -->
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]state[\\/]FollowerState"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]state[\\/]FollowerStateTest"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]SlowFollowerBackoffTest"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]state[\\/]FollowerState"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]state[\\/]FollowerStateTest"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]SlowFollowerBackoffTest"/>
 
     <!--  Suppress checking of copyright notice, adapted from Agrona project  -->
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]HashUtil"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]QuickMath"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]AbstractConcurrentArrayQueue"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]ManyToOneConcurrentArrayQueue"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]QueuedPipe"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]Pipe"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]OneToOneConcurrentArrayQueue"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2ObjectHashMap"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2LongHashMap"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntIterator"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Hashing"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]MapDelegatingSet"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]BiInt2ObjectMap"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntHashSet"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongIterator"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongHashSet"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Int2ObjectHashMap"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Int2ObjectHashMapTest"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2ObjectHashMapTest"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]BiInt2ObjectMapTest"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongHashSetTest"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntHashSetTest"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2LongHashMapTest"/>
-    <suppress checks="Header" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]graph[\\/]BronKerboschCliqueFinder"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]HashUtil"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]QuickMath"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]AbstractConcurrentArrayQueue"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]ManyToOneConcurrentArrayQueue"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]QueuedPipe"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]Pipe"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]concurrent[\\/]OneToOneConcurrentArrayQueue"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2ObjectHashMap"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2LongHashMap"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntIterator"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Hashing"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]MapDelegatingSet"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]BiInt2ObjectMap"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntHashSet"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongIterator"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongHashSet"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Int2ObjectHashMap"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Int2ObjectHashMapTest"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2ObjectHashMapTest"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]BiInt2ObjectMapTest"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]LongHashSetTest"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]IntHashSetTest"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Long2LongHashMapTest"/>
+    <suppress checks="Header" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]graph[\\/]BronKerboschCliqueFinder"/>
 
     <!-- Suppress checking of copyright notice in a file derived from Apache Tez -->
     <suppress checks="Header" files="TopologicalSorter"/>
     <suppress checks="Header" files="generated"/>
 
     <!-- Exclude internal, implementation and template packages from JavaDoc checks -->
-    <suppress checks="Javadoc(Package|Method|Type|Variable)" files="com[\\/]hecaton[\\/]internal[\\/]"/>
+    <suppress checks="Javadoc(Package|Method|Type|Variable)" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="[\\/]impl[\\/]"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="[\\/]template[\\/]"/>
-    <suppress checks="Javadoc(Package|Method|Type|Variable)" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]"/>
+    <suppress checks="Javadoc(Package|Method|Type|Variable)" files="uk[\\/]org[\\/]hecaton[\\/]cp[\\/]internal[\\/]"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="org[\\/]apache[\\/]calcite[\\/]"/>
 
     <!-- Exclude copied Calcite files from FileLength checks -->
@@ -87,75 +87,75 @@
     <suppress checks="OuterTypeNumber" files="AbstractConcurrentArrayQueue\.java"/>
 
     <!-- ConsoleApp -->
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]client[\\/]console[\\/]ClientConsoleApp"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]client[\\/]console[\\/]ClientConsoleApp"/>
 
     <!-- Config -->
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]config[\\/]Config"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]config[\\/]Config"/>
     <suppress checks="FileLength"
-              files="com[\\/]hecaton[\\/]internal[\\/]dynamicconfig[\\/]DynamicConfigurationAwareConfig"/>
+              files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]dynamicconfig[\\/]DynamicConfigurationAwareConfig"/>
     <suppress checks="FileLength"
-              files="com[\\/]hecaton[\\/]internal[\\/]dynamicconfig[\\/]DynamicConfigYamlGenerator"/>
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]internal[\\/]config[\\/]MemberDomConfigProcessor"/>
+              files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]dynamicconfig[\\/]DynamicConfigYamlGenerator"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]config[\\/]MemberDomConfigProcessor"/>
 
     <!-- Memory -->
-    <suppress checks="IllegalImport" files="com[\\/]hecaton[\\/]internal[\\/]memory[\\/]impl[\\/]UnsafeUtil"/>
+    <suppress checks="IllegalImport" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]memory[\\/]impl[\\/]UnsafeUtil"/>
 
     <!-- JSON -->
-    <suppress checks="" files="[\\/]com[\\/]hecaton[\\/]internal[\\/]json[\\/]"/>
+    <suppress checks="" files="[\\/]uk[\\/]org[\\/]hecaton[\\/]internal[\\/]json[\\/]"/>
 
     <!-- Client -->
     <suppress checks="FileLength"
-              files="com[\\/]hecaton[\\/]client[\\/]impl[\\/]proxy[\\/]ClientMapProxy"/>
+              files="uk[\\/]org[\\/]hecaton[\\/]client[\\/]impl[\\/]proxy[\\/]ClientMapProxy"/>
 
     <!-- Client Protocol (auto-generated) -->
     <suppress checks="Length"
-              files="com[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]DefaultMessageTaskFactoryProvider"/>
-    <suppress checks="UnusedImport|DeclarationOrder|MethodLength" files="com[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]codec[\\/]"/>
+              files="uk[\\/]org[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]DefaultMessageTaskFactoryProvider"/>
+    <suppress checks="UnusedImport|DeclarationOrder|MethodLength" files="uk[\\/]org[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]codec[\\/]"/>
     <suppress checks="LineLength|VisibilityModifier|AvoidStarImport|RegexpSingleline|ParameterNumber|TypeName"
-              files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]codec[\\/]"/>
+              files="src[\\/]main[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]client[\\/]impl[\\/]protocol[\\/]codec[\\/]"/>
     <suppress checks="UnusedImport|DeclarationOrder"
-              files="com[\\/]hecaton[\\/]internal[\\/]longregister[\\/]client[\\/]codec[\\/]"/>
+              files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]longregister[\\/]client[\\/]codec[\\/]"/>
     <suppress checks="LineLength|VisibilityModifier|AvoidStarImport|RegexpSingleline|ParameterNumber"
-              files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]internal[\\/]longregister[\\/]client[\\/]codec[\\/]"/>
+              files="src[\\/]main[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]internal[\\/]longregister[\\/]client[\\/]codec[\\/]"/>
     <suppress checks="UnusedImport|LineLength|VisibilityModifier|AvoidStarImport|RegexpSingleline|ParameterNumber"
-              files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]impl[\\/]client[\\/]protocol[\\/]codec[\\/]"/>
+              files="src[\\/]main[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]jet[\\/]impl[\\/]client[\\/]protocol[\\/]codec[\\/]"/>
 
     <!-- Instance -->
-    <suppress checks="Javadoc(Method|Type|Variable)" files="com[\\/]hecaton[\\/]instance[\\/]"/>
+    <suppress checks="Javadoc(Method|Type|Variable)" files="uk[\\/]org[\\/]hecaton[\\/]instance[\\/]"/>
     <suppress checks="FileLength"
-              files="com[\\/]hecaton[\\/]instance[\\/]impl[\\/]EnterpriseNodeExtension"/>
+              files="uk[\\/]org[\\/]hecaton[\\/]instance[\\/]impl[\\/]EnterpriseNodeExtension"/>
 
     <!-- SPI -->
     <suppress checks="FileLength"
-              files="com[\\/]hecaton[\\/]spi[\\/]impl[\\/]AbstractInvocationFuture"/>
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]spi[\\/]properties[\\/]ClusterProperty"/>
+              files="uk[\\/]org[\\/]hecaton[\\/]spi[\\/]impl[\\/]AbstractInvocationFuture"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]spi[\\/]properties[\\/]ClusterProperty"/>
 
     <!-- SQL -->
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]jet[\\/]sql[\\/]impl[\\/]SqlPlanImpl"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]jet[\\/]sql[\\/]impl[\\/]SqlPlanImpl"/>
 
     <!-- Security -->
-    <suppress checks="Javadoc(Method|Type|Variable)" files="com[\\/]hecaton[\\/]security[\\/]"/>
+    <suppress checks="Javadoc(Method|Type|Variable)" files="uk[\\/]org[\\/]hecaton[\\/]security[\\/]"/>
 
     <!-- Partition -->
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]internal[\\/]partition[\\/]impl[\\/]InternalPartitionServiceImpl"/>
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]internal[\\/]partition[\\/]impl[\\/]MigrationManager"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]partition[\\/]impl[\\/]InternalPartitionServiceImpl"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]partition[\\/]impl[\\/]MigrationManager"/>
 
     <!-- CP Subsystem -->
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]RaftService"/>
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]RaftNodeImpl"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]cp[\\/]internal[\\/]RaftService"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]cp[\\/]internal[\\/]raft[\\/]impl[\\/]RaftNodeImpl"/>
 
     <!-- Spring -->
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]spring[\\/]HecatonConfigBeanDefinitionParser"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]spring[\\/]HecatonConfigBeanDefinitionParser"/>
 
     <!-- Map -->
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]map[\\/]IMap"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]map[\\/]IMap"/>
     <suppress checks="FileLength" files="RecordStore.java"/>
 
     <!-- Adopted public domain code with different style -->
     <suppress
             checks="MagicNumber|FileLength|DeclarationOrder|RedundantModifier|InnerAssignment|NPathComplexity|CyclomaticComplexity"
-            files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]ConcurrentReferenceHashMap"/>
-    <suppress checks="" files="com[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Object2LongHashMap"/>
+            files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]ConcurrentReferenceHashMap"/>
+    <suppress checks="" files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]util[\\/]collection[\\/]Object2LongHashMap"/>
 
     <!-- Test suppressions -->
     <suppress
@@ -181,35 +181,35 @@
     <suppress
             checks="ExplicitInitialization|EqualsHashCode|MissingSwitchDefault|TrailingComment"
             files="[\\/]src[\\/]test[\\/]"/>
-    <suppress checks="" files="src[\\/]test[\\/]java[\\/]com[\\/]hecaton[\\/]client[\\/]protocol[\\/]compatibility[\\/]"/>
-    <suppress checks="" files="src[\\/]test[\\/]java[\\/]com[\\/]hecaton[\\/]nio[\\/]serialization[\\/]compatibility[\\/]"/>
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]jet[\\/]pipeline[\\/]Sources.java"/>
-    <suppress checks="FileLength" files="com[\\/]hecaton[\\/]jet[\\/]pipeline[\\/]Sinks.java"/>
+    <suppress checks="" files="src[\\/]test[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]client[\\/]protocol[\\/]compatibility[\\/]"/>
+    <suppress checks="" files="src[\\/]test[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]nio[\\/]serialization[\\/]compatibility[\\/]"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]jet[\\/]pipeline[\\/]Sources.java"/>
+    <suppress checks="FileLength" files="uk[\\/]org[\\/]hecaton[\\/]jet[\\/]pipeline[\\/]Sinks.java"/>
     <suppress checks="OuterTypeNumber"
-              files="src[\\/]test[\\/]java[\\/]com[\\/]hecaton[\\/]internal[\\/]hotrestart[\\/]impl[\\/]di[\\/]DiContainerTest"/>
+              files="src[\\/]test[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]internal[\\/]hotrestart[\\/]impl[\\/]di[\\/]DiContainerTest"/>
 
     <!-- module-info.java -->
     <suppress checks="" files="[\\/]module-info"/>
 
-    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]aggregate[\\/]AggregateOperations"/>
-    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]config[\\/]JobConfig"/>
-    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]impl[\\/]JobCoordinationService"/>
+    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]jet[\\/]aggregate[\\/]AggregateOperations"/>
+    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]jet[\\/]config[\\/]JobConfig"/>
+    <suppress checks="FileLength" files="src[\\/]main[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]jet[\\/]impl[\\/]JobCoordinationService"/>
 
-    <suppress checks="InnerAssignment|JavadocType|TrailingComment|MethodCount|OperatorWrap|ClassDataAbstractionCoupling|ClassFanOutComplexity|CyclomaticComplexity|NPathComplexity|MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]"/>
-    <suppress checks="OperatorWrap" files="[\\/]src[\\/]test[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]"/>
-    <suppress checks="VisibilityModifier" files="[\\/]src[\\/]main[\\/]java[\\/]com[\\/]hecaton[\\/]jet[\\/]impl[\\/]"/>
+    <suppress checks="InnerAssignment|JavadocType|TrailingComment|MethodCount|OperatorWrap|ClassDataAbstractionCoupling|ClassFanOutComplexity|CyclomaticComplexity|NPathComplexity|MethodLength" files="[\\/]src[\\/]main[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]jet[\\/]"/>
+    <suppress checks="OperatorWrap" files="[\\/]src[\\/]test[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]jet[\\/]"/>
+    <suppress checks="VisibilityModifier" files="[\\/]src[\\/]main[\\/]java[\\/]uk[\\/]org[\\/]hecaton[\\/]jet[\\/]impl[\\/]"/>
 
     <suppress checks="" files="target[\\/]generated-sources"/>
     <suppress checks="" files="target[\\/]generated-test-sources"/>
 
     <!-- Javadoc suppressions -->
-    <suppress checks="JavadocPackage" files="com[\\/]hecaton[\\/]security[\\/]"/>
+    <suppress checks="JavadocPackage" files="uk[\\/]org[\\/]hecaton[\\/]security[\\/]"/>
     <!-- Split OS/EE package -->
-    <suppress checks="JavadocPackage" files="com[\\/]hecaton[\\/]jet[\\/]pipeline[\\/][^\\/]*$"/>
+    <suppress checks="JavadocPackage" files="uk[\\/]org[\\/]hecaton[\\/]jet[\\/]pipeline[\\/][^\\/]*$"/>
 
     <!-- Hot restart module -->
     <suppress checks="FileLength"
-              files="com[\\/]hecaton[\\/]internal[\\/]hotrestart[\\/]cluster[\\/]ClusterMetadataManager\.java"/>
+              files="uk[\\/]org[\\/]hecaton[\\/]internal[\\/]hotrestart[\\/]cluster[\\/]ClusterMetadataManager\.java"/>
   
     <!-- BPlusTree -->
     <suppress checks="FileLength" files="HDBPlusTree.java"/>
