@@ -1,0 +1,316 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.hazelcast.map.impl.operation.steps;
+
+import com.hazelcast.internal.serialization.Data;
+import com.hazelcast.internal.serialization.SerializationService;
+import com.hazelcast.map.impl.MapContainer;
+import com.hazelcast.map.impl.MapServiceContext;
+import com.hazelcast.map.impl.event.MapEventPublisher;
+import com.hazelcast.map.impl.operation.MergeOperation;
+import com.hazelcast.map.impl.operation.steps.engine.State;
+import com.hazelcast.map.impl.operation.steps.engine.Step;
+import com.hazelcast.map.impl.record.Record;
+import com.hazelcast.map.impl.recordstore.DefaultRecordStore;
+import com.hazelcast.map.impl.recordstore.RecordStore;
+import com.hazelcast.map.impl.recordstore.StaticParams;
+import com.hazelcast.query.impl.InternalIndex;
+import com.hazelcast.spi.merge.SplitBrainMergePolicy;
+import com.hazelcast.spi.merge.SplitBrainMergeTypes;
+import com.hazelcast.wan.impl.CallerProvenance;
+
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+import java.util.Queue;
+
+import static com.hazelcast.core.EntryEventType.MERGED;
+import static com.hazelcast.spi.impl.merge.MergingValueFactory.createMergingEntry;
+
+public enum MergeOpSteps implements IMapOpStep {
+
+    READ() {
+        @Override
+        public void runStep(State state) {
+            MergeOperation operation = ((MergeOperation) state.getOperation());
+            DefaultRecordStore recordStore = ((DefaultRecordStore) state.getRecordStore());
+            MapContainer mapContainer = recordStore.getMapContainer();
+            MapServiceContext mapServiceContext = mapContainer.getMapServiceContext();
+            SerializationService serializationService = mapServiceContext.getNodeEngine().getSerializationService();
+            List<SplitBrainMergeTypes.MapMergeTypes<Object, Object>> mergingEntries = state.getMergingEntries();
+            SplitBrainMergePolicy<Object, SplitBrainMergeTypes.MapMergeTypes<Object, Object>,
+                    Object> mergePolicy = state.getMergePolicy();
+
+            MergeOperation.checkMergePolicy(mapContainer, mergePolicy);
+
+            Queue<InternalIndex> notMarkedIndexes = operation.beginIndexMarking();
+            state.setNotMarkedIndexes(notMarkedIndexes);
+
+            // key + oldValue + newValue + mergingEntry
+            List outcomes = new ArrayList<>(NUMBER_OF_ITEMS * mergingEntries.size());
+
+            for (SplitBrainMergeTypes.MapMergeTypes<Object, Object> mergingEntry : mergingEntries) {
+                mergingEntry = (SplitBrainMergeTypes.MapMergeTypes<Object, Object>) serializationService
+                        .getManagedContext().initialize(mergingEntry);
+                mergePolicy = (SplitBrainMergePolicy<Object, SplitBrainMergeTypes.MapMergeTypes<Object, Object>, Object>)
+                        serializationService.getManagedContext().initialize(mergePolicy);
+                Data key = (Data) mergingEntry.getRawKey();
+                Record record = recordStore.getRecordOrNull(key, state.getNow(), false);
+
+                SplitBrainMergeTypes.MapMergeTypes<Object, Object> existingEntry = record != null
+                        ? createMergingEntry(serializationService, key, record,
+                        recordStore.getExpirySystem().getExpiryMetadata(key)) : null;
+
+                Object oldValue = record == null ? null : record.getValue();
+                Object newValue = mergePolicy.merge(mergingEntry, existingEntry);
+
+                if (oldValue == null && newValue == null) {
+                    continue;
+                }
+
+                outcomes.add(key);
+                outcomes.add(recordStore.copyToHeapWhenNeeded(oldValue));
+                outcomes.add(recordStore.copyToHeapWhenNeeded(newValue));
+                outcomes.add(mergingEntry);
+                outcomes.add(existingEntry);
+            }
+
+            state.setResult(outcomes);
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            boolean persistenceEnabled = ((DefaultRecordStore) state.getRecordStore())
+                    .persistenceEnabledFor(state.getCallerProvenance());
+
+            List outcomes = (List) state.getResult();
+            return !outcomes.isEmpty() && persistenceEnabled
+                    ? MergeOpSteps.STORE_OR_DELETE : MergeOpSteps.PROCESS;
+        }
+    },
+
+    STORE_OR_DELETE() {
+        @Override
+        public boolean isStoreStep() {
+            return true;
+        }
+
+        @Override
+        public void runStep(State state) {
+            // key + oldValue + newValue + mergingEntry
+            List outcomes = (List) state.getResult();
+
+            State perKeyState = new State(state);
+            for (int i = 0; i < outcomes.size(); i += NUMBER_OF_ITEMS) {
+                Object key = outcomes.get(i);
+
+                assert key instanceof Data
+                        : "Expect key instanceOf Data but found " + key;
+
+                Object oldValue = outcomes.get(i + OLD_VALUE_OFFSET);
+                Object newValue = outcomes.get(i + NEW_VALUE_OFFSET);
+
+                perKeyState.setKey((Data) key)
+                        .setOldValue(oldValue)
+                        .setNewValue(newValue);
+
+                if (oldValue == null && newValue != null
+                        || oldValue != null && newValue != null) {
+                    // put or update
+                    PutOpSteps.STORE.runStep(perKeyState);
+                    //set new value returned from map-store
+                    outcomes.set(i + NEW_VALUE_OFFSET, perKeyState.getNewValue());
+                } else if (oldValue != null && newValue == null) {
+                    // remove
+                    DeleteOpSteps.DELETE.runStep(perKeyState);
+                }
+            }
+
+            state.setResult(outcomes);
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return MergeOpSteps.PROCESS;
+        }
+    },
+
+    PROCESS() {
+        @Override
+        @SuppressWarnings({"checkstyle:NestedIfDepth", "checkstyle:CyclomaticComplexity"})
+        public void runStep(State state) {
+            DefaultRecordStore recordStore = (DefaultRecordStore) state.getRecordStore();
+            MapContainer mapContainer = recordStore.getMapContainer();
+            MapServiceContext mapServiceContext = mapContainer.getMapServiceContext();
+            SerializationService serializationService = mapServiceContext
+                    .getNodeEngine().getSerializationService();
+
+            // key + oldValue + newValue + mergingEntry
+            List outcomes = (List) state.getResult();
+            State perKeyState = new State(state);
+            for (int i = 0; i < outcomes.size(); i += NUMBER_OF_ITEMS) {
+                Object key = outcomes.get(i);
+
+                assert key instanceof Data
+                        : "Expect key instanceOf Data but found " + key;
+
+                Object oldValue = outcomes.get(i + OLD_VALUE_OFFSET);
+                Object newValue = outcomes.get(i + NEW_VALUE_OFFSET);
+
+                perKeyState.setKey((Data) key)
+                        .setOldValue(oldValue)
+                        .setNewValue(newValue)
+                        .setStaticPutParams(StaticParams.PUT_PARAMS);
+
+                if (oldValue == null && newValue != null
+                        || oldValue != null && newValue != null) {
+
+                    SplitBrainMergeTypes.MapMergeTypes mergingEntry
+                            = (SplitBrainMergeTypes.MapMergeTypes) outcomes.get(i + MERGING_ENTRY_OFFSET);
+                    // if same values, merge expiry and continue with next entry
+                    if (recordStore.getValueComparator().isEqual(newValue, oldValue, serializationService)) {
+                        SplitBrainMergeTypes.MapMergeTypes existingEntry =
+                                (SplitBrainMergeTypes.MapMergeTypes) outcomes.get(i + EXISTING_ENTRY_OFFSET);
+                        // see: DefaultRecordStore#merge comments for more details on reasoning
+                        boolean shouldMergeExpiration = state.getCallerProvenance() != CallerProvenance.WAN
+                                || recordStore.getValueComparator().isEqual(existingEntry.getRawValue(),
+                                mergingEntry.getRawValue(), serializationService);
+                        if (shouldMergeExpiration) {
+                            Record record = recordStore.getRecord((Data) key);
+                            if (record != null) {
+                                if (!recordStore.mergeRecordExpiration((Data) key, record, mergingEntry, state.getNow())) {
+                                    // If we did not merge values, and did not merge expiration metadata, do not WAN replicate
+                                    if (state.getNonWanReplicatedIndexes() == null) {
+                                        state.setNonWanReplicatedIndexes(new BitSet());
+                                    }
+                                    state.getNonWanReplicatedIndexes().set(i / NUMBER_OF_ITEMS);
+                                }
+                            }
+                        }
+                        continue;
+                    }
+
+                    // put or update
+                    PutOpSteps.ON_STORE.runStep(perKeyState);
+                    Record record = recordStore.getRecord((Data) key);
+                    recordStore.mergeRecordExpiration((Data) key, record, mergingEntry, state.getNow());
+                } else if (oldValue != null && newValue == null) {
+                    // remove
+                    DeleteOpSteps.ON_DELETE.runStep(perKeyState);
+                }
+            }
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return RESPONSE;
+        }
+    },
+
+    RESPONSE() {
+        @Override
+        public void runStep(State state) {
+            RecordStore recordStore = state.getRecordStore();
+            MapContainer mapContainer = recordStore.getMapContainer();
+            MapServiceContext mapServiceContext = mapContainer.getMapServiceContext();
+            MapEventPublisher mapEventPublisher = mapServiceContext.getMapEventPublisher();
+            MergeOperation operation = ((MergeOperation) state.getOperation());
+
+            List<Data> invalidationKeys = null;
+            boolean hasMergedValues = false;
+
+            List backupPairs = null;
+
+            boolean hasMapListener = mapEventPublisher.hasEventListener(state.getOperation().getName());
+            boolean hasWanReplication = mapContainer.getWanContext().isWanReplicationEnabled()
+                    && !state.isDisableWanReplicationEvent();
+            boolean hasBackups = mapContainer.getTotalBackupCount() > 0;
+            boolean hasInvalidation = mapContainer.hasInvalidationListener();
+
+            // key + oldValue + newValue + mergingEntry
+            List outcomes = (List) state.getResult();
+
+            if (hasBackups) {
+                backupPairs = new ArrayList(2 * (outcomes.size() / NUMBER_OF_ITEMS));
+            }
+
+            if (hasInvalidation) {
+                invalidationKeys = new ArrayList<>((outcomes.size() / NUMBER_OF_ITEMS));
+            }
+
+            for (int i = 0; i < outcomes.size(); i += NUMBER_OF_ITEMS) {
+                hasMergedValues = true;
+
+                Data dataKey = ((Data) outcomes.get(i));
+
+                Object oldValue = outcomes.get(i + OLD_VALUE_OFFSET);
+                // TODO can't we use this newValue directly.
+                Object newValue = outcomes.get(i + NEW_VALUE_OFFSET);
+
+                Data dataValue = operation.getValueOrPostProcessedValue(dataKey, operation.getValue(dataKey));
+                mapServiceContext.interceptAfterPut(mapContainer.getInterceptorRegistry(), dataValue);
+
+                if (hasMapListener) {
+                    mapEventPublisher.publishEvent(state.getCallerAddress(), state.getOperation().getName(),
+                            MERGED, dataKey, oldValue, dataValue);
+                }
+
+                if (hasWanReplication) {
+                    // Don't WAN replicate keys that did not change during the merge; see MergeOperation and CacheMergeOperation
+                    boolean nonReplicatedKey = state.getNonWanReplicatedIndexes() != null
+                            && state.getNonWanReplicatedIndexes().get(i / NUMBER_OF_ITEMS);
+                    if (!nonReplicatedKey) {
+                        operation.publishWanUpdate(dataKey, dataValue);
+                    }
+                }
+
+                if (hasInvalidation) {
+                    invalidationKeys.add(dataKey);
+                }
+
+                if (hasBackups) {
+                    backupPairs.add(dataKey);
+                    backupPairs.add(dataValue);
+                }
+
+                operation.evict(dataKey);
+            }
+
+            state.setBackupPairs(backupPairs);
+            state.setResult(hasMergedValues);
+
+            operation.invalidateNearCache(invalidationKeys);
+            operation.finishIndexMarking(state.getNotMarkedIndexes());
+            operation.setNonWanReplicatedKeys(state.getNonWanReplicatedIndexes());
+
+        }
+
+        @Override
+        public Step nextStep(State state) {
+            return UtilSteps.FINAL_STEP;
+        }
+    };
+
+    private static final int NUMBER_OF_ITEMS = 5;
+    private static final int OLD_VALUE_OFFSET = 1;
+    private static final int NEW_VALUE_OFFSET = 2;
+    private static final int MERGING_ENTRY_OFFSET = 3;
+    private static final int EXISTING_ENTRY_OFFSET = 4;
+
+    MergeOpSteps() {
+    }
+}
