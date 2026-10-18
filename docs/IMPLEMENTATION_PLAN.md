@@ -15,7 +15,7 @@ Companion to [`SPEC.md`](SPEC.md). Section references (§) point to the spec.
 | Milestone | Content | Exit criteria | Est. |
 |---|---|---|---|
 | **M0** Foundation | Repo license, upstream snapshot import, CI on JDK 25, contribution rules | CI green on an empty build; decisions D4–D6, D8 confirmed (D7 tracked separately) | 1–2 ew |
-| **M1** Rebranded CE (`5.7.0-hc.0`) | `tools/rebrand`, renamed code base, cloud-native removal (D9), JDK 25 build, client 17/21/25 matrix, migration tooling | Upstream test suite passes (parity with upstream on JDK 25, minus removed cloud tests); official clients connect; migration acceptance test passes | 10–12 ew |
+| **M1** Rebranded CE (`5.7.0-hc.0`) | `tools/rebrand`, renamed code base, cloud-provider removal (D9), JDK 25 build, client 17/21/25 matrix, migration tooling | Upstream test suite passes (parity with upstream on JDK 25, minus removed cloud-provider tests); official clients connect; migration acceptance test passes | 10–12 ew |
 | **M2** Extension framework | `hecaton-ext-spi`, `hecaton-ext-core`, feature gates, Java 25 member check, client failover, license no-op | All EE gates converted; "missing module" errors tested | 3–4 ew |
 | **M3** Security P0 | TLS (F1), authentication (F2, without LDAP/Kerberos), authorization (F3) | TLS conformance + security test suites green | 8–10 ew |
 | **M4** CP Subsystem P0 | Raft port (F7), CPMap (F8) | Ported 5.4 CP test suite + linearizability harness green | 8–10 ew |
@@ -79,7 +79,7 @@ Upstream sync work uses `sync/vX.Y.Z`; generated rebrand output lives on `rebran
    one commit holding the `v5.7.0` tree (`Upstream-Tag`/`Upstream-Commit`/
    `Upstream-Excludes-SHA256` trailers). Files are byte-identical to upstream. Paths in
    `tools/upstream/excluded-paths.txt` are left out: upstream's `.github/` (its CI would
-   run here) and the self-contained cloud-native code (D9), 229 files for v5.7.0. Later
+   run here) and the self-contained cloud-provider code (D9), 197 files for v5.7.0. Later
    releases are added the same way, one commit per tag.
 4. **CI skeleton** (GitHub Actions, `.github/workflows/ci.yml`; the logic lives in
    `tools/ci/*.sh` so later milestones only change scripts):
@@ -160,8 +160,11 @@ Est.: 0.5 ew.
   scenarios.
 - Negative test: a Hazelcast 5.7 member trying to join a Hecaton cluster is rejected with
   the documented message (needs the join-validation patch, which can land early).
+- Kubernetes job (nightly, kind): 3 Hecaton members form a cluster through Kubernetes
+  discovery in DNS and API modes using the renamed `kubernetes-rbac.yaml`, survive a
+  rolling restart of the StatefulSet, and a client pod connects.
 
-Est.: 1.5 ew.
+Est.: 2 ew.
 
 ### 1.5 Migration tooling (§5)
 
@@ -174,7 +177,7 @@ Est.: 1.5 ew.
 
 Est.: 2.5 ew.
 
-### 1.6 Remove cloud-native support (D9, spec NG6)
+### 1.6 Remove cloud-provider support (D9, spec NG6)
 
 `tools/upstream/excluded-paths.txt` already leaves out the self-contained plugin and
 connector directories. M1 removes what the rest of the code base references, as tracked
@@ -182,10 +185,10 @@ upstream patches:
 
 | Area | Work |
 |---|---|
-| Config model | Remove `AwsConfig`, `AzureConfig`, `GcpConfig`, `KubernetesConfig`, `EurekaConfig`, `ClientCloudConfig` and their accessors on `JoinConfig`, `ClientNetworkConfig`, `WanBatchPublisherConfig`; trim `AliasedDiscoveryConfig`/`AliasedDiscoveryConfigUtils` to nothing or delete them. |
+| Config model | Remove `AwsConfig`, `AzureConfig`, `GcpConfig`, `EurekaConfig`, `ClientCloudConfig` and their accessors on `JoinConfig`, `ClientNetworkConfig`, `WanBatchPublisherConfig`; trim `AliasedDiscoveryConfig`/`AliasedDiscoveryConfigUtils` down to Kubernetes. `KubernetesConfig` stays. |
 | Config loading | XML/YAML parsers, config generators, XSD/JSON schemas, `HC_` env overrides: drop the elements. The parsers keep recognising the element names only to throw the targeted NG6 error. |
 | Client protocol | Keep the wire layout of `AwsConfigCodec` & co. (G3). Decode and reject non-empty cloud sections in dynamic-config messages. |
-| Member/client runtime | Remove `KubernetesTopologyIntentTracker` usage from `Node` (keep the no-op tracker); remove `HazelcastCloudDiscovery`/`ViridianAddressProvider` from the client; clean `META-INF/services/...DiscoveryStrategyFactory`; fix references in `DefaultReflectiveAttributeLookupPolicy` and `DefaultSerializationServiceBuilder`. |
+| Member/client runtime | Remove `HazelcastCloudDiscovery`/`ViridianAddressProvider` from the client; remove the cloud-provider entries from `META-INF/services/...DiscoveryStrategyFactory` (Kubernetes stays); fix references in `DefaultReflectiveAttributeLookupPolicy` and `DefaultSerializationServiceBuilder`. |
 | Build & distribution | Remove the excluded modules from `extensions/pom.xml`, `hadoop-dist/pom.xml`, `distribution`; check `hadoop-all` for bundled cloud file systems. |
 | Tests & docs | Delete tests of removed features; add tests for the NG6 config error; note the removal in the migration guide. |
 
@@ -198,7 +201,7 @@ Upstream's `README.md`, `LICENSE`, `NOTICE`, `CONTRIBUTING.md`, `SECURITY.md` an
 `docs/upstream/` (the Hecaton `NOTICE` already embeds the upstream NOTICE), so merges never
 conflict on them.
 
-**M1 exit:** tag `v5.7.0-hc.0` (CE parity minus cloud-native support, renamed, Java 25 build).
+**M1 exit:** tag `v5.7.0-hc.0` (CE parity minus cloud-provider support, renamed, Java 25 build).
 
 ---
 
@@ -306,8 +309,9 @@ consistency check are P1, in M9.)
   Hecaton feature mapping), feature reference, operations guide.
 - Release process (needs `hecatongrid.org` registered, D7): signed artifacts to Maven Central
   under `org.hecatongrid`, Docker image,
-  SBOM (CycloneDX), release notes generated from conventional commits. No Helm chart
-  or Kubernetes operator (D9).
+  SBOM (CycloneDX), release notes generated from conventional commits. Kubernetes
+  deployment is documented with plain manifests (StatefulSet, headless service,
+  `kubernetes-rbac.yaml`); a Helm chart is not planned for 1.0.
 - If upstream has released a newer minor by then, run the upstream sync (below) first and
   release 1.0 on that base.
 

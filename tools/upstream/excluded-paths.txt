@@ -10,23 +10,20 @@
 # they would run Hazelcast's CI in this repository.
 .github/**
 
-# D9: cloud-native support is not part of Hecaton (spec §1.2, NG6).
-# Cloud and Kubernetes discovery plugins:
+# D9: cloud-provider support is not part of Hecaton (spec §1.2, NG6). Kubernetes
+# discovery is kept.
+# Cloud-provider discovery plugins:
 hazelcast/src/main/java/com/hazelcast/aws/**
 hazelcast/src/main/java/com/hazelcast/azure/**
 hazelcast/src/main/java/com/hazelcast/gcp/**
-hazelcast/src/main/java/com/hazelcast/kubernetes/**
 hazelcast/src/test/java/com/hazelcast/aws/**
 hazelcast/src/test/java/com/hazelcast/azure/**
 hazelcast/src/test/java/com/hazelcast/gcp/**
-hazelcast/src/test/java/com/hazelcast/kubernetes/**
 # Test fixtures of those plugins (gcp/ includes a service-account key that GitHub push
 # protection rejects):
 hazelcast/src/test/resources/aws/**
 hazelcast/src/test/resources/azure/**
 hazelcast/src/test/resources/gcp/**
-hazelcast/src/test/resources/kubernetes/**
-kubernetes-rbac.yaml
 # Cloud service connectors for Jet (AWS Kinesis, S3; S3/GCS/Azure file systems):
 extensions/kinesis/**
 extensions/s3/**

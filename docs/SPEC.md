@@ -39,7 +39,7 @@ Hecaton is a fork of the latest Hazelcast Platform Community Edition (CE) that:
   beyond the cluster address.
 - G4: The public config model (XML/YAML/programmatic) is Hazelcast's, renamed. A Hazelcast
   EE config file that uses features from §6 works after the §5 rename. The exception is
-  cloud-native configuration, which Hecaton removes (NG6).
+  cloud-provider configuration, which Hecaton removes (NG6).
 - G5: Merging an upstream CE release (e.g. 5.8.0) takes days, not weeks.
 
 ### 1.2 Non-goals
@@ -56,22 +56,24 @@ Hecaton is a fork of the latest Hazelcast Platform Community Edition (CE) that:
 - NG4: **Using any Hazelcast EE code.** See the clean-room rules in §11.
 - NG5: Wire compatibility for Hazelcast EE-only client features beyond those listed in §6
   (e.g. EE-only Management Center codecs).
-- NG6: **Cloud-native support (D9).** Hecaton removes the cloud-provider and Kubernetes
-  integrations that upstream CE ships:
-  - member and client discovery for AWS, Azure, GCP, Kubernetes and Eureka (`<aws>`,
-    `<azure>`, `<gcp>`, `<kubernetes>`, `<eureka>` join/discovery config, also inside WAN
-    publisher config);
+- NG6: **Cloud-provider support (D9).** Hecaton removes the cloud-provider integrations
+  that upstream CE ships:
+  - member and client discovery for AWS, Azure, GCP and Eureka (`<aws>`, `<azure>`,
+    `<gcp>`, `<eureka>` join/discovery config, also inside WAN publisher config);
   - client discovery for Hazelcast Cloud / Viridian (`ClientCloudConfig`,
     `HazelcastCloudDiscovery`);
-  - the Kubernetes topology-intent tracker (StatefulSet-aware shutdown and restart);
   - the Jet connectors for AWS Kinesis and S3, and the S3/GCS/Azure file-system
     connectors (`hadoop-dist/files-*`);
-  - upstream's cloud test infrastructure (Terraform) and `kubernetes-rbac.yaml`.
+  - upstream's cloud test infrastructure (Terraform).
 
-  What stays: TCP/IP and multicast join, the generic **Discovery SPI** (so a third party can
-  add a Hecaton discovery plugin), partition groups, and the Docker image. A config that
-  uses a removed element fails at load time with "Cloud discovery is not supported in
-  Hecaton; use tcp-ip, multicast or a Discovery SPI implementation".
+  What stays: **Kubernetes** discovery (`<kubernetes>` config, DNS lookup and Kubernetes
+  API modes, auto-detection when running in a pod, `kubernetes-rbac.yaml`) and the
+  Kubernetes topology-intent tracker, which makes cluster-wide shutdown and persistence
+  (F10) aware of StatefulSet scaling and rolling restarts. Also kept: TCP/IP and multicast
+  join, the generic **Discovery SPI** (so a third party can add a Hecaton discovery
+  plugin), partition groups, and the Docker image. A config that uses a removed element
+  fails at load time with "Cloud-provider discovery is not supported in Hecaton; use
+  tcp-ip, multicast, kubernetes or a Discovery SPI implementation".
 
 ---
 
@@ -220,7 +222,7 @@ These carry no brand and appear in user data.
 | Serialized user data (IDS, Portable, Compact, Java serialization of user classes) | Yes | Factory/class IDs and Compact schemas are unchanged. |
 | Java-serialized **`com.hazelcast.*` classes** in user data (rare: e.g. a stored `HazelcastJsonValue`) | No | Documented. The migration CLI can rewrite such stores offline. |
 | Persistence / Hot Restart files | No (NG2) | |
-| Cloud discovery config (`aws`, `azure`, `gcp`, `kubernetes`, `eureka`, client `hazelcast-cloud`) | No (NG6) | Config load fails with a targeted error. Client-protocol codecs that carry these configs (e.g. dynamic WAN config) keep their wire layout; non-empty cloud sections are rejected. |
+| Cloud-provider discovery config (`aws`, `azure`, `gcp`, `eureka`, client `hazelcast-cloud`) | No (NG6) | Config load fails with a targeted error. Client-protocol codecs that carry these configs (e.g. dynamic WAN config) keep their wire layout; non-empty cloud sections are rejected. |
 | REST / Memcache endpoints | Yes | Upstream paths kept; `/hecaton/...` aliases added for `/hazelcast/...` paths. |
 
 ### 5.5 Migration acceptance test
@@ -427,6 +429,7 @@ main        ─────●──●──●──●──●──●─�
 | Persistence | Crash-consistency tests (kill -9 during writes, torn writes, fsync-off), cluster-wide restart, partial start, backup restore. |
 | WAN | Two- and three-cluster topologies in Testcontainers, active/passive and active/active, sync after a partition. |
 | Client compat | Official Hazelcast Java (5.5–5.7), Python, Go, .NET and Node.js clients run their smoke suites against a Hecaton cluster in CI. |
+| Kubernetes | Nightly: a 3-member cluster on kind forms through Kubernetes discovery (DNS and API modes), survives a rolling restart, and a client inside the cluster connects. |
 | Java matrix | Client suite on 17/21/25, member suite on 25. |
 | Performance | JMH and `simulator`-style benchmarks vs. upstream CE 5.7 on-heap: no regression above 5% on IMap get/put. HD has its own targets (GC pause p99 < 10 ms with 100 GB native). |
 | Security | OWASP dependency check (upstream config reused), SpotBugs/FindSecBugs, CodeQL, TLS conformance tests (testssl.sh). |
@@ -501,9 +504,9 @@ main        ─────●──●──●──●──●──●─�
 | D4 | Repository license → Apache 2.0 (from MIT) | Decided (done in M0) |
 | D5 | Keep HCL SQL/connectors as separate optional artifacts | Decided |
 | D6 | Env prefix `HC_`/`HCCLIENT_`, CLI prefix `hc` | Decided |
-| D7 | Domain `hecatongrid.org`; package root, Maven `groupId` and XML namespace follow it (§13.1) | Decided; **domain purchase pending** |
+| D7 | Domain `hecatongrid.org`; package root, Maven `groupId` and XML namespace follow it (§13.1) | Decided; the owner is registering the domain |
 | D8 | Upstream import as snapshots without history | Decided |
-| D9 | Drop cloud-native support (NG6) | Decided |
+| D9 | Drop cloud-provider support (AWS, Azure, GCP, Eureka, Hazelcast Cloud); keep Kubernetes discovery (NG6) | Decided |
 
 ### 13.1 Domain and Maven namespace (D7)
 
@@ -548,5 +551,5 @@ with .com after that, and .org is the usual choice for open-source foundations. 
   it with a DNS TXT record on `hecatongrid.org`.
 - XML namespace **`https://hecatongrid.org/schema/...`**.
 - Defensive extras, optional: `hecatongrid.com` (~$10/yr), `hecatongrid.dev` (~$12/yr).
-- **Action for the owner:** register `hecatongrid.org` before the first Maven Central
-  publish (M8). M1 can use the names without owning the domain.
+- The owner is registering `hecatongrid.org`. It is needed for the Maven Central namespace
+  check before the first publish (M8). M1 can use the names without it.
