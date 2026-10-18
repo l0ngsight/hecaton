@@ -1,0 +1,225 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.internal.nearcache.impl.store;
+
+import uk.org.hecaton.config.EvictionConfig;
+import uk.org.hecaton.config.MaxSizePolicy;
+import uk.org.hecaton.config.NearCacheConfig;
+import uk.org.hecaton.config.NearCachePreloaderConfig;
+import uk.org.hecaton.internal.adapter.DataStructureAdapter;
+import uk.org.hecaton.internal.eviction.EvictionChecker;
+import uk.org.hecaton.internal.eviction.BoundedExpirationStrategy;
+import uk.org.hecaton.internal.nearcache.NearCache;
+import uk.org.hecaton.internal.nearcache.NearCacheRecord;
+import uk.org.hecaton.internal.nearcache.impl.maxsize.EntryCountNearCacheEvictionChecker;
+import uk.org.hecaton.internal.nearcache.impl.preloader.NearCachePreloader;
+import uk.org.hecaton.internal.serialization.Data;
+import uk.org.hecaton.internal.serialization.SerializationService;
+import uk.org.hecaton.spi.properties.HecatonProperties;
+
+import javax.annotation.Nullable;
+import java.time.Duration;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import static java.lang.String.format;
+
+/**
+ * Base implementation of {@link AbstractNearCacheRecordStore} for on-heap Near Caches.
+ *
+ * @param <K> the type of the key stored in Near Cache
+ * @param <V> the type of the value stored in Near Cache
+ * @param <R> the type of the value of the underlying {@link uk.org.hecaton.internal.nearcache.impl.SampleableNearCacheRecordMap}
+ */
+public abstract class BaseHeapNearCacheRecordStore<K, V, R extends NearCacheRecord>
+        extends AbstractNearCacheRecordStore<K, V, K, R, HeapNearCacheRecordMap<K, R>> {
+
+    private static final int DEFAULT_INITIAL_CAPACITY = 1000;
+
+    private final NearCachePreloader<K> nearCachePreloader;
+    private final BiFunction<? super K, ? super R, ? extends R> invalidatorFunction = createInvalidatorFunction();
+    private final BoundedExpirationStrategy<Map.Entry<K, R>> expirationStrategy;
+
+    BaseHeapNearCacheRecordStore(String name, NearCacheConfig nearCacheConfig, SerializationService serializationService,
+                                 ClassLoader classLoader, HecatonProperties properties) {
+        super(nearCacheConfig, serializationService, classLoader);
+
+        NearCachePreloaderConfig preloaderConfig = nearCacheConfig.getPreloaderConfig();
+        this.nearCachePreloader = preloaderConfig.isEnabled()
+                ? new NearCachePreloader<>(name, preloaderConfig, nearCacheStats, serializationService) : null;
+
+        this.expirationStrategy = new BoundedExpirationStrategy<>(() -> records.entrySet().iterator(), this::tryExpire,
+                properties.getInteger(NearCache.EXPIRATION_TASK_MAX_BATCH_SIZE),
+                Duration.ofMillis(properties.getMillis(NearCache.EXPIRATION_TASK_LIMIT_MILLIS)));
+    }
+
+    @Override
+    protected EvictionChecker createNearCacheEvictionChecker(EvictionConfig evictionConfig,
+                                                             NearCacheConfig nearCacheConfig) {
+        MaxSizePolicy maxSizePolicy = evictionConfig.getMaxSizePolicy();
+        if (maxSizePolicy == MaxSizePolicy.ENTRY_COUNT) {
+            return new EntryCountNearCacheEvictionChecker(evictionConfig.getSize(), records);
+        }
+
+        throw new IllegalArgumentException(format("Invalid max-size policy (%s) for %s! Only %s is supported.",
+                maxSizePolicy, getClass().getName(), MaxSizePolicy.ENTRY_COUNT));
+    }
+
+    @Override
+    protected HeapNearCacheRecordMap<K, R> createNearCacheRecordMap(NearCacheConfig nearCacheConfig) {
+        return new HeapNearCacheRecordMap<>(serializationService, DEFAULT_INITIAL_CAPACITY);
+    }
+
+    @Override
+    public R getRecord(K key) {
+        return records.get(key);
+    }
+
+    @Override
+    protected R putRecord(K key, R record) {
+        R oldRecord = records.put(key, record);
+        nearCacheStats.incrementOwnedEntryMemoryCost(getTotalStorageMemoryCost(key, record));
+        if (oldRecord != null) {
+            nearCacheStats.decrementOwnedEntryMemoryCost(getTotalStorageMemoryCost(key, oldRecord));
+        }
+        return oldRecord;
+    }
+
+    @Override
+    protected boolean containsRecordKey(K key) {
+        return records.containsKey(key);
+    }
+
+    @Override
+    public void onEvict(K key, R record, boolean wasExpired) {
+        if (!canUpdateStats(record)) {
+            return;
+        }
+        super.onEvict(key, record, wasExpired);
+        nearCacheStats.decrementOwnedEntryMemoryCost(getTotalStorageMemoryCost(key, record));
+    }
+
+    @Override
+    public void doExpiration() {
+        expirationStrategy.doExpiration();
+    }
+
+    private void tryExpire(Map.Entry<K, R> entry) {
+        K key = entry.getKey();
+        R record = entry.getValue();
+        if (isRecordExpired(record)) {
+            invalidate(key);
+            onExpire(key, record);
+        }
+    }
+
+    @Override
+    public void loadKeys(DataStructureAdapter<Object, ?> adapter) {
+        if (nearCachePreloader != null) {
+            nearCachePreloader.loadKeys(adapter);
+        }
+    }
+
+    @Override
+    public void storeKeys() {
+        if (nearCachePreloader != null) {
+            nearCachePreloader.storeKeys(records.keySet().iterator());
+        }
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        if (nearCachePreloader != null) {
+            nearCachePreloader.destroy();
+        }
+    }
+
+    @Nullable
+    @Override
+    public V tryPublishReserved(K key, V value, long reservationId, boolean deserialize) {
+        R existingRecord = records.applyIfPresent(key,
+                (key1, reservedRecord) -> publishReservedRecord(key1, value, reservedRecord, reservationId));
+
+        if (existingRecord == null || !deserialize) {
+            return null;
+        }
+        Object cachedValue = existingRecord.getValue();
+        return cachedValue instanceof Data ? toValue(cachedValue) : (V) cachedValue;
+    }
+
+    @Override
+    protected R reserveForReadUpdate(K key, Data keyData, long reservationId) {
+        return records.applyIfAbsent(key, new ReadUpdateReservation(keyData, reservationId));
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    private class ReadUpdateReservation implements Function<K, R> {
+        private final Data keyData;
+        private final long reservationId;
+
+        ReadUpdateReservation(Data keyData, long reservationId) {
+            this.keyData = keyData;
+            this.reservationId = reservationId;
+        }
+
+        @Override
+        public R apply(K key) {
+            return newReservationRecord(key, keyData, reservationId);
+        }
+    }
+
+    @Override
+    protected R reserveForWriteUpdate(K key, Data keyData, long reservationId) {
+        return records.apply(key, new WriteUpdateReservation(keyData, reservationId));
+    }
+
+    private class WriteUpdateReservation implements BiFunction<K, R, R> {
+        private final Data keyData;
+        private final long reservationId;
+
+        WriteUpdateReservation(Data keyData, long reservationId) {
+            this.keyData = keyData;
+            this.reservationId = reservationId;
+        }
+
+        @Override
+        public R apply(K key, R existingRecord) {
+            return reserveForWriteUpdate(key, keyData, existingRecord, reservationId);
+        }
+    }
+
+    @Override
+    public void invalidate(K key) {
+        records.applyIfPresent(key, invalidatorFunction);
+
+        nearCacheStats.incrementInvalidationRequests();
+    }
+
+    private BiFunction<K, R, R> createInvalidatorFunction() {
+        return (key, record) -> {
+            if (canUpdateStats(record)) {
+                nearCacheStats.decrementOwnedEntryCount();
+                nearCacheStats.decrementOwnedEntryMemoryCost(getTotalStorageMemoryCost(key, record));
+                nearCacheStats.incrementInvalidations();
+            }
+            return null;
+        };
+    }
+
+}

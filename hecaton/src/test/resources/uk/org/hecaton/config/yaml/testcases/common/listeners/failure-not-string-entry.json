@@ -1,0 +1,16 @@
+{
+  "instance": {
+    "hecaton": {
+      "listeners": [
+        2
+      ]
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/Listeners/items",
+    "pointerToViolation": "#/hecaton/listeners/0",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: String, found: Integer"
+  }
+}

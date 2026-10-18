@@ -1,0 +1,418 @@
+/*
+ * Copyright 2026 Hazelcast Inc.
+ *
+ * Licensed under the Hazelcast Community License (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://hazelcast.com/hazelcast-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.mapstore;
+
+import uk.org.hecaton.config.MapConfig;
+import uk.org.hecaton.config.MapStoreConfig;
+import uk.org.hecaton.core.HecatonException;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.dataconnection.impl.JdbcDataConnection;
+import uk.org.hecaton.instance.impl.HecatonInstanceImpl;
+import uk.org.hecaton.internal.util.UuidUtil;
+import uk.org.hecaton.internal.util.executor.ManagedExecutorService;
+import uk.org.hecaton.jet.impl.util.Util;
+import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.map.MapLoader;
+import uk.org.hecaton.map.MapLoaderLifecycleSupport;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
+import uk.org.hecaton.spi.impl.executionservice.ExecutionService;
+import uk.org.hecaton.spi.properties.ClusterProperty;
+import uk.org.hecaton.spi.properties.HecatonProperties;
+import uk.org.hecaton.spi.properties.HecatonProperty;
+import uk.org.hecaton.sql.SqlColumnMetadata;
+import uk.org.hecaton.sql.SqlResult;
+import uk.org.hecaton.sql.SqlRow;
+import uk.org.hecaton.sql.SqlService;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+
+import static uk.org.hecaton.internal.util.StringUtil.isBoolean;
+import static uk.org.hecaton.mapstore.FromSqlRowConverter.toGenericRecord;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
+
+/**
+ * GenericMapLoader is an implementation of {@link MapLoader} built
+ * on top of Hecaton SQL engine.
+ * <p>
+ * It works with any SQL connector supporting SELECT statements.
+ * <p>
+ * Usage:
+ * <p>
+ * First define data connection, e.g. for JDBC use {@link JdbcDataConnection}:
+ * <pre>{@code Config config = new Config();
+ * config.addDataConnectionConfig(
+ *   new DataConnectionConfig("mysql-ref")
+ *     .setType("Jdbc")
+ *     .setProperty("jdbcUrl", dbConnectionUrl)
+ * );}</pre>
+ * <p>
+ * Then create a Map with {@link MapLoader} using the GenericMapLoader implementation:
+ * <pre>{@code MapConfig mapConfig = new MapConfig(mapName);
+ * MapStoreConfig mapStoreConfig = new MapStoreConfig();
+ * mapStoreConfig.setClassName(GenericMapLoader.class.getName());
+ * mapStoreConfig.setProperty(GenericMapLoader.DATA_CONNECTION_REF_PROPERTY, "mysql-ref");
+ * mapConfig.setMapStoreConfig(mapStoreConfig);
+ * instance().getConfig().addMapConfig(mapConfig);}</pre>
+ * <p>
+ * The GenericMapLoader creates a SQL mapping with name "__map-store." + mapName.
+ * This mapping is removed when the map is destroyed.
+ *
+ * @param <K> type of the key
+ * @param <V> type of the value
+ */
+public class GenericMapLoader<K, V> implements MapLoader<K, V>, MapLoaderLifecycleSupport {
+
+    /**
+     * Property key to define data connection
+     */
+    public static final String DATA_CONNECTION_REF_PROPERTY = "data-connection-ref";
+    /**
+     * Property key to define external name of the table
+     */
+    public static final String EXTERNAL_NAME_PROPERTY = "external-name";
+
+    /**
+     * Property key to define id column name in database
+     */
+    public static final String ID_COLUMN_PROPERTY = "id-column";
+
+    /**
+     * Property key to define column names in database
+     */
+    public static final String COLUMNS_PROPERTY = "columns";
+
+    /**
+     * Property key to data connection type name
+     */
+    public static final String TYPE_NAME_PROPERTY = "type-name";
+
+    /**
+     * Property key to control loading of all keys when IMap is first created
+     */
+    public static final String LOAD_ALL_KEYS_PROPERTY = "load-all-keys";
+
+    /**
+     * Property key to decide on getting a single column as the value
+     */
+    public static final String SINGLE_COLUMN_AS_VALUE = "single-column-as-value";
+
+    /**
+     * Timeout for initialization of GenericMapLoader
+     */
+    public static final HecatonProperty MAPSTORE_INIT_TIMEOUT
+            = new HecatonProperty("hecaton.mapstore.init.timeout", 30, SECONDS);
+
+    static final String MAPPING_PREFIX = "__map-store.";
+
+    protected SqlService sqlService;
+
+    protected List<SqlColumnMetadata> columnMetadataList;
+
+    GenericMapStoreProperties genericMapStoreProperties;
+
+    Queries queries;
+
+    private ILogger logger;
+
+    private HecatonInstanceImpl instance;
+
+    private MappingHelper mappingHelper;
+
+    private String mapName;
+    private String mappingName;
+
+    private long initTimeoutMillis;
+
+    // uses initFinished latch to ensure visibility
+    private Throwable initFailure;
+
+    private final CountDownLatch initFinished = new CountDownLatch(1);
+
+    @Override
+    public void init(HecatonInstance instance, Properties properties, String mapName) {
+        validateMapStoreConfig(instance, mapName);
+
+        logger = instance.getLoggingService().getLogger(GenericMapLoader.class);
+
+        this.instance = Util.getHecatonInstanceImpl(instance);
+        this.genericMapStoreProperties = new GenericMapStoreProperties(properties, mapName);
+        this.sqlService = instance.getSql();
+        this.mappingHelper = new MappingHelper(this.sqlService);
+
+        this.mapName = mapName;
+        this.mappingName = MAPPING_PREFIX + mapName;
+
+        HecatonProperties hzProperties = nodeEngine().getProperties();
+        this.initTimeoutMillis = hzProperties.getMillis(MAPSTORE_INIT_TIMEOUT);
+
+        ManagedExecutorService asyncExecutor = getMapStoreExecutor();
+
+        // Init can run on partition thread, creating a mapping uses other maps, so it needs to run elsewhere
+        asyncExecutor.submit(this::createOrReadMapping);
+    }
+
+    @SuppressWarnings("OperatorWrap")
+    private void validateMapStoreConfig(HecatonInstance instance, String mapName) {
+        MapConfig mapConfig = instance.getConfig().findMapConfig(mapName);
+        MapStoreConfig mapStoreConfig = mapConfig.getMapStoreConfig();
+        if (!mapStoreConfig.isOffload()) {
+            throw new HecatonException("MapStoreConfig for " + mapConfig.getName() +
+                                         " must have `offload` property set to true");
+        }
+        if (mapStoreConfig.getProperty(DATA_CONNECTION_REF_PROPERTY) == null) {
+            throw new HecatonException("MapStoreConfig for " + mapConfig.getName() +
+                                         " must have `" + DATA_CONNECTION_REF_PROPERTY + "` property set");
+        }
+
+        // Validate that property is not an invalid boolean string
+        String loadAllKeys = mapStoreConfig.getProperty(LOAD_ALL_KEYS_PROPERTY);
+        if (loadAllKeys != null) {
+            if (!isBoolean(loadAllKeys)) {
+                throw new HecatonException("MapStoreConfig for " + mapConfig.getName() +
+                                             " must have `" + LOAD_ALL_KEYS_PROPERTY + "` property set as true or false");
+            }
+        }
+    }
+
+   private ManagedExecutorService getMapStoreExecutor() {
+        return nodeEngine()
+                .getExecutionService()
+                .getExecutor(ExecutionService.MAP_STORE_OFFLOADABLE_EXECUTOR);
+    }
+
+    private NodeEngineImpl nodeEngine() {
+        return instance.node.nodeEngine;
+    }
+
+    private void createOrReadMapping() {
+        logger.fine("Initializing for map %s", mapName);
+        try {
+            List<SqlColumnMetadata> mappingColumns = null;
+            if (genericMapStoreProperties.hasColumns()) {
+                mappingColumns = resolveMappingColumns();
+                logger.fine("Discovered following mapping columns: %s", mappingColumns);
+            }
+
+            mappingHelper.createMapping(
+                    mappingName,
+                    genericMapStoreProperties.tableName,
+                    mappingColumns,
+                    genericMapStoreProperties.dataConnectionRef,
+                    genericMapStoreProperties.idColumn
+            );
+
+            readExistingMapping();
+        } catch (Throwable e) {
+            // We create the mapping on the first member initializing this object
+            // Other members trying to concurrently initialize will fail and just read the mapping
+            if (e.getMessage() != null && e.getMessage().startsWith("Mapping or view already exists:")) {
+                readExistingMapping();
+            } else {
+                logger.severe(e);
+                initFailure = e;
+            }
+        } finally {
+            initFinished.countDown();
+        }
+    }
+
+    private List<SqlColumnMetadata> resolveMappingColumns() {
+        // Create a temporary mapping
+        String tempMapping = "temp_mapping_" + UuidUtil.newUnsecureUuidString();
+        final String idColumn = genericMapStoreProperties.idColumn;
+        mappingHelper.createMapping(
+                tempMapping,
+                genericMapStoreProperties.tableName,
+                null,
+                genericMapStoreProperties.dataConnectionRef,
+                idColumn
+        );
+
+        List<SqlColumnMetadata> allColumnsMetadataList = mappingHelper.loadColumnMetadataFromMapping(tempMapping);
+        dropMapping(tempMapping);
+
+        Map<String, SqlColumnMetadata> columnMap = allColumnsMetadataList
+                .stream()
+                .collect(toMap(SqlColumnMetadata::getName, identity()));
+
+        genericMapStoreProperties.validateColumns(columnMap);
+        return genericMapStoreProperties.getAllColumns().stream()
+                                        .map(columnMap::get)
+                                        .toList();
+    }
+
+    private void readExistingMapping() {
+        logger.fine("Reading existing mapping for map %s", mapName);
+        try {
+            // If mappingName does not exist, we get "... did you forget to CREATE MAPPING?" exception
+            List<SqlColumnMetadata> columnMetadata = mappingHelper.loadColumnMetadataFromMapping(mappingName);
+            if (genericMapStoreProperties.hasColumns()) {
+                columnMetadata.removeIf(c -> !genericMapStoreProperties.columns.contains(c.getName())
+                        && !genericMapStoreProperties.idColumn.contains(c.getName()));
+            }
+            Map<String, SqlColumnMetadata> columnMap = columnMetadata
+                    .stream()
+                    .collect(toMap(SqlColumnMetadata::getName, identity()));
+            genericMapStoreProperties.validateColumns(columnMap);
+
+            columnMetadataList = columnMetadata;
+            queries = new Queries(mappingName, genericMapStoreProperties.idColumn, columnMetadata);
+
+        } catch (Exception e) {
+            initFailure = e;
+        }
+    }
+
+    @Override
+    public void destroy() {
+        ManagedExecutorService asyncExecutor = getMapStoreExecutor();
+
+        asyncExecutor.submit(() -> {
+            awaitInitFinished();
+            // Instance is not shutting down.
+            // Only GenericMapLoader is being closed
+            if (instance.isRunning()) {
+                dropMapping(mappingName);
+            }
+        });
+    }
+
+    private void dropMapping(String mappingName) {
+        logger.info("Dropping mapping " + mappingName);
+        try {
+            mappingHelper.dropMapping(mappingName);
+        } catch (Exception e) {
+            logger.warning("Failed to drop mapping " + mappingName, e);
+        }
+    }
+
+    @Override
+    public V load(K key) {
+        awaitSuccessfulInit();
+
+        try (SqlResult queryResult = sqlService.execute(queries.load(), key)) {
+            Iterator<SqlRow> it = queryResult.iterator();
+
+            V value = null;
+            if (it.hasNext()) {
+                SqlRow sqlRow = it.next();
+                if (it.hasNext()) {
+                    throw new IllegalStateException("multiple matching rows for a key " + key);
+                }
+                // If there is a single column as the value, return that column as the value
+                if (queryResult.getRowMetadata().getColumnCount() == 2 && genericMapStoreProperties.singleColumnAsValue) {
+                    value = sqlRow.getObject(1);
+                } else {
+                    //noinspection unchecked
+                    value = (V) toGenericRecord(sqlRow, genericMapStoreProperties);
+                }
+            }
+            return value;
+        }
+    }
+
+    /**
+     * Size of the {@code keys} collection is limited by {@link ClusterProperty#MAP_LOAD_CHUNK_SIZE}
+     */
+    @Override
+    public Map<K, V> loadAll(Collection<K> keys) {
+        awaitSuccessfulInit();
+
+        Object[] keysArray = keys.toArray();
+
+        String sql = queries.loadAll(keys.size());
+        try (SqlResult queryResult = sqlService.execute(sql, keysArray)) {
+            Iterator<SqlRow> it = queryResult.iterator();
+
+            Map<K, V> result = new HashMap<>();
+
+            while (it.hasNext()) {
+                SqlRow sqlRow = it.next();
+                // If there is a single column as the value, return that column as the value
+                if (queryResult.getRowMetadata().getColumnCount() == 2 && genericMapStoreProperties.singleColumnAsValue) {
+                    K id = sqlRow.getObject(genericMapStoreProperties.idColumn);
+                    result.put(id, sqlRow.getObject(1));
+                } else {
+                    K id = sqlRow.getObject(genericMapStoreProperties.idColumn);
+                    //noinspection unchecked
+                    V record = (V) toGenericRecord(sqlRow, genericMapStoreProperties);
+                    result.put(id, record);
+                }
+            }
+            return result;
+        }
+    }
+
+    @Override
+    public Iterable<K> loadAllKeys() {
+        // If loadAllKeys property is disabled, don't load anything
+        if (!genericMapStoreProperties.loadAllKeys) {
+            return Collections.emptyList();
+        }
+
+        awaitSuccessfulInit();
+
+        String sql = queries.loadAllKeys();
+        //noinspection resource
+        SqlResult keysResult = sqlService.execute(sql);
+
+        // The contract for loadAllKeys says that if iterator implements Closable
+        // then it will be closed when the iteration is over
+        return () -> new MappingClosingIterator<>(
+                keysResult.iterator(),
+                (SqlRow row) -> row.getObject(genericMapStoreProperties.idColumn),
+                keysResult::close
+        );
+    }
+
+    /**
+     * Awaits successful initialization; if the initialization fails, throws an exception.
+     */
+    protected void awaitSuccessfulInit() {
+        awaitInitFinished();
+        if (initFailure != null) {
+            throw new HecatonException("MapStore init failed for map: " + mapName, initFailure);
+        }
+    }
+
+    void awaitInitFinished() {
+        try {
+            boolean finished = initFinished.await(initTimeoutMillis, MILLISECONDS);
+            if (!finished) {
+                throw new HecatonException("MapStore init for map: " + mapName + " timed out after "
+                        + initTimeoutMillis + " ms", initFailure);
+            }
+        } catch (InterruptedException e) {
+            throw new HecatonException(e);
+        }
+    }
+
+    // Visible for testing
+    boolean initHasFinished() {
+        return initFinished.getCount() == 0;
+    }
+}

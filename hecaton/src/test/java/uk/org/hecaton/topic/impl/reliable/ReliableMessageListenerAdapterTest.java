@@ -1,0 +1,141 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.topic.impl.reliable;
+
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.topic.Message;
+import uk.org.hecaton.topic.MessageListener;
+import uk.org.hecaton.test.HecatonParallelClassRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * Even though the ReliableMessageListenerAdapter is extremely simple, we do need to get it tested due to the guarantees
+ * provided.
+ */
+@RunWith(HecatonParallelClassRunner.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class ReliableMessageListenerAdapterTest extends HecatonTestSupport {
+
+    @Test
+    public void testRegistration() {
+        HecatonInstance hz = createHecatonInstance();
+        ReliableTopicProxy<String> topic = (ReliableTopicProxy<String>) hz.<String>getReliableTopic("topic");
+        MessageListenerMock listener = new MessageListenerMock();
+        UUID id = topic.addMessageListener(listener);
+
+        MessageRunner<String> runner = topic.runnersMap.get(id);
+        assertNotNull(runner);
+        ReliableMessageListenerAdapter adapter = assertInstanceOf(ReliableMessageListenerAdapter.class, runner.listener);
+        assertSame(listener, adapter.messageListener);
+    }
+
+    // checks if the Adapter really works!
+    @Test
+    public void integrationTest() {
+        HecatonInstance hz = createHecatonInstance();
+        ReliableTopicProxy<String> topic = (ReliableTopicProxy<String>) hz.<String>getReliableTopic("topic");
+        final MessageListenerMock listener = new MessageListenerMock();
+        topic.addMessageListener(listener);
+
+        topic.publish("item");
+        assertTrueEventually(() -> assertEquals(singletonList("item"), listener.messages));
+    }
+
+    private static class MessageListenerMock implements MessageListener<String> {
+
+        private final List<String> messages = new CopyOnWriteArrayList<>();
+
+        @Override
+        public void onMessage(Message<String> message) {
+            messages.add(message.getMessageObject());
+        }
+    }
+
+    @Test
+    public void retrieveInitialSequence() {
+        MessageListener<String> listener = createMessageListenerMock();
+        ReliableMessageListenerAdapter<String> adapter = new ReliableMessageListenerAdapter<>(listener);
+
+        assertEquals(-1, adapter.retrieveInitialSequence());
+    }
+
+    @Test
+    public void isTerminal() {
+        MessageListener<String> listener = createMessageListenerMock();
+        ReliableMessageListenerAdapter<String> adapter = new ReliableMessageListenerAdapter<>(listener);
+
+        assertFalse(adapter.isTerminal(new RuntimeException()));
+        assertFalse(adapter.isTerminal(new Exception()));
+    }
+
+    @Test
+    public void isLossTolerant() {
+        MessageListener<String> listener = createMessageListenerMock();
+        ReliableMessageListenerAdapter<String> adapter = new ReliableMessageListenerAdapter<>(listener);
+
+        assertFalse(adapter.isLossTolerant());
+    }
+
+    @Test
+    public void onMessage() {
+        MessageListener<String> listener = createMessageListenerMock();
+        ReliableMessageListenerAdapter<String> adapter = new ReliableMessageListenerAdapter<>(listener);
+
+        Message<String> message = new Message<>("foo", "foo", System.currentTimeMillis(), null);
+        adapter.onMessage(message);
+
+        verify(listener).onMessage(message);
+    }
+
+    @Test
+    public void test_toString() {
+        MessageListener<String> listener = createMessageListenerMock();
+        when(listener.toString()).thenReturn("foobar");
+        ReliableMessageListenerAdapter<String> adapter = new ReliableMessageListenerAdapter<>(listener);
+
+        assertEquals("foobar", adapter.toString());
+    }
+
+    @Test
+    public void storeSequence() {
+        MessageListener<String> listener = createMessageListenerMock();
+        ReliableMessageListenerAdapter<String> adapter = new ReliableMessageListenerAdapter<>(listener);
+        adapter.storeSequence(10);
+    }
+
+    private MessageListener<String> createMessageListenerMock() {
+        return mock();
+    }
+}

@@ -1,0 +1,10 @@
+{
+  "instance": {
+    "hecaton": {
+      "lite-member": {
+        "enabled": true
+      }
+    }
+  },
+  "error": null
+}

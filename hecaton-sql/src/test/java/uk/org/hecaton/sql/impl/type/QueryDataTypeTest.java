@@ -1,0 +1,365 @@
+/*
+ * Copyright 2026 Hazelcast Inc.
+ *
+ * Licensed under the Hazelcast Community License (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://hazelcast.com/hazelcast-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.sql.impl.type;
+
+import uk.org.hecaton.core.HecatonJsonValue;
+import uk.org.hecaton.function.SupplierEx;
+import uk.org.hecaton.internal.serialization.InternalSerializationService;
+import uk.org.hecaton.internal.serialization.impl.DefaultSerializationServiceBuilder;
+import uk.org.hecaton.sql.impl.SqlCustomClass;
+import uk.org.hecaton.sql.impl.expression.RowValue;
+import uk.org.hecaton.sql.impl.schema.type.TypeKind;
+import uk.org.hecaton.sql.impl.type.converter.BigDecimalConverter;
+import uk.org.hecaton.sql.impl.type.converter.BigIntegerConverter;
+import uk.org.hecaton.sql.impl.type.converter.BooleanConverter;
+import uk.org.hecaton.sql.impl.type.converter.ByteConverter;
+import uk.org.hecaton.sql.impl.type.converter.CalendarConverter;
+import uk.org.hecaton.sql.impl.type.converter.CharacterConverter;
+import uk.org.hecaton.sql.impl.type.converter.Converter;
+import uk.org.hecaton.sql.impl.type.converter.DateConverter;
+import uk.org.hecaton.sql.impl.type.converter.DoubleConverter;
+import uk.org.hecaton.sql.impl.type.converter.FloatConverter;
+import uk.org.hecaton.sql.impl.type.converter.InstantConverter;
+import uk.org.hecaton.sql.impl.type.converter.IntegerConverter;
+import uk.org.hecaton.sql.impl.type.converter.IntervalConverter;
+import uk.org.hecaton.sql.impl.type.converter.JsonConverter;
+import uk.org.hecaton.sql.impl.type.converter.LocalDateConverter;
+import uk.org.hecaton.sql.impl.type.converter.LocalDateTimeConverter;
+import uk.org.hecaton.sql.impl.type.converter.LocalTimeConverter;
+import uk.org.hecaton.sql.impl.type.converter.LongConverter;
+import uk.org.hecaton.sql.impl.type.converter.MapConverter;
+import uk.org.hecaton.sql.impl.type.converter.NullConverter;
+import uk.org.hecaton.sql.impl.type.converter.ObjectConverter;
+import uk.org.hecaton.sql.impl.type.converter.OffsetDateTimeConverter;
+import uk.org.hecaton.sql.impl.type.converter.RowConverter;
+import uk.org.hecaton.sql.impl.type.converter.ShortConverter;
+import uk.org.hecaton.sql.impl.type.converter.StringConverter;
+import uk.org.hecaton.sql.impl.type.converter.ZonedDateTimeConverter;
+import uk.org.hecaton.test.HecatonParallelClassRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import uk.org.hecaton.test.starter.ReflectionUtils;
+import org.apache.commons.lang.SerializationUtils;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+
+@RunWith(HecatonParallelClassRunner.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class QueryDataTypeTest extends HecatonTestSupport {
+    private static InternalSerializationService serializationService;
+
+    @BeforeClass
+    public static void setup() {
+        serializationService = new DefaultSerializationServiceBuilder().build();
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        serializationService.dispose();
+    }
+
+    @Test
+    public void testResolutionByConverter() {
+        checkConverter(QueryDataType.VARCHAR, StringConverter.INSTANCE);
+        checkConverter(QueryDataType.VARCHAR_CHARACTER, CharacterConverter.INSTANCE);
+
+        checkConverter(QueryDataType.BOOLEAN, BooleanConverter.INSTANCE);
+
+        checkConverter(QueryDataType.TINYINT, ByteConverter.INSTANCE);
+        checkConverter(QueryDataType.SMALLINT, ShortConverter.INSTANCE);
+        checkConverter(QueryDataType.INT, IntegerConverter.INSTANCE);
+        checkConverter(QueryDataType.BIGINT, LongConverter.INSTANCE);
+        checkConverter(QueryDataType.DECIMAL, BigDecimalConverter.INSTANCE);
+        checkConverter(QueryDataType.DECIMAL_BIG_INTEGER, BigIntegerConverter.INSTANCE);
+        checkConverter(QueryDataType.REAL, FloatConverter.INSTANCE);
+        checkConverter(QueryDataType.DOUBLE, DoubleConverter.INSTANCE);
+
+        checkConverter(QueryDataType.TIME, LocalTimeConverter.INSTANCE);
+        checkConverter(QueryDataType.DATE, LocalDateConverter.INSTANCE);
+        checkConverter(QueryDataType.TIMESTAMP, LocalDateTimeConverter.INSTANCE);
+        checkConverter(QueryDataType.TIMESTAMP_WITH_TZ_DATE, DateConverter.INSTANCE);
+        checkConverter(QueryDataType.TIMESTAMP_WITH_TZ_CALENDAR, CalendarConverter.INSTANCE);
+        checkConverter(QueryDataType.TIMESTAMP_WITH_TZ_INSTANT, InstantConverter.INSTANCE);
+        checkConverter(QueryDataType.TIMESTAMP_WITH_TZ_OFFSET_DATE_TIME, OffsetDateTimeConverter.INSTANCE);
+        checkConverter(QueryDataType.TIMESTAMP_WITH_TZ_ZONED_DATE_TIME, ZonedDateTimeConverter.INSTANCE);
+
+        checkConverter(QueryDataType.OBJECT, ObjectConverter.INSTANCE);
+        checkConverter(new QueryDataType("CustomType"), ObjectConverter.INSTANCE);
+
+        checkConverter(QueryDataType.NULL, NullConverter.INSTANCE);
+
+        checkConverter(QueryDataType.INTERVAL_YEAR_MONTH, IntervalConverter.YEAR_MONTH);
+        checkConverter(QueryDataType.INTERVAL_DAY_SECOND, IntervalConverter.DAY_SECOND);
+
+        checkConverter(QueryDataType.MAP, MapConverter.INSTANCE);
+        checkConverter(QueryDataType.JSON, JsonConverter.INSTANCE);
+        checkConverter(QueryDataType.ROW, RowConverter.INSTANCE);
+    }
+
+    @Test
+    public void testResolutionByClass() {
+        checkClasses(QueryDataType.VARCHAR, String.class);
+        checkClasses(QueryDataType.VARCHAR_CHARACTER, char.class, Character.class);
+
+        checkClasses(QueryDataType.BOOLEAN, boolean.class, Boolean.class);
+
+        checkClasses(QueryDataType.TINYINT, byte.class, Byte.class);
+        checkClasses(QueryDataType.SMALLINT, short.class, Short.class);
+        checkClasses(QueryDataType.INT, int.class, Integer.class);
+        checkClasses(QueryDataType.BIGINT, long.class, Long.class);
+        checkClasses(QueryDataType.DECIMAL, BigDecimal.class);
+        checkClasses(QueryDataType.DECIMAL_BIG_INTEGER, BigInteger.class);
+        checkClasses(QueryDataType.REAL, float.class, Float.class);
+        checkClasses(QueryDataType.DOUBLE, double.class, Double.class);
+
+        checkClasses(QueryDataType.TIME, LocalTime.class);
+        checkClasses(QueryDataType.DATE, LocalDate.class);
+        checkClasses(QueryDataType.TIMESTAMP, LocalDateTime.class);
+        checkClasses(QueryDataType.TIMESTAMP_WITH_TZ_DATE, Date.class);
+        checkClasses(QueryDataType.TIMESTAMP_WITH_TZ_CALENDAR, Calendar.class, GregorianCalendar.class);
+        checkClasses(QueryDataType.TIMESTAMP_WITH_TZ_INSTANT, Instant.class);
+        checkClasses(QueryDataType.TIMESTAMP_WITH_TZ_OFFSET_DATE_TIME, OffsetDateTime.class);
+        checkClasses(QueryDataType.TIMESTAMP_WITH_TZ_ZONED_DATE_TIME, ZonedDateTime.class);
+
+        checkClasses(QueryDataType.OBJECT, Object.class, SqlCustomClass.class);
+
+        checkClasses(QueryDataType.NULL, void.class, Void.class);
+
+        checkClasses(QueryDataType.INTERVAL_YEAR_MONTH, SqlYearMonthInterval.class);
+        checkClasses(QueryDataType.INTERVAL_DAY_SECOND, SqlDaySecondInterval.class);
+
+        checkClasses(QueryDataType.MAP, Map.class, HashMap.class);
+        checkClasses(QueryDataType.JSON, HecatonJsonValue.class);
+        checkClasses(QueryDataType.ROW, RowValue.class);
+    }
+
+    @Test
+    public void testResolutionByName() {
+        checkName(QueryDataType.VARCHAR, "VARCHAR");
+        checkName(QueryDataType.VARCHAR_CHARACTER, "VARCHAR_CHARACTER");
+
+        checkName(QueryDataType.BOOLEAN, "BOOLEAN");
+
+        checkName(QueryDataType.TINYINT, "TINYINT");
+        checkName(QueryDataType.SMALLINT, "SMALLINT");
+        checkName(QueryDataType.INT, "INT");
+        checkName(QueryDataType.BIGINT, "BIGINT");
+        checkName(QueryDataType.DECIMAL, "DECIMAL");
+        checkName(QueryDataType.DECIMAL_BIG_INTEGER, "DECIMAL_BIG_INTEGER");
+        checkName(QueryDataType.REAL, "REAL");
+        checkName(QueryDataType.DOUBLE, "DOUBLE");
+
+        checkName(QueryDataType.TIME, "TIME");
+        checkName(QueryDataType.DATE, "DATE");
+        checkName(QueryDataType.TIMESTAMP, "TIMESTAMP");
+        checkName(QueryDataType.TIMESTAMP_WITH_TZ_DATE, "TIMESTAMP_WITH_TZ_DATE");
+        checkName(QueryDataType.TIMESTAMP_WITH_TZ_CALENDAR, "TIMESTAMP_WITH_TZ_CALENDAR");
+        checkName(QueryDataType.TIMESTAMP_WITH_TZ_INSTANT, "TIMESTAMP_WITH_TZ_INSTANT");
+        checkName(QueryDataType.TIMESTAMP_WITH_TZ_OFFSET_DATE_TIME, "TIMESTAMP_WITH_TZ_OFFSET_DATE_TIME");
+        checkName(QueryDataType.TIMESTAMP_WITH_TZ_ZONED_DATE_TIME, "TIMESTAMP_WITH_TZ_ZONED_DATE_TIME");
+
+        checkName(QueryDataType.OBJECT, "OBJECT");
+        checkName(new QueryDataType("CustomType"), "CustomType");
+
+        checkName(QueryDataType.NULL, "NULL");
+
+        checkName(QueryDataType.INTERVAL_YEAR_MONTH, "INTERVAL_YEAR_MONTH");
+        checkName(QueryDataType.INTERVAL_DAY_SECOND, "INTERVAL_DAY_SECOND");
+
+        checkName(QueryDataType.MAP, "MAP");
+        checkName(QueryDataType.JSON, "JSON");
+        checkName(QueryDataType.ROW, "ROW");
+    }
+
+    @Test
+    public void testSerialization() {
+        for (QueryDataType type : QueryDataType.values()) {
+            checkSerialization(type);
+        }
+
+        QueryDataType person = new QueryDataType("Person", TypeKind.COMPACT, "PersonType");
+        QueryDataType company = new QueryDataType("Company");
+
+        person.addField("name", QueryDataType.VARCHAR);
+        person.addField("employer", company);
+        person.addField("friend", person);
+
+        company.addField("id", QueryDataType.BIGINT);
+        company.addField("employee", person);
+        company.addField("competitor", company);
+
+        person.finalizeFields();
+        company.finalizeFields();
+        checkSerialization(person);
+    }
+
+    @Test
+    public void testJavaDeserializationRejectsEmptyFieldsForCustomType() throws IllegalAccessException {
+        QueryDataType person = new QueryDataType("Person", TypeKind.JAVA, "PersonType");
+        ReflectionUtils.setFieldValueReflectively(person, "objectFields", emptyList());
+
+        // check plain Java serialization
+        var serialized = SerializationUtils.serialize(person);
+        assertThatThrownBy(() -> SerializationUtils.deserialize(serialized))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Type has no fields");
+
+        // check Java serialization with SerializationService
+        assertThatThrownBy(() -> serde((SupplierEx<?>) () -> person))
+                .rootCause()
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Type has no fields");
+
+        // check IDS with SerializationService
+        assertThatThrownBy(() -> serde(person))
+                .rootCause()
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("Type has no fields");
+    }
+
+    @Test
+    public void testDigestEscaping() {
+        QueryDataType person = new QueryDataType("[P(e:r=s,o)n]", TypeKind.PORTABLE, "1:2:3");
+        person.addField("name", QueryDataType.VARCHAR);
+        person.addField("[(:fri=end,)]", person);
+        person.finalizeFields();
+
+        assertEquals("\\[P\\(e\\:r\\=s\\,o\\)n\\][PORTABLE=1:2:3]("
+                + "name:VARCHAR, "
+                + "\\[\\(\\:fri\\=end\\,\\)\\]:\\[P\\(e\\:r\\=s\\,o\\)n\\]"
+                + ")", person.getDigest());
+    }
+
+    @Test
+    public void testFinalization() {
+        QueryDataType placeholder = new QueryDataType("Person");
+        // The type is assumed to be concrete at creation.
+        assertThatThrownBy(placeholder::finalizeFields).hasMessage("Type has no fields");
+        // Accessing the fields before adding any field makes the type a placeholder.
+        assertThat(placeholder.getObjectFields()).isEmpty();
+        assertThatThrownBy(() -> placeholder.addField("name", QueryDataType.VARCHAR))
+                .hasMessage("Placeholder types are not expected to have fields");
+        assertThatThrownBy(placeholder::finalizeFields)
+                .hasMessage("Placeholder types are not expected to have fields");
+
+        QueryDataType person = new QueryDataType("Person");
+        assertThatThrownBy(person::finalizeFields).hasMessage("Type has no fields");
+        person.addField("name", QueryDataType.VARCHAR);
+        person.addField("age", QueryDataType.INT);
+        assertThatThrownBy(person::getObjectFields).hasMessage("Type fields are not finalized");
+        person.finalizeFields();
+        assertThat(person.getObjectFields()).hasSize(2);
+        assertThatThrownBy(() -> person.addField("friend", person))
+                .hasMessage("Type fields are already finalized");
+        assertThatThrownBy(person::finalizeFields).hasMessage("Type fields are already finalized");
+    }
+
+    // TODO This test will be removed by HZ-3691.
+    @Test
+    public void testResolutionByFamily() {
+        checkFamily(QueryDataType.VARCHAR, QueryDataTypeFamily.VARCHAR);
+
+        checkFamily(QueryDataType.BOOLEAN, QueryDataTypeFamily.BOOLEAN);
+        checkFamily(QueryDataType.TINYINT, QueryDataTypeFamily.TINYINT);
+        checkFamily(QueryDataType.SMALLINT, QueryDataTypeFamily.SMALLINT);
+        checkFamily(QueryDataType.INT, QueryDataTypeFamily.INTEGER);
+        checkFamily(QueryDataType.BIGINT, QueryDataTypeFamily.BIGINT);
+        checkFamily(QueryDataType.DECIMAL, QueryDataTypeFamily.DECIMAL);
+        checkFamily(QueryDataType.REAL, QueryDataTypeFamily.REAL);
+        checkFamily(QueryDataType.DOUBLE, QueryDataTypeFamily.DOUBLE);
+
+        checkFamily(QueryDataType.TIME, QueryDataTypeFamily.TIME);
+        checkFamily(QueryDataType.DATE, QueryDataTypeFamily.DATE);
+        checkFamily(QueryDataType.TIMESTAMP, QueryDataTypeFamily.TIMESTAMP);
+        checkFamily(QueryDataType.TIMESTAMP_WITH_TZ_OFFSET_DATE_TIME,
+                QueryDataTypeFamily.TIMESTAMP_WITH_TIME_ZONE);
+
+        checkFamily(QueryDataType.OBJECT, QueryDataTypeFamily.OBJECT);
+
+        checkFamily(QueryDataType.NULL, QueryDataTypeFamily.NULL);
+    }
+
+    private void checkConverter(QueryDataType type, Converter converter) {
+        assertSame(converter, type.getConverter());
+        if (!type.isCustomType()) {
+            assertSame(type, QueryDataType.resolveForConverter(converter));
+        }
+    }
+
+    private void checkClasses(QueryDataType type, Class<?>... classes) {
+        assertContains(List.of(classes), type.getConverter().getValueClass());
+        for (Class<?> clazz : classes) {
+            assertSame(type, QueryDataTypeUtils.resolveTypeForClass(clazz));
+        }
+    }
+
+    private void checkName(QueryDataType type, String name) {
+        assertEquals(name, type.toString());
+        if (type.isCustomType()) {
+            assertThatThrownBy(() -> QueryDataType.valueOf(name))
+                    .hasMessage("No predefined QueryDataType with name " + name);
+        } else {
+            assertSame(type, QueryDataType.valueOf(name));
+        }
+    }
+
+    private void checkSerialization(QueryDataType type) {
+        Object identifiedDataSerialized = serde(type);
+        Object javaSerialized = serde((SupplierEx<Object>) () -> type).get();
+
+        for (Object serialized : List.of(identifiedDataSerialized, javaSerialized)) {
+            if (type.isCustomType()) {
+                assertEquals(type, serialized);
+            } else {
+                assertSame(type, serialized);
+            }
+        }
+    }
+
+    private static <T> T serde(T object) {
+        return serializationService.toObject(serializationService.toData(object));
+    }
+
+    private void checkFamily(QueryDataType expectedType, QueryDataTypeFamily typeFamily) {
+        assertSame(expectedType, QueryDataTypeUtils.resolveTypeForTypeFamily(typeFamily));
+    }
+}

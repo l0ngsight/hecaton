@@ -1,0 +1,11 @@
+{
+  "instance": {
+    "hecaton": {
+      "sql": {
+        "statement-timeout-millis": 2,
+        "catalog-persistence-enabled": true
+      }
+    }
+  },
+  "error": null
+}

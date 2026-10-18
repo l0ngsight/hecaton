@@ -1,0 +1,72 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.impl.protocol.task;
+
+import uk.org.hecaton.client.impl.operations.OperationFactoryWrapper;
+import uk.org.hecaton.client.impl.protocol.ClientMessage;
+import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.namespace.NamespaceUtil;
+import uk.org.hecaton.internal.nio.Connection;
+import uk.org.hecaton.internal.util.collection.PartitionIdSet;
+import uk.org.hecaton.spi.impl.operationservice.OperationFactory;
+import uk.org.hecaton.spi.impl.operationservice.OperationService;
+import uk.org.hecaton.map.impl.MapService;
+import uk.org.hecaton.map.impl.MapServiceContext;
+import uk.org.hecaton.map.impl.operation.MapOperationProvider;
+
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+public abstract class AbstractMultiPartitionMessageTask<P>
+        extends AbstractAsyncMessageTask<P, Map<Integer, Object>> {
+
+    protected AbstractMultiPartitionMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
+        super(clientMessage, node, connection);
+    }
+
+    @Override
+    protected void processMessage() {
+        // Inheritors of AbstractMultiPartitionMessageTask are always Namespace-aware
+        NamespaceUtil.runWithNamespace(nodeEngine, getUserCodeNamespace(), super::processMessage);
+    }
+
+    @Override
+    protected CompletableFuture<Map<Integer, Object>> processInternal() {
+        OperationFactory operationFactory = new OperationFactoryWrapper(createOperationFactory(), endpoint.getUuid());
+        OperationService operationService = nodeEngine.getOperationService();
+        return operationService.invokeOnPartitionsAsync(getServiceName(), operationFactory, getPartitions());
+    }
+
+    public abstract PartitionIdSet getPartitions();
+
+    protected final MapOperationProvider getMapOperationProvider(String mapName) {
+        MapService mapService = getService(MapService.SERVICE_NAME);
+        MapServiceContext mapServiceContext = mapService.getMapServiceContext();
+        return mapServiceContext.getMapOperationProvider(mapName);
+    }
+
+    protected abstract String getUserCodeNamespace();
+
+    protected abstract OperationFactory createOperationFactory();
+
+    protected abstract Object reduce(Map<Integer, Object> map);
+
+    @Override
+    protected Object processResponseBeforeSending(Map<Integer, Object> response) {
+        return reduce(response);
+    }
+}

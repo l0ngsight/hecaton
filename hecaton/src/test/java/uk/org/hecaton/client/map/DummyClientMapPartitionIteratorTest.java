@@ -1,0 +1,67 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.map;
+
+import uk.org.hecaton.client.config.ClientConfig;
+import uk.org.hecaton.client.config.ClientNetworkConfig;
+import uk.org.hecaton.client.config.RoutingMode;
+import uk.org.hecaton.client.impl.proxy.ClientMapProxy;
+import uk.org.hecaton.client.test.TestHecatonFactory;
+import uk.org.hecaton.cluster.Address;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.map.AbstractMapPartitionIteratorTest;
+import uk.org.hecaton.map.IMap;
+import uk.org.hecaton.test.HecatonParallelParametersRunnerFactory;
+import uk.org.hecaton.test.HecatonParametrizedRunner;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized.UseParametersRunnerFactory;
+
+import java.util.Iterator;
+import java.util.Map;
+
+@RunWith(HecatonParametrizedRunner.class)
+@UseParametersRunnerFactory(HecatonParallelParametersRunnerFactory.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class DummyClientMapPartitionIteratorTest extends AbstractMapPartitionIteratorTest {
+
+    @Override
+    public void setup() {
+        factory = new TestHecatonFactory();
+        HecatonInstance server = factory.newHecatonInstance(getConfig());
+        instance = factory.newHecatonClient(getClientConfig(server));
+    }
+
+    @Override
+    protected <K, V> Iterator<Map.Entry<K, V>> getIterator(IMap<K, V> map, int partitionId) {
+        return ((ClientMapProxy<K, V>) map).iterator(10, partitionId, prefetchValues);
+    }
+
+    private ClientConfig getClientConfig(HecatonInstance instance) {
+        Address address = instance.getCluster().getLocalMember().getAddress();
+        String addressString = address.getHost() + ":" + address.getPort();
+
+        ClientNetworkConfig networkConfig = new ClientNetworkConfig()
+                .addAddress(addressString);
+        networkConfig.getClusterRoutingConfig()
+                     .setRoutingMode(RoutingMode.SINGLE_MEMBER);
+
+        return new ClientConfig().setNetworkConfig(networkConfig);
+    }
+}

@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.impl.protocol.task.multimap;
+
+import uk.org.hecaton.client.impl.protocol.ClientMessage;
+import uk.org.hecaton.client.impl.protocol.task.AbstractPartitionMessageTask;
+import uk.org.hecaton.function.ConsumerEx;
+import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.monitor.impl.LocalMultiMapStatsImpl;
+import uk.org.hecaton.internal.nio.Connection;
+import uk.org.hecaton.multimap.impl.MultiMapContainer;
+import uk.org.hecaton.multimap.impl.MultiMapService;
+
+public abstract class AbstractMultiMapPartitionMessageTask<P> extends AbstractPartitionMessageTask<P> {
+
+
+    protected AbstractMultiMapPartitionMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
+        super(clientMessage, node, connection);
+    }
+
+    @Override
+    public String getServiceName() {
+        return MultiMapService.SERVICE_NAME;
+    }
+
+    protected void updateStats(ConsumerEx<LocalMultiMapStatsImpl> statsUpdaterFn) {
+        if (getContainer().getConfig().isStatisticsEnabled()) {
+            statsUpdaterFn.accept(((MultiMapService) getService(MultiMapService.SERVICE_NAME))
+                    .getLocalMultiMapStatsImpl(getDistributedObjectName()));
+        }
+    }
+
+    protected MultiMapContainer getContainer() {
+        MultiMapService service = getService(MultiMapService.SERVICE_NAME);
+        return service.getOrCreateCollectionContainer(getPartitionId(), getDistributedObjectName());
+    }
+
+    @Override
+    protected String getUserCodeNamespace() {
+        return MultiMapService.lookupNamespace(nodeEngine, getDistributedObjectName());
+    }
+}

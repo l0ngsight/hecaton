@@ -1,0 +1,16 @@
+{
+  "instance": {
+    "hecaton": {
+      "config-replacers": {
+        "replacers": true
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/ConfigReplacers/properties/replacers",
+    "pointerToViolation": "#/hecaton/config-replacers/replacers",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: JSONArray, found: Boolean"
+  }
+}

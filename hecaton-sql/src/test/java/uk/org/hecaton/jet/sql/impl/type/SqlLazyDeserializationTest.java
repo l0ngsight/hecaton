@@ -1,0 +1,182 @@
+/*
+ * Copyright 2026 Hazelcast Inc.
+ *
+ * Licensed under the Hazelcast Community License (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://hazelcast.com/hazelcast-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.sql.impl.type;
+
+import uk.org.hecaton.client.test.TestHecatonFactory;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.SerializationConfig;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.serialization.Data;
+import uk.org.hecaton.internal.serialization.InternalSerializationService;
+import uk.org.hecaton.internal.serialization.impl.InternalGenericRecord;
+import uk.org.hecaton.jet.impl.util.Util;
+import uk.org.hecaton.nio.serialization.ClassDefinition;
+import uk.org.hecaton.nio.serialization.ClassDefinitionBuilder;
+import uk.org.hecaton.test.HecatonSerialClassRunner;
+
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.experimental.categories.Category;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
+import java.io.IOException;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static uk.org.hecaton.jet.sql.SqlTestSupport.assertRowsAnyOrder;
+import static uk.org.hecaton.jet.sql.SqlTestSupport.rows;
+import static uk.org.hecaton.jet.sql.impl.type.CompactNestedFieldsTest.setupCompactTypesForNestedQuery;
+import static uk.org.hecaton.jet.sql.impl.type.PortableNestedFieldsTest.setupPortableTypesForNestedQuery;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+/**
+ * This test tests if nested field access for compact and portable uses lazy deserialization or not.
+ * This test does not extend SqlTestSupport on purpose because we want full control over the member
+ * we start.
+ */
+@RunWith(HecatonSerialClassRunner.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class SqlLazyDeserializationTest {
+    private TestHecatonFactory mockInstanceFactory;
+
+    private HecatonInstance instance;
+    private HecatonInstance client;
+
+    private InternalSerializationService serializationService;
+
+    @Before
+    public void before() {
+        final Config config = new Config();
+        config.getJetConfig().setEnabled(true);
+
+        SerializationConfig serializationConfig = config.getSerializationConfig();
+        ClassDefinition officeType = new ClassDefinitionBuilder(1, 3)
+                .addLongField("id")
+                .addStringField("name")
+                .build();
+
+        ClassDefinition organizationType = new ClassDefinitionBuilder(1, 2)
+                .addLongField("id")
+                .addStringField("name")
+                .addPortableField("office", officeType)
+                .build();
+
+        ClassDefinition userType = new ClassDefinitionBuilder(1, 1)
+                .addLongField("id")
+                .addStringField("name")
+                .addPortableField("organization", organizationType)
+                .build();
+
+        serializationConfig.addClassDefinition(officeType);
+        serializationConfig.addClassDefinition(organizationType);
+        serializationConfig.addClassDefinition(userType);
+
+        mockInstanceFactory = new TestHecatonFactory();
+        mockInstanceFactory.withNodeExtensionCustomizer(SerializationServiceMockingNodeExtension::new);
+        instance = mockInstanceFactory.newHecatonInstance(config);
+        serializationService = Util.getHecatonInstanceImpl(instance).getSerializationService();
+
+        client = mockInstanceFactory.newHecatonClient();
+    }
+
+    @After
+    public void after() {
+        mockInstanceFactory.terminateAll();
+    }
+
+    @Test
+    public void test_compactNestedQueryLazyDeserialization() throws IOException {
+        setupCompactTypesForNestedQuery(client);
+        ResultCaptor resultCaptor = new ResultCaptor();
+        doAnswer(resultCaptor).when(serializationService).readAsInternalGenericRecord(any(Data.class));
+
+        client.getSql().execute("INSERT INTO test VALUES (1, 1, 'user1', (1, 'organization1', (1, 'office1')))");
+        assertRowsAnyOrder(instance, "SELECT (organization).office.name FROM test", rows(1, "office1"));
+
+        // 1. ColumnExpression uses readAsInternalGenericRecord to get the user type.
+        verify(serializationService, times(1)).readAsInternalGenericRecord(any(Data.class));
+        // There should be three InternalGenericRecords in results:
+        // 1. UserType that is accessed using readAsInternalGenericRecord
+        // 2,3. Organization and office types that are accessed using getInternalGenericRecord.
+        CopyOnWriteArrayList<InternalGenericRecord> results = resultCaptor.getResults();
+        assertEquals(3, results.size());
+        // 2. FieldAccessExpression uses getInternalGenericRecord to get the organization
+        verify(results.get(0), times(1)).getInternalGenericRecord("organization");
+        // 3. FieldAccessExpression uses getInternalGenericRecord to get office
+        verify(results.get(1), times(1)).getInternalGenericRecord("office");
+    }
+
+    @Test
+    public void test_portableNestedQueryLazyDeserialization() throws IOException {
+        setupPortableTypesForNestedQuery(client);
+        ResultCaptor resultCaptor = new ResultCaptor();
+        doAnswer(resultCaptor).when(serializationService).readAsInternalGenericRecord(any(Data.class));
+
+        client.getSql().execute("INSERT INTO test VALUES (1, 1, 'user1', (1, 'organization1', (1, 'office1')))");
+        assertRowsAnyOrder(instance, "SELECT (organization).office.name FROM test", rows(1, "office1"));
+
+        // 1. ColumnExpression uses readAsInternalGenericRecord to get the user type.
+        verify(serializationService, times(1)).readAsInternalGenericRecord(any(Data.class));
+        CopyOnWriteArrayList<InternalGenericRecord> results = resultCaptor.getResults();
+        // There should be three InternalGenericRecords in results:
+        // 1. UserType that is accessed using readAsInternalGenericRecord
+        // 2,3. Organization and office types that are accessed using getInternalGenericRecord.
+        assertEquals(3, results.size());
+        // 2. FieldAccessExpression uses getInternalGenericRecord to get the organization
+        verify(results.get(0), times(1)).getInternalGenericRecord("organization");
+        // 3. FieldAccessExpression uses getInternalGenericRecord to get office
+        verify(results.get(1), times(1)).getInternalGenericRecord("office");
+    }
+
+    private static class SerializationServiceMockingNodeExtension extends DefaultNodeExtension {
+
+        SerializationServiceMockingNodeExtension(Node node) {
+            super(node);
+        }
+
+        @Override
+        public InternalSerializationService createSerializationService() {
+            return spy(super.createSerializationService());
+        }
+    }
+
+    private static class ResultCaptor implements Answer<InternalGenericRecord> {
+        private CopyOnWriteArrayList<InternalGenericRecord> results = new CopyOnWriteArrayList<>();
+        public CopyOnWriteArrayList<InternalGenericRecord> getResults() {
+            return results;
+        }
+
+        @Override
+        public InternalGenericRecord answer(InvocationOnMock invocationOnMock) throws Throwable {
+            InternalGenericRecord spiedResult = spy((InternalGenericRecord) invocationOnMock.callRealMethod());
+            doAnswer(this).when(spiedResult).getInternalGenericRecord(any(String.class));
+            results.add(spiedResult);
+            return spiedResult;
+        }
+    }
+}

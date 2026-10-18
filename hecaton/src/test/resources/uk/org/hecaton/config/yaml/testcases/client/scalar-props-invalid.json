@@ -1,0 +1,61 @@
+{
+  "instance": {
+    "hecaton-client": {
+      "cluster-name": 2,
+      "instance-name": false,
+      "properties": null,
+      "backup-ack-to-client-enabled": "Off",
+      "cp-direct-to-leader-routing": "On",
+      "unknown": false
+    }
+  },
+  "error": {
+    "schemaLocation": "#/properties/hecaton-client",
+    "pointerToViolation": "#/hecaton-client",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/properties/hecaton-client",
+        "pointerToViolation": "#/hecaton-client",
+        "causingExceptions": [],
+        "keyword": "additionalProperties",
+        "message": "extraneous key [unknown] is not permitted"
+      },
+      {
+        "schemaLocation": "#/properties/hecaton-client/properties/backup-ack-to-client-enabled",
+        "pointerToViolation": "#/hecaton-client/backup-ack-to-client-enabled",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Boolean, found: String"
+      },
+      {
+        "schemaLocation": "#/properties/hecaton-client/properties/cp-direct-to-leader-routing",
+        "pointerToViolation": "#/hecaton-client/cp-direct-to-leader-routing",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Boolean, found: String"
+      },
+      {
+        "schemaLocation": "#/properties/hecaton-client/properties/cluster-name",
+        "pointerToViolation": "#/hecaton-client/cluster-name",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: String, found: Integer"
+      },
+      {
+        "schemaLocation": "#/properties/hecaton/properties/instance-name",
+        "pointerToViolation": "#/hecaton-client/instance-name",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: String, found: Boolean"
+      },
+      {
+        "schemaLocation": "#/properties/hecaton/properties/properties",
+        "pointerToViolation": "#/hecaton-client/properties",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: JSONObject, found: Null"
+      }
+    ],
+    "message": "6 schema violations found"
+  }
+}

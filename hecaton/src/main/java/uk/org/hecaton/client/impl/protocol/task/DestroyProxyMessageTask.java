@@ -1,0 +1,118 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.impl.protocol.task;
+
+import uk.org.hecaton.client.impl.protocol.ClientMessage;
+import uk.org.hecaton.client.impl.protocol.codec.ClientDestroyProxyCodec;
+import uk.org.hecaton.cluster.Member;
+import uk.org.hecaton.core.HecatonInstanceNotActiveException;
+import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.nio.Connection;
+import uk.org.hecaton.security.SecurityInterceptorConstants;
+import uk.org.hecaton.security.permission.ActionConstants;
+import uk.org.hecaton.spi.impl.operationservice.Operation;
+import uk.org.hecaton.spi.impl.proxyservice.impl.operations.DistributedObjectDestroyOperation;
+
+import java.security.Permission;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+
+import static uk.org.hecaton.internal.util.ExceptionUtil.peel;
+import static uk.org.hecaton.security.permission.ActionConstants.getPermission;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.WARNING;
+
+public class DestroyProxyMessageTask extends AbstractMultiTargetMessageTask<ClientDestroyProxyCodec.RequestParameters>
+        implements Supplier<Operation> {
+
+    public DestroyProxyMessageTask(ClientMessage clientMessage, Node node, Connection connection) {
+        super(clientMessage, node, connection);
+    }
+
+    @Override
+    public Operation get() {
+        return new DistributedObjectDestroyOperation(parameters.serviceName, parameters.name);
+    }
+
+    @Override
+    protected Supplier<Operation> createOperationSupplier() {
+        return this;
+    }
+
+    @Override
+    protected Object reduce(Map<Member, Object> map) throws Throwable {
+        for (Object result : map.values()) {
+            if (result instanceof Throwable throwable) {
+                handleException(throwable);
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Collection<Member> getTargets() {
+        // prefer sending to other members before ourselves, local invocation may block during execution
+        Member localMember = nodeEngine.getLocalMember();
+        return nodeEngine.getClusterService().getMembers().stream()
+                .sorted(Comparator.comparing(localMember::equals))
+                .toList();
+    }
+
+    private void handleException(Throwable throwable) {
+        boolean causedByInactiveInstance = peel(throwable) instanceof HecatonInstanceNotActiveException;
+        Level level = causedByInactiveInstance ? FINEST : WARNING;
+        logger.log(level, "Error while destroying a proxy.", throwable);
+    }
+
+    @Override
+    protected ClientDestroyProxyCodec.RequestParameters decodeClientMessage(ClientMessage clientMessage) {
+        return ClientDestroyProxyCodec.decodeRequest(clientMessage);
+    }
+
+    @Override
+    protected ClientMessage encodeResponse(Object response) {
+        return ClientDestroyProxyCodec.encodeResponse();
+    }
+
+    @Override
+    public String getServiceName() {
+        return parameters.serviceName;
+    }
+
+    @Override
+    public Permission getRequiredPermission() {
+        return getPermission(parameters.name, parameters.serviceName, ActionConstants.ACTION_DESTROY);
+    }
+
+    @Override
+    public String getDistributedObjectName() {
+        return parameters.name;
+    }
+
+    @Override
+    public String getMethodName() {
+        return SecurityInterceptorConstants.DESTROY;
+    }
+
+    @Override
+    public Object[] getParameters() {
+        return new Object[]{parameters.name};
+    }
+}

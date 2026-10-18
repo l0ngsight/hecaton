@@ -1,0 +1,12 @@
+{
+  "instance": {
+    "hecaton": {
+      "management-center": {
+        "scripting-enabled": false,
+        "console-enabled": false,
+        "data-access-enabled": false
+      }
+    }
+  },
+  "error": null
+}

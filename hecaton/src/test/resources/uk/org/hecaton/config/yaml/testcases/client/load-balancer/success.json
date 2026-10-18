@@ -1,0 +1,10 @@
+{
+  "instance": {
+    "hecaton-client": {
+      "load-balancer": {
+        "type": "round-robin"
+      }
+    }
+  },
+  "error": null
+}

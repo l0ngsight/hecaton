@@ -1,0 +1,122 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.topic.impl.reliable;
+
+import uk.org.hecaton.config.RingbufferConfig;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.instance.impl.TestUtil;
+import uk.org.hecaton.ringbuffer.Ringbuffer;
+import uk.org.hecaton.test.HecatonSerialClassRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.util.UUID;
+
+import static org.junit.Assert.assertTrue;
+
+@RunWith(HecatonSerialClassRunner.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class LossToleranceTest extends HecatonTestSupport {
+
+    private String reliableTopicName;
+    private ReliableTopicProxy<String> topic;
+    private Ringbuffer<ReliableTopicMessage> ringbuffer;
+    private HecatonInstance topicOwnerInstance;
+
+    @Before
+    public void setup() {
+        final HecatonInstance[] instances = createHecatonInstances(smallInstanceConfig(), 2);
+
+        warmUpPartitions(instances);
+        assertClusterSizeEventually(instances.length, instances);
+
+        topicOwnerInstance = instances[0];
+        reliableTopicName = randomNameOwnedBy(topicOwnerInstance, getClass().getName());
+
+        // Update the configuration now we've generated a name
+        instances[0].getConfig().addRingBufferConfig(
+                new RingbufferConfig(reliableTopicName)
+                        .setCapacity(100)
+                        .setTimeToLiveSeconds(0)
+                        .setBackupCount(0)
+                        .setAsyncBackupCount(0));
+
+        // Get the topic from the backup (i.e. non-owning) instance
+        topic = (ReliableTopicProxy<String>) instances[1].<String>getReliableTopic(reliableTopicName);
+        ringbuffer = topic.ringbuffer;
+    }
+
+    @Test
+    public void whenNotLossTolerant_thenTerminate() {
+        ReliableMessageListenerMock listener = new ReliableMessageListenerMock();
+        listener.initialSequence = 0;
+        listener.isLossTolerant = false;
+
+        topic.publish("foo");
+
+        // we add so many items that the items the listener wants to listen to, doesn't exist anymore
+        do {
+            topic.publish("item");
+        } while (ringbuffer.headSequence() <= listener.initialSequence);
+        topic.addMessageListener(listener);
+
+        assertTrueEventually(() -> assertTrue(topic.runnersMap.isEmpty()));
+    }
+
+    @Test
+    public void whenLossTolerant_thenContinue() {
+        final ReliableMessageListenerMock listener = new ReliableMessageListenerMock();
+        listener.initialSequence = 0;
+        listener.isLossTolerant = true;
+
+        // we add so many items that the items the listener wants to listen to, doesn't exist anymore
+        do {
+            topic.publish("item");
+        } while (ringbuffer.headSequence() <= listener.initialSequence);
+
+        topic.addMessageListener(listener);
+        topic.publish("newItem");
+
+        assertTrueEventually(() -> assertContains(listener.objects, "newItem"));
+    }
+
+    @Test
+    public void whenLossTolerant_andOwnerCrashes_thenContinue() {
+        final ReliableMessageListenerMock listener = new ReliableMessageListenerMock();
+        listener.isLossTolerant = true;
+        topic.addMessageListener(listener);
+        topic.publish("item1");
+        topic.publish("item2");
+
+        assertTrueEventually(() -> {
+            assertContains(listener.objects, "item1");
+            assertContains(listener.objects, "item2");
+        });
+        TestUtil.terminateInstance(topicOwnerInstance);
+
+        assertTrueEventually(() -> {
+            String item = "newItem " + UUID.randomUUID();
+            topic.publish(item);
+            assertTrueEventually(() -> assertContains(listener.objects, item), 5);
+        });
+    }
+}

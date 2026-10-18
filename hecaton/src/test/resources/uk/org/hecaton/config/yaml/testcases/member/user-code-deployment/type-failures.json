@@ -1,0 +1,77 @@
+{
+  "instance": {
+    "hecaton": {
+      "user-code-deployment": {
+        "unknown-prop": 123,
+        "enabled": "On",
+        "class-cache-mode": "INVALID",
+        "provider-mode": "INVALID",
+        "blacklist-prefixes": [
+          "com.foo"
+        ],
+        "whitelist-prefixes": {
+          "com.bar.MyClass": true
+        },
+        "provider-filter": {
+          "HAS_ATTRIBUTE": "lite"
+        }
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/UserCodeDeployment",
+    "pointerToViolation": "#/hecaton/user-code-deployment",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/definitions/UserCodeDeployment",
+        "pointerToViolation": "#/hecaton/user-code-deployment",
+        "causingExceptions": [],
+        "keyword": "additionalProperties",
+        "message": "extraneous key [unknown-prop] is not permitted"
+      },
+      {
+        "schemaLocation": "#/definitions/UserCodeDeployment/properties/whitelist-prefixes",
+        "pointerToViolation": "#/hecaton/user-code-deployment/whitelist-prefixes",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: String, found: JSONObject"
+      },
+      {
+        "schemaLocation": "#/definitions/UserCodeDeployment/properties/class-cache-mode",
+        "pointerToViolation": "#/hecaton/user-code-deployment/class-cache-mode",
+        "causingExceptions": [],
+        "keyword": "enum",
+        "message": "INVALID is not a valid enum value"
+      },
+      {
+        "schemaLocation": "#/definitions/UserCodeDeployment/properties/blacklist-prefixes",
+        "pointerToViolation": "#/hecaton/user-code-deployment/blacklist-prefixes",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: String, found: JSONArray"
+      },
+      {
+        "schemaLocation": "#/definitions/UserCodeDeployment/properties/provider-mode",
+        "pointerToViolation": "#/hecaton/user-code-deployment/provider-mode",
+        "causingExceptions": [],
+        "keyword": "enum",
+        "message": "INVALID is not a valid enum value"
+      },
+      {
+        "schemaLocation": "#/definitions/UserCodeDeployment/properties/provider-filter",
+        "pointerToViolation": "#/hecaton/user-code-deployment/provider-filter",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: String, found: JSONObject"
+      },
+      {
+        "schemaLocation": "#/definitions/UserCodeDeployment/properties/enabled",
+        "pointerToViolation": "#/hecaton/user-code-deployment/enabled",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Boolean, found: String"
+      }
+    ],
+    "message": "7 schema violations found"
+  }
+}

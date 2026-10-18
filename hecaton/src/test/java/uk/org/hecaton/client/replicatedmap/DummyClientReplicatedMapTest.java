@@ -1,0 +1,272 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.replicatedmap;
+
+import uk.org.hecaton.client.config.ClientConfig;
+import uk.org.hecaton.client.config.ClientNetworkConfig;
+import uk.org.hecaton.client.config.RoutingMode;
+import uk.org.hecaton.client.test.TestHecatonFactory;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.replicatedmap.ReplicatedMap;
+import uk.org.hecaton.cluster.Address;
+import uk.org.hecaton.test.HecatonParallelClassRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import org.junit.After;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(HecatonParallelClassRunner.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class DummyClientReplicatedMapTest extends HecatonTestSupport {
+
+    private final TestHecatonFactory hecatonFactory = new TestHecatonFactory();
+
+    @After
+    public void cleanup() {
+        hecatonFactory.terminateAll();
+    }
+
+    @Test
+    public void testGet() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+        ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+        String key = generateKeyOwnedBy(instance2);
+        int partitionId = instance2.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+        String value = randomString();
+        map.put(key, value);
+
+        assertEquals(value, map.get(key));
+    }
+
+    @Test
+    public void testIsEmpty() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+
+        String key = generateKeyOwnedBy(instance2);
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+        String value = randomString();
+        map.put(key, value);
+
+        assertTrueEventually(() -> assertFalse(map.isEmpty()));
+    }
+
+    @Test
+    public void testKeySet() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+        final String key = generateKeyOwnedBy(instance2);
+        final String value = randomString();
+
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+
+        map.put(key, value);
+
+        assertTrueEventually(() -> {
+            Collection<String> keySet = map.keySet();
+            assertEquals(1, keySet.size());
+            assertEquals(key, keySet.iterator().next());
+        });
+    }
+
+    @Test
+    public void testEntrySet() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+        final String key = generateKeyOwnedBy(instance2);
+        final String value = randomString();
+
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+
+        map.put(key, value);
+
+        assertTrueEventually(() -> {
+            Set<Map.Entry<String, String>> entries = map.entrySet();
+            assertEquals(1, entries.size());
+            Map.Entry<String, String> entry = entries.iterator().next();
+            assertEquals(key, entry.getKey());
+            assertEquals(value, entry.getValue());
+        });
+    }
+
+    @Test
+    public void testValues() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+        final String key = generateKeyOwnedBy(instance2);
+        final String value = randomString();
+
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+
+        map.put(key, value);
+
+        assertTrueEventually(() -> {
+            Collection<String> values = map.values();
+            assertEquals(1, values.size());
+            assertEquals(value, values.iterator().next());
+        });
+    }
+
+    @Test
+    public void testContainsKey() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+        ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+
+        final String key = generateKeyOwnedBy(instance2);
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+        String value = randomString();
+        map.put(key, value);
+
+        assertTrue(map.containsKey(key));
+    }
+
+    @Test
+    public void testContainsValue() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+
+        final String key = generateKeyOwnedBy(instance2);
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+        final String value = randomString();
+        map.put(key, value);
+
+        assertTrueEventually(() -> assertTrue(map.containsValue(value)));
+    }
+
+    @Test
+    public void testSize() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+
+        String key = generateKeyOwnedBy(instance2);
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+        String value = randomString();
+        map.put(key, value);
+
+        assertTrueEventually(() -> assertEquals(1, map.size()));
+    }
+
+    @Test
+    public void testClear() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+
+        String key = generateKeyOwnedBy(instance2);
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+        String value = randomString();
+        map.put(key, value);
+        map.clear();
+
+        assertTrueEventually(() -> assertEquals(0, map.size()));
+    }
+
+    @Test
+    public void testRemove() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+
+        String key = generateKeyOwnedBy(instance2);
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+        String value = randomString();
+        map.put(key, value);
+        map.remove(key);
+
+        assertTrueEventually(() -> assertEquals(0, map.size()));
+    }
+
+    @Test
+    public void testPutAll() throws Exception {
+        HecatonInstance instance1 = hecatonFactory.newHecatonInstance();
+        HecatonInstance instance2 = hecatonFactory.newHecatonInstance();
+        HecatonInstance client = hecatonFactory.newHecatonClient(getClientConfig(instance1));
+        final ReplicatedMap<String, String> map = client.getReplicatedMap(randomMapName());
+
+        String key = generateKeyOwnedBy(instance2);
+        int partitionId = instance1.getPartitionService().getPartition(key).getPartitionId();
+        setPartitionId(map, partitionId);
+        String value = randomString();
+        HashMap<String, String> m = new HashMap<>();
+        m.put(key, value);
+        map.putAll(m);
+
+        assertEquals(value, map.get(key));
+    }
+
+    private ClientConfig getClientConfig(HecatonInstance instance) {
+        Address address = instance.getCluster().getLocalMember().getAddress();
+        String addressString = address.getHost() + ":" + address.getPort();
+        ClientConfig dummyClientConfig = new ClientConfig();
+        ClientNetworkConfig networkConfig = new ClientNetworkConfig();
+        networkConfig.getClusterRoutingConfig().setRoutingMode(RoutingMode.SINGLE_MEMBER);
+        networkConfig.addAddress(addressString);
+        dummyClientConfig.setNetworkConfig(networkConfig);
+        return dummyClientConfig;
+    }
+
+    private void setPartitionId(ReplicatedMap<String, String> map, int partitionId) throws Exception {
+        Class<?> clazz = map.getClass();
+        Field targetPartitionId = clazz.getDeclaredField("targetPartitionId");
+        targetPartitionId.setAccessible(true);
+        targetPartitionId.setInt(map, partitionId);
+    }
+}

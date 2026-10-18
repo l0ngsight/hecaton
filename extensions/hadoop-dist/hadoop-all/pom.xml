@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2026 Hazelcast Inc.
+  ~
+  ~ Licensed under the Hazelcast Community License (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://hazelcast.com/hazelcast-community-license
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>jar</packaging>
+
+    <name>hecaton-jet-hadoop-all</name>
+    <description>Hecaton Jet Hadoop with all dependencies included</description>
+
+    <artifactId>hecaton-jet-hadoop-all</artifactId>
+
+    <parent>
+        <groupId>uk.org.hecaton.jet</groupId>
+        <artifactId>hecaton-jet-hadoop-dist</artifactId>
+        <version>5.7.0</version>
+    </parent>
+
+    <properties>
+        <!-- needed for CheckStyle -->
+        <main.basedir>${project.basedir}/../../..</main.basedir>
+        <!--
+        There is no Javadoc to publish, so we (ab)use `maven-jar-plugin` to generate a dummy artifact with `javadoc` classifier
+        Hence we do not need to execute `maven-javadoc-plugin`, even if executed in other reactor modules
+        https://maven.apache.org/plugins/maven-javadoc-plugin/javadoc-mojo.html#skip
+        -->
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+
+                <configuration>
+                    <shadeTestJar>false</shadeTestJar>
+                    <filters combine.children="append">
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/MANIFEST.MF</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <!-- We must generate a -javadoc JAR file to publish on Maven Central -->
+                        <id>empty-javadoc-jar</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>javadoc</classifier>
+                            <classesDirectory>${project.basedir}/src/main/javadoc</classesDirectory>
+                            <excludes>
+                                <exclude>.*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

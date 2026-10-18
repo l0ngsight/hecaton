@@ -1,0 +1,15 @@
+{
+  "instance": {
+    "hecaton": {
+      "import": [],
+      "other": true
+    }
+  },
+  "error": {
+    "schemaLocation": "#/properties/hecaton",
+    "pointerToViolation": "#/hecaton",
+    "causingExceptions": [],
+    "keyword": "additionalProperties",
+    "message": "extraneous key [other] is not permitted"
+  }
+}

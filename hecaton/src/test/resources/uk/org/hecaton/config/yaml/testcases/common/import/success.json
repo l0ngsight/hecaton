@@ -1,0 +1,10 @@
+{
+  "instance": {
+    "hecaton": {
+      "import": [
+        "./other.yaml"
+      ]
+    }
+  },
+  "error": null
+}

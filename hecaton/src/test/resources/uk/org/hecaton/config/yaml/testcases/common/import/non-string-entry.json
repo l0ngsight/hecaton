@@ -1,0 +1,14 @@
+{
+  "instance": {
+    "hecaton": {
+      "import": [null]
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/Import/items",
+    "pointerToViolation": "#/hecaton/import/0",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: String, found: Null"
+  }
+}
