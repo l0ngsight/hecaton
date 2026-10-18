@@ -56,6 +56,10 @@ replace:
   # path regexes), com\\hazelcast / com\hazelcast (Windows paths).
   - from: 'com(\.|/|_|\\\\\.|\\\.|\[\\\\/\]|\\\\|\\)hazelcast'
     to: 'uk$1org$1hecaton'
+  # The same path built from separate segments, e.g. Paths.get("com", "hazelcast", ...).
+  - from: '"com",(\s*)"hazelcast"'
+    to: '"uk",$1"org",$1"hecaton"'
+    scope: content
   # Product name in identifiers, file names, config roots, property keys and prose.
   - from: 'HAZELCAST'
     to: 'HECATON'

@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -24,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +35,9 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Turns an upstream Hazelcast source tree into the Hecaton tree, driven by
@@ -48,6 +54,11 @@ import java.util.stream.Stream;
  * remaining "hazelcast" sits inside a protected span.
  *
  * Both forms exit with status 1 if a "hazelcast" occurrence is left outside protected spans.
+ *
+ * Jar files (test fixtures) are rewritten too: entry paths are renamed, text entries get
+ * the content rules, and class files get the content rules applied to every CONSTANT_Utf8
+ * entry of their constant pool (class names, descriptors, string literals). Other binary
+ * files are copied unchanged.
  */
 public final class Rebrand {
 
@@ -78,6 +89,7 @@ public final class Rebrand {
     private final Map<String, Integer> protectedHits = new TreeMap<>();
     private int filesChanged;
     private int filesRenamed;
+    private int jarsRewritten;
 
     private Rebrand(Table table) {
         this.table = table;
@@ -146,7 +158,14 @@ public final class Rebrand {
                 continue;
             }
             byte[] bytes = Files.readAllBytes(in);
-            if (!keep && !isBinary(rel, bytes)) {
+            if (!keep && rel.endsWith(".jar")) {
+                byte[] renamed = renameJar(bytes);
+                if (!Arrays.equals(renamed, bytes)) {
+                    filesChanged++;
+                    jarsRewritten++;
+                    bytes = renamed;
+                }
+            } else if (!keep && !isBinary(rel, bytes)) {
                 String text = new String(bytes, StandardCharsets.ISO_8859_1);
                 String renamed = renameContent(rel, text);
                 if (!renamed.equals(text)) {
@@ -175,6 +194,12 @@ public final class Rebrand {
                 continue;
             }
             byte[] bytes = Files.readAllBytes(file);
+            if (rel.endsWith(".jar")) {
+                if (!Arrays.equals(renameJar(bytes), bytes)) {
+                    notIdempotent.add(rel);
+                }
+                continue;
+            }
             if (isBinary(rel, bytes)) {
                 continue;
             }
@@ -236,6 +261,93 @@ public final class Rebrand {
             }
         }
         return result;
+    }
+
+    /**
+     * Rewrites a jar: entry paths, text entries and class-file constant pools. Returns the
+     * input unchanged when no entry needs renaming.
+     */
+    byte[] renameJar(byte[] jar) throws IOException {
+        boolean changed = false;
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream(jar.length + 1024);
+        try (ZipInputStream in = new ZipInputStream(new ByteArrayInputStream(jar));
+             ZipOutputStream out = new ZipOutputStream(bytes)) {
+            ZipEntry entry;
+            while ((entry = in.getNextEntry()) != null) {
+                byte[] original = in.readAllBytes();
+                byte[] data = original;
+                String name = entry.getName();
+                if (!entry.isDirectory()) {
+                    if (name.endsWith(".class")) {
+                        data = renameClassFile(name, data);
+                    } else if (!isBinary(name, data)) {
+                        String text = new String(data, StandardCharsets.ISO_8859_1);
+                        data = renameContent(name, text).getBytes(StandardCharsets.ISO_8859_1);
+                    }
+                }
+                String newName = renamePath(name);
+                changed |= !newName.equals(name) || !Arrays.equals(data, original);
+                ZipEntry renamed = new ZipEntry(newName);
+                // Local date-time keeps the output independent of the time zone.
+                renamed.setTimeLocal(entry.getTimeLocal());
+                out.putNextEntry(renamed);
+                out.write(data);
+                out.closeEntry();
+            }
+        }
+        return changed ? bytes.toByteArray() : jar;
+    }
+
+    /**
+     * Applies the content rules to every CONSTANT_Utf8 entry of a class file. Constant-pool
+     * entries are length-prefixed and referenced by index only, so the rest of the class file
+     * is copied unchanged.
+     */
+    byte[] renameClassFile(String name, byte[] c) {
+        if (c.length < 10 || (c[0] & 0xff) != 0xCA || (c[1] & 0xff) != 0xFE
+                || (c[2] & 0xff) != 0xBA || (c[3] & 0xff) != 0xBE) {
+            return c;
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream(c.length + 256);
+        out.write(c, 0, 10);
+        int count = u2(c, 8);
+        int pos = 10;
+        for (int i = 1; i < count; i++) {
+            int tag = c[pos] & 0xff;
+            int size = switch (tag) {
+                case 1 -> -1;
+                case 7, 8, 16, 19, 20 -> 3;
+                case 15 -> 4;
+                case 3, 4, 9, 10, 11, 12, 17, 18 -> 5;
+                case 5, 6 -> 9;
+                default -> throw new IllegalStateException(name + ": unknown constant-pool tag " + tag);
+            };
+            if (size < 0) {
+                int length = u2(c, pos + 1);
+                String value = new String(c, pos + 3, length, StandardCharsets.ISO_8859_1);
+                byte[] renamed = renameContent(name, value).getBytes(StandardCharsets.ISO_8859_1);
+                if (renamed.length > 0xFFFF) {
+                    throw new IllegalStateException(name + ": constant too long after renaming");
+                }
+                out.write(1);
+                out.write(renamed.length >>> 8);
+                out.write(renamed.length & 0xff);
+                out.write(renamed, 0, renamed.length);
+                pos += 3 + length;
+            } else {
+                out.write(c, pos, size);
+                pos += size;
+                if (tag == 5 || tag == 6) {
+                    i++; // long and double take two constant-pool slots
+                }
+            }
+        }
+        out.write(c, pos, c.length - pos);
+        return out.toByteArray();
+    }
+
+    private static int u2(byte[] b, int at) {
+        return ((b[at] & 0xff) << 8) | (b[at + 1] & 0xff);
     }
 
     /** Sorted, merged protected spans. When {@code hits} is given, counts matches per rule. */
@@ -341,6 +453,7 @@ public final class Rebrand {
         sb.append("# Rebrand report\n\n");
         sb.append("- files with renamed content: ").append(filesChanged).append('\n');
         sb.append("- files with renamed paths: ").append(filesRenamed).append('\n');
+        sb.append("- jars rewritten: ").append(jarsRewritten).append('\n');
         sb.append("- leftovers outside protected spans: ").append(leftovers.size()).append("\n\n");
         sb.append("## Remaining \"hazelcast\" occurrences inside protected spans, by rule\n\n");
         sb.append("| Matches | Protect rule |\n|---|---|\n");
