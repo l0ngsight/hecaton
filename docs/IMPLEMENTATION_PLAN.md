@@ -82,7 +82,8 @@ Upstream sync work uses `sync/vX.Y.Z`; generated rebrand output lives on `rebran
    `tools/ci/*.sh` so later milestones only change scripts):
    - `hygiene`: Apache `LICENSE`/`NOTICE` present, no Hazelcast Enterprise artifacts or
      repositories in build files, no `sun.misc.Unsafe` in Hecaton-owned code.
-   - `build`: JDK 25 (Temurin). Skips the Maven build until M1 adds `pom.xml`.
+   - `build`: JDK 25 (Temurin). Skips the Maven build until M1 adds `pom.xml`; M1 also turns
+     on `setup-java`'s Maven cache, which fails when no `pom.xml` exists.
    - `client`: JDK 17/21/25 matrix (JDK 25 also installed for the toolchain). M1 adds the
      `client-tests` Maven profile it calls.
    - Added later: `nightly.yml` (full suites, crash-consistency, multi-cluster, compat

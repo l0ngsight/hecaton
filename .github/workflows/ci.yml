@@ -17,19 +17,19 @@ jobs:
     name: Repository hygiene
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: tools/ci/check-repo-hygiene.sh
 
   build:
     name: Build (JDK 25)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
-          cache: maven
+          # TODO(M1): add `cache: maven` once pom.xml exists (setup-java fails without one).
       - run: tools/ci/build.sh
 
   client:
@@ -41,14 +41,13 @@ jobs:
       matrix:
         java: ['17', '21', '25']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # JDK 25 is installed for the Maven toolchain (build); the matrix JDK is the
       # default runtime because it is listed last.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: |
             25
             ${{ matrix.java }}
-          cache: maven
       - run: tools/ci/client-tests.sh
