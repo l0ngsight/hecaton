@@ -370,9 +370,15 @@ Budget: ~1–2 ew per upstream minor.
    CI skeleton on JDK 25.
 2. **PR #2 — Upstream import (done):** `upstream/main` holds the `v5.7.0` snapshot, created
    by `tools/upstream/import-snapshot.sh` with `tools/upstream/excluded-paths.txt`.
-3. **PR #3 — `tools/rebrand` v1** + `rename-table.yaml` + keep-list + verification checks.
-4. **PR #4 — `rebrand/v5.7.0` merged into `main`**, JDK 25 build fixes, baseline test
-   comparison report.
-5. **PR #5 — Client matrix (17/21/25) + official-client compat smoke tests.**
+3. **PR #3 — `tools/rebrand` v1 (done, `feature/m1-rebranded-ce`):** `Rebrand.java`,
+   `rename-table.yaml`, `rebrand.sh`, CI determinism check (`tools/ci/check-rebrand.sh`).
+   On v5.7.0: 11,680 files rewritten, 11,716 paths renamed, 0 leftovers, idempotent.
+4. **PR #4 — renamed baseline (in progress, `feature/m1-rebranded-ce`):** `rebrand/v5.7.0`
+   merged; upstream patches 1–5 applied (`docs/upstream-patches.md`); the full reactor
+   (30 modules) compiles on JDK 25 with tests compiled. Still to do: run the test suite and
+   compare with upstream, the remaining items under "Pending" in
+   `docs/upstream-patches.md`.
+5. **PR #5 — Client matrix (17/21/25) (started):** CI runs a member + client smoke test on
+   JDK 17, 21 and 25 with the JDK 25-built jar. Official-client compat tests still to do.
 6. **PR #6 — Migration tooling** (OpenRewrite recipe + CLI + sample apps).
 7. **PR #7 — Extension framework** (M2).
