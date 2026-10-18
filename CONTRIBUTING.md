@@ -56,7 +56,7 @@ Signed-off-by: Your Name <you@example.com>
 |---|---|
 | `main` | Integrated, releasable state |
 | `feature/mN-*` | One long-lived branch per milestone (see [implementation plan](docs/IMPLEMENTATION_PLAN.md#branching-model)). Task PRs target the milestone branch. |
-| `upstream/main` | Unmodified snapshots of Hazelcast CE releases, one commit per release tag. Never edited by hand. |
+| `upstream/main` | Snapshots of Hazelcast CE releases, one commit per release tag, made by `tools/upstream/import-snapshot.sh`. Files are unmodified; paths in `tools/upstream/excluded-paths.txt` are left out. Never edited by hand. |
 | `rebrand/vX.Y.Z` | Output of `tools/rebrand` for an upstream release. Generated, never edited by hand. |
 | `sync/vX.Y.Z` | Merging a new upstream release into `main` |
 
