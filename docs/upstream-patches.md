@@ -17,6 +17,7 @@ Budget: fewer than 40 patched upstream files (spec §7.4).
 | 1 | `hecaton-parent/pom.xml` | Removed Hazelcast's private Maven repositories (`repository.hazelcast.com` release/snapshot/security) and `distributionManagement`. Clean room (CONTRIBUTING §1); Hecaton publishes to Maven Central (M8). | M1 |
 | 2 | `extensions/pom.xml`, `extensions/hadoop-dist/pom.xml`, `distribution/pom.xml`, `hecaton-coverage-report/pom.xml` | Dropped the cloud-provider modules left out at import (Kinesis, S3, files-azure/gcs/s3) and their dependencies (D9). | M1 |
 | 3 | `hecaton-spring-tests/pom.xml`, `hecaton-it/distribution-it/pom.xml`, `distribution/pom.xml`, `hecaton-parent/pom.xml`; deleted `TestHibernateApplicationContext`, `HibernateIT`, `AnnotatedEntity` and their resources | Removed the external `hazelcast-hibernate53` and `hazelcast-wm` integrations, which are built against `com.hazelcast` and cannot work with Hecaton. | M1 |
+| 4 | `pom.xml`, `hecaton-parent/pom.xml` | Project metadata (URL, SCM, issue tracker, developers, organization) points to Hecaton instead of Hazelcast, Inc.; the Hazelcast contributor-agreement link is removed (Hecaton uses the DCO). | M1 |
 
 ## Pending
 

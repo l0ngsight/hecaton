@@ -27,32 +27,30 @@
 
     <name>Hecaton Parent POM</name>
     <description>Provides a base configuration for Hecaton Platform builds</description>
-    <url>http://www.hazelcast.com/</url>
+    <url>https://hecaton.org.uk/</url>
 
     <scm>
-        <connection>scm:git:git://github.com/hazelcast/hazelcast.git</connection>
-        <developerConnection>scm:git:git@github.com:hazelcast/hazelcast.git</developerConnection>
-        <url>https://github.com/hazelcast/hazelcast/</url>
+        <connection>scm:git:https://github.com/l0ngsight/hecaton.git</connection>
+        <developerConnection>scm:git:git@github.com:l0ngsight/hecaton.git</developerConnection>
+        <url>https://github.com/l0ngsight/hecaton</url>
     </scm>
 
     <issueManagement>
-        <system>Github</system>
-        <url>https://github.com/hazelcast/hazelcast/issues</url>
+        <system>GitHub</system>
+        <url>https://github.com/l0ngsight/hecaton/issues</url>
     </issueManagement>
 
     <developers>
         <developer>
-            <id>hecaton-team</id>
-            <name>Hecaton team</name>
-            <email>info@hazelcast.com</email>
-            <organization>Hazelcast, Inc.</organization>
-            <organizationUrl>https://hazelcast.com</organizationUrl>
+            <id>hecaton-authors</id>
+            <name>The Hecaton Authors</name>
+            <url>https://github.com/l0ngsight/hecaton</url>
         </developer>
     </developers>
 
     <organization>
-        <name>Hazelcast, Inc.</name>
-        <url>http://www.hazelcast.com/</url>
+        <name>The Hecaton Authors</name>
+        <url>https://hecaton.org.uk/</url>
     </organization>
 
     <licenses>
