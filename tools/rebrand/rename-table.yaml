@@ -1,0 +1,93 @@
+# Hecaton rename table (spec §5). Single source of truth for:
+#   - tools/rebrand, which turns an upstream Hazelcast snapshot into the Hecaton tree;
+#   - the user migration tooling (M1.5), generated from the same rules.
+#
+# Semantics
+#   protect   Regexes (Java syntax). Matched spans are copied verbatim and no rule
+#             touches them. Used for copyright/license text, URLs, third-party names
+#             and wire-visible strings that official Hazelcast clients rely on.
+#   replace   Ordered regex rules applied to the unprotected text of every text file.
+#             `to` may use $1-style group references. `scope` is any of
+#             content | path (default: both). `paths` limits a rule to files whose
+#             upstream path matches one of the globs.
+#   relocate  Regex rules on upstream paths. A matching file is moved to `to` and its
+#             content is copied unchanged (used for upstream top-level files that would
+#             collide with Hecaton's own).
+#   keep-paths Paths (globs) whose path and content are copied unchanged.
+#
+# Every remaining "hazelcast" (any case) in the output must be inside a protected span.
+# tools/rebrand fails otherwise and lists the offending lines.
+
+version: 1
+
+protect:
+  # Copyright/license header blocks and lines. Never modified (Apache 2.0 §4).
+  - '(?s)/\*(?:(?!\*/).)*?Copyright(?:(?!\*/).)*?\*/'
+  - '(?s)<!--(?:(?!-->).)*?Copyright(?:(?!-->).)*?-->'
+  - '(?m)^[ \t]*(?:#|//|--|REM|::).*(?:Copyright|Licensed under|License\b).*$'
+  - '(?i)Copyright[^\n]*Hazelcast[^\n]*'
+  - 'Hazelcast,? Inc\.?'
+  - 'Hazelcast Community License'
+  # URLs, except the config schema namespace (renamed below).
+  - '(?i)\b(?:https?|ftp)://(?!www\.hazelcast\.com/schema/)[^\s"''<>(){}\[\]\\`|]+'
+  # E-mail addresses and bare domains (but not property keys such as hazelcast.io.x).
+  - '[\w.+-]+@[\w-]+(?:\.[\w-]+)+'
+  - '(?i)\b[\w.-]*hazelcast\.(?:com|org|io|cloud|net|dev)(?!\w|\.\w|/schema/)'
+  - '(?i)\bgithub\.com/hazelcast[\w./-]*'
+  # Third-party artifacts and packages that carry the Hazelcast name.
+  - 'com\.hazelcast\.(?:jsurfer|maven)\b'
+  - '(?s)<groupId>com\.hazelcast</groupId>\s*<artifactId>hazelcast-(?:hibernate53|wm)</artifactId>'
+  - 'org\.springframework\.boot\.(?:autoconfigure\.)?hazelcast\b'
+  - 'hibernate\.cache\.hazelcast\b'
+  # Released Hazelcast artifacts referenced by explicit version (old-version compatibility
+  # tests download them), e.g. com.hazelcast:hazelcast:4.0.1:jar:tests.
+  - 'com\.hazelcast:hazelcast(?:-[a-z0-9-]+)?:\d[\w.-]*(?::[\w.-]+)*'
+
+replace:
+  # Config schema namespace (must run before the generic product-name rules).
+  # Also matches the escaped form in META-INF/spring.schemas (http\://...).
+  - from: 'http(\\?)://www\.hazelcast\.com/schema/'
+    to: 'https$1://hecaton.org.uk/schema/'
+    scope: content
+  # Root package, with any separator: com.hazelcast, com/hazelcast, com_hazelcast (JNI),
+  # com\\.hazelcast / com\.hazelcast (escaped regexes in Java strings, properties).
+  - from: 'com(\.|/|_|\\\\\.|\\\.)hazelcast'
+    to: 'uk$1org$1hecaton'
+  # Product name in identifiers, file names, config roots, property keys and prose.
+  - from: 'HAZELCAST'
+    to: 'HECATON'
+  - from: 'Hazelcast'
+    to: 'Hecaton'
+  - from: 'hazelcast'
+    to: 'hecaton'
+  # Environment-variable override prefixes (HZ_ / HZCLIENT_ -> HC_ / HCCLIENT_). The
+  # $HZ_INSTANCE_TRACKING{} placeholder is user config syntax and stays.
+  - from: '\bHZ(CLIENT)?_(?=[A-Z"])(?!INSTANCE_TRACKING)'
+    to: 'HC$1_'
+    scope: content
+  # System-property override prefix and thread/instance name prefix ("hz." -> "hc.").
+  - from: '"hz\.'
+    to: '"hc.'
+    scope: content
+  - from: '-Dhz\.'
+    to: '-Dhc.'
+    scope: content
+  # CLI scripts: hz, hz-start, hz-cli, ... -> hc, hc-start, hc-cli, ...
+  - from: '\bhz-(start|stop|cli|cluster-admin|cluster-cp-admin|healthcheck)\b'
+    to: 'hc-$1'
+  - from: '(^|/)hz(\.bat)?$'
+    to: '$1hc$2'
+    scope: path
+    paths: ['distribution/src/bin*/**']
+  - from: '@Command\(name = "hz",'
+    to: '@Command(name = "hc",'
+    scope: content
+    paths: ['distribution/src/main/java/**']
+
+relocate:
+  - from: '^(README\.md|LICENSE|NOTICE|CONTRIBUTING\.md|SECURITY\.md|codecov\.yml)$'
+    to: 'docs/upstream/$1'
+
+keep-paths:
+  - 'licenses/hazelcast-community-license.txt'
+  - 'docs/upstream/**'
