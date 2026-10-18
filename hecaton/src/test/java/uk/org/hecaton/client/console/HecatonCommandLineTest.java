@@ -551,7 +551,7 @@ public class HecatonCommandLineTest extends JetTestSupport {
             LogEvent logEvent = logEventCaptor.getValue();
 
             String actual = logEvent.getMessage().toString();
-            String pathToClass = Paths.get("com", "hecaton", "jet", "testjob", "HecatonBootstrap.class").toString();
+            String pathToClass = Paths.get("uk", "org", "hecaton", "jet", "testjob", "HecatonBootstrap.class").toString();
             assertThat(actual).contains("WARNING: Hecaton code detected in the jar: " + pathToClass + ". Hecaton dependency should be set with the 'provided' scope or equivalent.");
         } finally {
             System.setErr(oldErr);
