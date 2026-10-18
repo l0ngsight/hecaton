@@ -106,8 +106,10 @@
         <property name="fileExtensions" value="java"/>
     </module>
 
+    <!-- Hecaton: 130 upstream + 2, since uk.org.hecaton is one character longer than the
+         upstream package and can appear twice on a line (docs/upstream-patches.md). -->
     <module name="LineLength">
-        <property name="max" value="130"/>
+        <property name="max" value="132"/>
     </module>
 
     <module name="TreeWalker">

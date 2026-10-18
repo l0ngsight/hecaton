@@ -18,6 +18,7 @@ Budget: fewer than 40 patched upstream files (spec §7.4).
 | 2 | `extensions/pom.xml`, `extensions/hadoop-dist/pom.xml`, `distribution/pom.xml`, `hecaton-coverage-report/pom.xml` | Dropped the cloud-provider modules left out at import (Kinesis, S3, files-azure/gcs/s3) and their dependencies (D9). | M1 |
 | 3 | `hecaton-spring-tests/pom.xml`, `hecaton-it/distribution-it/pom.xml`, `distribution/pom.xml`, `hecaton-parent/pom.xml`; deleted `TestHibernateApplicationContext`, `HibernateIT`, `AnnotatedEntity` and their resources | Removed the external `hazelcast-hibernate53` and `hazelcast-wm` integrations, which are built against `com.hazelcast` and cannot work with Hecaton. | M1 |
 | 4 | `pom.xml`, `hecaton-parent/pom.xml` | Project metadata (URL, SCM, issue tracker, developers, organization) points to Hecaton instead of Hazelcast, Inc.; the Hazelcast contributor-agreement link is removed (Hecaton uses the DCO). | M1 |
+| 5 | `checkstyle/checkstyle.xml` | `LineLength` max 130 → 132: `uk.org.hecaton` is one character longer than `com.hazelcast`, which pushed four upstream lines over the limit. Avoids patching individual files on every upstream release. | M1 |
 
 ## Pending
 
