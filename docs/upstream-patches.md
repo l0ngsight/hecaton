@@ -19,6 +19,7 @@ Budget: fewer than 40 patched upstream files (spec §7.4).
 | 3 | `hecaton-spring-tests/pom.xml`, `hecaton-it/distribution-it/pom.xml`, `distribution/pom.xml`, `hecaton-parent/pom.xml`; deleted `TestHibernateApplicationContext`, `HibernateIT`, `AnnotatedEntity` and their resources | Removed the external `hazelcast-hibernate53` and `hazelcast-wm` integrations, which are built against `com.hazelcast` and cannot work with Hecaton. | M1 |
 | 4 | `pom.xml`, `hecaton-parent/pom.xml` | Project metadata (URL, SCM, issue tracker, developers, organization) points to Hecaton instead of Hazelcast, Inc.; the Hazelcast contributor-agreement link is removed (Hecaton uses the DCO). | M1 |
 | 5 | `checkstyle/checkstyle.xml` | `LineLength` max 130 → 132: `uk.org.hecaton` is one character longer than `com.hazelcast`, which pushed four upstream lines over the limit. Avoids patching individual files on every upstream release. | M1 |
+| 6 | `hecaton-tpc-engine/src/main/resources/lib/linux-x86_64/libaffinity_helper.so`, `.../linux-x86_64/libicmp_helper.so`, `.../linux-x86/libicmp_helper.so` | Rebuilt from the renamed C sources with `tools/native/build-native.sh`. The upstream binaries export `Java_com_hazelcast_*` symbols and threw `UnsatisfiedLinkError` after the rename (thread affinity, ICMP ping). `tools/ci/check-native.sh` keeps binaries and sources in sync. | M1 |
 
 ## Pending
 
@@ -32,7 +33,6 @@ Known follow-ups found while producing the renamed baseline. Each becomes an ent
 | Spring Hibernate support | `hecaton-spring/.../hibernate/RegionFactoryBeanDefinitionParser` | Spring XML support for the removed Hibernate integration. Decide whether to keep. |
 | Kafka Connect test downloads | `extensions/kafka-connect/pom.xml` | Test connectors are downloaded from `repository.hazelcast.com/download/tests/`. Switch to the connectors' own distribution sites. |
 | Binary test fixtures | 10 test jars (e.g. `client/console/testjob-*.jar`, `jet/core/DataSerializableSuppliers.jar`, `deployment/sample-pojo-1.0-car.jar`) and `*.serialization.compatibility.binary` | Contain compiled `com.hazelcast` class names that rebrand cannot rewrite. Rebuild from source or regenerate. |
-| Native libraries | `hecaton-tpc-engine/src/main/resources/lib/linux-*/libaffinity_helper.so`, `libicmp_helper.so` | Prebuilt with JNI symbols `Java_com_hazelcast_*`; they no longer bind after the rename (thread affinity, ICMP ping). Rebuild from the renamed C sources. |
 | Hazelcast 3 serialization fixtures | `nio/hz-3.1.5-multicast-package.dump`, `testHz3Object`, `testHz3ObjectLittleEndian` | Serialized Hazelcast 3 objects with `com.hazelcast` class names. Remove the tests or regenerate the fixtures. |
 | REST `/hazelcast/...` alias | `internal/ascii/rest/HttpCommandProcessor` and REST dispatch | Spec §5.4: keep health checks and existing tooling working. |
 | Spring Boot integration | `hecaton-spring-boot3/4` auto-configuration classes | They order themselves after Spring Boot's own Hazelcast auto-configuration (kept by name, protected in the rename table). Check that the ordering still makes sense for Hecaton. |

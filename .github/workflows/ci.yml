@@ -19,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - run: tools/ci/check-repo-hygiene.sh
+      - run: tools/ci/check-native.sh
 
   rebrand:
     name: Rebrand determinism
