@@ -56,6 +56,10 @@ public final class Rebrand {
             "jar", "class", "png", "jpg", "jpeg", "gif", "ico", "jks", "p12", "pfx", "keystore",
             "truststore", "bin", "gz", "zip", "tgz", "so", "dll", "dylib", "ser", "der", "jfr", "parquet",
             "avro", "orc", "xlsx", "woff", "woff2", "ttf", "eot", "pdf");
+    /** Always treated as text, even if they contain NUL bytes (e.g. in string literals). */
+    private static final Set<String> TEXT_EXTENSIONS = Set.of(
+            "java", "kt", "xml", "xsd", "yaml", "yml", "json", "properties", "md", "txt", "sh", "bat", "cmd",
+            "c", "h", "py", "proto", "sql", "ftl", "fmpp", "jj", "html", "css", "js", "toml", "adoc");
 
     record Rule(String name, Pattern from, String to, boolean content, boolean path, List<PathMatcher> paths) {
         boolean appliesTo(String upstreamPath) {
@@ -300,7 +304,11 @@ public final class Rebrand {
 
     private static boolean isBinary(String rel, byte[] bytes) {
         int dot = rel.lastIndexOf('.');
-        if (dot >= 0 && BINARY_EXTENSIONS.contains(rel.substring(dot + 1).toLowerCase())) {
+        String extension = dot >= 0 ? rel.substring(dot + 1).toLowerCase() : "";
+        if (TEXT_EXTENSIONS.contains(extension)) {
+            return false;
+        }
+        if (BINARY_EXTENSIONS.contains(extension)) {
             return true;
         }
         int limit = Math.min(bytes.length, 8192);
