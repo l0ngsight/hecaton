@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, 'feature/**', 'sync/**', 'claude/**']
+    branches: [main, 'feature/**', 'claude/**']
   pull_request:
 
 permissions:
@@ -20,18 +20,6 @@ jobs:
       - uses: actions/checkout@v5
       - run: tools/ci/check-repo-hygiene.sh
       - run: tools/ci/check-native.sh
-
-  rebrand:
-    name: Rebrand determinism
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '25'
-      # Regenerates rebrand/<tag> from the upstream/main snapshot and compares trees.
-      - run: tools/ci/check-rebrand.sh
 
   build:
     name: Build (JDK 25)

@@ -1,19 +1,33 @@
-# Upstream patches
+# Changes from Hazelcast 5.7.0
 
-Every change Hecaton makes to a Hazelcast-derived file, beyond what `tools/rebrand`
-generates, is listed here with its reason (spec §7.4). Keep the list short: each entry
-is a potential merge conflict when a new upstream release comes in.
+Hecaton was forked once from Hazelcast CE 5.7.0 and is maintained independently (spec §9,
+D10). This file lists what differs from Hazelcast 5.7.0 beyond the mechanical rename in
+[`tools/rebrand/rename-table.yaml`](../tools/rebrand/rename-table.yaml) (spec §5): first
+what migrating applications notice, then a log of the changes made to inherited files while
+creating the fork.
 
-Generated changes are not listed. They are fully described by
-[`tools/rebrand/rename-table.yaml`](../tools/rebrand/rename-table.yaml) and
-[`tools/upstream/excluded-paths.txt`](../tools/upstream/excluded-paths.txt). That includes
-the eight upstream test jars, which `tools/rebrand` rewrites (entry paths and class-file
-constant pools), and the `@Generated` integrity hashes of the client-protocol codecs, which it
-recomputes.
+Add an entry in the same PR as any change that applications migrating from Hazelcast 5.7
+can observe (API, config, wire, REST, metrics, file names, behaviour).
 
-Budget: fewer than 40 patched upstream files (spec §7.4).
+## Differences visible to applications
 
-## Applied
+| Area | Hazelcast 5.7 | Hecaton | Since |
+|---|---|---|---|
+| Cloud-provider discovery (D9) | `aws`, `azure`, `gcp`, `eureka` join/discovery config; client `hazelcast-cloud` | Removed; Kubernetes, TCP/IP, multicast and the Discovery SPI remain. Configs using the removed elements fail with a targeted error. | 0.1.0 |
+| Jet connectors | Kinesis, S3, and the S3/GCS/Azure file systems | Removed (D9) | 0.1.0 |
+| External integrations | `hazelcast-hibernate53`, `hazelcast-wm` (separate Hazelcast projects) | Not available; they are built against `com.hazelcast` | 0.1.0 |
+| REST paths | `/hazelcast/rest/...`, `/hazelcast/health/...` | `/hecaton/...`; the `/hazelcast/...` paths are still served as aliases | 0.1.0 |
+| SQL catalog name | `hazelcast` | `hecaton` (only fully qualified names `hazelcast.public.x` change) | 0.1.0 |
+
+## Fork log
+
+Changes to inherited files made while creating the fork (M1), beyond what `tools/rebrand`
+generated. Generated changes are not listed: they are fully described by the rename table
+and the import exclusions (`tools/upstream/excluded-paths.txt`, in git history; removed
+with D10). That includes the
+eight inherited test jars, which `tools/rebrand` rewrote (entry paths and class-file
+constant pools), and the `@Generated` integrity hashes of the client-protocol codecs, which
+it recomputed.
 
 | # | Files | Reason | Milestone |
 |---|---|---|---|
@@ -31,17 +45,3 @@ Budget: fewer than 40 patched upstream files (spec §7.4).
 | 12 | `extensions/kafka-connect/pom.xml`; deleted `KafkaConnectSQSIT` | The test connectors were downloaded from `repository.hazelcast.com/download/tests/`. Six now come from their publishers (Confluent Hub, Maven Central), byte-identical to Hazelcast's copies (SHA-256 checked). The SQS connector has no public release and is an AWS connector (D9), so its test, download and AWS test dependencies are removed. | M1 |
 | 13 | `HttpCommandParser`, `RestApiFilter` (one line each); new `RestPathAliases` | REST requests to `/hazelcast/...` are served as `/hecaton/...` (spec §5.4). The endpoint-group filter and the command parser both map the path, so the alias gets the same access checks. | M1 |
 | 14 | `checkstyle/ClassHeaderApache.txt` | The header check also accepts the Hecaton header ("Copyright (c) <year>, The Hecaton Authors."), for Hecaton-owned files in upstream modules. | M1 |
-
-## Pending
-
-Known follow-ups found while producing the renamed baseline. Each becomes an entry under
-"Applied" when it lands.
-
-| Item | Files (upstream-relative, renamed) | Reason |
-|---|---|---|
-| Cloud-provider removal (D9) | `config/AwsConfig`, `AzureConfig`, `GcpConfig`, `EurekaConfig`, `client/config/ClientCloudConfig`, `JoinConfig`, `ClientNetworkConfig`, `WanBatchPublisherConfig`, `AliasedDiscoveryConfigUtils`, config parsers/generators, XSD/JSON schemas, `META-INF/services/...DiscoveryStrategyFactory`, `HecatonCloudDiscovery`, `ViridianAddressProvider`, `extensions/pom.xml`, `extensions/hadoop-dist/pom.xml`, `distribution/pom.xml`, `hecaton-coverage-report/pom.xml` | Plan §1.6. The plugins themselves are left out at import. |
-| Old-version compatibility tests | root `pom.xml` (`get-hz-3`), `hecaton/src/test/.../test/starter/**`, tests using `HecatonStarter` | They load real Hazelcast releases (`com.hazelcast` classes) next to Hecaton; cross-version compatibility with Hazelcast is a non-goal (NG1). Remove or disable. |
-| Spring Hibernate support | `hecaton-spring/.../hibernate/RegionFactoryBeanDefinitionParser` | Spring XML support for the removed Hibernate integration. Decide whether to keep. |
-| Spring Boot integration | `hecaton-spring-boot3/4` auto-configuration classes | Spring Boot's own Hazelcast auto-configuration (kept by name, protected in the rename table) only reacts to `com.hazelcast` classes, so a Hecaton application gets no `HecatonInstance` bean (`BootHecatonApplicationTest`, known nightly failure). Hecaton needs its own auto-configuration (spec §5.2). |
-| Python 3.14 support | `extensions/python` (`python.protobuf.version`, `grpc.version` in the POMs) | The pinned protobuf 4.25.8 / grpcio 1.73.0 do not work on Python 3.14 (protobuf: "Metaclasses with custom tp_new are not supported"; grpcio has no 3.14 wheel and builds from source for minutes). The nightly pins Python 3.12; bump the pinned versions so Python services work on current Python. |
-| JDK 25 build | plugin/library versions, Surefire `argLine` | Plan §1.2; only where JDK 25 needs it. |

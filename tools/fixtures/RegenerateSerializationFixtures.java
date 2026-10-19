@@ -31,7 +31,7 @@ import static com.google.common.collect.Sets.newHashSet;
 
 /**
  * Regenerates the serialization test fixtures whose bytes embed class names, so they match
- * the renamed package (docs/upstream-patches.md):
+ * the renamed package (docs/changes-from-hazelcast.md):
  * <ul>
  *   <li>{@code 1.serialization.compatibility.binary}, via upstream's
  *       {@code BinaryCompatibilityFileGenerator};</li>

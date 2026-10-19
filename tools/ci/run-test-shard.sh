@@ -2,20 +2,20 @@
 #
 # Runs one shard of the nightly test suite (.github/workflows/nightly.yml).
 #
-# Usage: run-test-shard.sh <source-root> <hecaton|upstream> <group> <shard> <shards>
+# Usage: run-test-shard.sh <group> <shard> <shards>
 #
 # Builds the group's modules and their dependencies (tests skipped), then runs the
-# group's tests with upstream's standard `parallelTest` profile (SlowTest and
+# group's tests with the `parallelTest` profile (SlowTest and
 # NightlyTest excluded). Test failures do not fail the script; the report job
 # evaluates the surefire XML.
 set -euo pipefail
 
-root="$1" suite="$2" group="$3" shard="$4" shards="$5"
+group="$1" shard="$2" shards="$3"
 tools="$(cd "$(dirname "$0")" && pwd)"
-modules="$(python3 "$tools/nightly.py" modules --suite "$suite" --group "$group")"
+modules="$(python3 "$tools/nightly.py" modules --group "$group")"
 skip=(-Dcheckstyle.skip -Dspotbugs.skip -Djacoco.skip -Dmaven.javadoc.skip -Denforcer.skip -Dlicense.skip)
 
-cd "$root"
+cd "$tools/../.."
 java -version
 
 ./mvnw -B -ntp -T 1C -pl "$modules" -am install -DskipTests "${skip[@]}"

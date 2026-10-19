@@ -16,10 +16,10 @@
 """Helpers for the nightly test workflow (.github/workflows/nightly.yml).
 
   nightly.py matrix                         JSON job matrix (stdout)
-  nightly.py modules --suite S --group G    Maven -pl value for a group
+  nightly.py modules --group G              Maven -pl value for a group
   nightly.py shard --root DIR --module M --shard I --shards N
                                             comma-separated test classes for one shard
-  nightly.py report --reports DIR --suite S [--baseline F] [--known F]
+  nightly.py report --reports DIR [--baseline F] [--known F]
                     [--failures-out F] [--summary-out F]
                                             merge JUnit XML, classify failures
 """
@@ -35,20 +35,17 @@ import xml.etree.ElementTree as ET
 # Logical test groups. "shards" > 1 splits one module's test classes across jobs;
 # groups with several modules run all their tests in one job.
 GROUPS = [
-    {"group": "core", "shards": 20, "modules": {"hecaton": ["hecaton"], "upstream": ["hazelcast"]}},
-    {"group": "sql", "shards": 6, "modules": {"hecaton": ["hecaton-sql"], "upstream": ["hazelcast-sql"]}},
-    {"group": "spring", "shards": 1, "modules": {
-        "hecaton": ["hecaton-spring-tests", "hecaton-spring-boot-autoconfiguration/hecaton-spring-boot3",
-                    "hecaton-spring-boot-autoconfiguration/hecaton-spring-boot4"],
-        "upstream": ["hazelcast-spring-tests", "hazelcast-spring-boot-autoconfiguration/hazelcast-spring-boot3",
-                     "hazelcast-spring-boot-autoconfiguration/hazelcast-spring-boot4"]}},
-    {"group": "ext-streaming", "shards": 1, "modules": {s: [
+    {"group": "core", "shards": 20, "modules": ["hecaton"]},
+    {"group": "sql", "shards": 6, "modules": ["hecaton-sql"]},
+    {"group": "spring", "shards": 1, "modules": [
+        "hecaton-spring-tests", "hecaton-spring-boot-autoconfiguration/hecaton-spring-boot3",
+        "hecaton-spring-boot-autoconfiguration/hecaton-spring-boot4"]},
+    {"group": "ext-streaming", "shards": 1, "modules": [
         "extensions/kafka", "extensions/kafka-connect", "extensions/avro", "extensions/csv",
-        "extensions/protobuf", "extensions/grpc", "extensions/python"] for s in ("hecaton", "upstream")}},
-    {"group": "ext-stores", "shards": 1, "modules": {s: [
+        "extensions/protobuf", "extensions/grpc", "extensions/python"]},
+    {"group": "ext-stores", "shards": 1, "modules": [
         "extensions/mongodb", "extensions/elasticsearch/elasticsearch-7", "extensions/cdc-debezium",
-        "extensions/cdc-mysql", "extensions/cdc-postgres", "extensions/hadoop", "extensions/mapstore"]
-        for s in ("hecaton", "upstream")}},
+        "extensions/cdc-mysql", "extensions/cdc-postgres", "extensions/hadoop", "extensions/mapstore"]},
 ]
 
 TEST_ANNOTATION = re.compile(r"@(?:Test|ParameterizedTest|RepeatedTest|TestFactory|TestTemplate)\b")
@@ -71,7 +68,7 @@ def group_by_name(name):
 
 
 def cmd_modules(args):
-    print(",".join(group_by_name(args.group)["modules"][args.suite]))
+    print(",".join(group_by_name(args.group)["modules"]))
 
 
 def cmd_shard(args):
@@ -94,12 +91,6 @@ def cmd_shard(args):
         bins[target][0] += count
         bins[target][1].append(name)
     print(",".join(sorted(bins[args.shard - 1][1])))
-
-
-def normalize(test_id):
-    """Maps an upstream test id to its Hecaton name (same rules as tools/rebrand)."""
-    test_id = re.sub(r"com\.hazelcast", "uk.org.hecaton", test_id)
-    return test_id.replace("HAZELCAST", "HECATON").replace("Hazelcast", "Hecaton").replace("hazelcast", "hecaton")
 
 
 def read_list(path):
@@ -137,7 +128,7 @@ def cmd_report(args):
                 kind = "failures" if case.find("failure") is not None else "errors"
                 totals[kind] += 1
                 stats["failed"] += 1
-                failing[normalize(test_id) if args.suite == "upstream" else test_id] = group
+                failing[test_id] = group
 
     baseline = read_list(args.baseline)
     known = read_list(args.known)
@@ -149,20 +140,19 @@ def cmd_report(args):
         with open(args.failures_out, "w", encoding="utf-8") as f:
             f.write("\n".join(sorted(failing)) + ("\n" if failing else ""))
 
-    lines = [f"# Nightly test results ({args.suite})", "",
+    lines = ["# Nightly test results", "",
              f"- tests: {totals['tests']}, failures: {totals['failures']}, errors: {totals['errors']}, "
              f"skipped: {totals['skipped']}", ""]
     lines += ["| Shard | Tests | Failed | Skipped |", "|---|---|---|---|"]
     for group, s in sorted(per_group.items()):
         lines.append(f"| {group} | {s['tests']} | {s['failed']} | {s['skipped']} |")
-    if args.suite == "hecaton":
-        lines += ["", f"- failing upstream too (baseline): {len(upstream_too)}",
-                  f"- known and triaged (tools/ci/known-test-failures.txt): {len(triaged)}",
-                  f"- **new, untriaged: {len(new)}**"]
-        if new:
-            lines += ["", "## New failures", ""] + [f"- `{t}` ({failing[t]})" for t in new[:500]]
-            if len(new) > 500:
-                lines.append(f"- ... and {len(new) - 500} more (see the failures artifact)")
+    lines += ["", f"- inherited from Hazelcast 5.7.0 (baseline): {len(upstream_too)}",
+              f"- known and triaged (tools/ci/known-test-failures.txt): {len(triaged)}",
+              f"- **new, untriaged: {len(new)}**"]
+    if new:
+        lines += ["", "## New failures", ""] + [f"- `{t}` ({failing[t]})" for t in new[:500]]
+        if len(new) > 500:
+            lines.append(f"- ... and {len(new) - 500} more (see the failures artifact)")
     summary = "\n".join(lines) + "\n"
     print(summary)
     if args.summary_out:
@@ -170,7 +160,7 @@ def cmd_report(args):
             f.write(summary)
     if totals["tests"] == 0:
         sys.exit("no test results found")
-    sys.exit(1 if args.suite == "hecaton" and new else 0)
+    sys.exit(1 if new else 0)
 
 
 def main():
@@ -178,7 +168,6 @@ def main():
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("matrix")
     p = sub.add_parser("modules")
-    p.add_argument("--suite", choices=["hecaton", "upstream"], required=True)
     p.add_argument("--group", required=True)
     p = sub.add_parser("shard")
     p.add_argument("--root", required=True)
@@ -187,7 +176,6 @@ def main():
     p.add_argument("--shards", type=int, required=True)
     p = sub.add_parser("report")
     p.add_argument("--reports", required=True)
-    p.add_argument("--suite", choices=["hecaton", "upstream"], required=True)
     p.add_argument("--baseline")
     p.add_argument("--known")
     p.add_argument("--failures-out")

@@ -1,25 +1,16 @@
 name: Nightly tests
 
-# Full test suite (upstream's `parallelTest` level: SlowTest/NightlyTest excluded),
-# sharded across jobs. Logic lives in tools/ci/nightly.py and tools/ci/run-test-shard.sh
-# of the tested ref, so this file only changes when the job layout does.
-#
-# suite=hecaton   tests `ref` of this repository and compares failures with the committed
-#                 upstream baseline and tools/ci/known-test-failures.txt; fails on new,
-#                 untriaged failures.
-# suite=upstream  tests the Hazelcast CE tag in tools/upstream/version (from `ref`) to
-#                 produce the baseline (docs/test-baseline/upstream-<tag>-jdk25.txt).
+# Full test suite (`parallelTest` level: SlowTest/NightlyTest excluded), sharded across
+# jobs. Logic lives in tools/ci/nightly.py and tools/ci/run-test-shard.sh of the tested ref,
+# so this file only changes when the job layout does. Failures are compared with the
+# failures inherited from Hazelcast 5.7.0 (docs/test-baseline/hazelcast-5.7.0.txt) and
+# tools/ci/known-test-failures.txt; new, untriaged failures fail the run.
 
 on:
   schedule:
     - cron: '17 1 * * *'
   workflow_dispatch:
     inputs:
-      suite:
-        description: 'hecaton or upstream'
-        type: choice
-        options: [hecaton, upstream]
-        default: hecaton
       ref:
         description: 'Branch of this repository to test (and to take the tools from)'
         default: feature/m1-rebranded-ce
@@ -28,11 +19,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: nightly-${{ inputs.suite || 'hecaton' }}-${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+  group: nightly-${{ inputs.ref || 'feature/m1-rebranded-ce' }}
   cancel-in-progress: false
 
 env:
-  SUITE: ${{ inputs.suite || 'hecaton' }}
   # Scheduled runs test the active milestone branch; switch to main once M1 is merged.
   REF: ${{ inputs.ref || 'feature/m1-rebranded-ce' }}
 
@@ -41,16 +31,13 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
-      upstream_tag: ${{ steps.matrix.outputs.upstream_tag }}
     steps:
       - uses: actions/checkout@v5
         with:
           ref: ${{ env.REF }}
           path: hc
       - id: matrix
-        run: |
-          echo "matrix=$(python3 hc/tools/ci/nightly.py matrix)" >> "$GITHUB_OUTPUT"
-          echo "upstream_tag=$(cat hc/tools/upstream/version)" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(python3 hc/tools/ci/nightly.py matrix)" >> "$GITHUB_OUTPUT"
 
   test:
     name: ${{ matrix.name }}
@@ -66,18 +53,12 @@ jobs:
         with:
           ref: ${{ env.REF }}
           path: hc
-      - if: env.SUITE == 'upstream'
-        uses: actions/checkout@v5
-        with:
-          repository: hazelcast/hazelcast
-          ref: ${{ needs.plan.outputs.upstream_tag }}
-          path: up
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
           cache: maven
-          cache-dependency-path: ${{ env.SUITE == 'upstream' && 'up/**/pom.xml' || 'hc/**/pom.xml' }}
+          cache-dependency-path: hc/**/pom.xml
       # The Python tests install the protobuf/grpcio versions pinned by the build, which do
       # not support the runner image's newer default Python (3.14); pin a supported one.
       - if: matrix.group == 'ext-streaming'
@@ -89,10 +70,7 @@ jobs:
           GROUP: ${{ matrix.group }}
           SHARD: ${{ matrix.shard }}
           SHARDS: ${{ matrix.shards }}
-        run: |
-          root=hc
-          [ "$SUITE" = upstream ] && root=up
-          hc/tools/ci/run-test-shard.sh "$root" "$SUITE" "$GROUP" "$SHARD" "$SHARDS"
+        run: hc/tools/ci/run-test-shard.sh "$GROUP" "$SHARD" "$SHARDS"
       - if: always()
         name: Collect reports
         env:
@@ -100,10 +78,10 @@ jobs:
         # run-test-shard.sh keeps the parallel-JVM pass's reports in
         # target/surefire-reports-paralleljvm; suffix them so they do not replace the
         # single-JVM reports of the same class. Inline (not a script of the tested ref) so
-        # it also works for refs that predate the two-pass layout.
+        # it does not depend on the tested ref's scripts.
         run: |
           mkdir -p "reports/$NAME"
-          { find hc up -path '*/target/surefire-reports*/TEST-*.xml' 2>/dev/null || true; } |
+          { find hc -path '*/target/surefire-reports*/TEST-*.xml' 2>/dev/null || true; } |
             while IFS= read -r report; do
               suffix="$(basename "$(dirname "$report")")"
               cp "$report" "reports/$NAME/$(basename "$report" .xml)${suffix#surefire-reports}.xml"
@@ -131,11 +109,9 @@ jobs:
           path: reports
           merge-multiple: true
       - name: Compare results
-        env:
-          UPSTREAM_TAG: ${{ needs.plan.outputs.upstream_tag }}
         run: |
-          python3 hc/tools/ci/nightly.py report --reports reports --suite "$SUITE" \
-            --baseline "hc/docs/test-baseline/upstream-$UPSTREAM_TAG-jdk25.txt" \
+          python3 hc/tools/ci/nightly.py report --reports reports \
+            --baseline hc/docs/test-baseline/hazelcast-5.7.0.txt \
             --known hc/tools/ci/known-test-failures.txt \
             --failures-out failures.txt --summary-out summary.md
       - if: always()
@@ -148,7 +124,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-${{ env.SUITE }}
+          name: test-results
           path: |
             failures.txt
             summary.md

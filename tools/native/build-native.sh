@@ -3,7 +3,7 @@
 # Rebuilds the JNI helper libraries shipped in hecaton-tpc-engine from their C sources
 # (hecaton/src/main/resources/*.c), using the flags documented next to the sources
 # (affinity_helper.md, icmp_helper.md). Upstream ships prebuilt binaries whose JNI
-# symbols carry the old package name, so Hecaton rebuilds them (docs/upstream-patches.md).
+# symbols carry the old package name, so Hecaton rebuilds them (docs/changes-from-hazelcast.md).
 #
 # Requires gcc with 32-bit support (Debian/Ubuntu: gcc-multilib) and a JDK (JAVA_HOME).
 set -euo pipefail

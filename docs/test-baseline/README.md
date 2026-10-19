@@ -1,16 +1,12 @@
-# Upstream test baselines
+# Inherited test failures
 
-`upstream-<tag>-jdk25.txt` lists the tests that fail in **unmodified Hazelcast CE** at
-`<tag>`, built and run on JDK 25 with the same nightly job layout Hecaton uses. The nightly
-report does not count these as Hecaton regressions.
+`hazelcast-5.7.0.txt` lists the tests that fail in **unmodified Hazelcast CE 5.7.0**,
+built and run on JDK 25 with the nightly job layout, before Hecaton was forked (two runs,
+see the file header). The nightly report counts them separately from Hecaton regressions.
 
-Test names are already mapped to Hecaton names (`com.hazelcast` → `uk.org.hecaton`,
-`Hazelcast` → `Hecaton`), one `Class#method` per line.
+Test names are mapped to Hecaton names (`com.hazelcast` → `uk.org.hecaton`, `Hazelcast` →
+`Hecaton`), one `Class#method` per line.
 
-To refresh a baseline (for example after a new upstream release is imported):
-
-1. Run the **Nightly tests** workflow manually with `suite = upstream` and `ref` set to the
-   branch whose `tools/upstream/version` names the tag.
-2. Take `failures.txt` from the run's `test-results-upstream` artifact (or the block
-   between `BEGIN/END FAILING TESTS` in the report job's log).
-3. Commit it here as `upstream-<tag>-jdk25.txt`.
+The list is frozen: Hecaton does not track later Hazelcast releases (spec §9). Remove an
+entry when the test is fixed; never add new ones (Hecaton-specific failures belong in
+`tools/ci/known-test-failures.txt`, with a reason).

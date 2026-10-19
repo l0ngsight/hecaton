@@ -3,10 +3,10 @@
 # One test per line: `fully.qualified.Class#method  reason`, with two or more spaces before
 # the reason. A failure listed here does not fail the nightly report. Failures that also
 # happen upstream belong in docs/test-baseline/, not here. Keep each entry tied to a pending
-# item in docs/upstream-patches.md or an issue, and remove it once fixed.
+# item in docs/IMPLEMENTATION_PLAN.md or an issue, and remove it once fixed.
 
 uk.org.hecaton.config.XmlConfigSchemaLocationTest#testSchemaLocationsExist  Fetches the XSDs from https://hecaton.org.uk/schema/...; fails until the site hosts them (D7, M8).
 uk.org.hecaton.internal.json.JsonParser_Test#parse_failsOnTooDeeplyNestedObject  Code identical to upstream. On JDK 25 with the default 1 MB thread stack the recursive parser can throw StackOverflowError before its 1000-level nesting limit, depending on JIT state (passes alone or with -Xss2m, fails after the rest of the class). Follow-up: bound the recursion depth below what the stack allows.
-uk.org.hecaton.spring.boot.BootHecatonApplicationTest#  No HecatonInstance bean: Spring Boot's own Hazelcast auto-configuration (kept by name) only reacts to com.hazelcast classes. Needs Hecaton's own auto-configuration (spec §5.2; docs/upstream-patches.md "Spring Boot integration").
+uk.org.hecaton.spring.boot.BootHecatonApplicationTest#  No HecatonInstance bean: Spring Boot's own Hazelcast auto-configuration (kept by name) only reacts to com.hazelcast classes. Needs Hecaton's own auto-configuration (spec §5.2; docs/IMPLEMENTATION_PLAN.md §1.9).
 uk.org.hecaton.spring.boot.BootHecatonApplicationTest#testMap  See BootHecatonApplicationTest# above.
 uk.org.hecaton.spring.boot.BootHecatonApplicationTest#testServices  See BootHecatonApplicationTest# above.

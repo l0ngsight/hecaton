@@ -1,6 +1,7 @@
 # Hecaton rename table (spec §5). Single source of truth for:
-#   - tools/rebrand, which turns an upstream Hazelcast snapshot into the Hecaton tree;
-#   - the user migration tooling (M1.5), generated from the same rules.
+#   - tools/rebrand, which turned the Hazelcast CE 5.7.0 snapshot into the Hecaton tree
+#     (run once; Hecaton does not merge later upstream releases, spec §9);
+#   - the user migration tooling (plan §1.5), which applies the same rules to applications.
 #
 # Semantics
 #   protect   Regexes (Java syntax). Matched spans are copied verbatim and no rule
