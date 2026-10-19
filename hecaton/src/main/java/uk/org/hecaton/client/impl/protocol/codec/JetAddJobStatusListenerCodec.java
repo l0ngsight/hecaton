@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a JobStatusListener to the specified job.
  */
 @SuppressWarnings("unused")
-@Generated("d8f4b72e3a934f772e23e037d0f4e54a")
+@Generated("e6e1ce7367d455dfe9b2b91ceebc3bd1")
 public final class JetAddJobStatusListenerCodec {
     //hex: 0xFE1300
     public static final int REQUEST_MESSAGE_TYPE = 16651008;

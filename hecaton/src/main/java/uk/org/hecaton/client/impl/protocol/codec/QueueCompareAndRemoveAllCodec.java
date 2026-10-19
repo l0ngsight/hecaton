@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * After this call returns, this collection will contain no elements in common with the specified collection.
  */
 @SuppressWarnings("unused")
-@Generated("d61eb74a88a972c01dac16547127745f")
+@Generated("e4ed4b4c01baad5bf1e11bd1a5fccbad")
 public final class QueueCompareAndRemoveAllCodec {
     //hex: 0x030D00
     public static final int REQUEST_MESSAGE_TYPE = 199936;

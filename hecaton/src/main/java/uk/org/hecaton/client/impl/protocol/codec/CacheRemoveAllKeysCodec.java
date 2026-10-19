@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * is a write-through cache, the CacheWriter. If the key set is empty, the CacheWriter is not called.
  */
 @SuppressWarnings("unused")
-@Generated("2a2568d65b40e311f76f146009fa8f18")
+@Generated("0c18605b542f65fdcdcec88f672d8318")
 public final class CacheRemoveAllKeysCodec {
     //hex: 0x130300
     public static final int REQUEST_MESSAGE_TYPE = 1245952;

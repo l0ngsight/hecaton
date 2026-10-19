@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * rounded to the next closest second value.
  */
 @SuppressWarnings("unused")
-@Generated("804b12ea141cb89368c45c9f5d3e16b1")
+@Generated("de862b28d7a52d2e633321bdb123b200")
 public final class MapPutWithMaxIdleCodec {
     //hex: 0x014400
     public static final int REQUEST_MESSAGE_TYPE = 82944;

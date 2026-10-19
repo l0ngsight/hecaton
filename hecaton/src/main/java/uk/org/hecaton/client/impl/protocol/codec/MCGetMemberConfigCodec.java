@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets the effective config of a member rendered as XML.
  */
 @SuppressWarnings("unused")
-@Generated("925ab18e593fe541412de42469a701ae")
+@Generated("c77db94173279b3c962f27cd8cea28cb")
 public final class MCGetMemberConfigCodec {
     //hex: 0x200500
     public static final int REQUEST_MESSAGE_TYPE = 2098432;

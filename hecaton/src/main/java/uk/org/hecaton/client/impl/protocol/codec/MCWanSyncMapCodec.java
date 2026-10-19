@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Initiate WAN sync for a specific map or all maps
  */
 @SuppressWarnings("unused")
-@Generated("68677c6ddfc2029315b92f18db209e9d")
+@Generated("928cd9362bdf7ab2a6d6a63d79d44d0e")
 public final class MCWanSyncMapCodec {
     //hex: 0x201600
     public static final int REQUEST_MESSAGE_TYPE = 2102784;

@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * key of entry is full class name, and byte[] is the class definition.
  */
 @SuppressWarnings("unused")
-@Generated("35c6ee45cbcf1730e117497c338f9632")
+@Generated("15fd6312eeae523aca673c32d83aa4d0")
 public final class ClientDeployClassesCodec {
     //hex: 0x000D00
     public static final int REQUEST_MESSAGE_TYPE = 3328;

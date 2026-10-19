@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the number of entries in this map.
  */
 @SuppressWarnings("unused")
-@Generated("6bf3d25e04a09d9da95dd1062fe068de")
+@Generated("ed9937955ff48753066930685f85d35d")
 public final class TransactionalMapSizeCodec {
     //hex: 0x0E0400
     public static final int REQUEST_MESSAGE_TYPE = 918528;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Atomically adds the given value to the current value.
  */
 @SuppressWarnings("unused")
-@Generated("72d5f4ce4978b6820c958f3d2d6a8448")
+@Generated("11e03b3726b455dcaa1e8d642d621b5e")
 public final class AtomicLongGetAndAddCodec {
     //hex: 0x090600
     public static final int REQUEST_MESSAGE_TYPE = 591360;

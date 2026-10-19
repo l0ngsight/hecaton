@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * this operation is undefined if the specified collection is modified while the operation is in progress.
  */
 @SuppressWarnings("unused")
-@Generated("6c66407fa77c992883b90e79061faf0f")
+@Generated("f3c5e28086153556d3af2ee2a6118eb0")
 public final class QueueDrainToCodec {
     //hex: 0x030900
     public static final int REQUEST_MESSAGE_TYPE = 198912;

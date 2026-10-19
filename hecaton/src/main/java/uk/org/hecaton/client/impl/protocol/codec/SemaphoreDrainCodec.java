@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Acquires all available permits at once and returns immediately.
  */
 @SuppressWarnings("unused")
-@Generated("ccf095842ed3a18894a9c26196b8c47a")
+@Generated("b082ee62611e8df87e34dc6c6b8469e3")
 public final class SemaphoreDrainCodec {
     //hex: 0x0C0400
     public static final int REQUEST_MESSAGE_TYPE = 787456;

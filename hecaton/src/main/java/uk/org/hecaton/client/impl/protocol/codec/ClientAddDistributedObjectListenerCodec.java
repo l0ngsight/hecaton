@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * when a distributed object is created or destroyed.
  */
 @SuppressWarnings("unused")
-@Generated("b3f2ffcb926bd8be6f38ad3f9e818c9c")
+@Generated("5bd27bfb001639efdd3795e7385a26c1")
 public final class ClientAddDistributedObjectListenerCodec {
     //hex: 0x000900
     public static final int REQUEST_MESSAGE_TYPE = 2304;

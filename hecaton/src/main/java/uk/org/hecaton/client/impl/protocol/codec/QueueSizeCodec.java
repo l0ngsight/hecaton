@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * elements, returns Integer.MAX_VALUE
  */
 @SuppressWarnings("unused")
-@Generated("ca790e250d463eadd0675dfda001400f")
+@Generated("cacdb9f2848a789c40d1aef8ee3a1422")
 public final class QueueSizeCodec {
     //hex: 0x030300
     public static final int REQUEST_MESSAGE_TYPE = 197376;

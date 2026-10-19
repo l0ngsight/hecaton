@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Closes the cache. Clears the internal content and releases any resource.
  */
 @SuppressWarnings("unused")
-@Generated("3f34358a003c12b80d8f4b0dc2499f63")
+@Generated("db32b5f407ea63a65c71b48528dd4bf8")
 public final class CacheDestroyCodec {
     //hex: 0x130700
     public static final int REQUEST_MESSAGE_TYPE = 1246976;

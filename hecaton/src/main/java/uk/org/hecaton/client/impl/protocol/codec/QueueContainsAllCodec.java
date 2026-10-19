@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Return true if this collection contains all of the elements in the specified collection.
  */
 @SuppressWarnings("unused")
-@Generated("df1bd808dd626fea6eea7e9aa78171b5")
+@Generated("53bfac304ae455a1c9355d287f72b66c")
 public final class QueueContainsAllCodec {
     //hex: 0x030C00
     public static final int REQUEST_MESSAGE_TYPE = 199680;

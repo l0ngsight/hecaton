@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Submits the task to partition for execution, partition is chosen based on multiple criteria of the given task.
  */
 @SuppressWarnings("unused")
-@Generated("4943728309d600a112d8e30b4aad3b7a")
+@Generated("3b87806bf8ef4ff31fa1a3fad3d81698")
 public final class ScheduledExecutorSubmitToPartitionCodec {
     //hex: 0x1A0200
     public static final int REQUEST_MESSAGE_TYPE = 1704448;

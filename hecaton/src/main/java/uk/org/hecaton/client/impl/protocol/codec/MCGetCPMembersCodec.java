@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the current list of CP members.
  */
 @SuppressWarnings("unused")
-@Generated("e2979732029d94515e2606302a8ea474")
+@Generated("a909838ec044c65fd2e3be83ae7fb099")
 public final class MCGetCPMembersCodec {
     //hex: 0x201900
     public static final int REQUEST_MESSAGE_TYPE = 2103552;

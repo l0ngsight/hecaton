@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a partition lost listener to the cluster.
  */
 @SuppressWarnings("unused")
-@Generated("20e3e1750cddd5096bb90c49609051c5")
+@Generated("6b00f016d1b9f0c4a6d6d16073345364")
 public final class ClientAddPartitionLostListenerCodec {
     //hex: 0x000600
     public static final int REQUEST_MESSAGE_TYPE = 1536;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Atomically removes the entry for a key only if currently mapped to some value.
  */
 @SuppressWarnings("unused")
-@Generated("924f3ab01009b807018153f1906ecf6e")
+@Generated("8993020d033421e525ddadbd122b173a")
 public final class CacheGetAndRemoveCodec {
     //hex: 0x130A00
     public static final int REQUEST_MESSAGE_TYPE = 1247744;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns true if this map contains an entry for the specified key.
  */
 @SuppressWarnings("unused")
-@Generated("744b88573aac347cac9a84141102b465")
+@Generated("e97447da79a5049e03ddd1aa9b2dac68")
 public final class TransactionalMapContainsKeyCodec {
     //hex: 0x0E0100
     public static final int REQUEST_MESSAGE_TYPE = 917760;

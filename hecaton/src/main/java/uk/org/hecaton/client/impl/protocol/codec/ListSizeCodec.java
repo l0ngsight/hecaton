@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Integer.MAX_VALUE.
  */
 @SuppressWarnings("unused")
-@Generated("d59c42256905b55163732cac90531950")
+@Generated("5977b1b7eb735004489a8ee7c94a2a00")
 public final class ListSizeCodec {
     //hex: 0x050100
     public static final int REQUEST_MESSAGE_TYPE = 327936;

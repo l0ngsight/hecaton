@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * has expired or has been evicted.
  */
 @SuppressWarnings("unused")
-@Generated("f39a13d1d70e005036117e21ea6b1377")
+@Generated("b1105d1ac33d66364a96094f49cfb124")
 public final class CacheIterateCodec {
     //hex: 0x130E00
     public static final int REQUEST_MESSAGE_TYPE = 1248768;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Applies the aggregation logic on all map entries and returns the result
  */
 @SuppressWarnings("unused")
-@Generated("b3036fe4031b5305431e3fbda15d3c5a")
+@Generated("a7b002e955e82a19fc097fe30cca65ae")
 public final class MapAggregateCodec {
     //hex: 0x013900
     public static final int REQUEST_MESSAGE_TYPE = 80128;

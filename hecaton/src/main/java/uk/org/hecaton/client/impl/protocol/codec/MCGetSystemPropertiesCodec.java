@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets the system properties of the member it's called on.
  */
 @SuppressWarnings("unused")
-@Generated("4fc211567f7d8e193e54bc7e7f763145")
+@Generated("833c248e21038710d332612b59b2282c")
 public final class MCGetSystemPropertiesCodec {
     //hex: 0x200A00
     public static final int REQUEST_MESSAGE_TYPE = 2099712;

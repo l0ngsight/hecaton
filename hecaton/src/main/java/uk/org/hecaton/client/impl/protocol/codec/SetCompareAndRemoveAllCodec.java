@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * asymmetric set difference of the two sets.
  */
 @SuppressWarnings("unused")
-@Generated("9ac3f801986391af715a0ccde7cd22a8")
+@Generated("294acae7f33aab99fd9cef228312de46")
 public final class SetCompareAndRemoveAllCodec {
     //hex: 0x060700
     public static final int REQUEST_MESSAGE_TYPE = 395008;

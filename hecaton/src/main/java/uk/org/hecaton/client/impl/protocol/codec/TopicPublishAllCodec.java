@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Publishes all messages to all subscribers of this topic
  */
 @SuppressWarnings("unused")
-@Generated("5adfe42a4f7c71e696a8dc7aed766ec2")
+@Generated("f492109056ff415a57131532f34dabd7")
 public final class TopicPublishAllCodec {
     //hex: 0x040400
     public static final int REQUEST_MESSAGE_TYPE = 263168;

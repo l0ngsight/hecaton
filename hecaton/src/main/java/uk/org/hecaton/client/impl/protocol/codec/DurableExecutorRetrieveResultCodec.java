@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Retrieves the result of the execution with the given sequence
  */
 @SuppressWarnings("unused")
-@Generated("8a6bab4f62f94f17e4f3938f88287052")
+@Generated("d49f7a3b253cb08cae9db1b8ee72b8ef")
 public final class DurableExecutorRetrieveResultCodec {
     //hex: 0x180400
     public static final int REQUEST_MESSAGE_TYPE = 1573888;

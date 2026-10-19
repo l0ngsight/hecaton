@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * as if the Hecaton cluster is starting up initially.
  */
 @SuppressWarnings("unused")
-@Generated("0e504824f2560d0fa036171e97b17214")
+@Generated("9aaeedf75236551d02d754257c8052ee")
 public final class MCResetCPSubsystemCodec {
     //hex: 0x201C00
     public static final int REQUEST_MESSAGE_TYPE = 2104320;

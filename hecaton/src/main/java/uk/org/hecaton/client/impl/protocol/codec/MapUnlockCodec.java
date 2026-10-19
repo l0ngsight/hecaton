@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * then ILLEGAL_MONITOR_STATE is thrown.
  */
 @SuppressWarnings("unused")
-@Generated("6b1cf9b9bae2415ea58b1cbdc74543d8")
+@Generated("821d2e3a890211f9b1706afc9a0a3913")
 public final class MapUnlockCodec {
     //hex: 0x011300
     public static final int REQUEST_MESSAGE_TYPE = 70400;

@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * member's internal queue.
  */
 @SuppressWarnings("unused")
-@Generated("324040ffd800cb4ce168a931fbacd22a")
+@Generated("2ae39724d8a80d355fb19df436316253")
 public final class MCPollMCEventsCodec {
     //hex: 0x201800
     public static final int REQUEST_MESSAGE_TYPE = 2103296;

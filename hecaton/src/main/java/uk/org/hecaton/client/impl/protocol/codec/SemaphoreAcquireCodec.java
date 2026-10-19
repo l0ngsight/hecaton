@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * and lies dormant until other threads release enough permits.
  */
 @SuppressWarnings("unused")
-@Generated("9a949496ab25fbbd46e2c9662d5567d0")
+@Generated("65e099855b3bcbfe27c1bc462596020d")
 public final class SemaphoreAcquireCodec {
     //hex: 0x0C0200
     public static final int REQUEST_MESSAGE_TYPE = 786944;

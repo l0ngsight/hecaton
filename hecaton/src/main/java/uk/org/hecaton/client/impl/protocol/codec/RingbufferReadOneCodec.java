@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * call is going to block. In the future we could add e.g. tryReadOne(long sequence, long timeout, TimeUnit unit).
  */
 @SuppressWarnings("unused")
-@Generated("30a99f248bfd8f2e0221d784783cd731")
+@Generated("41eeb8da7040dd2f4d0c72552e1af7e4")
 public final class RingbufferReadOneCodec {
     //hex: 0x170700
     public static final int REQUEST_MESSAGE_TYPE = 1509120;

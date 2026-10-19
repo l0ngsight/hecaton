@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Fetches a schema from the cluster with the given schemaId
  */
 @SuppressWarnings("unused")
-@Generated("79a1163d0359cbf4891a5f9b9123cffa")
+@Generated("540bd742e2a58080d1a94ac94ed02644")
 public final class ClientFetchSchemaCodec {
     //hex: 0x001400
     public static final int REQUEST_MESSAGE_TYPE = 5120;

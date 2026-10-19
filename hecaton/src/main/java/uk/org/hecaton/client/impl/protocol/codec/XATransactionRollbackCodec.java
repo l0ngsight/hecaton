@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Informs the member to roll back work done on behalf of a transaction.
  */
 @SuppressWarnings("unused")
-@Generated("839b0942cd9838b7d704b09c773eed6b")
+@Generated("2ad12b4c5e2e681437e50531160e4d86")
 public final class XATransactionRollbackCodec {
     //hex: 0x140700
     public static final int REQUEST_MESSAGE_TYPE = 1312512;

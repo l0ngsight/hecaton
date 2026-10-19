@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Registers a new CP membership listener.
  */
 @SuppressWarnings("unused")
-@Generated("252ec9c53a01256add488e03bc633c30")
+@Generated("1d91c9bbd5fcc3b6e055706a3467d7e8")
 public final class CPSubsystemAddMembershipListenerCodec {
     //hex: 0x220100
     public static final int REQUEST_MESSAGE_TYPE = 2228480;

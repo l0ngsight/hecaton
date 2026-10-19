@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Shuts down the member it's called on.
  */
 @SuppressWarnings("unused")
-@Generated("4902c864ec83b03ab06088cee348470e")
+@Generated("134b9f4c337ef5312f9593dca7a472bc")
 public final class MCShutdownMemberCodec {
     //hex: 0x200800
     public static final int REQUEST_MESSAGE_TYPE = 2099200;

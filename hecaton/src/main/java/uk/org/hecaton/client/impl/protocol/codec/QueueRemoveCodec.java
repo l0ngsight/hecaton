@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * if this queue is empty.
  */
 @SuppressWarnings("unused")
-@Generated("07ba07a2a0f81472bd9b4b3359c86ebf")
+@Generated("b95bc0c9937fc1f4d8110e06bc0a68be")
 public final class QueueRemoveCodec {
     //hex: 0x030400
     public static final int REQUEST_MESSAGE_TYPE = 197632;

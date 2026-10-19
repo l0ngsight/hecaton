@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Checks whether a task as identified from the given handler is already cancelled.
  */
 @SuppressWarnings("unused")
-@Generated("172fa326d2cc900afaeb8bd1151cf095")
+@Generated("bd13f0a40846202669a00287a162bafa")
 public final class ScheduledExecutorIsCancelledFromMemberCodec {
     //hex: 0x1A0C00
     public static final int REQUEST_MESSAGE_TYPE = 1707008;

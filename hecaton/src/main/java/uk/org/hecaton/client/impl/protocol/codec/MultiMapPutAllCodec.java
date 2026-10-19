@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * operation is in progress.
  */
 @SuppressWarnings("unused")
-@Generated("37782a1108bcb8e46da0b388da083bb3")
+@Generated("351b15563ef80aab0f753cce0d2423e4")
 public final class MultiMapPutAllCodec {
     //hex: 0x021700
     public static final int REQUEST_MESSAGE_TYPE = 136960;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Creates a transaction with the given parameters.
  */
 @SuppressWarnings("unused")
-@Generated("770e038fca00aa20fd37731d87cad773")
+@Generated("62b2fa927ab8b74f5743eb39a1d41428")
 public final class TransactionCreateCodec {
     //hex: 0x150200
     public static final int REQUEST_MESSAGE_TYPE = 1376768;

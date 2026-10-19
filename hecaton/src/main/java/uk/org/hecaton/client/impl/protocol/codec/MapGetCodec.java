@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * value in the map. You should put the modified value back to make changes visible to all nodes.
  */
 @SuppressWarnings("unused")
-@Generated("a17333f0bccfd0fe0211f407b4cefea3")
+@Generated("789887b3d201d7be26297bab20819edc")
 public final class MapGetCodec {
     //hex: 0x010200
     public static final int REQUEST_MESSAGE_TYPE = 66048;

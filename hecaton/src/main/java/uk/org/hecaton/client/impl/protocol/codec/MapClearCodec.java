@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * To clear a map without calling MapStore#deleteAll, use #evictAll.
  */
 @SuppressWarnings("unused")
-@Generated("6a6ab4cf333dc899d935e928df61979e")
+@Generated("878bfb612d8a0d8c8edfb16a7c6244f9")
 public final class MapClearCodec {
     //hex: 0x012D00
     public static final int REQUEST_MESSAGE_TYPE = 77056;

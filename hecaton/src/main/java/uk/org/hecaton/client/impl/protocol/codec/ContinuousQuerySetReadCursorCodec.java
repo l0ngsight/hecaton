@@ -49,7 +49,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * possible.
  */
 @SuppressWarnings("unused")
-@Generated("771137b17e7920a552653e3ee4feebe6")
+@Generated("62b83073ae374ce806a95687563b7d76")
 public final class ContinuousQuerySetReadCursorCodec {
     //hex: 0x160500
     public static final int REQUEST_MESSAGE_TYPE = 1443072;

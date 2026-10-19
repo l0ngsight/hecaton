@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * the case that another thread is about to insert or remove an element.
  */
 @SuppressWarnings("unused")
-@Generated("1a57e45d29de87bbba5d24d2e8506aec")
+@Generated("8b1be238dd811a613880feab0b35f31d")
 public final class QueueRemainingCapacityCodec {
     //hex: 0x031300
     public static final int REQUEST_MESSAGE_TYPE = 201472;

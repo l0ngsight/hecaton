@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * to the left (subtracts one from their indices). Returns the element that was removed from the list.
  */
 @SuppressWarnings("unused")
-@Generated("dea8054e824f1750ec17eacf2347a3d1")
+@Generated("e8b1cbf07b439ea7a8f4b33c13decb30")
 public final class ListRemoveWithIndexCodec {
     //hex: 0x051200
     public static final int REQUEST_MESSAGE_TYPE = 332288;

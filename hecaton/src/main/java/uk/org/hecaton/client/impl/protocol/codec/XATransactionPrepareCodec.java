@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Ask a member to prepare for a transaction commit of the transaction specified in xid.
  */
 @SuppressWarnings("unused")
-@Generated("0adcb9e88c311c4c5f27a38618cd6a32")
+@Generated("1f521f980789791b75f98210f7e72629")
 public final class XATransactionPrepareCodec {
     //hex: 0x140600
     public static final int REQUEST_MESSAGE_TYPE = 1312256;

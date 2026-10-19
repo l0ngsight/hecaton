@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * oldest and newest event in the journal.
  */
 @SuppressWarnings("unused")
-@Generated("7120c72da884ceaea6fa1e1a0adf4bf0")
+@Generated("c0bc8c3d7de8761aef4abb685252ba59")
 public final class CacheEventJournalSubscribeCodec {
     //hex: 0x131F00
     public static final int REQUEST_MESSAGE_TYPE = 1253120;

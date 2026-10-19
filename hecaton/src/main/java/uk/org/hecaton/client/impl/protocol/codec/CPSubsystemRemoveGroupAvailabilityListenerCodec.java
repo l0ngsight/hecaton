@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Deregisters CP availability listener.
  */
 @SuppressWarnings("unused")
-@Generated("fdc8bb2ad6f7d68bd8afafa2d986d01e")
+@Generated("587a403d95361a819866f22547a188b6")
 public final class CPSubsystemRemoveGroupAvailabilityListenerCodec {
     //hex: 0x220400
     public static final int REQUEST_MESSAGE_TYPE = 2229248;

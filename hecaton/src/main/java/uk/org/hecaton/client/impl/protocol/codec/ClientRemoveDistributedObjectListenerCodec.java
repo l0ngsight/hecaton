@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * change in the cluster and returns false.
  */
 @SuppressWarnings("unused")
-@Generated("0e9bb023713afc6bdabab640762849a6")
+@Generated("c5f8860d60358b4e472c90defc4227b7")
 public final class ClientRemoveDistributedObjectListenerCodec {
     //hex: 0x000A00
     public static final int REQUEST_MESSAGE_TYPE = 2560;

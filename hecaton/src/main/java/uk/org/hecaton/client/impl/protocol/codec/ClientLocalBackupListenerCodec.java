@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds listener for backup acks
  */
 @SuppressWarnings("unused")
-@Generated("8f118bfce4e68d776d8675cb4e6ddbfb")
+@Generated("2e01e8cbb2e6ce67fe28b5fd7c785d64")
 public final class ClientLocalBackupListenerCodec {
     //hex: 0x000F00
     public static final int REQUEST_MESSAGE_TYPE = 3840;

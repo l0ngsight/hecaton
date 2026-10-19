@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Triggers hot restart backup
  */
 @SuppressWarnings("unused")
-@Generated("7ff6d267f650e40fc423f539376284e7")
+@Generated("695ed688dc3ed02d8d069e3bd08fff12")
 public final class MCTriggerHotRestartBackupCodec {
     //hex: 0x201F00
     public static final int REQUEST_MESSAGE_TYPE = 2105088;

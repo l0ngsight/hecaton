@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * thus the put operation is not successful.
  */
 @SuppressWarnings("unused")
-@Generated("e5ac5aa8792b65c08c3197d291574dff")
+@Generated("bcd3ae4c40286ad9e16dba9451746b13")
 public final class MapTryPutCodec {
     //hex: 0x010C00
     public static final int REQUEST_MESSAGE_TYPE = 68608;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets the diagnostics configuration from the member.
  */
 @SuppressWarnings("unused")
-@Generated("dfc8ea8b4e7aaad6fd879c70130c81d5")
+@Generated("65453b7e03ae6d046d33cbb64f45989e")
 public final class MCGetDiagnosticsConfigCodec {
     //hex: 0x202800
     public static final int REQUEST_MESSAGE_TYPE = 2107392;

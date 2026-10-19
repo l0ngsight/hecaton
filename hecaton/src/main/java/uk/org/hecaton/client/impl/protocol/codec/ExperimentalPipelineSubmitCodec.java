@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * The message is used to transfer the declarative pipeline definition and the related resource files from client to the server.
  */
 @SuppressWarnings("unused")
-@Generated("0dfb6da59c31e5de80ae2b23f62cc0e5")
+@Generated("dc49eb56d609819c5b918c52e863d655")
 public final class ExperimentalPipelineSubmitCodec {
     //hex: 0xFD0100
     public static final int REQUEST_MESSAGE_TYPE = 16580864;

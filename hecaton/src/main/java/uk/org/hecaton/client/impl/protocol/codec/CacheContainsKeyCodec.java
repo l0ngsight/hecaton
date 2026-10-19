@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * cache contains a mapping for a key k such that key.equals(k). (There can be at most one such mapping.)
  */
 @SuppressWarnings("unused")
-@Generated("4e8a9daa80b94fca847ffe57d03119c1")
+@Generated("a77466da322296a48ddc47fa7fd3cfdc")
 public final class CacheContainsKeyCodec {
     //hex: 0x130500
     public static final int REQUEST_MESSAGE_TYPE = 1246464;

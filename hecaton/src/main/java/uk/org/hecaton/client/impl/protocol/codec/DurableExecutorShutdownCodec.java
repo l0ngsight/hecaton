@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Invocation has no additional effect if already shut down.
  */
 @SuppressWarnings("unused")
-@Generated("40375bac0e03d63b1874c25fff71fdd0")
+@Generated("4254f4554bbd089d4c3e620e84906a43")
 public final class DurableExecutorShutdownCodec {
     //hex: 0x180100
     public static final int REQUEST_MESSAGE_TYPE = 1573120;

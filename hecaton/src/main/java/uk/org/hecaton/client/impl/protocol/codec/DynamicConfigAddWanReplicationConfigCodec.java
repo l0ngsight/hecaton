@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a WAN replication configuration.
  */
 @SuppressWarnings("unused")
-@Generated("ec696dda621f436d2739b1b6c550fc88")
+@Generated("10a0666a13ad4c2e92a99c3fabb192cc")
 public final class DynamicConfigAddWanReplicationConfigCodec {
     //hex: 0x1B1200
     public static final int REQUEST_MESSAGE_TYPE = 1774080;

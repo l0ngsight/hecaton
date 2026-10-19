@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Changes the state of a cluster.
  */
 @SuppressWarnings("unused")
-@Generated("685d38b46291112d6fb49d60bc70ce4f")
+@Generated("9ec4759648932418d1fd42327b5b35a4")
 public final class MCChangeClusterStateCodec {
     //hex: 0x200200
     public static final int REQUEST_MESSAGE_TYPE = 2097664;

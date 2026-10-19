@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes all the entries with the given key.
  */
 @SuppressWarnings("unused")
-@Generated("56f8e0da827dc77948209fdf75d974cd")
+@Generated("0e60a8c85e8fe32dfc464ae3366d5d74")
 public final class MultiMapDeleteCodec {
     //hex: 0x021600
     public static final int REQUEST_MESSAGE_TYPE = 136704;

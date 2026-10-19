@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * of these request messages for filling a request for a key set if the keys belong to different partitions.
  */
 @SuppressWarnings("unused")
-@Generated("fc33969b705107dba02c344d6440d7ba")
+@Generated("ff2447e8bc4b1a3eacd50916085df272")
 public final class ReplicatedMapPutAllWithMetadataCodec {
     //hex: 0x0D1300
     public static final int REQUEST_MESSAGE_TYPE = 856832;

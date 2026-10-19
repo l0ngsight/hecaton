@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns statistics of the task
  */
 @SuppressWarnings("unused")
-@Generated("6f232795b06bb84ab0bb028c74e1718a")
+@Generated("c35903612b27851d5083e6752c37f469")
 public final class ScheduledExecutorGetStatsFromPartitionCodec {
     //hex: 0x1A0500
     public static final int REQUEST_MESSAGE_TYPE = 1705216;

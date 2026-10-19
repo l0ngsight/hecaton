@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * intersection of the two sets.
  */
 @SuppressWarnings("unused")
-@Generated("b5465dad9a21c8c42241fa7ca642048f")
+@Generated("2a08148217c400ae3a7ae37d63719238")
 public final class SetCompareAndRetainAllCodec {
     //hex: 0x060800
     public static final int REQUEST_MESSAGE_TYPE = 395264;

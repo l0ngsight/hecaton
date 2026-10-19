@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns current lock ownership status of the given FencedLock instance.
  */
 @SuppressWarnings("unused")
-@Generated("258a42f7bea1e73eb5ed96bc90c0635f")
+@Generated("7115fd39e6a2fc20eaedea9b46bcd7fe")
 public final class FencedLockGetLockOwnershipCodec {
     //hex: 0x070400
     public static final int REQUEST_MESSAGE_TYPE = 459776;

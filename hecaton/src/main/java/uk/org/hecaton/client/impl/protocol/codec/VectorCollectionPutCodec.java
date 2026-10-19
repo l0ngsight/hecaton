@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Puts a document into the Vector Collection.
  */
 @SuppressWarnings("unused")
-@Generated("bcd82b9be5cae9c7664f20460bb6e59a")
+@Generated("199e5476812bd2b675c252b2bd3b6043")
 public final class VectorCollectionPutCodec {
     //hex: 0x240100
     public static final int REQUEST_MESSAGE_TYPE = 2359552;

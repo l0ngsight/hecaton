@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a user code namespace configuration.
  */
 @SuppressWarnings("unused")
-@Generated("c52becf5e6e8276dddbbc6bdea8b3317")
+@Generated("117c9731f46badc16465a6e6ce53a450")
 public final class DynamicConfigAddUserCodeNamespaceConfigCodec {
     //hex: 0x1B1300
     public static final int REQUEST_MESSAGE_TYPE = 1774336;

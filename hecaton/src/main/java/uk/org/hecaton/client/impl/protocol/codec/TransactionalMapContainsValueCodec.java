@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns true if this map contains an entry for the specified value.
  */
 @SuppressWarnings("unused")
-@Generated("7285a169d30abe10bc71516714b7ab58")
+@Generated("95af0c217a91d8a15f82907d6a12d161")
 public final class TransactionalMapContainsValueCodec {
     //hex: 0x0E1200
     public static final int REQUEST_MESSAGE_TYPE = 922112;

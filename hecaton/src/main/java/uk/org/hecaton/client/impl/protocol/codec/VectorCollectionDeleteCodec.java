@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes the mapping for a key from this VectorCollection without returning previous value.
  */
 @SuppressWarnings("unused")
-@Generated("f4222ec865708b90b1b55daf2a89478e")
+@Generated("aa7f42ee4b9db9c5ce5477f9d2c5d5fb")
 public final class VectorCollectionDeleteCodec {
     //hex: 0x240700
     public static final int REQUEST_MESSAGE_TYPE = 2361088;

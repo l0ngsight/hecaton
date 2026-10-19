@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Applies a function on the value
  */
 @SuppressWarnings("unused")
-@Generated("4b94d42c9dbd9dd694641f2083a79b9e")
+@Generated("d663ab44627e616ebdea94522dad1368")
 public final class AtomicRefApplyCodec {
     //hex: 0x0A0100
     public static final int REQUEST_MESSAGE_TYPE = 655616;

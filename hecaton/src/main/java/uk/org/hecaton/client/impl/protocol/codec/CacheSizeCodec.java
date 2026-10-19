@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Total entry count
  */
 @SuppressWarnings("unused")
-@Generated("46fc4db304e09e5e9e6e4af27ac70998")
+@Generated("9d741b1e1512c57a82d496edb81f4147")
 public final class CacheSizeCodec {
     //hex: 0x131800
     public static final int REQUEST_MESSAGE_TYPE = 1251328;

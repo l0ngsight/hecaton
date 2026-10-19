@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * The initial value of the tail is -1.
  */
 @SuppressWarnings("unused")
-@Generated("5ba5069dce421ed4bcf88a438522b184")
+@Generated("0a7b4f5deddc14d9e555e06ecbe7719d")
 public final class RingbufferTailSequenceCodec {
     //hex: 0x170200
     public static final int REQUEST_MESSAGE_TYPE = 1507840;

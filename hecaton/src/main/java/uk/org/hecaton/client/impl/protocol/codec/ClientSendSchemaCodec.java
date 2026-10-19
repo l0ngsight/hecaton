@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Sends a schema to cluster
  */
 @SuppressWarnings("unused")
-@Generated("513a7583bbc89bf784368419007a51e5")
+@Generated("88a752bcb3af204a5d83cafbf3dd82c9")
 public final class ClientSendSchemaCodec {
     //hex: 0x001300
     public static final int REQUEST_MESSAGE_TYPE = 4864;

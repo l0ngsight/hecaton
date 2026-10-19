@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Creates a new CP group with the given name
  */
 @SuppressWarnings("unused")
-@Generated("bda48d691ba73096afdd7d825dab562b")
+@Generated("0dd37cc992d70214cd35146152ccdce3")
 public final class CPGroupCreateCPGroupCodec {
     //hex: 0x1E0100
     public static final int REQUEST_MESSAGE_TYPE = 1966336;

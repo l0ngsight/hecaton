@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the number of values that match the given key in the multimap.
  */
 @SuppressWarnings("unused")
-@Generated("3377d6e965dcc3aa3bb992ae2362eb4d")
+@Generated("5a0ffbcf78af1bfd1864e82d6f037666")
 public final class MultiMapValueCountCodec {
     //hex: 0x020C00
     public static final int REQUEST_MESSAGE_TYPE = 134144;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds an index to this map with specified configuration.
  */
 @SuppressWarnings("unused")
-@Generated("de3aade448e8a89ef3f1ea720eebdd6c")
+@Generated("6affe5e05dcdba3674241a56971db1bc")
 public final class MapAddIndexCodec {
     //hex: 0x012900
     public static final int REQUEST_MESSAGE_TYPE = 76032;

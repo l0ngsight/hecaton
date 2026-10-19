@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Note that Partition based operations triggers this automatically
  */
 @SuppressWarnings("unused")
-@Generated("67b738e3730b4da9349b0683ffee2512")
+@Generated("abffd8598f4bc8b229872dc379e19615")
 public final class ClientTriggerPartitionAssignmentCodec {
     //hex: 0x001000
     public static final int REQUEST_MESSAGE_TYPE = 4096;

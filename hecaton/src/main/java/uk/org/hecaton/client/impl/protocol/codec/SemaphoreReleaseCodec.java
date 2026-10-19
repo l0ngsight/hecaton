@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * available permits by that amount.
  */
 @SuppressWarnings("unused")
-@Generated("7e4d52f2eaac2274d289a0b6a9aaa95c")
+@Generated("8f8728630263af7fb9e83f0385b20b4a")
 public final class SemaphoreReleaseCodec {
     //hex: 0x0C0300
     public static final int REQUEST_MESSAGE_TYPE = 787200;

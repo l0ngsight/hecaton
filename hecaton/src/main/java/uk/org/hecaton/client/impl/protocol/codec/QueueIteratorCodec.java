@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * the elements are returned (unless this collection is an instance of some class that provides a guarantee).
  */
 @SuppressWarnings("unused")
-@Generated("7dd3399be261bfbaac700bca0084a6a6")
+@Generated("795df272581a429a782f7ff2ea1eab9f")
 public final class QueueIteratorCodec {
     //hex: 0x030800
     public static final int REQUEST_MESSAGE_TYPE = 198656;

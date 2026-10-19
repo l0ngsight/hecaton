@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Stop, pause or resume WAN replication for the given WAN replication and publisher
  */
 @SuppressWarnings("unused")
-@Generated("b88e11f95530059019cb12b850be55cf")
+@Generated("fcb5a5b3d728caf80b24df4415c2325c")
 public final class MCChangeWanReplicationStateCodec {
     //hex: 0x201300
     public static final int REQUEST_MESSAGE_TYPE = 2102016;

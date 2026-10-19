@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * CP group.
  */
 @SuppressWarnings("unused")
-@Generated("94464a400875589baaf3484e68ed0240")
+@Generated("5a05dec6d8060d75e3c32efebe3f0211")
 public final class CPSessionGenerateThreadIdCodec {
     //hex: 0x1F0400
     public static final int REQUEST_MESSAGE_TYPE = 2032640;

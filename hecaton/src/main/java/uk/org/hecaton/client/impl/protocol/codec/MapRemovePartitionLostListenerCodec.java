@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * change in the cluster and returns false.
  */
 @SuppressWarnings("unused")
-@Generated("987df9523dfd0f10daadcacf5379d1e3")
+@Generated("210f9f462af1423d4cd4f4c1e04a75cc")
 public final class MapRemovePartitionLostListenerCodec {
     //hex: 0x011C00
     public static final int REQUEST_MESSAGE_TYPE = 72704;

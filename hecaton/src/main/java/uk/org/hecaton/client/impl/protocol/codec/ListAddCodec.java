@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * clearly specify in their documentation any restrictions on what elements may be added.
  */
 @SuppressWarnings("unused")
-@Generated("f2672e183ae5c546d2ba4548a9a8a765")
+@Generated("540a8daf4af086416970b5328a0b7907")
 public final class ListAddCodec {
     //hex: 0x050400
     public static final int REQUEST_MESSAGE_TYPE = 328704;

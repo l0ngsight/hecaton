@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Derives CREATE MAPPING SQL.
  */
 @SuppressWarnings("unused")
-@Generated("4bf1c99add69f9e03194618e2431dd65")
+@Generated("94e6be8999a57bf2f7467a2e11d01009")
 public final class SqlMappingDdlCodec {
     //hex: 0x210600
     public static final int REQUEST_MESSAGE_TYPE = 2164224;

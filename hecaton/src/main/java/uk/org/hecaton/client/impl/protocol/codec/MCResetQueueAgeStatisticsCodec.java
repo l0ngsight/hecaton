@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Resets the max-age, min-age and average-age metrics of the queue
  */
 @SuppressWarnings("unused")
-@Generated("7482bf2a9afadbf2a7e03ca458b5a15a")
+@Generated("8d1938adf98d10484fbd9bc2981368b9")
 public final class MCResetQueueAgeStatisticsCodec {
     //hex: 0x202100
     public static final int REQUEST_MESSAGE_TYPE = 2105600;

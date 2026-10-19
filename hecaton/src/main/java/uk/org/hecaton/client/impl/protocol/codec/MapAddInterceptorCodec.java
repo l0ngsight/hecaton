@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * and execute user defined methods and will cancel operations if user defined method throw exception.
  */
 @SuppressWarnings("unused")
-@Generated("e8977dc8ee37f5f23802bc9990469bc8")
+@Generated("fd5156bde4fd788b8d5a03da609dda8b")
 public final class MapAddInterceptorCodec {
     //hex: 0x011400
     public static final int REQUEST_MESSAGE_TYPE = 70656;

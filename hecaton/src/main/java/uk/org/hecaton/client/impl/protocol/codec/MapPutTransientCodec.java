@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * If ttl is 0, then the entry lives forever.
  */
 @SuppressWarnings("unused")
-@Generated("2bcae313ae855c09026c7a220d6f37dc")
+@Generated("ef7d856bcf46380243f197f635f109d9")
 public final class MapPutTransientCodec {
     //hex: 0x010D00
     public static final int REQUEST_MESSAGE_TYPE = 68864;

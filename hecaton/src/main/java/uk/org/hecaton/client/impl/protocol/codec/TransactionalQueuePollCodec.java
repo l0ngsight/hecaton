@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * to become available.
  */
 @SuppressWarnings("unused")
-@Generated("63bb7936bcd1f3578d103c68071c4fb2")
+@Generated("ad981ba29f47cba546924453f29290bb")
 public final class TransactionalQueuePollCodec {
     //hex: 0x120300
     public static final int REQUEST_MESSAGE_TYPE = 1180416;

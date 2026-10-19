@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * use to feed hash values into the estimator.
  */
 @SuppressWarnings("unused")
-@Generated("1909223f68444d5363349c01d01dfd2a")
+@Generated("a03bfad8de2da752b8036d6c8dcb4848")
 public final class CardinalityEstimatorAddCodec {
     //hex: 0x190100
     public static final int REQUEST_MESSAGE_TYPE = 1638656;

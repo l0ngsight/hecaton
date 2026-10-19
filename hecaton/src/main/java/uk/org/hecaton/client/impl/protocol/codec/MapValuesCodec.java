@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * if query result size limit is configured.
  */
 @SuppressWarnings("unused")
-@Generated("9f1d54d7ce995951ee6298ab58259dc1")
+@Generated("c53d7ebd96e056068c60c1dadf17d4bc")
 public final class MapValuesCodec {
     //hex: 0x012400
     public static final int REQUEST_MESSAGE_TYPE = 74752;

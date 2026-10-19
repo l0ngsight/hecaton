@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns true if this list contained the specified element (or equivalently, if this list changed as a result of the call).
  */
 @SuppressWarnings("unused")
-@Generated("6e0fe9fb432caadc3d8b07e03e291925")
+@Generated("ba1f0e2e462d83ec0d2f25ab530c1e8e")
 public final class ListRemoveCodec {
     //hex: 0x050500
     public static final int REQUEST_MESSAGE_TYPE = 328960;

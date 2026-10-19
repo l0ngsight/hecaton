@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * currently at that position (if any) and any subsequent elements to the right (adds one to their indices).
  */
 @SuppressWarnings("unused")
-@Generated("84c918caca4ec5ddf260d7c825d6abbf")
+@Generated("0bce59922ef40de88796f8a3324865c2")
 public final class ListAddWithIndexCodec {
     //hex: 0x051100
     public static final int REQUEST_MESSAGE_TYPE = 332032;

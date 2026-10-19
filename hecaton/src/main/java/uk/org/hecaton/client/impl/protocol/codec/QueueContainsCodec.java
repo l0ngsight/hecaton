@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * contains at least one element e such that value.equals(e)
  */
 @SuppressWarnings("unused")
-@Generated("36f2a033eac0b0457a4c514c4e15d837")
+@Generated("61424a34f6f0d3856065674a4b5388b5")
 public final class QueueContainsCodec {
     //hex: 0x030B00
     public static final int REQUEST_MESSAGE_TYPE = 199424;

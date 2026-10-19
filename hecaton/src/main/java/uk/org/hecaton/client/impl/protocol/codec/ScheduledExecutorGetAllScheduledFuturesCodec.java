@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns all scheduled tasks in for a given scheduler in the given member.
  */
 @SuppressWarnings("unused")
-@Generated("319b398128419e61bebae0b4acebfbe4")
+@Generated("80a39e4078da0b4b051c900b1043dc03")
 public final class ScheduledExecutorGetAllScheduledFuturesCodec {
     //hex: 0x1A0400
     public static final int REQUEST_MESSAGE_TYPE = 1704960;

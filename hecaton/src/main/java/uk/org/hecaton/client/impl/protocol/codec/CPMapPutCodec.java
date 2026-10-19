@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Puts the key-value into the specified map.
  */
 @SuppressWarnings("unused")
-@Generated("d0a10aaec2817652aaeb76ff5dd2d204")
+@Generated("e9a934904e257fbcf1c422e3fa2bf2cb")
 public final class CPMapPutCodec {
     //hex: 0x230200
     public static final int REQUEST_MESSAGE_TYPE = 2294272;

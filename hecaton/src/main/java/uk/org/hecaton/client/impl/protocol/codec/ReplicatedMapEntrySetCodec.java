@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets a lazy set view of the mappings contained in this map.
  */
 @SuppressWarnings("unused")
-@Generated("63bfc93ab62d78dfcf6acadd210d949f")
+@Generated("ec22093e67f211ab61a5ca164aa7f485")
 public final class ReplicatedMapEntrySetCodec {
     //hex: 0x0D1100
     public static final int REQUEST_MESSAGE_TYPE = 856320;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Puts an entry into this map if the specified key is not already associated with a value.
  */
 @SuppressWarnings("unused")
-@Generated("28e69570864a211c18677a19e980731c")
+@Generated("448df19a2dcdb8b13571c785c67739c2")
 public final class VectorCollectionPutIfAbsentCodec {
     //hex: 0x240200
     public static final int REQUEST_MESSAGE_TYPE = 2359808;

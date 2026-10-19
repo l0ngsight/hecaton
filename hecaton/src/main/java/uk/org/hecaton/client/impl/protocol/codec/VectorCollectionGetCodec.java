@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the VectorDocument for the given key.
  */
 @SuppressWarnings("unused")
-@Generated("19d5ee7628d4b1bd26e7ce8dcc8b5ab7")
+@Generated("c7c8ba81276a6271757557172e33ec6e")
 public final class VectorCollectionGetCodec {
     //hex: 0x240400
     public static final int REQUEST_MESSAGE_TYPE = 2360320;

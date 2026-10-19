@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * also a set, this method returns true if it is a subset of this set.
  */
 @SuppressWarnings("unused")
-@Generated("afb14f248dea8eb7722599b85c35ea4d")
+@Generated("51ad8bf847d81a94772095ce253ff515")
 public final class SetContainsAllCodec {
     //hex: 0x060300
     public static final int REQUEST_MESSAGE_TYPE = 393984;

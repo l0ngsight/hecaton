@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Add a new WAN batch publisher configuration
  */
 @SuppressWarnings("unused")
-@Generated("f3548db2cd50be4e690720bebbaf7665")
+@Generated("4ba967434598ab2e01a251033b453ad1")
 public final class MCAddWanBatchPublisherConfigCodec {
     //hex: 0x201500
     public static final int REQUEST_MESSAGE_TYPE = 2102528;

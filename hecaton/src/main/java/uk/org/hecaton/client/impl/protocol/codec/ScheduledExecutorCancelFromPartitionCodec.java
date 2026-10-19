@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Cancels further execution and scheduling of the task
  */
 @SuppressWarnings("unused")
-@Generated("65c5dcfa8a51386f20dddfe3f7518430")
+@Generated("638fb922abe3b46c874ca9c8503d0353")
 public final class ScheduledExecutorCancelFromPartitionCodec {
     //hex: 0x1A0900
     public static final int REQUEST_MESSAGE_TYPE = 1706240;

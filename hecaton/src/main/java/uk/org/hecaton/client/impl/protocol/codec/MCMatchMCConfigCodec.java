@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Checks if local MC config (client filter list) has the same ETag as provided.
  */
 @SuppressWarnings("unused")
-@Generated("a6728e90e25f15f9bd08329c930b037f")
+@Generated("84e9662cf8e533d99098f3b680022756")
 public final class MCMatchMCConfigCodec {
     //hex: 0x200C00
     public static final int REQUEST_MESSAGE_TYPE = 2100224;

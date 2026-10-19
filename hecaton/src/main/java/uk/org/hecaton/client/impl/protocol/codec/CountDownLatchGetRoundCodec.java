@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * reaches to 0 and a new round starts afterwards.
  */
 @SuppressWarnings("unused")
-@Generated("6a654c56a5d29c2d78d9328f5b2b4b22")
+@Generated("b53893eb005d57c4678c7e744f838674")
 public final class CountDownLatchGetRoundCodec {
     //hex: 0x0B0500
     public static final int REQUEST_MESSAGE_TYPE = 722176;

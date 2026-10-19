@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Loads all the keys into the CacheRecordStore in batch.
  */
 @SuppressWarnings("unused")
-@Generated("4da969b0a85c51b80455259db6b133ba")
+@Generated("b785147984d19eb481085bf77e6d44f8")
 public final class CacheLoadAllCodec {
     //hex: 0x131000
     public static final int REQUEST_MESSAGE_TYPE = 1249280;

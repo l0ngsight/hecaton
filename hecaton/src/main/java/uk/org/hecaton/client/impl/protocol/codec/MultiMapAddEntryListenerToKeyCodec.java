@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * add/remove/update/evict events for the specified key only.
  */
 @SuppressWarnings("unused")
-@Generated("86102eda43f4af48480dcc53796f0678")
+@Generated("c499488de69ca73226f3d296bc9c78c9")
 public final class MultiMapAddEntryListenerToKeyCodec {
     //hex: 0x020D00
     public static final int REQUEST_MESSAGE_TYPE = 134400;

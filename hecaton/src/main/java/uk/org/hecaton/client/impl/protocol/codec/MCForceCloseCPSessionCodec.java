@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Closes the given session forcefully on the given CP group.
  */
 @SuppressWarnings("unused")
-@Generated("775a9b5ba88cfec07ec4b92cd9f053d2")
+@Generated("57f484441f3b278f04d8b10e0c0f63c4")
 public final class MCForceCloseCPSessionCodec {
     //hex: 0x202400
     public static final int REQUEST_MESSAGE_TYPE = 2106368;

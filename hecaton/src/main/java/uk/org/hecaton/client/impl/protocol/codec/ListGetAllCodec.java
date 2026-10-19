@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Return the all elements of this collection
  */
 @SuppressWarnings("unused")
-@Generated("127ea17969f3484b81f0a0496ff7ceda")
+@Generated("94497972d8e23f5517890177ef418d0f")
 public final class ListGetAllCodec {
     //hex: 0x050A00
     public static final int REQUEST_MESSAGE_TYPE = 330240;

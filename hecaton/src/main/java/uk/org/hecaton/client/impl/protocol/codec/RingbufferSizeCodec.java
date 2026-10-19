@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * head completed the first looparound the ring. This is because no items are getting retired.
  */
 @SuppressWarnings("unused")
-@Generated("77626f61bc9c1a8a5c42b7ab14667251")
+@Generated("306db05e0a4521ef6c84c0994ef49a08")
 public final class RingbufferSizeCodec {
     //hex: 0x170100
     public static final int REQUEST_MESSAGE_TYPE = 1507584;

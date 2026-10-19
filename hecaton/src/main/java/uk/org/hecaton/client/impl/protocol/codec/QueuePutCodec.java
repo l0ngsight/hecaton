@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Inserts the specified element into this queue, waiting if necessary for space to become available.
  */
 @SuppressWarnings("unused")
-@Generated("8c85b1375ee06464a64eb7129cf9dd5b")
+@Generated("bc727358869d74c1c18b4638f2e544b3")
 public final class QueuePutCodec {
     //hex: 0x030200
     public static final int REQUEST_MESSAGE_TYPE = 197120;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Submits the task to partition for execution
  */
 @SuppressWarnings("unused")
-@Generated("1e245a6f108c9f91b800c4b26ce8cb9e")
+@Generated("c32a53c1d24e4dc647203ae7460588df")
 public final class DurableExecutorSubmitToPartitionCodec {
     //hex: 0x180300
     public static final int REQUEST_MESSAGE_TYPE = 1573632;

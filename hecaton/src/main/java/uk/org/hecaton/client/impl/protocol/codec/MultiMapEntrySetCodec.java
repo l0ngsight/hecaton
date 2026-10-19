@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * are NOT reflected in the collection, and vice-versa
  */
 @SuppressWarnings("unused")
-@Generated("ff3083ef478736d6786418631d299509")
+@Generated("f94ab08991e77822c06e61a4b0f2f4a0")
 public final class MultiMapEntrySetCodec {
     //hex: 0x020600
     public static final int REQUEST_MESSAGE_TYPE = 132608;

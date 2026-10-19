@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * MessageListener is called. More than one message listener can be added on one instance.
  */
 @SuppressWarnings("unused")
-@Generated("d2020665d3c001f7197f096139034ed0")
+@Generated("699bc3513fb4a44da5ebbfb0846e7433")
 public final class TopicAddMessageListenerCodec {
     //hex: 0x040200
     public static final int REQUEST_MESSAGE_TYPE = 262656;

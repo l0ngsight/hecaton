@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets the value associated with the key in the specified map.
  */
 @SuppressWarnings("unused")
-@Generated("af475aca7262863c672790ab7155f579")
+@Generated("6d8715cb504c8ea6448eecb639c5efe4")
 public final class CPMapGetCodec {
     //hex: 0x230100
     public static final int REQUEST_MESSAGE_TYPE = 2294016;

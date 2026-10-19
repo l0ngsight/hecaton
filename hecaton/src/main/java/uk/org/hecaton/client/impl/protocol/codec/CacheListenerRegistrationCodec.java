@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * to the given member.
  */
 @SuppressWarnings("unused")
-@Generated("5f151702ab28a07b505b673af4d724ef")
+@Generated("d2f61a78f10bbb8da6a8520b69386842")
 public final class CacheListenerRegistrationCodec {
     //hex: 0x130F00
     public static final int REQUEST_MESSAGE_TYPE = 1249024;

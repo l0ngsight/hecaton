@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a CP Group view listener to a connection.
  */
 @SuppressWarnings("unused")
-@Generated("ed00e02a058458e1828cfc7b2790e706")
+@Generated("80b510e0055e300591635cadbf30060c")
 public final class ClientAddCPGroupViewListenerCodec {
     //hex: 0x001700
     public static final int REQUEST_MESSAGE_TYPE = 5888;

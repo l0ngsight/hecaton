@@ -56,7 +56,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Time resolution for TTL is seconds. The given TTL value is rounded to the next closest second value.
  */
 @SuppressWarnings("unused")
-@Generated("eb26c618dd9525670839f71145ac8508")
+@Generated("626961627c6bf67173feee724b455ba7")
 public final class MapSetTtlCodec {
     //hex: 0x014300
     public static final int REQUEST_MESSAGE_TYPE = 82688;

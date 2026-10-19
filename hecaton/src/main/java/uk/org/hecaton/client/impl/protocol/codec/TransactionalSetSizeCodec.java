@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the size of the set.
  */
 @SuppressWarnings("unused")
-@Generated("101a25be999b6456cf11a686a4eaded9")
+@Generated("2471bc68a37f6e3d9a4f95384fd1953b")
 public final class TransactionalSetSizeCodec {
     //hex: 0x100300
     public static final int REQUEST_MESSAGE_TYPE = 1049344;

@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * store the value of the key to any kind of external resource.
  */
 @SuppressWarnings("unused")
-@Generated("88eb21c47889fa4ee7dae87d17ce3792")
+@Generated("8c464fce012a40db160b85dbb8d6765d")
 public final class CacheGetAndReplaceCodec {
     //hex: 0x130B00
     public static final int REQUEST_MESSAGE_TYPE = 1248000;

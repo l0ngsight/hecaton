@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * have a RaftService.
  */
 @SuppressWarnings("unused")
-@Generated("69ddfb335aa25a530590419126e1a470")
+@Generated("11b406451f80595e06e9fcd94be9a6ae")
 public final class CPSubsystemGetCPGroupIdsCodec {
     //hex: 0x220500
     public static final int REQUEST_MESSAGE_TYPE = 2229504;

@@ -51,7 +51,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * message may act as a proxy.
  */
 @SuppressWarnings("unused")
-@Generated("a34126d8490852216f08c15365a79fe5")
+@Generated("2705724f3ed187c9bb2b28af1e37b15d")
 public final class PNCounterGetCodec {
     //hex: 0x1D0100
     public static final int REQUEST_MESSAGE_TYPE = 1900800;

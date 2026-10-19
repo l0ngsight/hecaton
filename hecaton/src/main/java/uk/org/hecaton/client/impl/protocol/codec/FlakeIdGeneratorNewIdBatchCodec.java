@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Fetches a new batch of ids for the given flake id generator.
  */
 @SuppressWarnings("unused")
-@Generated("bd7070129652b1c90bf1a4d7e4c55bcd")
+@Generated("8f3d27dc1086d2387a158b447b529de5")
 public final class FlakeIdGeneratorNewIdBatchCodec {
     //hex: 0x1C0100
     public static final int REQUEST_MESSAGE_TYPE = 1835264;

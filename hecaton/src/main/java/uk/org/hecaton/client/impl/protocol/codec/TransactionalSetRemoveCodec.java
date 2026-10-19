@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Remove item from transactional set.
  */
 @SuppressWarnings("unused")
-@Generated("102d016d197da5965fe858ce94308d88")
+@Generated("60d07489b5e293b6db20ce4274938651")
 public final class TransactionalSetRemoveCodec {
     //hex: 0x100200
     public static final int REQUEST_MESSAGE_TYPE = 1049088;

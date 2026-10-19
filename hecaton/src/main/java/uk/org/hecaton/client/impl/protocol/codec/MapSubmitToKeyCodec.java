@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * operation of EntryProcessor.
  */
 @SuppressWarnings("unused")
-@Generated("e92c947a96b3c8d57412375e93793bde")
+@Generated("1a68606f19cb9aa6a8203d49810ad96c")
 public final class MapSubmitToKeyCodec {
     //hex: 0x012F00
     public static final int REQUEST_MESSAGE_TYPE = 77568;

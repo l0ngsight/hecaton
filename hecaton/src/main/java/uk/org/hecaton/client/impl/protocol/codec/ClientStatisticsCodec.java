@@ -203,7 +203,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * The metrics blob constructed this way is then gets ZLIB compressed.
  */
 @SuppressWarnings("unused")
-@Generated("92fe7f8fe89117ba1f79e57c008f4527")
+@Generated("c570db6bba989d6b8e283650a1673cdc")
 public final class ClientStatisticsCodec {
     //hex: 0x000C00
     public static final int REQUEST_MESSAGE_TYPE = 3072;

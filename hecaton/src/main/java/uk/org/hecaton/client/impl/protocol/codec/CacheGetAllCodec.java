@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * of external resource.
  */
 @SuppressWarnings("unused")
-@Generated("a094f12fabae74751c33d0f2c45dae0f")
+@Generated("ebc540d42e9272570a24f507c354a96b")
 public final class CacheGetAllCodec {
     //hex: 0x130900
     public static final int REQUEST_MESSAGE_TYPE = 1247488;

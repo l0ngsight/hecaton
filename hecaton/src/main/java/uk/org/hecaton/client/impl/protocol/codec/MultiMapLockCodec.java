@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * unlocked N times before another thread can acquire it.
  */
 @SuppressWarnings("unused")
-@Generated("72c8b1fe3c501cecef95e51469611dab")
+@Generated("c1e0eaaa28a01f448a75bf9a44fdc483")
 public final class MultiMapLockCodec {
     //hex: 0x021000
     public static final int REQUEST_MESSAGE_TYPE = 135168;

@@ -54,7 +54,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * to find that item.
  */
 @SuppressWarnings("unused")
-@Generated("6a9fbea5ac95608f43547ec0f056e161")
+@Generated("1c1eeaa35b8ae44b09714285876070c6")
 public final class RingbufferAddCodec {
     //hex: 0x170600
     public static final int REQUEST_MESSAGE_TYPE = 1508864;

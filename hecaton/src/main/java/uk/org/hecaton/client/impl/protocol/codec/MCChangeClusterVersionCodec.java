@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Changes the cluster version.
  */
 @SuppressWarnings("unused")
-@Generated("2ddef7731424df461bd83c6cc61b38dd")
+@Generated("198d8cb406f8018abb1f572a80ec83c7")
 public final class MCChangeClusterVersionCodec {
     //hex: 0x201000
     public static final int REQUEST_MESSAGE_TYPE = 2101248;

@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * If ttl is not set, the remaining capacity will always be the capacity.
  */
 @SuppressWarnings("unused")
-@Generated("0a0e600fb3982f57c5f10ca1ba07659b")
+@Generated("b5dd4815c2b49ed013a303332340bdb0")
 public final class RingbufferRemainingCapacityCodec {
     //hex: 0x170500
     public static final int REQUEST_MESSAGE_TYPE = 1508608;

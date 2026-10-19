@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * A proxy creation failure does not cancel this operation, all proxies will be attempted to be created.
  */
 @SuppressWarnings("unused")
-@Generated("36d06134498df0c5b3f74ec02a26d389")
+@Generated("c6c26140592249c832ebf2bad6d3d1b7")
 public final class ClientCreateProxiesCodec {
     //hex: 0x000E00
     public static final int REQUEST_MESSAGE_TYPE = 3584;

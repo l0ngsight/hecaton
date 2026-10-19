@@ -50,7 +50,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * to design limitations.
  */
 @SuppressWarnings("unused")
-@Generated("703b964276c95efede0f6bf3f66803aa")
+@Generated("d05c7ddd6bcdcced6f50d6455c36d99a")
 public final class MapAddPartitionLostListenerCodec {
     //hex: 0x011B00
     public static final int REQUEST_MESSAGE_TYPE = 72448;

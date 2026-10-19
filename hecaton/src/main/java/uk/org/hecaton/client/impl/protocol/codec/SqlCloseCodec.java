@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Closes server-side query cursor.
  */
 @SuppressWarnings("unused")
-@Generated("288d0f45b1b3e6487b1bb1866093e912")
+@Generated("806e6d5d95bcb7de73faa4e027c1ae4b")
 public final class SqlCloseCodec {
     //hex: 0x210300
     public static final int REQUEST_MESSAGE_TYPE = 2163456;

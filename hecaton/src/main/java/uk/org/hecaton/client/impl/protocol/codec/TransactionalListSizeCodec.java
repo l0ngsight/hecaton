@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the size of the list
  */
 @SuppressWarnings("unused")
-@Generated("c60c42d1406bce74f432553ae9c8ade7")
+@Generated("dbf135ea3b8b308af0002fe0e8bff293")
 public final class TransactionalListSizeCodec {
     //hex: 0x110300
     public static final int REQUEST_MESSAGE_TYPE = 1114880;

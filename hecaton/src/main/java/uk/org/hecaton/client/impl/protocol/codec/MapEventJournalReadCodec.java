@@ -51,7 +51,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * and no projection is applied.
  */
 @SuppressWarnings("unused")
-@Generated("f430235411cf601c280020da247d7b23")
+@Generated("f9f2839a88ce2bc00e7e4b40221d4511")
 public final class MapEventJournalReadCodec {
     //hex: 0x014200
     public static final int REQUEST_MESSAGE_TYPE = 82432;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes from this list all of its elements that are contained in the specified collection (optional operation).
  */
 @SuppressWarnings("unused")
-@Generated("073ea1d11dcfc36f33274ff355ebba01")
+@Generated("4dbc1cbffa3160277b9915ee8a02d117")
 public final class ListCompareAndRemoveAllCodec {
     //hex: 0x050700
     public static final int REQUEST_MESSAGE_TYPE = 329472;

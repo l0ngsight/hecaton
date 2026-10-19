@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * contain the element.
  */
 @SuppressWarnings("unused")
-@Generated("fda6446f9bd5d68e8548caf8dbc4b817")
+@Generated("3e7d555b2ad5e35ff822b2d64db427d8")
 public final class ListLastIndexOfCodec {
     //hex: 0x051300
     public static final int REQUEST_MESSAGE_TYPE = 332544;

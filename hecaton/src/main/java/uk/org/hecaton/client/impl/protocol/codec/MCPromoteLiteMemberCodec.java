@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Promotes the lite member it's called on to a data member.
  */
 @SuppressWarnings("unused")
-@Generated("ac99afa37b8ebf4ed3f29301bd0f838c")
+@Generated("d7f7193acb878533a7df9ccae621c1d8")
 public final class MCPromoteLiteMemberCodec {
     //hex: 0x200900
     public static final int REQUEST_MESSAGE_TYPE = 2099456;

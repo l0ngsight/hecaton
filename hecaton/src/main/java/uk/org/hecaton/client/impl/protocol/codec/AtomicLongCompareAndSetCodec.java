@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * value the expected value.
  */
 @SuppressWarnings("unused")
-@Generated("c953007645e6a529b89d59073f1c8e22")
+@Generated("b9425771210b2c8e4e54651f56de5bc7")
 public final class AtomicLongCompareAndSetCodec {
     //hex: 0x090400
     public static final int REQUEST_MESSAGE_TYPE = 590848;

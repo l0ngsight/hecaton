@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Clear vector collection.
  */
 @SuppressWarnings("unused")
-@Generated("cd891387ced2602c9a8b5aa127e69554")
+@Generated("71023a92e4c9f88f9fae47080b276a32")
 public final class VectorCollectionClearCodec {
     //hex: 0x240A00
     public static final int REQUEST_MESSAGE_TYPE = 2361856;

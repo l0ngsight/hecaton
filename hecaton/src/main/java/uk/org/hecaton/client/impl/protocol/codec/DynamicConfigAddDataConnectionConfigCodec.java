@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * the new configuration is ignored and the existing one is preserved.
  */
 @SuppressWarnings("unused")
-@Generated("84e5fa33feb9a2c1bf2a71a9cc3cd57d")
+@Generated("abf0c2df7f3e26a2a5b113fae21f96df")
 public final class DynamicConfigAddDataConnectionConfigCodec {
     //hex: 0x1B1100
     public static final int REQUEST_MESSAGE_TYPE = 1773824;

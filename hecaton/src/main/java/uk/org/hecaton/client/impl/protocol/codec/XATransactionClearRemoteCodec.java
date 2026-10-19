@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Clears the XA transaction with the given xid from remote member.
  */
 @SuppressWarnings("unused")
-@Generated("7de51dd9717c014d8f2da542e3366044")
+@Generated("9aed650ec4b847de433fa5861a9f2c95")
 public final class XATransactionClearRemoteCodec {
     //hex: 0x140100
     public static final int REQUEST_MESSAGE_TYPE = 1310976;

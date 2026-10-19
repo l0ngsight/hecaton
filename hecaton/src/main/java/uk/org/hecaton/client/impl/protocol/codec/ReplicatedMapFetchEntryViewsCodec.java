@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * member with the default timeout of 300 seconds that is reset after each fetch. Sending endEntryViewIteration or timing out will release the resource.
  */
 @SuppressWarnings("unused")
-@Generated("c1cac600d2977faf0902f8f6f3abefe2")
+@Generated("980a30de8fba351981f545a915e4b02a")
 public final class ReplicatedMapFetchEntryViewsCodec {
     //hex: 0x0D1400
     public static final int REQUEST_MESSAGE_TYPE = 857088;
