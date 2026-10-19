@@ -89,8 +89,11 @@ Upstream sync work uses `sync/vX.Y.Z`; generated rebrand output lives on `rebran
      on `setup-java`'s Maven cache, which fails when no `pom.xml` exists.
    - `client`: JDK 17/21/25 matrix (JDK 25 also installed for the toolchain). M1 adds the
      `client-tests` Maven profile it calls.
-   - Added later: `nightly.yml` (full suites, crash-consistency, multi-cluster, compat
-     clients) in M1, `rebrand-check.yml` (determinism, HCL file report) with `tools/rebrand`.
+   - Added in M1: `nightly.yml`, the full test suite in 29 parallel shards (upstream's
+     `parallelTest` level) with a report that separates upstream-baseline, triaged and new
+     failures (`tools/ci/nightly.py`, `docs/test-baseline/`, `tools/ci/known-test-failures.txt`),
+     and the rebrand determinism job in `ci.yml`. Crash-consistency, multi-cluster and
+     official-client suites join the nightly as their milestones land.
 5. **Contribution rules:** `CONTRIBUTING.md` with the clean-room policy (§11.3), DCO
    sign-off, PR template with a provenance checkbox, `CODEOWNERS`, `SECURITY.md`.
 

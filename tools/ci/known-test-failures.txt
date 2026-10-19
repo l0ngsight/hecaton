@@ -1,0 +1,6 @@
+# Known, triaged test failures for the nightly suite (.github/workflows/nightly.yml).
+#
+# One test per line: `fully.qualified.Class#method  reason`, with two or more spaces before
+# the reason. A failure listed here does not fail the nightly report. Failures that also
+# happen upstream belong in docs/test-baseline/, not here. Keep each entry tied to a pending
+# item in docs/upstream-patches.md or an issue, and remove it once fixed.
