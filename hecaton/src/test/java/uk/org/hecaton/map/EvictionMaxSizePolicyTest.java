@@ -187,11 +187,15 @@ public class EvictionMaxSizePolicyTest extends HecatonTestSupport {
         }
 
         IMap<Integer, Integer> map2 = node2.getMap(mapName);
-        LocalMapStats localMapStats1 = map1.getLocalMapStats();
-        LocalMapStats localMapStats2 = map2.getLocalMapStats();
 
-        assertEqualsEventually(localMapStats2::getBackupEntryCount, localMapStats1.getOwnedEntryCount());
-        assertEqualsEventually(localMapStats1::getBackupEntryCount, localMapStats2.getOwnedEntryCount());
+        // getLocalMapStats() returns a snapshot: take new ones on every attempt, backups and
+        // their eviction are applied asynchronously.
+        assertTrueEventually(() -> {
+            LocalMapStats localMapStats1 = map1.getLocalMapStats();
+            LocalMapStats localMapStats2 = map2.getLocalMapStats();
+            assertEquals(localMapStats1.getOwnedEntryCount(), localMapStats2.getBackupEntryCount());
+            assertEquals(localMapStats2.getOwnedEntryCount(), localMapStats1.getBackupEntryCount());
+        });
     }
 
     @Test
