@@ -1,0 +1,45 @@
+# Tests that fail in unmodified Hazelcast CE v5.7.0 built and run on JDK 25 with the nightly
+# job layout (run https://github.com/l0ngsight/hecaton/actions/runs/39188787418, 2026-10-19:
+# 72,419 tests, 36 failing). Names are mapped to Hecaton names.
+#
+# Shards core-3 and core-6 hit the job timeout (a hanging test JVM); their reports were still
+# collected, but tests that never ran in those shards are not covered here.
+# That run also collected one surefire report per class, so for classes with both
+# ParallelJVMTest and single-JVM tests only the single-JVM results are included (fixed in
+# tools/ci/run-test-shard.sh; regenerate from the next upstream run).
+uk.org.hecaton.client.ClientOutBoundPortTest#clientOutboundPortRangeTest
+uk.org.hecaton.client.cache.ClientCacheConfigTest#createCacheConfigOnAllNodes
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#closeCacheManagerByURIAndClassLoader
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#closeCacheManagers
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#closeCacheManagersByClassLoader
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#closeCachingProvider
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#getCacheManagerUsingDefaultURI
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#getCacheManagerUsingNulls
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#getCacheManagerUsingSameNameAndClassLoader
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#getCacheManagerUsingSameURIDifferentClassLoader
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#testMemberCachingProviderXmlConfig
+uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#testMemberCachingProviderYamlConfig
+uk.org.hecaton.client.impl.connection.tcp.TcpClientConnectionManagerTranslateTest#testTranslateIsNotUsedWhenPublicIpDisabled
+uk.org.hecaton.client.impl.connection.tcp.TcpClientConnectionManagerTranslateTest#testTranslateIsUsedWhenMemberHasPublicClientAddress
+uk.org.hecaton.client.impl.spi.impl.discovery.ClientAutoDetectionDiscoveryTest#defaultDiscovery
+uk.org.hecaton.client.io.DirectBufferTest#test[0]
+uk.org.hecaton.client.io.DirectBufferTest#test[1]
+uk.org.hecaton.client.io.DirectBufferTest#test[2]
+uk.org.hecaton.client.io.DirectBufferTest#test[3]
+uk.org.hecaton.client.map.ClientComputeConditionallyTests#testComputeIfPresentShouldNotExecuteRemappingFunctionForAbsentKeys
+uk.org.hecaton.client.map.ClientComputeConditionallyTests#testComputeIfPresentWithLambdaReMappingFunction
+uk.org.hecaton.client.map.ClientComputeConditionallyTests#testComputeShouldNotDoAnythingWhenBothOldAndNewValuesAreNotPresent
+uk.org.hecaton.client.map.ClientMapLockTest#testTryPut_whenLockedFromOtherThread
+uk.org.hecaton.client.map.ClientMapLockTest#testTryRemove_whenLockedFromOtherThread
+uk.org.hecaton.client.map.impl.querycache.ClientQueryCacheBasicTest#entryAdded_whenValueOutsidePredicate[includeValues: true, useQueryCacheFilteringStrategy: false, nearCache: false]
+uk.org.hecaton.client.map.impl.querycache.ClientQueryCacheBasicTest#entryUpdated_whenOldValueMatches_newValueOutsidePredicate[includeValues: true, useQueryCacheFilteringStrategy: false, nearCache: false]
+uk.org.hecaton.client.multimap.ClientMultiMapTest#testContainsKey_whenKeyNull
+uk.org.hecaton.client.queue.ClientQueueTest#testQueueRemoveFromIterator
+uk.org.hecaton.internal.cluster.impl.EventRegistrationTest#testEventRegistrationsForAllMembers_AfterJoin
+uk.org.hecaton.internal.networking.nio.AdvancedNetworkIntegrationTest#testKeepAliveSocketOptions
+uk.org.hecaton.internal.networking.nio.UnifiedNetworkIntegrationTest#testKeepAliveSocketOptions
+uk.org.hecaton.jet.impl.deployment.ProcessorClassLoaderTest#
+uk.org.hecaton.map.impl.mapstore.MapLoaderFailoverTest#testLoadsAll_whenInitialLoaderNodeRemovedWhileLoading
+uk.org.hecaton.mapstore.AllTypesGenericMapStoreTest#
+uk.org.hecaton.mapstore.H2GenericMapLoaderTest#
+uk.org.hecaton.mapstore.SingleColumnGenericMapStoreIntegrationTest#

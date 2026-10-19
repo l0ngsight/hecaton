@@ -91,10 +91,7 @@ jobs:
         name: Collect reports
         env:
           NAME: ${{ matrix.name }}
-        run: |
-          mkdir -p "reports/$NAME"
-          find hc up -path '*/target/surefire-reports/TEST-*.xml' -exec cp {} "reports/$NAME/" \; 2>/dev/null || true
-          echo "$(ls "reports/$NAME" | wc -l) report files"
+        run: hc/tools/ci/collect-test-reports.sh "reports/$NAME" hc up
       - if: always()
         uses: actions/upload-artifact@v4
         with:

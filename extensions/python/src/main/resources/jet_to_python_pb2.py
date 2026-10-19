@@ -13,14 +13,14 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13jet-to-python.proto\x12\rjet_to_python\"\"\n\x0cInputMessage\x12\x12\n\ninputValue\x18\x01 \x03(\t\"$\n\rOutputMessage\x12\x13\n\x0boutputValue\x18\x01 \x03(\t2_\n\x0bJetToPython\x12P\n\rstreamingCall\x12\x1b.jet_to_python.InputMessage\x1a\x1c.jet_to_python.OutputMessage\"\x00(\x01\x30\x01\x42;\n\"uk.org.hecaton.jet.python.impl.grpcB\x13JetToPythonTopLevelP\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x13jet-to-python.proto\x12\rjet_to_python\"\"\n\x0cInputMessage\x12\x12\n\ninputValue\x18\x01 \x03(\t\"$\n\rOutputMessage\x12\x13\n\x0boutputValue\x18\x01 \x03(\t2_\n\x0bJetToPython\x12P\n\rstreamingCall\x12\x1b.jet_to_python.InputMessage\x1a\x1c.jet_to_python.OutputMessage\"\x00(\x01\x30\x01\x42<\n#uk.org.hecaton.jet.python.impl.grpcB\x13JetToPythonTopLevelP\x01\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'jet_to_python_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'\n\"uk.org.hecaton.jet.python.impl.grpcB\023JetToPythonTopLevelP\001'
+  DESCRIPTOR._serialized_options = b'\n#uk.org.hecaton.jet.python.impl.grpcB\023JetToPythonTopLevelP\001'
   _INPUTMESSAGE._serialized_start=38
   _INPUTMESSAGE._serialized_end=72
   _OUTPUTMESSAGE._serialized_start=74

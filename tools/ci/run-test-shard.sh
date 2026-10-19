@@ -7,7 +7,7 @@
 # Builds the group's modules and their dependencies (tests skipped), then runs the
 # group's tests with upstream's standard `parallelTest` profile (SlowTest and
 # NightlyTest excluded). Test failures do not fail the script; the report job
-# evaluates the surefire XML.
+# evaluates the surefire XML (gathered by collect-test-reports.sh).
 set -euo pipefail
 
 root="$1" suite="$2" group="$3" shard="$4" shards="$5"
@@ -27,9 +27,20 @@ if [ "$shards" -gt 1 ]; then
     test_args=(-Dtest="$tests" -Dsurefire.failIfNoSpecifiedTests=false)
 fi
 
+# The parallelTest profile runs two surefire executions: default-test (ParallelJVMTest
+# classes, forked in parallel) and singlejvm (everything else). Both write
+# target/surefire-reports/TEST-<class>.xml, so for a class with tests of both kinds the
+# second execution's report replaces the first one's and its failures go unreported.
+# Run them as two passes and keep the first pass's reports in surefire-reports-paralleljvm.
+#
 # surefire.timeout kills a test JVM that runs longer than an hour (a hanging test), so the
 # shard still finishes and reports what ran instead of hitting the job timeout.
-./mvnw -B -ntp -pl "$modules" -PparallelTest test "${skip[@]}" "${test_args[@]}" \
-    -Dmaven.test.failure.ignore=true -DtrimStackTrace=true -Dsurefire.timeout=3600 || {
-    echo "::warning::Maven exited with an error in $group shard $shard (see log); reports collected anyway."
+mvn_test=(-B -ntp -pl "$modules" -PparallelTest "${skip[@]}" "${test_args[@]}"
+    -Dmaven.test.failure.ignore=true -DtrimStackTrace=true -Dsurefire.timeout=3600)
+warn() {
+    echo "::warning::Maven exited with an error in $group shard $shard ($1 pass, see log); reports collected anyway."
 }
+
+./mvnw "${mvn_test[@]}" test -Dskip-singlejvm-tests=true || warn paralleljvm
+find . -path '*/target/surefire-reports' -type d -prune -exec mv {} {}-paralleljvm \;
+./mvnw "${mvn_test[@]}" surefire:test@singlejvm || warn singlejvm
