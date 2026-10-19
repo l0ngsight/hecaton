@@ -103,4 +103,6 @@ keep-paths:
   - 'docs/upstream/**'
 
 regenerate-codec-hash:
+  # Java globs: `**/` needs at least one directory, so list direct children separately.
+  - '**/client/impl/protocol/codec/*Codec.java'
   - '**/client/impl/protocol/codec/**/*Codec.java'
