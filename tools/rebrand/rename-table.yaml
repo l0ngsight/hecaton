@@ -50,9 +50,9 @@ protect:
   - 'com\.hazelcast:hazelcast(?:-[a-z0-9-]+)?:\d[\w.-]*(?::[\w.-]+)*'
 
 replace:
-  # Config schema namespace (must run before the generic product-name rules).
+  # Config schema namespace (must run before the generic product-name rules), http and https.
   # Also matches the escaped form in META-INF/spring.schemas (http\://...).
-  - from: 'http(\\?)://www\.hazelcast\.com/schema/'
+  - from: 'https?(\\?)://www\.hazelcast\.com/schema/'
     to: 'https$1://hecaton.org.uk/schema/'
     scope: content
   # Root package, with any separator: com.hazelcast, com/hazelcast, com_hazelcast (JNI),

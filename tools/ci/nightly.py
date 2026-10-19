@@ -38,7 +38,7 @@ GROUPS = [
     {"group": "core", "shards": 20, "modules": ["hecaton"]},
     {"group": "sql", "shards": 6, "modules": ["hecaton-sql"]},
     {"group": "spring", "shards": 1, "modules": [
-        "hecaton-spring-tests", "hecaton-spring-boot-autoconfiguration/hecaton-spring-boot3",
+        "hecaton-spring", "hecaton-spring-tests", "hecaton-spring-boot-autoconfiguration/hecaton-spring-boot3",
         "hecaton-spring-boot-autoconfiguration/hecaton-spring-boot4"]},
     {"group": "ext-streaming", "shards": 1, "modules": [
         "extensions/kafka", "extensions/kafka-connect", "extensions/avro", "extensions/csv",
