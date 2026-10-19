@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("862eace3f7e3db48338a6a3b3b412fbf")
+@Generated("7938332cf1ae238316fc6b10762f5303")
 public final class XidCodec {
     private static final int FORMAT_ID_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = FORMAT_ID_FIELD_OFFSET + INT_SIZE_IN_BYTES;

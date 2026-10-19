@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("5731e5874965f6adec3259d55579aeb9")
+@Generated("716056db76e7f111b4ca0479b70b558b")
 public final class KubernetesConfigCodec {
     private static final int ENABLED_FIELD_OFFSET = 0;
     private static final int USE_PUBLIC_IP_FIELD_OFFSET = ENABLED_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;

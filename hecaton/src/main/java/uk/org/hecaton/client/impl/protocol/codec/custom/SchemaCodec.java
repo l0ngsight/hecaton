@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("08fa90157eba5f1d6284aac0fe4a56f4")
+@Generated("d337376dd0e2e7cfc5077fb6ada17156")
 public final class SchemaCodec {
 
     private SchemaCodec() {

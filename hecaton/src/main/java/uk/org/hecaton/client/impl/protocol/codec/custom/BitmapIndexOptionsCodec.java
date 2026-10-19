@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("7644fd2f76127299dc24bbc61edbfd16")
+@Generated("994a77770962861370016e0d2ab6a30a")
 public final class BitmapIndexOptionsCodec {
     private static final int UNIQUE_KEY_TRANSFORMATION_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = UNIQUE_KEY_TRANSFORMATION_FIELD_OFFSET + INT_SIZE_IN_BYTES;

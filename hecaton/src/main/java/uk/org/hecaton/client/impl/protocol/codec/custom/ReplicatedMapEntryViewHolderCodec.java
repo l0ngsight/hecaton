@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("ef553bfccf16a117fdb4996cc91a8b5a")
+@Generated("6af47c42a677e3bb4d534813cbcb2994")
 public final class ReplicatedMapEntryViewHolderCodec {
     private static final int CREATION_TIME_FIELD_OFFSET = 0;
     private static final int HITS_FIELD_OFFSET = CREATION_TIME_FIELD_OFFSET + LONG_SIZE_IN_BYTES;

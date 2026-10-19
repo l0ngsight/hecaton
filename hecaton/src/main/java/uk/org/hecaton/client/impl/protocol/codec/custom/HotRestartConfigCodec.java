@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("cb5b1d6b7d8b36ea3fc70fc84e365484")
+@Generated("0a39a955749c7e4b4da1f9c495676bd0")
 public final class HotRestartConfigCodec {
     private static final int ENABLED_FIELD_OFFSET = 0;
     private static final int FSYNC_FIELD_OFFSET = ENABLED_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;

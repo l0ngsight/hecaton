@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("1bb8f2c59effb77ca2ed4256e50a2f10")
+@Generated("b410ba63aa60e96d4ef63546cf130d93")
 public final class WanReplicationRefCodec {
     private static final int REPUBLISHING_ENABLED_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = REPUBLISHING_ENABLED_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;

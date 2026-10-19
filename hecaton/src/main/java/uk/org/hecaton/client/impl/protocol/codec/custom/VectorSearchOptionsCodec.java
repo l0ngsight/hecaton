@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("268dbde6f391d672f349917b4af64ace")
+@Generated("3b861be2b80af5da71a30b17c8426446")
 public final class VectorSearchOptionsCodec {
     private static final int INCLUDE_VALUE_FIELD_OFFSET = 0;
     private static final int INCLUDE_VECTORS_FIELD_OFFSET = INCLUDE_VALUE_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;

@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("fc1c420733ab8ab65e7b1dcb75fef2d7")
+@Generated("1bf060397c7b84c01a7e9dcd82afe6d8")
 public final class PagingPredicateHolderCodec {
     private static final int PAGE_SIZE_FIELD_OFFSET = 0;
     private static final int PAGE_FIELD_OFFSET = PAGE_SIZE_FIELD_OFFSET + INT_SIZE_IN_BYTES;

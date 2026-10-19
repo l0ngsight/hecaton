@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("7565e8a83e575171cc83a372e8e5298c")
+@Generated("f7e859d05288cfda601039341d9cdba8")
 public final class SqlErrorCodec {
     private static final int CODE_FIELD_OFFSET = 0;
     private static final int ORIGINATING_MEMBER_ID_FIELD_OFFSET = CODE_FIELD_OFFSET + INT_SIZE_IN_BYTES;

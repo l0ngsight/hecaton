@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("659ef6d0c0e3e2f010fd26c5c63bdceb")
+@Generated("6f2c8e4d7ecab09426659d937dd38be1")
 public final class MigrationStateCodec {
     private static final int START_TIME_FIELD_OFFSET = 0;
     private static final int PLANNED_MIGRATIONS_FIELD_OFFSET = START_TIME_FIELD_OFFSET + LONG_SIZE_IN_BYTES;

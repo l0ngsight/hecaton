@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("ab72c63be2a7cbe4da76c47ee82f5875")
+@Generated("390054fb0ce86c627c8f5c2f6799a5f2")
 public final class BTreeIndexConfigCodec {
 
     private BTreeIndexConfigCodec() {

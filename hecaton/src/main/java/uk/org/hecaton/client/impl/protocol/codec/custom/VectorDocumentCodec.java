@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("1a2d816b05924fb6c84c67cb9a367e8e")
+@Generated("8186018f7b0ec0e7a9e564bf12345a87")
 public final class VectorDocumentCodec {
 
     private VectorDocumentCodec() {

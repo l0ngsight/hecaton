@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("7c5493d8afab346d20d327be480d408e")
+@Generated("f413ddfbf213629db617778ede07698c")
 public final class EurekaConfigCodec {
     private static final int ENABLED_FIELD_OFFSET = 0;
     private static final int USE_PUBLIC_IP_FIELD_OFFSET = ENABLED_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;

@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("fe589f145d621ef2e7fa856801bed1c8")
+@Generated("9d275cd3dda9a13f01265187ea824895")
 public final class RaftGroupIdCodec {
     private static final int SEED_FIELD_OFFSET = 0;
     private static final int ID_FIELD_OFFSET = SEED_FIELD_OFFSET + LONG_SIZE_IN_BYTES;

@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("13379626a6ded7d7ac1ce00809cce0e9")
+@Generated("b14c47e20fbf2de9760ff336260db3f5")
 public final class ErrorHolderCodec {
     private static final int ERROR_CODE_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = ERROR_CODE_FIELD_OFFSET + INT_SIZE_IN_BYTES;

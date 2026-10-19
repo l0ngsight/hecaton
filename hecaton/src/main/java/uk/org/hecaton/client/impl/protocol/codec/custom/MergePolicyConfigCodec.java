@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("1084da9dc7f52c5a77e413c44e1a10ac")
+@Generated("49e81118c8f468e5ff91215265f8558c")
 public final class MergePolicyConfigCodec {
     private static final int BATCH_SIZE_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = BATCH_SIZE_FIELD_OFFSET + INT_SIZE_IN_BYTES;

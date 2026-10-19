@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("cb419c8b24d3f3c44858c861efe435d4")
+@Generated("ba2b5a7ac0177e08ba658fe4a424136c")
 public final class VersionCodec {
     private static final int MAJOR_FIELD_OFFSET = 0;
     private static final int MINOR_FIELD_OFFSET = MAJOR_FIELD_OFFSET + BYTE_SIZE_IN_BYTES;

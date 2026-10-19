@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("33abbda32724230c26415163f1fdadea")
+@Generated("eba6363c65b100444a7219e5eac1057f")
 public final class MCEventCodec {
     private static final int TIMESTAMP_FIELD_OFFSET = 0;
     private static final int TYPE_FIELD_OFFSET = TIMESTAMP_FIELD_OFFSET + LONG_SIZE_IN_BYTES;

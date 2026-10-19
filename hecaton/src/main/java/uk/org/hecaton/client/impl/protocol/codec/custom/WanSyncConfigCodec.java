@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("120aaea0e7f07ff3c4b061fe60bd059c")
+@Generated("a877050c2adbc9a0338d692d8edde507")
 public final class WanSyncConfigCodec {
     private static final int CONSISTENCY_CHECK_STRATEGY_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = CONSISTENCY_CHECK_STRATEGY_FIELD_OFFSET + BYTE_SIZE_IN_BYTES;

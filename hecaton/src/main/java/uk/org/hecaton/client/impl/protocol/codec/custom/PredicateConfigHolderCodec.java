@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("e373a5a571423add79247ff4099b5958")
+@Generated("0f3925b9a7c0a41de8f9e8c1fc4adeb9")
 public final class PredicateConfigHolderCodec {
 
     private PredicateConfigHolderCodec() {

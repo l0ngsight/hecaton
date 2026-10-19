@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("da52d1eaad1ae8868fe49a5f6a85a940")
+@Generated("814d43c4ab74dc7952c565204cb489ec")
 public final class SqlSummaryCodec {
     private static final int UNBOUNDED_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = UNBOUNDED_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;

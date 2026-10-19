@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("2f34f63721ba92db6464600e5acbbb16")
+@Generated("a6e854c7b30e3641e6ba62eca3039b82")
 public final class EndpointQualifierCodec {
     private static final int TYPE_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = TYPE_FIELD_OFFSET + INT_SIZE_IN_BYTES;

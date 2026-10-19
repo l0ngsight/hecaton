@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("a900d168b02140c3030616b38d363800")
+@Generated("44ff2b6efa79ce0f28f3f008b5225ea0")
 public final class TieredStoreConfigCodec {
     private static final int ENABLED_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = ENABLED_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;

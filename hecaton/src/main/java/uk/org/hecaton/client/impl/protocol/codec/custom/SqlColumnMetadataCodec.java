@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("1da3ec529b7376bff4b2483d68166730")
+@Generated("b75c51709a06f8eb22b273d396351ff0")
 public final class SqlColumnMetadataCodec {
     private static final int TYPE_FIELD_OFFSET = 0;
     private static final int NULLABLE_FIELD_OFFSET = TYPE_FIELD_OFFSET + INT_SIZE_IN_BYTES;

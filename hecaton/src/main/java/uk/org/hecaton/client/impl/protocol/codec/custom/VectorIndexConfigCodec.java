@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("91f93321f839ac2f67b7253331f213b9")
+@Generated("bec029ac56b8784c8fd144a73f25347d")
 public final class VectorIndexConfigCodec {
     private static final int METRIC_FIELD_OFFSET = 0;
     private static final int DIMENSION_FIELD_OFFSET = METRIC_FIELD_OFFSET + INT_SIZE_IN_BYTES;

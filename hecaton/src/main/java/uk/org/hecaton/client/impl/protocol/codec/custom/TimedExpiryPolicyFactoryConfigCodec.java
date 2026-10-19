@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("a0bc3d804a1338501045fce370a89a0d")
+@Generated("e63a7374c3160406d947a00cd0e98abf")
 public final class TimedExpiryPolicyFactoryConfigCodec {
     private static final int EXPIRY_POLICY_TYPE_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = EXPIRY_POLICY_TYPE_FIELD_OFFSET + INT_SIZE_IN_BYTES;

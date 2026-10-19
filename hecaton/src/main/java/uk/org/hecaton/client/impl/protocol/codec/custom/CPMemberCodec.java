@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("44e748ace019f2e5ed5334648089a2ed")
+@Generated("f5094bd16609e5a7b749f17c01df854e")
 public final class CPMemberCodec {
     private static final int UUID_FIELD_OFFSET = 0;
     private static final int AUTO_STEP_DOWN_WHEN_LEADER_FIELD_OFFSET = UUID_FIELD_OFFSET + UUID_SIZE_IN_BYTES;

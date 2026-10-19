@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("5379ad2a3b99a918e02a4bdc2d0b2c43")
+@Generated("a42f926147c1faa875da665fea439913")
 public final class CapacityCodec {
     private static final int VALUE_FIELD_OFFSET = 0;
     private static final int UNIT_FIELD_OFFSET = VALUE_FIELD_OFFSET + LONG_SIZE_IN_BYTES;

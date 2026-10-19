@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("e02e63c79b461c28289b5f6e6f73cec7")
+@Generated("d8e2256476155d0cb4ac075695de4824")
 public final class RingbufferStoreConfigHolderCodec {
     private static final int ENABLED_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = ENABLED_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;
