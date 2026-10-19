@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("a3a804203ffab1c1323d076706b6eae5")
+@Generated("88312445b36d228b6b4f9a8cde1ed54a")
 public final class WanCustomPublisherConfigHolderCodec {
 
     private WanCustomPublisherConfigHolderCodec() {

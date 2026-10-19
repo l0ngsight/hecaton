@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("d349b8508dd138c8e47fd770568febc3")
+@Generated("5a3946b8f05763f49836387f00a5748b")
 public final class PartitioningAttributeConfigCodec {
 
     private PartitioningAttributeConfigCodec() {

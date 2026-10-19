@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("f40f06635b5285921e56a0be44d3e828")
+@Generated("d35ba1057f6700b6a111f41da94884ce")
 public final class DistributedObjectInfoCodec {
 
     private DistributedObjectInfoCodec() {

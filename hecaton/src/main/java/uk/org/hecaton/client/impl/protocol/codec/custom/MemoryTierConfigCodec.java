@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("a709bb123ee5d35e537308675be7a917")
+@Generated("ed8f3e4f8fa6b85a902e6844ee4f33ff")
 public final class MemoryTierConfigCodec {
 
     private MemoryTierConfigCodec() {

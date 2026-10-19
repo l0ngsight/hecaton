@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("39e49f5f66ea5d623cd8a917018f57f9")
+@Generated("622f3def0856913502a186f623afaad8")
 public final class RaftGroupInfoCodec {
 
     private RaftGroupInfoCodec() {

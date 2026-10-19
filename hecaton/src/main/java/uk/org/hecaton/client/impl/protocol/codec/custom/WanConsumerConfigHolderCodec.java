@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("26064b2095a05d0838ea07cf6ec65fd6")
+@Generated("9d18c27b1f9414a47ecf60d0492b021b")
 public final class WanConsumerConfigHolderCodec {
     private static final int PERSIST_WAN_REPLICATED_DATA_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = PERSIST_WAN_REPLICATED_DATA_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;

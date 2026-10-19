@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("8935a3cace76cb317e3f8a3f85a69b1b")
+@Generated("8f708b52d43d5e244d0087a8de3a1462")
 public final class VectorPairCodec {
     private static final int TYPE_FIELD_OFFSET = 0;
     private static final int INITIAL_FRAME_SIZE = TYPE_FIELD_OFFSET + BYTE_SIZE_IN_BYTES;

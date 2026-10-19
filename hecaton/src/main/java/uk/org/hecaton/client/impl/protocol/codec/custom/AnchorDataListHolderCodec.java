@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("b143884b85b3326cf4763ee599720322")
+@Generated("418ae3485b7722a4fd55cf9a12cb7ffc")
 public final class AnchorDataListHolderCodec {
 
     private AnchorDataListHolderCodec() {

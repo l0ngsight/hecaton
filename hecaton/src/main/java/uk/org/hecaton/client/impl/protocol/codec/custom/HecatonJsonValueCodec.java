@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("b9aed14694cb1e5c5cc398e085d709eb")
+@Generated("cc71d266e66293385c6e722d23ace559")
 public final class HecatonJsonValueCodec {
 
     private HecatonJsonValueCodec() {
