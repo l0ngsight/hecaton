@@ -16,9 +16,11 @@ with you.
 Hecaton has not released a version yet. Once it does, this section will list the versions
 that receive security fixes.
 
-## Upstream fixes
+## Issues inherited from Hazelcast
 
-Hecaton is based on Hazelcast Community Edition. Hazelcast no longer publishes Community
-Edition patch releases, so Hecaton backports relevant upstream security fixes itself
-(see the [implementation plan](docs/IMPLEMENTATION_PLAN.md#continuous-workstream--upstream-sync)).
-If you know of an upstream fix that Hecaton has not picked up, please report it the same way.
+Hecaton was forked from Hazelcast Community Edition 5.7.0 and is maintained independently;
+it does not take later Hazelcast releases. Vulnerabilities in code inherited from Hazelcast
+are fixed in Hecaton directly (see the
+[implementation plan](docs/IMPLEMENTATION_PLAN.md#continuous-workstream--maintenance)).
+If you know of a Hazelcast advisory or fix that also applies to Hecaton, please report it
+the same way.

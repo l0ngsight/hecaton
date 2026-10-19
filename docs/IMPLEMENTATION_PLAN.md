@@ -4,8 +4,8 @@ Companion to [`SPEC.md`](SPEC.md). Section references (§) point to the spec.
 
 | | |
 |---|---|
-| Upstream base | Hazelcast CE `v5.7.0` |
-| Target for 1.0 | All **P0** features from §6 on top of a renamed 5.7.x (or the latest upstream minor available at that point) |
+| Forked from | Hazelcast CE `v5.7.0`, once; maintained independently afterwards (D10, spec §9) |
+| Target for 1.0 | All **P0** features from §6 on the Hecaton code base |
 | Effort unit | engineer-weeks (ew), rough order of magnitude |
 
 ---
@@ -15,8 +15,8 @@ Companion to [`SPEC.md`](SPEC.md). Section references (§) point to the spec.
 | Milestone | Content | Exit criteria | Est. |
 |---|---|---|---|
 | **M0** Foundation | Repo license, upstream snapshot import, CI on JDK 25, contribution rules | CI green on an empty build; decisions D4–D6, D8 confirmed (D7 tracked separately) | 1–2 ew |
-| **M1** Rebranded CE (`5.7.0-hc.0`) | `tools/rebrand`, renamed code base, cloud-provider removal (D9), JDK 25 build, client 17/21/25 matrix, migration tooling | Upstream test suite passes (parity with upstream on JDK 25, minus removed cloud-provider tests); official clients connect; migration acceptance test passes | 10–12 ew |
-| **M2** Extension framework | `hecaton-ext-spi`, `hecaton-ext-core`, feature gates, Java 25 member check, client failover, license no-op | All EE gates converted; "missing module" errors tested | 3–4 ew |
+| **M1** Rebranded CE (`0.1.0`) | `tools/rebrand`, renamed code base, cloud-provider removal (D9), retire sync tooling (D10), JDK 25 build, client 17/21/25 matrix, migration tooling | Inherited test suite at parity with Hazelcast 5.7.0 on JDK 25 (minus removed cloud-provider tests); official clients connect; migration acceptance test passes | 10–12 ew |
+| **M2** Core cleanup | Remove edition gates and licensing code, `MemberModule` SPI, Java 25 member check, client failover | No "requires Enterprise" path left; "missing module" errors tested | 2–3 ew |
 | **M3** Security P0 | TLS (F1), authentication (F2, without LDAP/Kerberos), authorization (F3) | TLS conformance + security test suites green | 8–10 ew |
 | **M4** CP Subsystem P0 | Raft port (F7), CPMap (F8) | Ported 5.4 CP test suite + linearizability harness green | 8–10 ew |
 | **M5** HD memory P0 | FFM allocator, HD IMap/ICache, HD indexes (F11 member side) | HD suites green; GC/latency targets met | 14–18 ew |
@@ -35,7 +35,7 @@ M0 ─▶ M1 ─▶ M2 ─┬─▶ M3 (security) ──────────
                 ├─▶ M4 (CP) ───────────────────────────┤
                 ├─▶ M5 (HD) ─────▶ M6 (persistence) ───┼─▶ M8 (1.0) ─▶ M9 ─▶ M10
                 └─▶ M7 (WAN) ──────────────────────────┘
-   upstream sync (every upstream minor) runs continuously from M1 onward
+   maintenance (security fixes, dependency updates) runs continuously from M1 onward
 ```
 
 ---
@@ -51,7 +51,7 @@ into `main` once its exit criteria are met.
 |---|---|
 | M0 Foundation | `feature/m0-foundation` |
 | M1 Rebranded CE | `feature/m1-rebranded-ce` |
-| M2 Extension framework | `feature/m2-extension-framework` |
+| M2 Core cleanup | `feature/m2-core-cleanup` |
 | M3 Security P0 | `feature/m3-security` |
 | M4 CP Subsystem P0 | `feature/m4-cp-subsystem` |
 | M5 HD memory P0 | `feature/m5-hd-memory` |
@@ -61,8 +61,9 @@ into `main` once its exit criteria are met.
 | M9 1.x (P1) | `feature/m9-p1-features` |
 | M10 2.x (P2) | `feature/m10-p2-features` |
 
-Upstream sync work uses `sync/vX.Y.Z`; generated rebrand output lives on `rebrand/vX.Y.Z`
-(§9 of the spec).
+`upstream/main` (the 5.7.0 snapshot) and `rebrand/v5.7.0` (its renamed form) are kept
+read-only as the record of how the fork was made (spec §9). No new branches of either kind
+are created.
 
 ---
 
@@ -77,10 +78,9 @@ Upstream sync work uses `sync/vX.Y.Z`; generated rebrand output lives on `rebran
 3. **Upstream snapshot import** (no history, D8):
    `tools/upstream/import-snapshot.sh v5.7.0` creates the orphan branch `upstream/main` with
    one commit holding the `v5.7.0` tree (`Upstream-Tag`/`Upstream-Commit`/
-   `Upstream-Excludes-SHA256` trailers). Files are byte-identical to upstream. Paths in
-   `tools/upstream/excluded-paths.txt` are left out: upstream's `.github/` (its CI would
-   run here) and the self-contained cloud-provider code (D9), 197 files for v5.7.0. Later
-   releases are added the same way, one commit per tag.
+   `Upstream-Excludes-SHA256` trailers). Files are byte-identical to upstream. Upstream's
+   `.github/` (its CI would run here) and the self-contained cloud-provider code (D9), 197
+   files, were left out. This happened once; the import script was retired with D10.
 4. **CI skeleton** (GitHub Actions, `.github/workflows/ci.yml`; the logic lives in
    `tools/ci/*.sh` so later milestones only change scripts):
    - `hygiene`: Apache `LICENSE`/`NOTICE` present, no Hazelcast Enterprise artifacts or
@@ -92,8 +92,9 @@ Upstream sync work uses `sync/vX.Y.Z`; generated rebrand output lives on `rebran
    - Added in M1: `nightly.yml`, the full test suite in 29 parallel shards (upstream's
      `parallelTest` level) with a report that separates upstream-baseline, triaged and new
      failures (`tools/ci/nightly.py`, `docs/test-baseline/`, `tools/ci/known-test-failures.txt`),
-     and the rebrand determinism job in `ci.yml`. Crash-consistency, multi-cluster and
-     official-client suites join the nightly as their milestones land.
+     and the rebrand determinism job in `ci.yml` (both upstream-specific parts were retired
+     with D10). Crash-consistency, multi-cluster and official-client suites join the
+     nightly as their milestones land.
 5. **Contribution rules:** `CONTRIBUTING.md` with the clean-room policy (§11.3), DCO
    sign-off, PR template with a provenance checkbox, `CODEOWNERS`, `SECURITY.md`.
 
@@ -104,7 +105,8 @@ Upstream sync work uses `sync/vX.Y.Z`; generated rebrand output lives on `rebran
 ### 1.1 `tools/rebrand`
 
 A standalone Java 25 CLI in `tools/rebrand/`. Deterministic and idempotent:
-`rebrand(upstreamTree) → hecatonTree`.
+`rebrand(upstreamTree) → hecatonTree`. It was run once, on `v5.7.0` (D10). Its text engine
+and the rename table are now the base of `hecaton-migrate` (1.5).
 
 | Component | Work |
 |---|---|
@@ -128,22 +130,24 @@ Est.: 3–4 ew (including edge-case triage on ~5,900 core files plus modules/tes
      `client/console/testjob-*.jar`, `jet/core/DataSerializableSuppliers.jar`) and
      serialization-compatibility binaries that contain compiled `com.hazelcast` class names.
      Rebrand cannot rewrite them; rebuild them from source (or regenerate the binaries) as
-     part of this step and list them in `docs/upstream-patches.md`.
+     part of this step and list them in `docs/changes-from-hazelcast.md`.
 3. **Build on JDK 25:**
    - Add a Maven toolchains config; set `jdk.version`-style properties per module:
      `hecaton.release.client=17`, `hecaton.release.member=25`.
    - Keep `--release 17` for every renamed upstream module (§8.1).
    - Upgrade build plugins and test libraries only where JDK 25 needs it (Mockito/ByteBuddy,
      SpotBugs, Checkstyle, JaCoCo, Surefire `argLine` with
-     `--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED`). Each one is
-     recorded as an upstream patch.
+     `--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED`).
    - Per-module `enforceBytecodeVersion` (17 or 25) and a rule that forbids 17-targeted
      modules from depending on 25-targeted ones.
-4. **Baseline comparison:** run the *upstream* `v5.7.0` suite on JDK 25 and the *renamed*
-   suite on JDK 25. The renamed suite must match the upstream pass/fail set exactly. Known
-   upstream failures go in `docs/known-upstream-failures.md`.
-5. **Product identity:** `BuildInfo`, startup banner, `hecaton-default.xml`, distribution
-   (`hc-*` scripts), Docker image `hecaton/hecaton:5.7.0-hc.0` (Temurin 25 JRE base).
+4. **Baseline comparison (done):** the *upstream* `v5.7.0` suite and the *renamed* suite
+   ran on JDK 25 in the nightly. Failures inherited from 5.7.0 are frozen in
+   `docs/test-baseline/upstream-v5.7.0-jdk25.txt`; Hecaton-only failures are fixed or
+   triaged in `tools/ci/known-test-failures.txt`. Inherited failures are fixed over time
+   like any other bug.
+5. **Product identity:** `BuildInfo` (Hecaton version, "based on Hazelcast 5.7.0", D11),
+   startup banner, `hecaton-default.xml`, distribution (`hc-*` scripts), Docker image
+   `hecaton/hecaton:0.1.0` (Temurin 25 JRE base).
 
 Est.: 3 ew.
 
@@ -182,65 +186,86 @@ Est.: 2.5 ew.
 
 ### 1.6 Remove cloud-provider support (D9, spec NG6)
 
-`tools/upstream/excluded-paths.txt` already leaves out the self-contained plugin and
-connector directories. M1 removes what the rest of the code base references, as tracked
-upstream patches:
+The self-contained plugin and connector directories were left out at import. M1 deletes
+what the rest of the code base references. With D10 there is no patch budget, so the
+removal is complete rather than minimal:
 
 | Area | Work |
 |---|---|
-| Config model | Remove `AwsConfig`, `AzureConfig`, `GcpConfig`, `EurekaConfig`, `ClientCloudConfig` and their accessors on `JoinConfig`, `ClientNetworkConfig`, `WanBatchPublisherConfig`; trim `AliasedDiscoveryConfig`/`AliasedDiscoveryConfigUtils` down to Kubernetes. `KubernetesConfig` stays. |
-| Config loading | XML/YAML parsers, config generators, XSD/JSON schemas, `HC_` env overrides: drop the elements. The parsers keep recognising the element names only to throw the targeted NG6 error. |
-| Client protocol | Keep the wire layout of `AwsConfigCodec` & co. (G3). Decode and reject non-empty cloud sections in dynamic-config messages. |
-| Member/client runtime | Remove `HazelcastCloudDiscovery`/`ViridianAddressProvider` from the client; remove the cloud-provider entries from `META-INF/services/...DiscoveryStrategyFactory` (Kubernetes stays); fix references in `DefaultReflectiveAttributeLookupPolicy` and `DefaultSerializationServiceBuilder`. |
-| Build & distribution | Remove the excluded modules from `extensions/pom.xml`, `hadoop-dist/pom.xml`, `distribution`; check `hadoop-all` for bundled cloud file systems. |
-| Tests & docs | Delete tests of removed features; add tests for the NG6 config error; note the removal in the migration guide. |
+| Config model | Delete `AwsConfig`, `AzureConfig`, `GcpConfig`, `EurekaConfig`, `ClientCloudConfig` and their accessors on `JoinConfig`, `ClientNetworkConfig`, `WanBatchPublisherConfig`, `ClientFailoverConfig`; trim `AliasedDiscoveryConfigUtils` & co. to Kubernetes. `KubernetesConfig` stays. |
+| Config loading | XML/YAML parsers, config generators, XSD/JSON schemas (current versions), Spring XML support, `HC_` env overrides: drop the elements. The parsers recognise the old element names only to throw the targeted NG6 error. |
+| Client protocol | Keep the wire layout of `AwsConfigCodec` & co. so official clients' dynamic WAN config messages still decode (G3); the decoded cloud sections are rejected if enabled. |
+| Member/client runtime | Delete `HecatonCloudDiscovery`/`ViridianAddressProvider` and the cloud branches in `ClusterDiscoveryServiceBuilder`; remove the cloud-provider entries from `META-INF/services/...DiscoveryStrategyFactory` (Kubernetes stays); management DTOs. |
+| Build & distribution | Remove the excluded modules from `extensions/pom.xml`, `hadoop-dist/pom.xml`, `distribution` (done); check `hadoop-all` for bundled cloud file systems. |
+| Tests & docs | Delete tests of removed features; add tests for the NG6 config error; note the removal in `docs/changes-from-hazelcast.md`. |
 
 Est.: 1.5–2 ew.
 
 ### 1.7 Upstream top-level files
 
 Upstream's `README.md`, `LICENSE`, `NOTICE`, `CONTRIBUTING.md`, `SECURITY.md` and
-`codecov.yml` collide with Hecaton's. Rebrand moves the upstream versions to
-`docs/upstream/` (the Hecaton `NOTICE` already embeds the upstream NOTICE), so merges never
-conflict on them.
+`codecov.yml` were moved to `docs/upstream/` by rebrand, for reference.
 
-**M1 exit:** tag `v5.7.0-hc.0` (CE parity minus cloud-provider support, renamed, Java 25 build).
+### 1.8 Retire upstream-sync tooling (D10)
 
----
+| Item | Action |
+|---|---|
+| `tools/upstream/` (snapshot import, excluded paths) | Delete; the 5.7.0 import is recorded on `upstream/main`. |
+| `tools/rebrand/rebrand.sh`, `tools/ci/check-rebrand.sh`, the `rebrand` CI job | Delete. `Rebrand.java` and `rename-table.yaml` stay for `hecaton-migrate`. |
+| Nightly `suite=upstream` | Delete; the 5.7.0 baseline is frozen. |
+| `docs/upstream-patches.md` | Becomes `docs/changes-from-hazelcast.md`: the list of differences from Hazelcast 5.7.0 that migrating users or maintainers need to know. No budget. |
+| Old-version compatibility tests (`HecatonStarter`, `get-hz-3`) | Delete; they load real Hazelcast releases next to Hecaton, which is not a goal (NG1). |
+| Rename table protections that only served re-runs on new upstream tags | Keep for now; they also document what `hecaton-migrate` must leave alone. |
 
-## Phase 2 — Extension framework (M2)
+### 1.9 Open items found while building M1
 
-1. **`hecaton-ext-spi`** (Java 17): `Feature` enum (one constant per F-number),
-   `FeatureProvider`, capability interfaces, `Features.isAvailable(Feature)`,
-   `MissingFeatureException` with module hint.
-2. **`hecaton-ext-core`:**
-   - `HecatonNodeExtension extends DefaultNodeExtension` delegates through providers
-     (§7.1–7.2). Upstream patch: `EXTENSION_PRIORITY_LIST`.
-   - `HecatonClientExtension extends DefaultClientExtension`, registered via
-     `META-INF/services`.
-   - Java 25 member runtime check (§8.2).
-   - F21: license no-op (`license-key` accepted and ignored; `getLicense()` descriptor).
-   - F15: `isClientFailoverSupported() → true`, plus failover tests with two clusters.
-3. **Gate conversion** (upstream patches): replace every `BuildInfo#isEnterprise()` check
-   in `DefaultNodeExtension`, `ConfigValidator`, `Node`, `ClientEndpointImpl`,
-   `ChannelInitializerFunction`, `DefaultClientExtension`, etc. with `Features` checks;
-   `isEnterprise()` returns `true` when `hecaton-ext-core` is present. Invert the upstream
-   tests that assert "requires Enterprise".
-4. **`docs/upstream-patches.md`** started, with a CI check that every non-generated change
-   to a file under a renamed upstream module has an entry.
-5. **`hecaton-member` BOM/POM** that pulls in every ext module.
+| Item | Notes |
+|---|---|
+| Spring Boot auto-configuration | Spring Boot's own Hazelcast auto-configuration only reacts to `com.hazelcast` classes, so a Hecaton app gets no `HecatonInstance` bean (`BootHecatonApplicationTest`, known nightly failure). Ship `HecatonAutoConfiguration` (spec §5.2). |
+| Spring Hibernate XML support | `RegionFactoryBeanDefinitionParser` serves the removed Hibernate integration; delete it. |
+| Python 3.14 | The pinned protobuf 4.25.8 / grpcio 1.73.0 fail on Python 3.14; bump them (the nightly pins Python 3.12 meanwhile). |
+| Deep JSON nesting | `JsonParser` can overflow the stack before its 1,000-level limit on JDK 25 (known nightly failure); bound the recursion depth. |
+| Schema hosting | `XmlConfigSchemaLocationTest` needs the XSDs at `https://hecaton.org.uk/schema/...` (M8, D7). |
 
-Est.: 3–4 ew.
+**M1 exit:** tag `v0.1.0` (CE 5.7.0 parity minus cloud-provider support, renamed, Java 25 build).
 
 ---
 
-## Phase 3 — Security P0 (M3): `hecaton-ext-tls`, `hecaton-ext-security`
+## Phase 2 — Core cleanup (M2)
+
+With D10 the provider indirection planned earlier (`hecaton-ext-spi`, `FeatureProvider`,
+delegating `HecatonNodeExtension`) is not needed: Java 17 features are built directly in
+core (spec §7.1).
+
+1. **Edition gates out:** delete the "requires Enterprise" checks in `DefaultNodeExtension`,
+   `ConfigValidator`, `Node`, `ClientEndpointImpl`, `ChannelInitializerFunction`,
+   `DefaultClientExtension`, etc. Until a feature lands, its config fails with a precise
+   "not implemented yet (Fn)" message instead. `BuildInfo#isEnterprise()` becomes a
+   deprecated method returning `true`; the Enterprise build-properties lookup goes.
+   Rewrite the upstream tests that assert "requires Enterprise".
+2. **Licensing code out (F21):** `license-key` accepted and ignored with an INFO log;
+   `getLicense()` returns a "community, unlimited" descriptor; remove the license-related
+   REST/CLI paths' Enterprise branches.
+3. **`DefaultNodeExtension` → `HecatonNodeExtension`** (one class, no priority list
+   lookup); same for the client extension.
+4. **`MemberModule` SPI** (spec §7.2) with the capability interfaces for HD, persistence,
+   tiered storage and vector, and the "requires `uk.org.hecaton:hecaton-<module>`" errors.
+5. **Java 25 member check** (spec §8.2).
+6. **F15 client failover:** `isClientFailoverSupported() → true`, plus failover tests with
+   two clusters.
+7. **`hecaton-member` POM** that pulls in every member module as it appears.
+
+Est.: 2–3 ew.
+
+---
+
+## Phase 3 — Security P0 (M3): core
 
 | Step | Work | Est. |
 |---|---|---|
 | F1.1 | `SSLEngineFactory` implementations: JDK (`BasicSSLContextFactory`-compatible properties: keystore/truststore type/password/path, protocol, ciphers, `mutualAuthentication` REQUIRED/OPTIONAL) and optional OpenSSL via netty-tcnative (Apache 2.0). | 2 ew |
 | F1.2 | TLS channel handlers in `createChannelInitializerFn` for MEMBER, CLIENT, WAN, REST, MEMCACHE endpoint qualifiers (advanced networking). Handshake timeout, ALPN not required. | 1.5 ew |
-| F1.3 | Client-side TLS (`HecatonClientExtension`), Java 17 compatible. | 1 ew |
+| F1.3 | Client-side TLS in the client extension, Java 17 compatible. | 1 ew |
 | F1.4 | Keystore hot-reload (`keyStoreReload`/file-watch), cert expiry metrics. | 0.5 ew |
 | F2.1 | `SecurityContext`/`SecurityService`: realms, JAAS login, `Credentials` types (username/password, token, cert), member-to-member authentication, client authentication in `AuthenticationBaseMessageTask`. | 2.5 ew |
 | F2.2 | Built-in login modules at the renamed EE class names (`docs/ee-class-map.md`): simple, username/password config realm, TLS cert, token. | 1 ew |
@@ -249,19 +274,19 @@ Est.: 3–4 ew.
 
 ---
 
-## Phase 4 — CP Subsystem P0 (M4): `hecaton-ext-cp`
+## Phase 4 — CP Subsystem P0 (M4): core
 
 | Step | Work | Est. |
 |---|---|---|
-| F7.1 | Import `com/hazelcast/cp/**` (main and test) from `v5.4.0` (Apache 2.0, ~375 main files) into `hecaton-ext-cp` through `tools/rebrand --tree`. Keep the original headers; add provenance to `NOTICE`/`docs/provenance.md`. | 0.5 ew |
-| F7.2 | Diff the CP public/SPI surface between 5.4.0 and 5.7.0 (`CPSubsystem`, `CPSubsystemManagementService`, `CPSubsystemConfig`, CP group/session APIs, metrics, client codecs) and adapt the ported engine to it. Replace `CPSubsystemStubImpl` via `createCPSubsystem`. | 3 ew |
+| F7.1 | Import `com/hazelcast/cp/**` (main and test) from `v5.4.0` (Apache 2.0, ~375 main files) into core through `tools/rebrand` (same rename table). Keep the original headers; add provenance to `NOTICE`/`docs/provenance.md`. | 0.5 ew |
+| F7.2 | Diff the CP public/SPI surface between 5.4.0 and 5.7.0 (`CPSubsystem`, `CPSubsystemManagementService`, `CPSubsystemConfig`, CP group/session APIs, metrics, client codecs) and adapt the ported engine to it. Replace `CPSubsystemStubImpl` (delete the stub). | 2.5 ew |
 | F7.3 | Register CP client message tasks (codecs exist in core), CP membership REST/CLI (`hc-cluster-cp-admin`). | 1 ew |
 | F8 | `CPMap` new implementation: Raft-replicated KV state machine with the documented ops and size limits, snapshotting, client proxy, config (`CPMapConfig`). | 2.5 ew |
 | Tests | Ported 5.4 CP tests (~114 files) + CPMap tests + linearizability harness (Porcupine-style checker over recorded histories, nemesis: partitions, pauses, kills). | 2 ew |
 
 ---
 
-## Phase 5 — High-Density memory P0 (M5): `hecaton-ext-hd`
+## Phase 5 — High-Density memory P0 (M5): `hecaton-hd`
 
 | Step | Work | Est. |
 |---|---|---|
@@ -275,7 +300,7 @@ Est.: 3–4 ew.
 
 ---
 
-## Phase 6 — Persistence P0 (M6): `hecaton-ext-persistence`
+## Phase 6 — Persistence P0 (M6): `hecaton-persistence`
 
 | Step | Work | Est. |
 |---|---|---|
@@ -289,7 +314,7 @@ Est.: 3–4 ew.
 
 ---
 
-## Phase 7 — WAN replication P0 (M7): `hecaton-ext-wan`
+## Phase 7 — WAN replication P0 (M7): core
 
 | Step | Work | Est. |
 |---|---|---|
@@ -306,8 +331,8 @@ consistency check are P1, in M9.)
 
 ## Phase 8 — Hecaton 1.0 (M8)
 
-- Performance pass against upstream CE 5.7 (§10 targets), HD and persistence tuning.
-- External security review of `hecaton-ext-tls` and `hecaton-ext-security`.
+- Performance pass against Hazelcast CE 5.7 (§10 targets), HD and persistence tuning.
+- External security review of the TLS and security code.
 - Docs site: getting started, migration guide (Hazelcast CE → Hecaton, Hazelcast EE →
   Hecaton feature mapping), feature reference, operations guide.
 - Release process (needs `hecaton.org.uk` registered, D7): signed artifacts to Maven Central
@@ -315,8 +340,6 @@ consistency check are P1, in M9.)
   SBOM (CycloneDX), release notes generated from conventional commits. Kubernetes
   deployment is documented with plain manifests (StatefulSet, headless service,
   `kubernetes-rbac.yaml`); a Helm chart is not planned for 1.0.
-- If upstream has released a newer minor by then, run the upstream sync (below) first and
-  release 1.0 on that base.
 
 ---
 
@@ -349,39 +372,33 @@ consistency check are P1, in M9.)
 
 ---
 
-## Continuous workstream — upstream sync
+## Continuous workstream — maintenance
 
-For each upstream CE release (minor) and for upstream security fixes:
+Hecaton owns its whole code base (D10):
 
-1. `tools/upstream/import-snapshot.sh vX.Y.Z` adds the new tag as one snapshot commit on `upstream/main`.
-2. `tools/rebrand --tag vX.Y.Z` → commit to `rebrand/vX.Y.Z`.
-3. Merge into a `sync/vX.Y.Z` branch from `main`. Resolve conflicts only in files listed in
-   `docs/upstream-patches.md`. Run the SPI contract tests.
-4. Re-run the CP 5.4→current API diff and every `hecaton-ext-*` suite.
-5. Release `X.Y.Z-hc.1`.
-6. Security fixes between releases: `tools/rebrand --commit <sha>` produces a renamed patch
-   that is cherry-picked onto the maintenance branch; release `X.Y.Z-hc.N`.
+1. **Security:** advisory process per `SECURITY.md`; watch Hazelcast CE's public CVEs and
+   release notes for issues in inherited code; patch releases `X.Y.Z`.
+2. **Dependencies:** Renovate/Dependabot for Maven and GitHub Actions, grouped weekly,
+   gated by CI and the nightly.
+3. **Upstream fixes:** port individual Apache-2.0 fixes from Hazelcast CE by hand when they
+   apply, citing the upstream commit.
+4. **Inherited failures:** work down `docs/test-baseline/` like any other bug list.
 
-Budget: ~1–2 ew per upstream minor.
+Budget: ~1 ew per month, more after 1.0.
 
 ---
 
-## Immediate next steps (first PRs)
+## Immediate next steps
 
-1. **PR #1 — Foundation (done, `feature/m0-foundation`):** Apache 2.0 `LICENSE` + `NOTICE`,
-   `CONTRIBUTING.md` with the clean-room policy, PR template, `SECURITY.md`, `CODEOWNERS`,
-   CI skeleton on JDK 25.
-2. **PR #2 — Upstream import (done):** `upstream/main` holds the `v5.7.0` snapshot, created
-   by `tools/upstream/import-snapshot.sh` with `tools/upstream/excluded-paths.txt`.
-3. **PR #3 — `tools/rebrand` v1 (done, `feature/m1-rebranded-ce`):** `Rebrand.java`,
-   `rename-table.yaml`, `rebrand.sh`, CI determinism check (`tools/ci/check-rebrand.sh`).
-   On v5.7.0: 11,680 files rewritten, 11,716 paths renamed, 0 leftovers, idempotent.
-4. **PR #4 — renamed baseline (in progress, `feature/m1-rebranded-ce`):** `rebrand/v5.7.0`
-   merged; upstream patches 1–5 applied (`docs/upstream-patches.md`); the full reactor
-   (30 modules) compiles on JDK 25 with tests compiled. Still to do: run the test suite and
-   compare with upstream, the remaining items under "Pending" in
-   `docs/upstream-patches.md`.
-5. **PR #5 — Client matrix (17/21/25) (started):** CI runs a member + client smoke test on
-   JDK 17, 21 and 25 with the JDK 25-built jar. Official-client compat tests still to do.
-6. **PR #6 — Migration tooling** (OpenRewrite recipe + CLI + sample apps).
-7. **PR #7 — Extension framework** (M2).
+1. **M0 Foundation (done, merged):** Apache 2.0 `LICENSE` + `NOTICE`, `CONTRIBUTING.md`
+   with the clean-room policy, PR template, `SECURITY.md`, `CODEOWNERS`, CI on JDK 25.
+2. **M1 (in progress, `feature/m1-rebranded-ce`):**
+   - done: `v5.7.0` snapshot import; `tools/rebrand` (11,680 files rewritten, 11,716 paths
+     renamed, 0 leftovers); renamed baseline merged and building on JDK 25; nightly suite
+     with a frozen 5.7.0 baseline (73,584 tests, no untriaged failures); client smoke tests
+     on JDK 17/21/25; REST `/hazelcast` alias; Kafka Connect test downloads off Hazelcast's
+     servers;
+   - next: retire the sync tooling (1.8), cloud-provider removal (1.6), migration tooling
+     (1.5), official-client compat tests (1.4), Spring Boot auto-configuration, tag
+     `v0.1.0`.
+3. **M2 Core cleanup**, then M3–M7 in parallel.
