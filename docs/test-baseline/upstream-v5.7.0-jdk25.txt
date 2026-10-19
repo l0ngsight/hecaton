@@ -1,12 +1,16 @@
 # Tests that fail in unmodified Hazelcast CE v5.7.0 built and run on JDK 25 with the nightly
-# job layout (run https://github.com/l0ngsight/hecaton/actions/runs/39188787418, 2026-10-19:
-# 72,419 tests, 36 failing). Names are mapped to Hecaton names.
-#
-# Shards core-3 and core-6 hit the job timeout (a hanging test JVM); their reports were still
-# collected, but tests that never ran in those shards are not covered here.
-# That run also collected one surefire report per class, so for classes with both
-# ParallelJVMTest and single-JVM tests only the single-JVM results are included (fixed in
-# tools/ci/run-test-shard.sh; regenerate from the next upstream run).
+# job layout. Names are mapped to Hecaton names. Union of two runs, because many of these
+# fail only some of the time upstream as well:
+#   https://github.com/l0ngsight/hecaton/actions/runs/39188787418 (2026-10-19): 72,419 tests,
+#     36 failing; one surefire report per class, so results of classes with both
+#     ParallelJVMTest and single-JVM tests are partly missing.
+#   https://github.com/l0ngsight/hecaton/actions/runs/39206700559 (2026-10-19): 73,338 tests,
+#     29 failing; both surefire passes reported.
+# In both runs shards core-3 and core-6 hung in the single-JVM pass (second run:
+# com.hazelcast.client.standalone.ClientMapStandaloneTest and
+# com.hazelcast.internal.ascii.RestNodeStateTest) until the job timeout; tests those shards
+# had not reached are not covered here. The Hecaton suite, sharded differently because of
+# the renamed class names, runs both classes without hanging.
 uk.org.hecaton.client.ClientOutBoundPortTest#clientOutboundPortRangeTest
 uk.org.hecaton.client.cache.ClientCacheConfigTest#createCacheConfigOnAllNodes
 uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#closeCacheManagerByURIAndClassLoader
@@ -19,22 +23,27 @@ uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#getCacheManagerUsin
 uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#getCacheManagerUsingSameURIDifferentClassLoader
 uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#testMemberCachingProviderXmlConfig
 uk.org.hecaton.client.cache.HecatonClientCachingProviderTest#testMemberCachingProviderYamlConfig
+uk.org.hecaton.client.console.HecatonCommandLineTest#test_submit_server_cli_version_minor_mismatch
 uk.org.hecaton.client.impl.connection.tcp.TcpClientConnectionManagerTranslateTest#testTranslateIsNotUsedWhenPublicIpDisabled
 uk.org.hecaton.client.impl.connection.tcp.TcpClientConnectionManagerTranslateTest#testTranslateIsUsedWhenMemberHasPublicClientAddress
+uk.org.hecaton.client.impl.management.MCTrustedInterfacesTest#testGetSystemPropertiesMessageTask_passing
 uk.org.hecaton.client.impl.spi.impl.discovery.ClientAutoDetectionDiscoveryTest#defaultDiscovery
 uk.org.hecaton.client.io.DirectBufferTest#test[0]
 uk.org.hecaton.client.io.DirectBufferTest#test[1]
 uk.org.hecaton.client.io.DirectBufferTest#test[2]
 uk.org.hecaton.client.io.DirectBufferTest#test[3]
+uk.org.hecaton.client.listeners.leak.ListenerLeakTest#testListenerLeakOnMember_whenClientDestroyed[allMembersRouting:true]
 uk.org.hecaton.client.map.ClientComputeConditionallyTests#testComputeIfPresentShouldNotExecuteRemappingFunctionForAbsentKeys
 uk.org.hecaton.client.map.ClientComputeConditionallyTests#testComputeIfPresentWithLambdaReMappingFunction
 uk.org.hecaton.client.map.ClientComputeConditionallyTests#testComputeShouldNotDoAnythingWhenBothOldAndNewValuesAreNotPresent
+uk.org.hecaton.client.map.ClientComputeConditionallyTests#testMergeShouldReplaceValueWhenBothOldAndNewValuesArePresent
 uk.org.hecaton.client.map.ClientMapLockTest#testTryPut_whenLockedFromOtherThread
 uk.org.hecaton.client.map.ClientMapLockTest#testTryRemove_whenLockedFromOtherThread
 uk.org.hecaton.client.map.impl.querycache.ClientQueryCacheBasicTest#entryAdded_whenValueOutsidePredicate[includeValues: true, useQueryCacheFilteringStrategy: false, nearCache: false]
 uk.org.hecaton.client.map.impl.querycache.ClientQueryCacheBasicTest#entryUpdated_whenOldValueMatches_newValueOutsidePredicate[includeValues: true, useQueryCacheFilteringStrategy: false, nearCache: false]
 uk.org.hecaton.client.multimap.ClientMultiMapTest#testContainsKey_whenKeyNull
 uk.org.hecaton.client.queue.ClientQueueTest#testQueueRemoveFromIterator
+uk.org.hecaton.client.txn.ClientXACompatibilityTest#testCommit_TwoPhase_NonPrepared
 uk.org.hecaton.internal.cluster.impl.EventRegistrationTest#testEventRegistrationsForAllMembers_AfterJoin
 uk.org.hecaton.internal.networking.nio.AdvancedNetworkIntegrationTest#testKeepAliveSocketOptions
 uk.org.hecaton.internal.networking.nio.UnifiedNetworkIntegrationTest#testKeepAliveSocketOptions

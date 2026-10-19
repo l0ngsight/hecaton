@@ -33,14 +33,31 @@ fi
 # second execution's report replaces the first one's and its failures go unreported.
 # Run them as two passes and keep the first pass's reports in surefire-reports-paralleljvm.
 #
-# surefire.timeout kills a test JVM that runs longer than an hour (a hanging test), so the
-# shard still finishes and reports what ran instead of hitting the job timeout.
+# surefire.timeout asks a test JVM that runs longer than an hour (a hanging test) to stop,
+# but that JVM still runs its shutdown hooks, and a member shutdown hook can hang as well.
+# So each pass also has a hard limit: on expiry the hung test JVMs get a thread dump in the
+# log and are killed, and the shard still reports what ran instead of hitting the job
+# timeout.
 mvn_test=(-B -ntp -pl "$modules" -PparallelTest "${skip[@]}" "${test_args[@]}"
     -Dmaven.test.failure.ignore=true -DtrimStackTrace=true -Dsurefire.timeout=3600)
-warn() {
-    echo "::warning::Maven exited with an error in $group shard $shard ($1 pass, see log); reports collected anyway."
+pass_limit=70m
+run_pass() {
+    local name="$1"
+    shift
+    local status=0
+    timeout --kill-after=60 "$pass_limit" ./mvnw "${mvn_test[@]}" "$@" || status=$?
+    if [ "$status" -eq 124 ] || [ "$status" -eq 137 ]; then
+        echo "::warning::$group shard $shard: $name pass exceeded $pass_limit; killing hung test JVMs."
+        for pid in $(pgrep -f surefire/surefirebooter || true); do
+            echo "----- thread dump of test JVM $pid -----"
+            jcmd "$pid" Thread.print 2>&1 | head -n 600 || true
+        done
+        pkill -9 -f surefire/surefirebooter || true
+    elif [ "$status" -ne 0 ]; then
+        echo "::warning::Maven exited with an error in $group shard $shard ($name pass, see log); reports collected anyway."
+    fi
 }
 
-./mvnw "${mvn_test[@]}" test -Dskip-singlejvm-tests=true || warn paralleljvm
+run_pass paralleljvm test -Dskip-singlejvm-tests=true
 find . -path '*/target/surefire-reports' -type d -prune -exec mv {} {}-paralleljvm \;
-./mvnw "${mvn_test[@]}" surefire:test@singlejvm || warn singlejvm
+run_pass singlejvm surefire:test@singlejvm
