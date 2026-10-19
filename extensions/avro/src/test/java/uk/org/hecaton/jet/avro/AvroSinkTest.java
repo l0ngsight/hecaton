@@ -48,11 +48,9 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-import static uk.org.hecaton.jet.avro.AvroSinks.AVRO_SINK_CONNECTOR_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static uk.org.hecaton.jet.pipeline.JetPhoneHomeTestUtil.assertConnectorPhoneHomeCollected;
 
 @RunWith(HecatonParallelClassRunner.class)
 @Category({QuickTest.class, ParallelJVMTest.class})
@@ -110,13 +108,6 @@ public class AvroSinkTest extends JetTestSupport {
         hz.getJet().newJob(p).join();
 
         checkFileContent(new GenericDatumReader<>());
-    }
-
-    @Test
-    public void testPhoneHome() {
-        List<Supplier<Pipeline>> pipelines = getPipelines();
-
-        assertConnectorPhoneHomeCollected(pipelines, AVRO_SINK_CONNECTOR_NAME, null, true, hz);
     }
 
     private List<Supplier<Pipeline>> getPipelines() {

@@ -34,7 +34,6 @@ import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.internal.serialization.impl.compact.schema.MemberSchemaService;
 import uk.org.hecaton.internal.services.ManagedService;
 import uk.org.hecaton.internal.tpc.TpcServerBootstrap;
-import uk.org.hecaton.internal.util.phonehome.PhoneHome;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.LoggingService;
 import uk.org.hecaton.spi.annotation.PrivateApi;
@@ -340,8 +339,6 @@ public interface NodeEngine {
      * @return the {@link MetricsRegistry}
      */
     MetricsRegistry getMetricsRegistry();
-
-    PhoneHome getPhoneHome();
 
     void onClientDisconnected(UUID clientUuid);
 

@@ -25,7 +25,6 @@ import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.MergePolicyConfig;
 import uk.org.hecaton.core.HecatonInstance;
-import uk.org.hecaton.function.BiFunctionEx;
 import uk.org.hecaton.instance.impl.HecatonBootstrap;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.instance.impl.NodeState;
@@ -73,8 +72,6 @@ import java.security.Permission;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -122,7 +119,6 @@ public class JetServiceBackend implements ManagedService, MembershipAwareService
     private final AtomicInteger numConcurrentAsyncOps = new AtomicInteger();
     private final Supplier<int[]> sharedPartitionKeys = memoizeConcurrent(this::computeSharedPartitionKeys);
     private final JobUploadStore jobUploadStore = new JobUploadStore();
-    private final ConcurrentMap<String, Long> connectorInitializeCounts = new ConcurrentHashMap<>();
     private ScheduledFuture<?> jobUploadStoreCheckerFuture;
 
     public JetServiceBackend(Node node) {
@@ -165,10 +161,6 @@ public class JetServiceBackend implements ManagedService, MembershipAwareService
         // Run periodically to clean expired jar uploads
         this.jobUploadStoreCheckerFuture = nodeEngine.getExecutionService().scheduleWithRepetition(
                 jobUploadStore::cleanExpiredUploads, 0, JOB_UPLOAD_STORE_PERIOD, SECONDS);
-    }
-
-    public ConcurrentMap<String, Long> getConnectorInitializeCounts() {
-        return connectorInitializeCounts;
     }
 
     public void configureJetInternalObjects(Config config, HecatonProperties properties) {
@@ -523,16 +515,6 @@ public class JetServiceBackend implements ManagedService, MembershipAwareService
                 wrapWithJetException(exception);
             }
         }
-    }
-
-    /**
-     * Used to collect phone home data about jet connector initialization.
-     * Sets count to 1 if it's absent in the map, otherwise increment it by 1.
-     * @param connectorName Name of the connector.
-     */
-    public void onConnectorInitialize(String connectorName) {
-        BiFunctionEx<String, Long, Long> incrementFn = (k, v) -> v == null ? 1L : v + 1L;
-        connectorInitializeCounts.compute(connectorName, incrementFn);
     }
 
     private void throwJetExceptionFromJobMetaData(JobMetaDataParameterObject jobMetaDataParameterObject, Exception exception) {

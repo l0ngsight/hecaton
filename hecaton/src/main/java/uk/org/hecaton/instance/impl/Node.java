@@ -551,7 +551,6 @@ public class Node {
             logger.warning("ManagementCenterService could not be constructed!", e);
         }
         nodeExtension.afterStart();
-        nodeEngine.getPhoneHome().start();
         healthMonitor.start();
     }
 

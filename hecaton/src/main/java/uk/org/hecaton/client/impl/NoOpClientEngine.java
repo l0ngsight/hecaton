@@ -123,21 +123,6 @@ public class NoOpClientEngine implements ClientEngine {
     }
 
     @Override
-    public Map<String, ClientEndpointStatisticsSnapshot> getEndpointStatisticsSnapshots() {
-        return emptyMap();
-    }
-
-    @Override
-    public void onEndpointAuthenticated(ClientEndpoint endpoint) {
-
-    }
-
-    @Override
-    public void onEndpointDestroyed(ClientEndpoint endpoint) {
-
-    }
-
-    @Override
     public Map<UUID, ClientStatistics> getClientStatistics() {
         return emptyMap();
     }

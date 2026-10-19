@@ -55,7 +55,6 @@ import uk.org.hecaton.internal.tpc.TpcServerBootstrap;
 import uk.org.hecaton.internal.usercodedeployment.UserCodeDeploymentClassLoader;
 import uk.org.hecaton.internal.usercodedeployment.UserCodeDeploymentService;
 import uk.org.hecaton.internal.util.ConcurrencyDetection;
-import uk.org.hecaton.internal.util.phonehome.PhoneHome;
 import uk.org.hecaton.jet.impl.JetServiceBackend;
 import uk.org.hecaton.jet.impl.util.Util;
 import uk.org.hecaton.logging.ILogger;
@@ -126,7 +125,6 @@ public class NodeEngineImpl implements NodeEngine {
     private final LoggingServiceImpl loggingService;
     private final ILogger logger;
     private final MetricsRegistryImpl metricsRegistry;
-    private final PhoneHome phoneHome;
     private final ProxyServiceImpl proxyService;
     private final ServiceManagerImpl serviceManager;
     private final ExecutionServiceImpl executionService;
@@ -156,7 +154,6 @@ public class NodeEngineImpl implements NodeEngine {
             this.loggingService = node.loggingService;
             this.logger = node.getLogger(NodeEngine.class.getName());
             this.metricsRegistry = newMetricRegistry(node);
-            this.phoneHome = new PhoneHome(node);
             this.proxyService = new ProxyServiceImpl(this);
             this.serviceManager = new ServiceManagerImpl(this);
             this.executionService = new ExecutionServiceImpl(this);
@@ -285,11 +282,6 @@ public class NodeEngineImpl implements NodeEngine {
     @Override
     public MetricsRegistry getMetricsRegistry() {
         return metricsRegistry;
-    }
-
-    @Override
-    public PhoneHome getPhoneHome() {
-        return phoneHome;
     }
 
     public void start() {
@@ -638,9 +630,6 @@ public class NodeEngineImpl implements NodeEngine {
         }
         if (metricsRegistry != null) {
             metricsRegistry.shutdown();
-        }
-        if (phoneHome != null) {
-            phoneHome.shutdown();
         }
         if (diagnostics != null) {
             diagnostics.shutdown();

@@ -108,34 +108,6 @@ public interface ClientEngine extends Consumer<ClientMessage> {
     Map<String, Long> getActiveClientsInCluster();
 
     /**
-     * Returns the map of the statistics related to the
-     * clients connected to this node since the last time
-     * this method is called. Mapping is from the client
-     * type to statistics snapshot.
-     */
-    Map<String, ClientEndpointStatisticsSnapshot> getEndpointStatisticsSnapshots();
-
-    /**
-     * Called when the given client endpoint is successfully authenticated.
-     * <p>
-     * This call performs necessary statistics collection for the given
-     * endpoint type.
-     *
-     * @param endpoint authenticated endpoint.
-     */
-    void onEndpointAuthenticated(ClientEndpoint endpoint);
-
-    /**
-     * Called when the given client endpoint is destroyed.
-     * <p>
-     * This call performs necessary statistics collection for the given
-     * endpoint type if the endpoint is already authenticated.
-     *
-     * @param endpoint destroyed endpoint.
-     */
-    void onEndpointDestroyed(ClientEndpoint endpoint);
-
-    /**
      * Returns the latest client statistics mapped to the client UUIDs.
      *
      * @return map of the client statistics

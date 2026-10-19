@@ -119,7 +119,6 @@ public abstract class AbstractHecatonClassRunner extends AbstractParameterizedHe
                 System.setProperty(TestEnvironment.HECATON_TEST_USE_NETWORK, "false");
             }
         }
-        System.setProperty("hecaton.phone.home.enabled", "false");
         System.setProperty("hecaton.wait.seconds.before.join", "1");
         System.setProperty("hecaton.local.localAddress", "127.0.0.1");
         System.setProperty("java.net.preferIPv4Stack", "true");

@@ -2420,7 +2420,6 @@
             <xs:enumeration value="hecaton.mc.queue.excludes"/>
             <xs:enumeration value="hecaton.mc.semaphore.excludes"/>
             <xs:enumeration value="hecaton.mc.topic.excludes"/>
-            <xs:enumeration value="hecaton.phone.home.enabled"/>
             <xs:enumeration value="hecaton.map.max.backup.count"/>
             <xs:enumeration value="hecaton.max.wait.seconds.before.join"/>
             <xs:enumeration value="hecaton.logging.type"/>

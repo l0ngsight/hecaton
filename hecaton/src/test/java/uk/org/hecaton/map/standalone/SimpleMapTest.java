@@ -64,7 +64,6 @@ public final class SimpleMapTest {
         this.putPercentage = putPercentage;
         this.load = load;
         Config cfg = new XmlConfigBuilder().build()
-                .setProperty(ClusterProperty.PHONE_HOME_ENABLED.getName(), "false")
                 .setProperty(ClusterProperty.PREFER_IPv4_STACK.getName(), "true");
 
         instance = Hecaton.newHecatonInstance(cfg);

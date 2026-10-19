@@ -69,7 +69,6 @@
             -Xmx1G
             -Xms1G
             -XX:+AlwaysPreTouch
-            -Dhecaton.phone.home.enabled=false
             -Dhecaton.logging.type=log4j2
             -Dhecaton.logging.details.enabled=true
             -Dhecaton.test.use.network=false

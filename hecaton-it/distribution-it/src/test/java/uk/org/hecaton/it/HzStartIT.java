@@ -58,7 +58,6 @@ public class HzStartIT extends HecatonTestSupport {
                 .directory(new File("./target/hecaton"))
                 .inheritIO();
         builder.environment().put("HC_CLUSTERNAME", clusterName);
-        builder.environment().put("JAVA_OPTS", "-Dhecaton.phone.home.enabled=false");
         // Remove classpath set by Maven
         builder.environment().remove("CLASSPATH");
 

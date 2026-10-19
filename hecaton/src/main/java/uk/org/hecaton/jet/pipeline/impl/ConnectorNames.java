@@ -17,7 +17,7 @@
 package uk.org.hecaton.jet.pipeline.impl;
 
 /**
- * Includes builtin connector names for phone home purposes. These connectors live in {@link Sources} and {@link Sinks}
+ * Includes builtin connector names. These connectors live in {@link Sources} and {@link Sinks}
  * <p>
  * The connector name format is "<connectorIdentifier>(Source|Sink)" and follows camel case.
  * e.g avroSink, fileSource, fileWatcherSource, avroSource and so on.

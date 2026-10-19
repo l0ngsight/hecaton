@@ -49,7 +49,6 @@ import uk.org.hecaton.internal.tpcengine.iobuffer.IOBufferAllocator;
 import uk.org.hecaton.internal.util.RuntimeAvailableProcessors;
 import uk.org.hecaton.internal.util.executor.ExecutorType;
 import uk.org.hecaton.internal.util.executor.UnblockablePoolExecutorThreadFactory;
-import uk.org.hecaton.internal.util.phonehome.PhoneHome;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.security.SecurityContext;
 import uk.org.hecaton.spi.impl.NodeEngine;
@@ -146,7 +145,6 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
     private final CPGroupViewListenerService cpGroupViewListenerService;
 
     // not final for the testing purposes
-    private ClientEndpointStatisticsManager endpointStatisticsManager;
 
     public ClientEngineImpl(Node node) {
         this.logger = node.getLogger(ClientEngine.class);
@@ -164,8 +162,6 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
                 nodeEngine.getExecutionService(), node.getProperties());
         Set<String> trustedInterfaces = node.getConfig().getManagementCenterConfig().getTrustedInterfaces();
         this.addressChecker = new AddressCheckerImpl(trustedInterfaces, logger);
-        this.endpointStatisticsManager = PhoneHome.isPhoneHomeEnabled(node)
-                ? new ClientEndpointStatisticsManagerImpl() : new NoOpClientEndpointStatisticsManager();
         this.tpcEnabled = nodeEngine.getTpcServerBootstrap().isEnabled();
         this.cpGroupViewListenerService = createCpGroupViewListenerService();
     }
@@ -502,21 +498,6 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
 
-    @Override
-    public Map<String, ClientEndpointStatisticsSnapshot> getEndpointStatisticsSnapshots() {
-        return endpointStatisticsManager.getSnapshotsAndReset(endpointManager.getEndpoints());
-    }
-
-    @Override
-    public void onEndpointAuthenticated(ClientEndpoint endpoint) {
-        endpointStatisticsManager.onEndpointAuthenticated(endpoint);
-    }
-
-    @Override
-    public void onEndpointDestroyed(ClientEndpoint endpoint) {
-        endpointStatisticsManager.onEndpointDestroyed(endpoint);
-    }
-
     Map<UUID, String> getClientsInCluster() {
         OperationService operationService = node.nodeEngine.getOperationService();
         Map<UUID, String> clientsMap = new HashMap<>();
@@ -583,11 +564,6 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
     @Override
     public AddressChecker getManagementTasksChecker() {
         return addressChecker;
-    }
-
-    public void setEndpointStatisticsManager(ClientEndpointStatisticsManager endpointStatisticsManager) {
-        // this should only be used in tests
-        this.endpointStatisticsManager = endpointStatisticsManager;
     }
 
     protected CPGroupViewListenerService createCpGroupViewListenerService() {

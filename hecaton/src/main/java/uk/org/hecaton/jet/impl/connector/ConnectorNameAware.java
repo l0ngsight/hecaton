@@ -20,12 +20,11 @@ import javax.annotation.Nullable;
 
 /**
  * Implemented by {@link uk.org.hecaton.jet.core.ProcessorMetaSupplier}s to indicate that they are related to a Source/Sink.
- * That is, they are a connector. {@link uk.org.hecaton.jet.impl.execution.init.ExecutionPlanBuilder} will handle these PMS
- * and will collect phone home data for connectors.
+ * That is, they are a connector.
  */
 public interface ConnectorNameAware {
     /**
-     * The connector name in the phone home data. that'll be used in the phone homes.
+     * The name of the connector.
      * See {@link uk.org.hecaton.jet.pipeline.impl.ConnectorNames}
      */
     @Nullable String getConnectorName();

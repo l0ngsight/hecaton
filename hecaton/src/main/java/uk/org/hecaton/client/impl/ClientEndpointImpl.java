@@ -133,7 +133,6 @@ public final class ClientEndpointImpl implements ClientEndpoint {
         this.clientName = clientName;
         this.labels = labels;
         this.cpDirectToLeaderRouting = cpDirectToLeaderRouting;
-        clientEngine.onEndpointAuthenticated(this);
     }
 
     @Override
@@ -274,7 +273,6 @@ public final class ClientEndpointImpl implements ClientEndpoint {
                 lc.logout();
             }
         } finally {
-            clientEngine.onEndpointDestroyed(this);
             authenticated = false;
         }
     }

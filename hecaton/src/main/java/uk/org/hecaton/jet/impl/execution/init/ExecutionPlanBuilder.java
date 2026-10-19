@@ -32,10 +32,8 @@ import uk.org.hecaton.jet.core.Vertex;
 import uk.org.hecaton.jet.function.RunnableEx;
 import uk.org.hecaton.jet.impl.JetServiceBackend;
 import uk.org.hecaton.jet.impl.JobClassLoaderService;
-import uk.org.hecaton.jet.impl.connector.ConnectorNameAware;
 import uk.org.hecaton.jet.impl.execution.init.Contexts.MetaSupplierCtx;
 import uk.org.hecaton.jet.impl.util.FixedCapacityIntArrayList;
-import uk.org.hecaton.jet.impl.util.WrappingProcessorMetaSupplier;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
@@ -172,7 +170,6 @@ public final class ExecutionPlanBuilder {
                                 logger, vertex.getName(), localParallelism, totalParallelism, memberCount,
                                 isLightJob, partitionsByAddress, subject, processorClassLoader)
                         );
-                        searchConnectorPhoneHomeData(nodeEngine, metaSupplier);
                     });
                 } catch (Exception e) {
                     throw sneakyThrow(peel(e));
@@ -199,31 +196,6 @@ public final class ExecutionPlanBuilder {
         }
         return CompletableFuture.allOf(futures)
                 .thenCompose(r -> completedFuture(plans));
-    }
-
-    /**
-     * Recursively searches for the first {@link ConnectorNameAware} processor meta supplier in the provided pms.
-     * <p>
-     * Recursion is required in case pms is instance of {@link WrappingProcessorMetaSupplier}
-     * @param nodeEngineImpl NodeEngineImpl
-     * @param pms Provided ProcessorMetaSupplier
-     */
-    private static void searchConnectorPhoneHomeData(NodeEngineImpl nodeEngineImpl,
-                                                     ProcessorMetaSupplier pms) {
-        if (pms instanceof ConnectorNameAware connectorNameAware) {
-            collectConnectorPhoneHome(nodeEngineImpl, connectorNameAware.getConnectorName());
-        } else if (pms instanceof WrappingProcessorMetaSupplier wrapping) {
-            ProcessorMetaSupplier original = wrapping.getWrapped();
-            searchConnectorPhoneHomeData(nodeEngineImpl, original);
-        }
-    }
-
-    private static void collectConnectorPhoneHome(NodeEngineImpl nodeEngine, String connectorName) {
-        JetServiceBackend jetServiceBackend = nodeEngine.getService(JetServiceBackend.SERVICE_NAME);
-        if (jetServiceBackend != null && connectorName != null) {
-            // The following increments this connector's usage count by one.
-            jetServiceBackend.onConnectorInitialize(connectorName);
-        }
     }
 
     /**

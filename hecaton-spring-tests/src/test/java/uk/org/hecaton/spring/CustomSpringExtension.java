@@ -62,7 +62,6 @@ public class CustomSpringExtension implements BeforeAllCallback, BeforeEachCallb
             Config config = smallInstanceConfig();
             config.setProperty("java.net.preferIPv4Stack", "true");
             config.setProperty("hecaton.local.localAddress", "127.0.0.1");
-            config.setProperty(ClusterProperty.PHONE_HOME_ENABLED.getName(), "false");
             config.setProperty(ClusterProperty.WAIT_SECONDS_BEFORE_JOIN.getName(), "1");
             config.setProperty(ClusterProperty.ASYNC_JOIN_STRATEGY_ENABLED.getName(), "false");
             return config;

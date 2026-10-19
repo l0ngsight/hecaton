@@ -1637,13 +1637,6 @@ public final class ClusterProperty {
             = new HecatonProperty("hecaton.event.sync.timeout.millis", 5000, MILLISECONDS);
 
     /**
-     * Enable or disable the sending of phone home data to Hecaton’s phone home
-     * server.
-     */
-    public static final HecatonProperty PHONE_HOME_ENABLED
-            = new HecatonProperty("hecaton.phone.home.enabled", true);
-
-    /**
      * Enable Hecaton shutdownhook thread. When this is enabled, this thread
      * terminates the Hecaton instance without waiting to shut down gracefully.
      */

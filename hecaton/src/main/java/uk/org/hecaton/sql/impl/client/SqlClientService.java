@@ -79,7 +79,7 @@ public class SqlClientService implements SqlService {
     private final ILogger logger;
 
     /**
-     * The field to indicate whether a query should update phone home statistics or not.
+     * The field to indicate whether a query should update the query statistics or not.
      * For example, the queries issued from the MC client will not update the statistics
      * because they cause a significant distortion.
      */

@@ -63,7 +63,6 @@ public class SimpleReplicatedMapTest {
         Config cfg = new XmlConfigBuilder().build()
                                            .setProperty(ClusterProperty.HEALTH_MONITORING_LEVEL.getName(), "NOISY")
                                            .setProperty(ClusterProperty.HEALTH_MONITORING_DELAY_SECONDS.getName(), "5")
-                                           .setProperty(ClusterProperty.PHONE_HOME_ENABLED.getName(), "false")
                                            .setProperty(ClusterProperty.PREFER_IPv4_STACK.getName(), "false");
         instance = Hecaton.newHecatonInstance(cfg);
         logger = instance.getLoggingService().getLogger("SimpleReplicatedMapTest");

@@ -19,6 +19,7 @@ can observe (API, config, wire, REST, metrics, file names, behaviour).
 | External integrations | `hazelcast-hibernate53`, `hazelcast-wm` (separate Hazelcast projects) | Not available; they are built against `com.hazelcast` | 0.1.0 |
 | REST paths | `/hazelcast/rest/...`, `/hazelcast/health/...` | `/hecaton/...`; the `/hazelcast/...` paths are still served as aliases | 0.1.0 |
 | SQL catalog name | `hazelcast` | `hecaton` (only fully qualified names `hazelcast.public.x` change) | 0.1.0 |
+| Usage reporting ("phone home") | Members send usage statistics to `phonehome.hazelcast.com` once a day and probe cloud metadata endpoints to detect the environment; `hazelcast.phone.home.enabled` / `HZ_PHONE_HOME_ENABLED` turn it off | Removed: members send nothing anywhere. `hecaton.phone.home.enabled` is ignored | 0.1.0 |
 
 ## Fork log
 
@@ -46,3 +47,4 @@ it recomputed.
 | 12 | `extensions/kafka-connect/pom.xml`; deleted `KafkaConnectSQSIT` | The test connectors were downloaded from `repository.hazelcast.com/download/tests/`. Six now come from their publishers (Confluent Hub, Maven Central), byte-identical to Hazelcast's copies (SHA-256 checked). The SQS connector has no public release and is an AWS connector (D9), so its test, download and AWS test dependencies are removed. | M1 |
 | 13 | `HttpCommandParser`, `RestApiFilter` (one line each); new `RestPathAliases` | REST requests to `/hazelcast/...` are served as `/hecaton/...` (spec §5.4). The endpoint-group filter and the command parser both map the path, so the alias gets the same access checks. | M1 |
 | 14 | `checkstyle/ClassHeaderApache.txt` | The header check also accepts the Hecaton header ("Copyright (c) <year>, The Hecaton Authors."), for Hecaton-owned files in upstream modules. | M1 |
+| 15 | deleted `internal/util/phonehome` (and its `META-INF/services` file), the client endpoint statistics classes and their tests; `Node`, `NodeEngine(Impl)`, `ClientEngine(Impl)`, `NoOpClientEngine`, `ClientEndpointImpl`, `JetServiceBackend`, `ExecutionPlanBuilder`, `ClusterProperty`, `hecaton-spring-5.7.xsd` | Phone home reported usage to Hazelcast, Inc. and probed AWS, Azure and GCP metadata endpoints at startup. Hecaton has no reporting service, so the whole subsystem and the statistics collected only for it are gone, along with the `hecaton.phone.home.enabled` property and the `-D...=false` flags in the build. The SQL `skipUpdateStatistics` client message field stays (wire protocol) | M1 |

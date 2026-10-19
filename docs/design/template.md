@@ -166,7 +166,6 @@ Some of these prompts may not be relevant to your design document; in which case
   - What might be the valuable metrics that could be shown for this feature in Management Center and/or Viridan Control Plane?
   - Should this feature be configured, enabled/disabled or managed from the Management Center? How do you think your change affects Management Center?
   - Does the feature require or allow runtime changes to the member configuration (XML/YAML/programmatic)?
-  - Are usage statistics for this feature reported in Phone Home? If not, why?
 
 The section should return to the user stories in the motivations section, and explain more fully how the detailed proposal makes those stories work.
 

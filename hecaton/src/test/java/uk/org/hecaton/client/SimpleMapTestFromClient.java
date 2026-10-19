@@ -34,7 +34,6 @@ public class SimpleMapTestFromClient {
         ClusterProperty.WAIT_SECONDS_BEFORE_JOIN.setSystemProperty("0");
         System.setProperty("java.net.preferIPv4Stack", "true");
         System.setProperty("hecaton.local.localAddress", "127.0.0.1");
-        ClusterProperty.PHONE_HOME_ENABLED.setSystemProperty("false");
         ClusterProperty.SOCKET_BIND_ANY.setSystemProperty("false");
     }
 

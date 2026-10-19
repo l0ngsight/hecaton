@@ -49,8 +49,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static uk.org.hecaton.jet.avro.AvroSources.AVRO_SOURCE_CONNECTOR_NAME;
-import static uk.org.hecaton.jet.pipeline.JetPhoneHomeTestUtil.assertConnectorPhoneHomeCollected;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -107,21 +105,6 @@ public class AvroSourceTest extends SimpleTestInClusterSupport {
 
         assertEquals(TOTAL_RECORD_COUNT, list.size());
         assertTrue(list.contains(new User("name-1", 1)));
-    }
-
-    @Test
-    public void testPhoneHome() {
-        List<Supplier<Pipeline>> pipelineSuppliers = getPipelineSetupFunctions();
-
-        assertConnectorPhoneHomeCollected(pipelineSuppliers, AVRO_SOURCE_CONNECTOR_NAME, (unused) -> {
-            cleanup();
-            try {
-                createDirectory();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            return null;
-        }, true, instance());
     }
 
     private Supplier<Pipeline> getReflectReaderPipelineSupplier() {

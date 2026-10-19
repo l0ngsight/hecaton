@@ -54,7 +54,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import static uk.org.hecaton.internal.util.phonehome.TestUtil.getNode;
+import static uk.org.hecaton.test.Accessors.getNode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
