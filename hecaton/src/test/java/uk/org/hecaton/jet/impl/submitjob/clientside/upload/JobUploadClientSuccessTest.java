@@ -75,7 +75,7 @@ public class JobUploadClientSuccessTest extends JetTestSupport {
     public void sha256() throws IOException, NoSuchAlgorithmException {
         Path jarPath = getJarPath();
         String sha256Hex = Sha256Util.calculateSha256Hex(jarPath);
-        assertEquals("b1c93019597f7cb6d17d98b720837b3b0b7187b231844c4213f6b372308b118f", sha256Hex);
+        assertEquals("cf277e8d3a6a66d6a40393aa5ac355aace2982e8a8f3b2f7beb93a859a295bc4", sha256Hex);
     }
 
     @Test

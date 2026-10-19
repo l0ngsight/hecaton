@@ -115,7 +115,7 @@ public class MatchingPointConfigPatternMatcherTest {
 
     @Test
     public void testMapConfigWildcardDocumentationExample2() {
-        MapConfig mapConfig = new MapConfig().setName("com.hazel*");
+        MapConfig mapConfig = new MapConfig().setName("uk.org.hec*");
 
         Config config = new Config();
         config.setConfigPatternMatcher(new MatchingPointConfigPatternMatcher());
@@ -137,7 +137,7 @@ public class MatchingPointConfigPatternMatcherTest {
 
     @Test
     public void testMapConfigWildcardDocumentationExample4() {
-        MapConfig mapConfig = new MapConfig().setName("com.*test.myMap");
+        MapConfig mapConfig = new MapConfig().setName("uk.*test.myMap");
 
         Config config = new Config();
         config.setConfigPatternMatcher(new MatchingPointConfigPatternMatcher());

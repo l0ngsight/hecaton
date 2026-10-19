@@ -89,7 +89,7 @@ class AddressUtilTest {
             hazelcast.com           | hazelcast.com         | true
             hazelcast.com           | *.com                 | true
             jobs.hazelcast.com      | *.hazelcast.com       | true
-            download.hazelcast.org  | *.hecaton.*         | true
+            download.hazelcast.org  | *.hazelcast.*         | true
             download.hazelcast.org  | *.hazelcast.org       | true
             hazelcast.com           | abc.com               | false
             hazelcast.com           | *.hazelcast.com       | false

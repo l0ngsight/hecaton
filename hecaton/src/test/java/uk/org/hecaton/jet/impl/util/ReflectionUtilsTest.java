@@ -229,7 +229,7 @@ public class ReflectionUtilsTest {
 
     private static byte[] generateClassFileHeaderWithAllConstants() {
         // We need to define all bytes up to the `this_class` definition
-        ByteBuffer buffer = ByteBuffer.allocate(154);
+        ByteBuffer buffer = ByteBuffer.allocate(155);
         buffer.order(ByteOrder.BIG_ENDIAN);
 
         // 4 bytes of magic

@@ -414,14 +414,14 @@ public class XmlClientConfigBuilderTest extends AbstractClientConfigBuilderTest 
     public void testTokenIdentityConfig() {
         String xml = HECATON_CLIENT_START_TAG
                 + "<security>"
-                + "  <token encoding='base64'>SGF6ZWxjYXN0</token>"
+                + "  <token encoding='base64'>SGVjYXRvbg==</token>"
                 + "</security>"
                 + HECATON_CLIENT_END_TAG;
         ClientConfig config = buildConfig(xml);
         TokenIdentityConfig tokenIdentityConfig = config.getSecurityConfig().getTokenIdentityConfig();
         assertNotNull(tokenIdentityConfig);
         assertArrayEquals("Hecaton".getBytes(StandardCharsets.US_ASCII), tokenIdentityConfig.getToken());
-        assertEquals("SGF6ZWxjYXN0", tokenIdentityConfig.getTokenEncoded());
+        assertEquals("SGVjYXRvbg==", tokenIdentityConfig.getTokenEncoded());
     }
 
     @Override

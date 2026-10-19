@@ -402,14 +402,14 @@ public class YamlClientConfigBuilderTest extends AbstractClientConfigBuilderTest
                   security:
                     token:
                       encoding: base64
-                      value: SGF6ZWxjYXN0
+                      value: SGVjYXRvbg==
                 """;
 
         ClientConfig config = buildConfig(yaml);
         TokenIdentityConfig tokenIdentityConfig = config.getSecurityConfig().getTokenIdentityConfig();
         assertNotNull(tokenIdentityConfig);
         assertArrayEquals("Hecaton".getBytes(StandardCharsets.US_ASCII), tokenIdentityConfig.getToken());
-        assertEquals("SGF6ZWxjYXN0", tokenIdentityConfig.getTokenEncoded());
+        assertEquals("SGVjYXRvbg==", tokenIdentityConfig.getTokenEncoded());
     }
 
     @Override

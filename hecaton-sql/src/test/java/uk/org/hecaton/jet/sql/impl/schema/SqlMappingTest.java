@@ -279,7 +279,7 @@ public class SqlMappingTest extends SqlTestSupport {
                 .hasMessage("From line 1, column 16 to line 1, column 39: " +
                         "The mapping must be created in the \"public\" schema");
         assertThatThrownBy(() -> sqlService.execute("CREATE MAPPING hecaton.badSchema.mapping TYPE TestBatch"))
-                .hasMessage("From line 1, column 16 to line 1, column 42: " +
+                .hasMessage("From line 1, column 16 to line 1, column 40: " +
                         "The mapping must be created in the \"public\" schema");
     }
 
