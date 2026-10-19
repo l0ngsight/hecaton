@@ -25,6 +25,9 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.attribute.PosixFilePermission;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -78,8 +81,12 @@ public final class Rebrand {
         }
     }
 
-    record Table(List<Pattern> protect, List<Rule> rules, List<Rule> relocate, List<PathMatcher> keepPaths) {
+    record Table(List<Pattern> protect, List<Rule> rules, List<Rule> relocate, List<PathMatcher> keepPaths,
+                 List<PathMatcher> codecHashPaths) {
     }
+
+    /** The integrity hash generated client-protocol codecs carry (see CodecHashTest). */
+    private static final Pattern CODEC_HASH = Pattern.compile("@Generated\\(\"([a-f0-9]{32})\"\\)");
 
     record Leftover(String path, int line, String text) {
     }
@@ -167,7 +174,7 @@ public final class Rebrand {
                 }
             } else if (!keep && !isBinary(rel, bytes)) {
                 String text = new String(bytes, StandardCharsets.ISO_8859_1);
-                String renamed = renameContent(rel, text);
+                String renamed = transformContent(rel, text);
                 if (!renamed.equals(text)) {
                     filesChanged++;
                     bytes = renamed.getBytes(StandardCharsets.ISO_8859_1);
@@ -204,7 +211,7 @@ public final class Rebrand {
                 continue;
             }
             String text = new String(bytes, StandardCharsets.ISO_8859_1);
-            if (!renameContent(rel, text).equals(text)) {
+            if (!transformContent(rel, text).equals(text)) {
                 notIdempotent.add(rel);
             }
             collectLeftovers(rel, text);
@@ -235,6 +242,34 @@ public final class Rebrand {
             }
         }
         return result;
+    }
+
+    /** Content rules plus derived values that depend on the renamed content (codec hashes). */
+    String transformContent(String rel, String text) {
+        String renamed = renameContent(rel, text);
+        return matchesAny(table.codecHashPaths(), rel) ? regenerateCodecHash(renamed) : renamed;
+    }
+
+    /**
+     * Recomputes the {@code @Generated("<md5>")} hash of a client-protocol codec the way
+     * CodecHashTest does: MD5 over the lines joined with "\n" (trailing newline included),
+     * with the hash itself replaced by {@code !codec_hash!}.
+     */
+    static String regenerateCodecHash(String content) {
+        Matcher m = CODEC_HASH.matcher(content);
+        if (!m.find()) {
+            return content;
+        }
+        StringBuilder normalized = new StringBuilder(content.length() + 1);
+        content.lines().forEach(line -> normalized.append(line).append('\n'));
+        String hashInput = CODEC_HASH.matcher(normalized).replaceFirst("@Generated(\"!codec_hash!\")");
+        try {
+            byte[] digest = MessageDigest.getInstance("MD5")
+                    .digest(hashInput.getBytes(StandardCharsets.ISO_8859_1));
+            return content.substring(0, m.start(1)) + HexFormat.of().formatHex(digest) + content.substring(m.end(1));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     String renameContent(String rel, String text) {
@@ -522,11 +557,16 @@ public final class Rebrand {
             }
             List<Rule> rules = rules(top.getOrDefault("replace", List.of()));
             List<Rule> relocate = rules(top.getOrDefault("relocate", List.of()));
-            List<PathMatcher> keep = new ArrayList<>();
-            for (Object o : top.getOrDefault("keep-paths", List.of())) {
-                keep.add(FileSystems.getDefault().getPathMatcher("glob:" + o));
+            return new Table(protect, rules, relocate, globs(top.get("keep-paths")),
+                    globs(top.get("regenerate-codec-hash")));
+        }
+
+        private static List<PathMatcher> globs(List<Object> entries) {
+            List<PathMatcher> matchers = new ArrayList<>();
+            for (Object o : entries == null ? List.of() : entries) {
+                matchers.add(FileSystems.getDefault().getPathMatcher("glob:" + o));
             }
-            return new Table(protect, rules, relocate, keep);
+            return matchers;
         }
 
         private static List<Rule> rules(List<Object> entries) {

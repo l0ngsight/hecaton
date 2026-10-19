@@ -14,6 +14,9 @@
 #             content is copied unchanged (used for upstream top-level files that would
 #             collide with Hecaton's own).
 #   keep-paths Paths (globs) whose path and content are copied unchanged.
+#   regenerate-codec-hash
+#             Paths (globs) of generated client-protocol codecs. After renaming, their
+#             @Generated("<md5>") integrity hash is recomputed (as CodecHashTest checks it).
 #
 # Every remaining "hazelcast" (any case) in the output must be inside a protected span.
 # tools/rebrand fails otherwise and lists the offending lines.
@@ -98,3 +101,6 @@ relocate:
 keep-paths:
   - 'licenses/hazelcast-community-license.txt'
   - 'docs/upstream/**'
+
+regenerate-codec-hash:
+  - '**/client/impl/protocol/codec/**/*Codec.java'
