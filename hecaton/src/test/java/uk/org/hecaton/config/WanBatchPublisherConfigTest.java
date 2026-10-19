@@ -66,11 +66,7 @@ public class WanBatchPublisherConfigTest {
                 .setTargetEndpoints("a,b,c,d")
                 .setDiscoveryConfig(new DiscoveryConfig())
                 .setSyncConfig(new WanSyncConfig())
-                .setAwsConfig(new AwsConfig().setEnabled(true).setProperty("connection-timeout-seconds", "20"))
-                .setGcpConfig(new GcpConfig().setEnabled(true).setProperty("gcp", "gcp-val"))
-                .setAzureConfig(new AzureConfig().setEnabled(true).setProperty("azure", "azure-val"))
                 .setKubernetesConfig(new KubernetesConfig().setEnabled(true).setProperty("kubernetes", "kubernetes-val"))
-                .setEurekaConfig(new EurekaConfig().setEnabled(true).setProperty("eureka", "eureka-val"))
                 .setEndpoint("WAN")
                 .setProperties(properties)
                 .setImplementation(new DummyWanPublisher());

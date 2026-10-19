@@ -19,6 +19,7 @@ package uk.org.hecaton.client.impl.spi.impl.discovery;
 import uk.org.hecaton.client.HecatonClient;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.properties.ClientProperty;
+import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.annotation.ParallelJVMTest;
 import uk.org.hecaton.test.annotation.QuickTest;
@@ -26,34 +27,11 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 @RunWith(HecatonParallelClassRunner.class)
 @Category({QuickTest.class, ParallelJVMTest.class})
 public class ConflictingConfigTest {
-
-
-    @Test(expected = IllegalStateException.class)
-    public void testHecatonCloud_and_DiscoverySPIEnabled() {
-        ClientConfig config = new ClientConfig();
-        config.getNetworkConfig().getCloudConfig().setEnabled(true);
-        config.setProperty(ClientProperty.DISCOVERY_SPI_ENABLED.getName(), "true");
-        HecatonClient.newHecatonClient(config);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testHecatonCloudViaProperty_and_DiscoverySPIEnabled() {
-        ClientConfig config = new ClientConfig();
-        config.setProperty(ClientProperty.DISCOVERY_SPI_ENABLED.getName(), "true");
-        config.setProperty(ClientProperty.HECATON_CLOUD_DISCOVERY_TOKEN.getName(), "TOKEN");
-        HecatonClient.newHecatonClient(config);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testHecatonCloud_firstClass_and_propertyBased() {
-        ClientConfig config = new ClientConfig();
-        config.setProperty(ClientProperty.HECATON_CLOUD_DISCOVERY_TOKEN.getName(), "TOKEN");
-        config.getNetworkConfig().getCloudConfig().setEnabled(true);
-        HecatonClient.newHecatonClient(config);
-    }
 
     @Test(expected = IllegalStateException.class)
     public void testClusterMembersGiven_and_DiscoverySPIEnabled() {
@@ -63,19 +41,12 @@ public class ConflictingConfigTest {
         HecatonClient.newHecatonClient(config);
     }
 
-    @Test(expected = IllegalStateException.class)
-    public void testClusterMembersGiven_and_HecatonCloudEnabled() {
+    @Test
+    public void testRemovedHazelcastCloudTokenProperty() {
         ClientConfig config = new ClientConfig();
-        config.getNetworkConfig().addAddress("127.0.0.1");
-        config.getNetworkConfig().getCloudConfig().setEnabled(true);
-        HecatonClient.newHecatonClient(config);
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testClusterMembersGiven_and_HecatonCloudViaProperty() {
-        ClientConfig config = new ClientConfig();
-        config.getNetworkConfig().addAddress("127.0.0.1");
-        config.setProperty(ClientProperty.HECATON_CLOUD_DISCOVERY_TOKEN.getName(), "TOKEN");
-        HecatonClient.newHecatonClient(config);
+        config.setProperty("hecaton.client.cloud.discovery.token", "TOKEN");
+        assertThatThrownBy(() -> HecatonClient.newHecatonClient(config))
+                .isInstanceOf(InvalidConfigurationException.class)
+                .hasMessageContaining("Cloud-provider discovery is not supported in Hecaton");
     }
 }

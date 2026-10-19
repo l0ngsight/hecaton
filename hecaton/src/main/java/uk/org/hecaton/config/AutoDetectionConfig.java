@@ -22,7 +22,7 @@ import java.util.Objects;
  * Configuration for the Discovery Strategy Auto Detection.
  * <p>
  * When enabled, it will walk through all available discovery strategies and detect the correct one for the current runtime
- * environment. For example, it will automatically use the {@code hecaton-aws} plugin if run on an AWS instance.
+ * environment. For example, it automatically uses Kubernetes discovery when the member runs in a Kubernetes pod.
  */
 public class AutoDetectionConfig {
     private boolean enabled = true;

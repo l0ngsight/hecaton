@@ -19,7 +19,6 @@ package uk.org.hecaton.spi.discovery;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.cluster.impl.MemberImpl;
-import uk.org.hecaton.config.AwsConfig;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.DiscoveryConfig;
 import uk.org.hecaton.config.DiscoveryStrategyConfig;
@@ -247,9 +246,6 @@ public class DiscoverySpiTest extends HecatonTestSupport {
         Config config = new XmlConfigBuilder(xmlResource).build();
 
         JoinConfig joinConfig = config.getNetworkConfig().getJoin();
-
-        AwsConfig awsConfig = joinConfig.getAwsConfig();
-        assertFalse(awsConfig.isEnabled());
 
         TcpIpConfig tcpIpConfig = joinConfig.getTcpIpConfig();
         assertFalse(tcpIpConfig.isEnabled());

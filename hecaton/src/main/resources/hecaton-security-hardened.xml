@@ -94,11 +94,7 @@
                     <member>192.168.1.103:15701</member>
                 </member-list>
             </tcp-ip>
-            <aws enabled="false" />
-            <gcp enabled="false" />
-            <azure enabled="false" />
             <kubernetes enabled="false" />
-            <eureka enabled="false" />
         </join>
         <!--
           The following part defines different kind of endpoints (protocols) each with its own socket address and configuration.'

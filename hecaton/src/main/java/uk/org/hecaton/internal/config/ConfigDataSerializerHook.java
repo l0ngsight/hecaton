@@ -17,8 +17,6 @@
 package uk.org.hecaton.internal.config;
 
 import uk.org.hecaton.config.AttributeConfig;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
 import uk.org.hecaton.config.BTreeIndexConfig;
 import uk.org.hecaton.config.BitmapIndexOptions;
 import uk.org.hecaton.config.CachePartitionLostListenerConfig;
@@ -36,12 +34,10 @@ import uk.org.hecaton.config.DiscoveryStrategyConfig;
 import uk.org.hecaton.config.DiskTierConfig;
 import uk.org.hecaton.config.DurableExecutorConfig;
 import uk.org.hecaton.config.EntryListenerConfig;
-import uk.org.hecaton.config.EurekaConfig;
 import uk.org.hecaton.config.EventJournalConfig;
 import uk.org.hecaton.config.EvictionConfig;
 import uk.org.hecaton.config.ExecutorConfig;
 import uk.org.hecaton.config.FlakeIdGeneratorConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.HotRestartConfig;
 import uk.org.hecaton.config.IndexConfig;
 import uk.org.hecaton.config.ItemListenerConfig;
@@ -159,10 +155,7 @@ public final class ConfigDataSerializerHook implements DataSerializerHook {
     public static final int MERKLE_TREE_CONFIG = 50;
     public static final int WAN_SYNC_CONFIG = 51;
     public static final int KUBERNETES_CONFIG = 52;
-    public static final int EUREKA_CONFIG = 53;
-    public static final int GCP_CONFIG = 54;
-    public static final int AZURE_CONFIG = 55;
-    public static final int AWS_CONFIG = 56;
+    // 53-56: EurekaConfig, GcpConfig, AzureConfig, AwsConfig (removed with cloud-provider support, D9)
     public static final int DISCOVERY_CONFIG = 57;
     public static final int DISCOVERY_STRATEGY_CONFIG = 58;
     public static final int WAN_REPLICATION_REF = 59;
@@ -248,10 +241,6 @@ public final class ConfigDataSerializerHook implements DataSerializerHook {
         constructors[MERKLE_TREE_CONFIG] = MerkleTreeConfig::new;
         constructors[WAN_SYNC_CONFIG] = WanSyncConfig::new;
         constructors[KUBERNETES_CONFIG] = KubernetesConfig::new;
-        constructors[EUREKA_CONFIG] = EurekaConfig::new;
-        constructors[GCP_CONFIG] = GcpConfig::new;
-        constructors[AZURE_CONFIG] = AzureConfig::new;
-        constructors[AWS_CONFIG] = AwsConfig::new;
         constructors[DISCOVERY_CONFIG] = DiscoveryConfig::new;
         constructors[DISCOVERY_STRATEGY_CONFIG] = DiscoveryStrategyConfig::new;
         constructors[WAN_REPLICATION_REF] = WanReplicationRef::new;

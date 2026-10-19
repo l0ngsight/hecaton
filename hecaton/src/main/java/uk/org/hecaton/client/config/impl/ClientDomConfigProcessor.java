@@ -17,7 +17,6 @@
 package uk.org.hecaton.client.config.impl;
 
 import uk.org.hecaton.client.config.ClientTpcConfig;
-import uk.org.hecaton.client.config.ClientCloudConfig;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.ClientConnectionStrategyConfig;
 import uk.org.hecaton.client.config.ClientFlakeIdGeneratorConfig;
@@ -59,6 +58,7 @@ import uk.org.hecaton.config.security.RealmConfig;
 import uk.org.hecaton.config.security.TokenIdentityConfig;
 import uk.org.hecaton.internal.config.AbstractDomConfigProcessor;
 import uk.org.hecaton.internal.config.AliasedDiscoveryConfigUtils;
+import uk.org.hecaton.internal.config.RemovedCloudDiscovery;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.Logger;
 import uk.org.hecaton.topic.TopicOverloadPolicy;
@@ -456,8 +456,8 @@ public class ClientDomConfigProcessor extends AbstractDomConfigProcessor {
                 handleOutboundPorts(child, clientNetworkConfig);
             } else if (matches("icmp-ping", nodeName)) {
                 handleIcmpPing(child, clientNetworkConfig);
-            } else if (matches("hecaton-cloud", nodeName)) {
-                handleHecatonCloud(child, clientNetworkConfig);
+            } else if (matches(RemovedCloudDiscovery.CLIENT_CLOUD_TAG, nodeName)) {
+                RemovedCloudDiscovery.check(nodeName);
             }
         }
         clientConfig.setNetworkConfig(clientNetworkConfig);
@@ -509,21 +509,6 @@ public class ClientDomConfigProcessor extends AbstractDomConfigProcessor {
         clusterRoutingConfig.setRoutingMode(routingMode);
         clusterRoutingConfig.setRoutingStrategy(routingStrategy);
         processedRoutingMode = true;
-    }
-
-    private void handleHecatonCloud(Node node, ClientNetworkConfig clientNetworkConfig) {
-        ClientCloudConfig cloudConfig = clientNetworkConfig.getCloudConfig();
-
-        Node enabledNode = getNamedItemNode(node, "enabled");
-        boolean enabled = enabledNode != null && getBooleanValue(getTextContent(enabledNode).trim());
-        cloudConfig.setEnabled(enabled);
-
-        for (Node child : childElements(node)) {
-            String nodeName = cleanNodeName(child);
-            if (matches("discovery-token", nodeName)) {
-                cloudConfig.setDiscoveryToken(getTextContent(child));
-            }
-        }
     }
 
     private void handleIcmpPing(Node node, ClientNetworkConfig clientNetworkConfig) {

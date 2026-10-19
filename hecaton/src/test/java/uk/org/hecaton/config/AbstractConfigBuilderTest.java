@@ -86,19 +86,7 @@ public abstract class AbstractConfigBuilderTest extends HecatonTestSupport {
     public abstract void testSecurityConfig();
 
     @Test
-    public abstract void readAwsConfig();
-
-    @Test
-    public abstract void readGcpConfig();
-
-    @Test
-    public abstract void readAzureConfig();
-
-    @Test
     public abstract void readKubernetesConfig();
-
-    @Test
-    public abstract void readEurekaConfig();
 
     @Test
     public abstract void readDiscoveryConfig();
@@ -691,18 +679,6 @@ public abstract class AbstractConfigBuilderTest extends HecatonTestSupport {
     }
 
     public abstract void testSqlConfig();
-
-    protected static void assertAwsConfig(AwsConfig aws) {
-        assertEquals("sample-access-key", aws.getProperties().get("access-key"));
-        assertEquals("sample-secret-key", aws.getProperties().get("secret-key"));
-        assertEquals("sample-role", aws.getProperties().get("iam-role"));
-        assertEquals("sample-region", aws.getProperties().get("region"));
-        assertEquals("sample-header", aws.getProperties().get("host-header"));
-        assertEquals("sample-group", aws.getProperties().get("security-group-name"));
-        assertEquals("sample-tag-key", aws.getProperties().get("tag-key"));
-        assertEquals("sample-tag-value", aws.getProperties().get("tag-value"));
-        assertEquals("10", aws.getProperties().get("connection-timeout-seconds"));
-    }
 
     protected static void assertPermissionConfig(PermissionConfig expected, Config config) {
         Iterator<PermissionConfig> permConfigs = config.getSecurityConfig().getClientPermissionConfigs().iterator();

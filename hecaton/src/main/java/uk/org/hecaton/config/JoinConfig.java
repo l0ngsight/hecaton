@@ -32,15 +32,9 @@ public class JoinConfig {
 
     private TcpIpConfig tcpIpConfig = new TcpIpConfig();
 
-    private AwsConfig awsConfig = new AwsConfig();
 
-    private GcpConfig gcpConfig = new GcpConfig();
-
-    private AzureConfig azureConfig = new AzureConfig();
 
     private KubernetesConfig kubernetesConfig = new KubernetesConfig();
-
-    private EurekaConfig eurekaConfig = new EurekaConfig();
 
     private DiscoveryConfig discoveryConfig = new DiscoveryConfig();
 
@@ -79,54 +73,6 @@ public class JoinConfig {
     }
 
     /**
-     * @return the awsConfig join configuration
-     */
-    public AwsConfig getAwsConfig() {
-        return awsConfig;
-    }
-
-    /**
-     * @param awsConfig the AwsConfig join configuration to set
-     * @throws IllegalArgumentException if awsConfig is null
-     */
-    public JoinConfig setAwsConfig(final AwsConfig awsConfig) {
-        this.awsConfig = isNotNull(awsConfig, "awsConfig");
-        return this;
-    }
-
-    /**
-     * @return the gcpConfig join configuration
-     */
-    public GcpConfig getGcpConfig() {
-        return gcpConfig;
-    }
-
-    /**
-     * @param gcpConfig the GcpConfig join configuration to set
-     * @throws IllegalArgumentException if gcpConfig is null
-     */
-    public JoinConfig setGcpConfig(final GcpConfig gcpConfig) {
-        this.gcpConfig = isNotNull(gcpConfig, "gcpConfig");
-        return this;
-    }
-
-    /**
-     * @return the azureConfig join configuration
-     */
-    public AzureConfig getAzureConfig() {
-        return azureConfig;
-    }
-
-    /**
-     * @param azureConfig the AzureConfig join configuration to set
-     * @throws IllegalArgumentException if azureConfig is null
-     */
-    public JoinConfig setAzureConfig(final AzureConfig azureConfig) {
-        this.azureConfig = isNotNull(azureConfig, "azureConfig");
-        return this;
-    }
-
-    /**
      * @return the kubernetesConfig join configuration
      */
     public KubernetesConfig getKubernetesConfig() {
@@ -139,22 +85,6 @@ public class JoinConfig {
      */
     public JoinConfig setKubernetesConfig(final KubernetesConfig kubernetesConfig) {
         this.kubernetesConfig = isNotNull(kubernetesConfig, "kubernetesConfig");
-        return this;
-    }
-
-    /**
-     * @return the eurekaConfig join configuration
-     */
-    public EurekaConfig getEurekaConfig() {
-        return eurekaConfig;
-    }
-
-    /**
-     * @param eurekaConfig the EurekaConfig join configuration to set
-     * @throws IllegalArgumentException if eurekaConfig is null
-     */
-    public JoinConfig setEurekaConfig(final EurekaConfig eurekaConfig) {
-        this.eurekaConfig = isNotNull(eurekaConfig, "eurekaConfig");
         return this;
     }
 
@@ -205,11 +135,7 @@ public class JoinConfig {
         return autoDetectionConfig.isEnabled()
                 && !multicastConfig.isEnabled()
                 && !tcpIpConfig.isEnabled()
-                && !awsConfig.isEnabled()
-                && !gcpConfig.isEnabled()
-                && !azureConfig.isEnabled()
                 && !kubernetesConfig.isEnabled()
-                && !eurekaConfig.isEnabled()
                 && !discoveryConfig.isEnabled();
     }
 
@@ -230,25 +156,9 @@ public class JoinConfig {
             countEnabled++;
             enabledDiscoveries.add("Multicast");
         }
-        if (getAwsConfig().isEnabled()) {
-            countEnabled++;
-            enabledDiscoveries.add("AWS discovery");
-        }
-        if (getGcpConfig().isEnabled()) {
-            countEnabled++;
-            enabledDiscoveries.add("GCP discovery");
-        }
-        if (getAzureConfig().isEnabled()) {
-            countEnabled++;
-            enabledDiscoveries.add("Azure discovery");
-        }
         if (getKubernetesConfig().isEnabled()) {
             countEnabled++;
             enabledDiscoveries.add("Kubernetes discovery");
-        }
-        if (getEurekaConfig().isEnabled()) {
-            countEnabled++;
-            enabledDiscoveries.add("Eureka discovery");
         }
 
         Collection<DiscoveryStrategyConfig> discoveryStrategyConfigs = discoveryConfig.getDiscoveryStrategyConfigs();
@@ -269,11 +179,7 @@ public class JoinConfig {
         return "JoinConfig{"
                 + "multicastConfig=" + multicastConfig
                 + ", tcpIpConfig=" + tcpIpConfig
-                + ", awsConfig=" + awsConfig
-                + ", gcpConfig=" + gcpConfig
-                + ", azureConfig=" + azureConfig
                 + ", kubernetesConfig=" + kubernetesConfig
-                + ", eurekaConfig=" + eurekaConfig
                 + ", discoveryConfig=" + discoveryConfig
                 + ", autoDetectionConfig=" + autoDetectionConfig
                 + '}';
@@ -289,17 +195,14 @@ public class JoinConfig {
         }
         JoinConfig that = (JoinConfig) o;
         return Objects.equals(multicastConfig, that.multicastConfig)
-                && Objects.equals(tcpIpConfig, that.tcpIpConfig) && Objects.equals(awsConfig, that.awsConfig)
-                && Objects.equals(gcpConfig, that.gcpConfig) && Objects.equals(azureConfig, that.azureConfig)
+                && Objects.equals(tcpIpConfig, that.tcpIpConfig)
                 && Objects.equals(kubernetesConfig, that.kubernetesConfig)
-                && Objects.equals(eurekaConfig, that.eurekaConfig)
                 && Objects.equals(discoveryConfig, that.discoveryConfig)
                 && Objects.equals(autoDetectionConfig, that.autoDetectionConfig);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(multicastConfig, tcpIpConfig, awsConfig, gcpConfig, azureConfig, kubernetesConfig, eurekaConfig,
-                discoveryConfig, autoDetectionConfig);
+        return Objects.hash(multicastConfig, tcpIpConfig, kubernetesConfig, discoveryConfig, autoDetectionConfig);
     }
 }

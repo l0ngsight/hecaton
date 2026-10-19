@@ -207,12 +207,6 @@ public final class ClientProperty {
             = new HecatonProperty("hecaton.client.response.thread.dynamic", true);
 
     /**
-     * Token to use when discovering cluster via hazelcast.cloud
-     */
-    public static final HecatonProperty HECATON_CLOUD_DISCOVERY_TOKEN =
-            new HecatonProperty("hecaton.client.cloud.discovery.token");
-
-    /**
      * If an operation has backups, this property specifies how long the invocation will wait for acks from the backup replicas.
      * If acks are not received from some backups, there will not be any rollback on other successful replicas.
      */

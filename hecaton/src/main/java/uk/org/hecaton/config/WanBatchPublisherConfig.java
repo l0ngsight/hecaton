@@ -38,10 +38,10 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * cluster in batches, sending when either when enough events are enqueued
  * or enqueued events have waited for enough time.
  * The publisher can be a different cluster defined by static IPs or
- * discovered using a cloud discovery mechanism.
+ * discovered using Kubernetes or a Discovery SPI implementation.
  *
  * @see DiscoveryConfig
- * @see AwsConfig
+ * @see KubernetesConfig
  */
 @SuppressWarnings({"checkstyle:methodcount", "checkstyle:javadocvariable"})
 public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
@@ -81,11 +81,7 @@ public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
 
     private String targetEndpoints = DEFAULT_TARGET_ENDPOINTS;
 
-    private AwsConfig awsConfig = new AwsConfig();
-    private GcpConfig gcpConfig = new GcpConfig();
-    private AzureConfig azureConfig = new AzureConfig();
     private KubernetesConfig kubernetesConfig = new KubernetesConfig();
-    private EurekaConfig eurekaConfig = new EurekaConfig();
     private DiscoveryConfig discoveryConfig = new DiscoveryConfig();
     private WanSyncConfig syncConfig = new WanSyncConfig();
     /**
@@ -289,11 +285,7 @@ public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
      * you may consider using some of the discovery strategies.
      *
      * @return comma separated list
-     * @see #getAwsConfig()
-     * @see #getGcpConfig()
-     * @see #getAzureConfig()
      * @see #getKubernetesConfig()
-     * @see #getEurekaConfig()
      * @see #getDiscoveryConfig()
      */
     public String getTargetEndpoints() {
@@ -308,11 +300,7 @@ public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
      *
      * @param targetEndpoints comma separated list
      * @return this config
-     * @see #setAwsConfig(AwsConfig)
-     * @see #setGcpConfig(GcpConfig)
-     * @see #setAzureConfig(AzureConfig)
      * @see #setKubernetesConfig(KubernetesConfig)
-     * @see #setEurekaConfig(EurekaConfig)
      * @see #setDiscoveryConfig(DiscoveryConfig)
      */
     public WanBatchPublisherConfig setTargetEndpoints(String targetEndpoints) {
@@ -613,69 +601,6 @@ public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
     }
 
     /**
-     * Returns the {@link AwsConfig} used by the discovery mechanism for this
-     * WAN publisher.
-     */
-    public AwsConfig getAwsConfig() {
-        return awsConfig;
-    }
-
-    /**
-     * Sets the {@link AwsConfig} used by the discovery mechanism for this
-     * WAN publisher.
-     *
-     * @param awsConfig the AWS discovery configuration
-     * @return this config
-     * @throws IllegalArgumentException if awsConfig is null
-     */
-    public WanBatchPublisherConfig setAwsConfig(final AwsConfig awsConfig) {
-        this.awsConfig = isNotNull(awsConfig, "awsConfig");
-        return this;
-    }
-
-    /**
-     * Returns the {@link GcpConfig} used by the discovery mechanism for this
-     * WAN publisher.
-     */
-    public GcpConfig getGcpConfig() {
-        return gcpConfig;
-    }
-
-    /**
-     * Sets the {@link GcpConfig} used by the discovery mechanism for this
-     * WAN publisher.
-     *
-     * @param gcpConfig the GCP discovery configuration
-     * @return this config
-     * @throws IllegalArgumentException if gcpConfig is null
-     */
-    public WanBatchPublisherConfig setGcpConfig(final GcpConfig gcpConfig) {
-        this.gcpConfig = isNotNull(gcpConfig, "gcpConfig");
-        return this;
-    }
-
-    /**
-     * Returns the {@link AzureConfig} used by the discovery mechanism for this
-     * WAN publisher.
-     */
-    public AzureConfig getAzureConfig() {
-        return azureConfig;
-    }
-
-    /**
-     * Sets the {@link AzureConfig} used by the discovery mechanism for this
-     * WAN publisher.
-     *
-     * @param azureConfig the Azure discovery configuration
-     * @return this config
-     * @throws IllegalArgumentException if azureConfig is null
-     */
-    public WanBatchPublisherConfig setAzureConfig(final AzureConfig azureConfig) {
-        this.azureConfig = isNotNull(azureConfig, "azureConfig");
-        return this;
-    }
-
-    /**
      * Returns the {@link KubernetesConfig} used by the discovery mechanism for this
      * WAN publisher.
      */
@@ -693,27 +618,6 @@ public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
      */
     public WanBatchPublisherConfig setKubernetesConfig(final KubernetesConfig kubernetesConfig) {
         this.kubernetesConfig = isNotNull(kubernetesConfig, "kubernetesConfig");
-        return this;
-    }
-
-    /**
-     * Returns the {@link EurekaConfig} used by the discovery mechanism for this
-     * WAN publisher.
-     */
-    public EurekaConfig getEurekaConfig() {
-        return eurekaConfig;
-    }
-
-    /**
-     * Sets the {@link EurekaConfig} used by the discovery mechanism for this
-     * WAN publisher.
-     *
-     * @param eurekaConfig the Eureka discovery configuration
-     * @return this config
-     * @throws IllegalArgumentException if eurekaConfig is null
-     */
-    public WanBatchPublisherConfig setEurekaConfig(final EurekaConfig eurekaConfig) {
-        this.eurekaConfig = isNotNull(eurekaConfig, "eurekaConfig");
         return this;
     }
 
@@ -790,11 +694,7 @@ public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
                 + ", properties=" + properties
                 + ", className='" + className + '\''
                 + ", implementation=" + implementation
-                + ", awsConfig=" + awsConfig
-                + ", gcpConfig=" + gcpConfig
-                + ", azureConfig=" + azureConfig
                 + ", kubernetesConfig=" + kubernetesConfig
-                + ", eurekaConfig=" + eurekaConfig
                 + ", discoveryConfig=" + discoveryConfig
                 + ", endpoint=" + endpoint
                 + '}';
@@ -829,11 +729,7 @@ public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
         out.writeLong(idleMinParkNs);
         out.writeLong(idleMaxParkNs);
         out.writeString(targetEndpoints);
-        out.writeObject(awsConfig);
-        out.writeObject(gcpConfig);
-        out.writeObject(azureConfig);
         out.writeObject(kubernetesConfig);
-        out.writeObject(eurekaConfig);
         out.writeObject(discoveryConfig);
         out.writeObject(syncConfig);
         out.writeString(endpoint);
@@ -858,11 +754,7 @@ public class WanBatchPublisherConfig extends AbstractWanPublisherConfig {
         idleMinParkNs = in.readLong();
         idleMaxParkNs = in.readLong();
         targetEndpoints = in.readString();
-        awsConfig = in.readObject();
-        gcpConfig = in.readObject();
-        azureConfig = in.readObject();
         kubernetesConfig = in.readObject();
-        eurekaConfig = in.readObject();
         discoveryConfig = in.readObject();
         syncConfig = in.readObject();
         endpoint = in.readString();

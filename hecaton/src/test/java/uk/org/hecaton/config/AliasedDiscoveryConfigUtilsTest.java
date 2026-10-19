@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -39,15 +40,27 @@ public class AliasedDiscoveryConfigUtilsTest {
 
     @Test
     public void supports() {
-        assertTrue(AliasedDiscoveryConfigUtils.supports("gcp"));
+        assertTrue(AliasedDiscoveryConfigUtils.supports("kubernetes"));
         assertFalse(AliasedDiscoveryConfigUtils.supports("unknown"));
     }
 
     @Test
+    public void removedCloudProviderTags_areRejected() {
+        for (String tag : List.of("aws", "gcp", "azure", "eureka", "hecaton-cloud")) {
+            assertThatThrownBy(() -> AliasedDiscoveryConfigUtils.supports(tag))
+                    .isInstanceOf(InvalidConfigurationException.class)
+                    .hasMessageContaining("'" + tag + "': Cloud-provider discovery is not supported in Hecaton");
+            assertThatThrownBy(() -> AliasedDiscoveryConfigUtils.newConfigFor(tag))
+                    .isInstanceOf(InvalidConfigurationException.class);
+            assertThatThrownBy(() -> AliasedDiscoveryConfigUtils.getConfigByTag(new JoinConfig(), tag))
+                    .isInstanceOf(InvalidConfigurationException.class);
+        }
+    }
+
+    @Test
     public void tagFor() {
-        assertEquals("gcp", AliasedDiscoveryConfigUtils.tagFor(new GcpConfig()));
-        assertEquals("aws", AliasedDiscoveryConfigUtils.tagFor(new AwsConfig()));
-        assertEquals("aws", AliasedDiscoveryConfigUtils.tagFor(new AwsConfig() {
+        assertEquals("kubernetes", AliasedDiscoveryConfigUtils.tagFor(new KubernetesConfig()));
+        assertEquals("kubernetes", AliasedDiscoveryConfigUtils.tagFor(new KubernetesConfig() {
         }));
         assertNull(AliasedDiscoveryConfigUtils.tagFor(new DummyAliasedDiscoveryConfig(null)));
     }
@@ -56,60 +69,54 @@ public class AliasedDiscoveryConfigUtilsTest {
     public void createDiscoveryStrategyConfigsFromJoinConfig() {
         // given
         JoinConfig config = new JoinConfig();
-        config.getGcpConfig().setEnabled(true);
+        config.getKubernetesConfig().setEnabled(true);
 
         // when
         List<DiscoveryStrategyConfig> result = AliasedDiscoveryConfigUtils.createDiscoveryStrategyConfigs(config);
 
         // then
         assertEquals(1, result.size());
-        assertEquals("uk.org.hecaton.gcp.GcpDiscoveryStrategy", result.get(0).getClassName());
+        assertEquals("uk.org.hecaton.kubernetes.HecatonKubernetesDiscoveryStrategy", result.get(0).getClassName());
     }
 
     @Test
     public void createDiscoveryStrategyConfigsFromWanPublisherConfig() {
         // given
         WanBatchPublisherConfig config = new WanBatchPublisherConfig();
-        config.getGcpConfig().setEnabled(true);
+        config.getKubernetesConfig().setEnabled(true);
 
         // when
         List<DiscoveryStrategyConfig> result = AliasedDiscoveryConfigUtils.createDiscoveryStrategyConfigs(config);
 
         // then
         assertEquals(1, result.size());
-        assertEquals("uk.org.hecaton.gcp.GcpDiscoveryStrategy", result.get(0).getClassName());
+        assertEquals("uk.org.hecaton.kubernetes.HecatonKubernetesDiscoveryStrategy", result.get(0).getClassName());
     }
 
     @Test
     public void map() {
         // given
         List<AliasedDiscoveryConfig<?>> aliasedDiscoveryConfigs = new ArrayList<>();
-        aliasedDiscoveryConfigs
-                .add(new GcpConfig().setEnabled(true).setProperty("projects", "hecaton-33").setProperty("zones", "us-east1-b"));
-        aliasedDiscoveryConfigs.add(new AwsConfig() { }.setEnabled(true).setProperty("access-key", "someAccessKey")
-                .setProperty("secret-key", "someSecretKey").setProperty("region", "eu-central-1"));
+        aliasedDiscoveryConfigs.add(new KubernetesConfig().setEnabled(true).setProperty("namespace", "hecaton-33")
+                .setProperty("service-name", "my-service"));
+        aliasedDiscoveryConfigs.add(new KubernetesConfig().setEnabled(false).setProperty("namespace", "disabled"));
 
         // when
         List<DiscoveryStrategyConfig> discoveryConfigs = AliasedDiscoveryConfigUtils.map(aliasedDiscoveryConfigs);
 
         // then
-        DiscoveryStrategyConfig gcpConfig = discoveryConfigs.get(0);
-        assertEquals("uk.org.hecaton.gcp.GcpDiscoveryStrategy", gcpConfig.getClassName());
-        assertEquals("hecaton-33", gcpConfig.getProperties().get("projects"));
-        assertEquals("us-east1-b", gcpConfig.getProperties().get("zones"));
-
-        DiscoveryStrategyConfig awsConfig = discoveryConfigs.get(1);
-        assertEquals("uk.org.hecaton.aws.AwsDiscoveryStrategy", awsConfig.getClassName());
-        assertEquals("someAccessKey", awsConfig.getProperties().get("access-key"));
-        assertEquals("someSecretKey", awsConfig.getProperties().get("secret-key"));
-        assertEquals("eu-central-1", awsConfig.getProperties().get("region"));
+        assertEquals(1, discoveryConfigs.size());
+        DiscoveryStrategyConfig kubernetesConfig = discoveryConfigs.get(0);
+        assertEquals("uk.org.hecaton.kubernetes.HecatonKubernetesDiscoveryStrategy", kubernetesConfig.getClassName());
+        assertEquals("hecaton-33", kubernetesConfig.getProperties().get("namespace"));
+        assertEquals("my-service", kubernetesConfig.getProperties().get("service-name"));
     }
 
     @Test
     public void skipNotEnabledConfigs() {
         // given
         List<AliasedDiscoveryConfig<?>> configs = new ArrayList<>();
-        configs.add(new GcpConfig().setEnabled(false));
+        configs.add(new KubernetesConfig().setEnabled(false));
 
         // when
         List<DiscoveryStrategyConfig> discoveryConfigs = AliasedDiscoveryConfigUtils.map(configs);
@@ -122,7 +129,7 @@ public class AliasedDiscoveryConfigUtilsTest {
     public void skipPropertyWithNullKey() {
         // given
         List<AliasedDiscoveryConfig<?>> configs = new ArrayList<>();
-        configs.add(new GcpConfig().setEnabled(true).setProperty(null, "value"));
+        configs.add(new KubernetesConfig().setEnabled(true).setProperty(null, "value"));
 
         // when
         List<DiscoveryStrategyConfig> discoveryConfigs = AliasedDiscoveryConfigUtils.map(configs);
@@ -152,10 +159,10 @@ public class AliasedDiscoveryConfigUtilsTest {
         JoinConfig config = new JoinConfig();
 
         // when
-        AliasedDiscoveryConfig result = AliasedDiscoveryConfigUtils.getConfigByTag(config, "gcp");
+        AliasedDiscoveryConfig result = AliasedDiscoveryConfigUtils.getConfigByTag(config, "kubernetes");
 
         // then
-        assertEquals(GcpConfig.class, result.getClass());
+        assertEquals(KubernetesConfig.class, result.getClass());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -176,10 +183,10 @@ public class AliasedDiscoveryConfigUtilsTest {
         WanBatchPublisherConfig config = new WanBatchPublisherConfig();
 
         // when
-        AliasedDiscoveryConfig result = AliasedDiscoveryConfigUtils.getConfigByTag(config, "gcp");
+        AliasedDiscoveryConfig result = AliasedDiscoveryConfigUtils.getConfigByTag(config, "kubernetes");
 
         // then
-        assertEquals(GcpConfig.class, result.getClass());
+        assertEquals(KubernetesConfig.class, result.getClass());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -197,9 +204,9 @@ public class AliasedDiscoveryConfigUtilsTest {
     @Test
     public void allUsePublicAddressTrue() {
         // given
-        AwsConfig awsConfig = new AwsConfig().setEnabled(true).setUsePublicIp(true);
-        GcpConfig gcpConfig = new GcpConfig().setEnabled(true).setUsePublicIp(true);
-        List<AliasedDiscoveryConfig<?>> configs = asList(awsConfig, gcpConfig);
+        KubernetesConfig first = new KubernetesConfig().setEnabled(true).setUsePublicIp(true);
+        KubernetesConfig second = new KubernetesConfig().setEnabled(true).setUsePublicIp(true);
+        List<AliasedDiscoveryConfig<?>> configs = asList(first, second);
 
         // when
         boolean result = AliasedDiscoveryConfigUtils.allUsePublicAddress(configs);
@@ -211,9 +218,9 @@ public class AliasedDiscoveryConfigUtilsTest {
     @Test
     public void allUsePublicAddressFalse() {
         // given
-        AwsConfig awsConfig = new AwsConfig().setEnabled(true).setUsePublicIp(true);
-        GcpConfig gcpConfig = new GcpConfig().setEnabled(true).setUsePublicIp(false);
-        List<AliasedDiscoveryConfig<?>> configs = asList(awsConfig, gcpConfig);
+        KubernetesConfig first = new KubernetesConfig().setEnabled(true).setUsePublicIp(true);
+        KubernetesConfig second = new KubernetesConfig().setEnabled(true).setUsePublicIp(false);
+        List<AliasedDiscoveryConfig<?>> configs = asList(first, second);
 
         // when
         boolean result = AliasedDiscoveryConfigUtils.allUsePublicAddress(configs);

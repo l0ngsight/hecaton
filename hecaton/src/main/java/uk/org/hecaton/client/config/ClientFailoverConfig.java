@@ -41,12 +41,7 @@ import static uk.org.hecaton.internal.config.DeclarativeConfigUtil.validateSuffi
  * <li>{@code NetworkConfig.Addresses}</li>
  * <li>{@code NetworkConfig.SocketInterceptorConfig}</li>
  * <li>{@code NetworkConfig.SSLConfig}</li>
- * <li>{@code NetworkConfig.AwsConfig}</li>
- * <li>{@code NetworkConfig.GcpConfig}</li>
- * <li>{@code NetworkConfig.AzureConfig}</li>
  * <li>{@code NetworkConfig.KubernetesConfig}</li>
- * <li>{@code NetworkConfig.EurekaConfig}</li>
- * <li>{@code NetworkConfig.CloudConfig}</li>
  * <li>{@code NetworkConfig.DiscoveryConfig}</li>
  * </ul>
  */

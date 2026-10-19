@@ -499,11 +499,7 @@ public class RestClusterTest {
         join.getAutoDetectionConfig().setEnabled(false);
         join.getMulticastConfig().setEnabled(false);
         join.getTcpIpConfig().setEnabled(false);
-        join.getAwsConfig().setEnabled(false);
-        join.getGcpConfig().setEnabled(false);
-        join.getAzureConfig().setEnabled(false);
         join.getKubernetesConfig().setEnabled(false);
-        join.getEurekaConfig().setEnabled(false);
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(false);
         HecatonInstance instance = null;
         try {
@@ -530,11 +526,7 @@ public class RestClusterTest {
         join.getAutoDetectionConfig().setEnabled(false);
         join.getMulticastConfig().setEnabled(false);
         join.getTcpIpConfig().setEnabled(false);
-        join.getAwsConfig().setEnabled(false);
-        join.getGcpConfig().setEnabled(false);
-        join.getAzureConfig().setEnabled(false);
         join.getKubernetesConfig().setEnabled(false);
-        join.getEurekaConfig().setEnabled(false);
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(false);
         HecatonInstance instance = null;
         try {

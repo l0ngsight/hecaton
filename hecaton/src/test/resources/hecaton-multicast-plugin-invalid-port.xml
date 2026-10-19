@@ -29,7 +29,6 @@
         <join>
             <multicast enabled="false"/>
             <tcp-ip enabled="false" />
-            <aws enabled="false"/>
             <discovery-strategies>
                 <discovery-strategy enabled="true" class="uk.org.hecaton.spi.discovery.multicast.MulticastDiscoveryStrategy">
                     <properties>

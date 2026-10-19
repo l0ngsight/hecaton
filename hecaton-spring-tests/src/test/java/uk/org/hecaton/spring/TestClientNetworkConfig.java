@@ -21,10 +21,6 @@ import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.RoutingStrategy;
 import uk.org.hecaton.client.impl.clientside.HecatonClientProxy;
 import uk.org.hecaton.client.config.RoutingMode;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
-import uk.org.hecaton.config.EurekaConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.KubernetesConfig;
 import uk.org.hecaton.config.SocketInterceptorConfig;
 import uk.org.hecaton.core.Hecaton;
@@ -99,41 +95,6 @@ class TestClientNetworkConfig {
     }
 
     @Test
-    void smokeAwsConfig() {
-        AwsConfig aws = client.getClientConfig().getNetworkConfig().getAwsConfig();
-        assertFalse(aws.isEnabled());
-        assertEquals("sample-access-key", aws.getProperty("access-key"));
-        assertEquals("sample-secret-key", aws.getProperty("secret-key"));
-        assertEquals("sample-region", aws.getProperty("region"));
-        assertEquals("sample-header", aws.getProperty("host-header"));
-        assertEquals("sample-group", aws.getProperty("security-group-name"));
-        assertEquals("sample-tag-key", aws.getProperty("tag-key"));
-        assertEquals("sample-tag-value", aws.getProperty("tag-value"));
-        assertEquals("sample-role", aws.getProperty("iam-role"));
-    }
-
-    @Test
-    void smokeGcpConfig() {
-        GcpConfig gcp = client.getClientConfig().getNetworkConfig().getGcpConfig();
-        assertFalse(gcp.isEnabled());
-        assertEquals("us-east1-b,us-east1-c", gcp.getProperty("zones"));
-    }
-
-    @Test
-    void smokeAzureConfig() {
-        AzureConfig azure = client.getClientConfig().getNetworkConfig().getAzureConfig();
-        assertFalse(azure.isEnabled());
-        assertEquals("false", azure.getProperty("instance-metadata-available"));
-        assertEquals("CLIENT_ID", azure.getProperty("client-id"));
-        assertEquals("CLIENT_SECRET", azure.getProperty("client-secret"));
-        assertEquals("TENANT_ID", azure.getProperty("tenant-id"));
-        assertEquals("SUB_ID", azure.getProperty("subscription-id"));
-        assertEquals("RESOURCE-GROUP-NAME", azure.getProperty("resource-group"));
-        assertEquals("SCALE-SET", azure.getProperty("scale-set"));
-        assertEquals("TAG-NAME=HZLCAST001", azure.getProperty("tag"));
-    }
-
-    @Test
     void smokeKubernetesConfig() {
         KubernetesConfig kubernetes = client.getClientConfig().getNetworkConfig().getKubernetesConfig();
         assertFalse(kubernetes.isEnabled());
@@ -141,14 +102,6 @@ class TestClientNetworkConfig {
         assertEquals("MY-SERVICE-NAME", kubernetes.getProperty("service-name"));
         assertEquals("MY-SERVICE-LABEL-NAME", kubernetes.getProperty("service-label-name"));
         assertEquals("MY-SERVICE-LABEL-VALUE", kubernetes.getProperty("service-label-value"));
-    }
-
-    @Test
-    void smokeEurekaConfig() {
-        EurekaConfig eureka = client.getClientConfig().getNetworkConfig().getEurekaConfig();
-        assertFalse(eureka.isEnabled());
-        assertEquals("true", eureka.getProperty("self-registration"));
-        assertEquals("hecaton", eureka.getProperty("namespace"));
     }
 
     @Test

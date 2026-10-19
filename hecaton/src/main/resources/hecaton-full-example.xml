@@ -288,48 +288,17 @@
                     check procedure to work properly, the target cluster should support the
                     chosen strategy.
                     Default value is NONE, which means the check is disabled.
-            * <aws>:
-                Set its "enabled" attribute to true for discovery within Amazon EC2. It has the following sub-elements:
-                - <access-key>:
-                    Access key of your account on EC2.
-                - <secret-key>:
-                    Secret key of your account on EC2.
-                - <iam-role>:
-                    IAM role that binds with your instance.
-                - <region>:
-                    The region where your Hecaton members run. Default value is us-east-1.
-                                It needs to be specified if the region is other than the default one.
-                - <host-header>:
-                    The URL that is the entry point for a web service. It is optional.
-                - <security-group-name>:
-                    Name of the security group you specified at the EC2 management console.
-                                It is used to narrow the Hecaton members to be within this group. It is optional.
-                - <tag-key>:
-                    To narrow the members in the cloud down to only Hecaton members, you can set
-                                this to the one you specified in the EC2 console. It is optional.
-                - <tag-value>:
-                    To narrow the members in the cloud down to only Hecaton members, you can set
-                                this to the one you specified in the EC2 console. It is optional.
             * <discovery-strategies>:
                 Set its "enabled" attribute to true for discovery in various cloud infrastructures.
                 You can define multiple discovery strategies using the <discovery-strategy> sub-element and its properties.
                 Please refer to
                 https://docs.hazelcast.com/hazelcast/latest/clusters/discovery-mechanisms
                 to see the properties you can use.
-                The following is an example for EC2 cloud.
+                The following is an example for Kubernetes.
                 <discovery-strategies>
-                    <discovery-strategy enabled="true" class="uk.org.hecaton.aws.AwsDiscoveryStrategy">
+                    <discovery-strategy enabled="true" class="uk.org.hecaton.kubernetes.HecatonKubernetesDiscoveryStrategy">
                         <properties>
-                            <property name="access-key">test-access-key</property>
-                            <property name="secret-key">test-secret-key</property>
-                            <property name="region">test-region</property>
-                            <property name="iam-role">test-iam-role</property>
-                            <property name="host-header">ec2.test-host-header</property>
-                            <property name="security-group-name">test-security-group-name</property>
-                            <property name="tag-key">test-tag-key</property>
-                            <property name="tag-value">test-tag-value</property>
-                            <property name="connection-timeout-seconds">10</property>
-                            <property name="hz-port">5702</property>
+                            <property name="service-dns">my-cluster.my-namespace.svc.cluster.local</property>
                         </properties>
                     </discovery-strategy>
                 </discovery-strategies>
@@ -385,16 +354,6 @@
             <sync>
                 <consistency-check-strategy>NONE</consistency-check-strategy>
             </sync>
-            <!--            <aws enabled="false">-->
-            <!--                <access-key>my-access-key</access-key>-->
-            <!--                <secret-key>my-secret-key</secret-key>-->
-            <!--                <iam-role>dummy</iam-role>-->
-            <!--                <region>us-west-1</region>-->
-            <!--                <host-header>ec2.amazonaws.com</host-header>-->
-            <!--                <security-group-name>hecaton-sg</security-group-name>-->
-            <!--                <tag-key>type</tag-key>-->
-            <!--                <tag-value>hz-nodes</tag-value>-->
-            <!--            </aws>-->
             <!--            <discovery-strategies>-->
             <!--                <discovery-strategy class="uk.org.hecaton.jclouds.JCloudsDiscoveryStrategy" enabled="true">-->
             <!--                    <properties>-->
@@ -516,23 +475,9 @@
                 IP address(es) of one or more well known members listed with the <member> element.
             - <interface>:
                 IP address(es) of one or more well known members.
-        - <aws>:
-            Set its "enabled" attribute to true for discovery within Amazon EC2.
-            Please refer to https://github.com/hazelcast/hazelcast-aws/#configuration for the configuration details.
-        - <gcp>:
-            Set its "enabled" attribute to true for discovery within the Google Cloud Platform.
-            Please refer to https://github.com/hazelcast/hazelcast-gcp/#configuration for the configuration details.
-        - <azure>:
-            Set its "enabled" attribute to true for discovery within Microsoft Azure.
-            Please refer to https://github.com/hazelcast/hazelcast-azure/#configuring-at-hazelcast-side for
-            the configuration details.
         - <kubernetes>:
             Set its "enabled" attribute to true for discovery in the Kubernetes environment.
             Please refer to https://docs.hazelcast.com/hazelcast/latest/kubernetes/kubernetes-auto-discovery#hazelcast-configuration for
-            the configuration details.
-        - <eureka>:
-            Set its "enabled" attribute to true for discovery with using Eureka Service Registry.
-            Please refer to https://github.com/hazelcast/hazelcast-eureka#hazelcast-configuration for
             the configuration details.
         - <discovery-strategies>:
             Set its "enabled" attribute to true for discovery in various cloud infrastructures. You also need to set the
@@ -677,57 +622,12 @@
                     <member>10.0.0.3</member>
                 </member-list>
             </tcp-ip>
-            <aws enabled="false">
-                <access-key>my-access-key</access-key>
-                <secret-key>my-secret-key</secret-key>
-                <region>us-west-1</region>
-                <host-header>ec2.amazonaws.com</host-header>
-                <connection-timeout-seconds>7</connection-timeout-seconds>
-                <read-timeout-seconds>7</read-timeout-seconds>
-                <connection-retries>4</connection-retries>
-                <hz-port>5701-5710</hz-port>
-                <tag-key>type</tag-key>
-                <tag-value>hz-nodes</tag-value>
-                <security-group-name>hecaton-sg</security-group-name>
-                <iam-role>dummy</iam-role>
-                <use-public-ip>true</use-public-ip>
-                <!--
-                <cluster>my-cluster</cluster>
-                <family>test-family</family>
-                <service-name>test-service</service-name>
-                -->
-            </aws>
-            <gcp enabled="false">
-                <private-key-path>key-path</private-key-path>
-                <projects>project-1,project-2</projects>
-                <region>us-central1</region>
-                <zones>us-central1-b,us-central1-c</zones>
-                <label>key=value</label>
-                <hz-port>5701-5710</hz-port>
-                <use-public-ip>true</use-public-ip>
-            </gcp>
-            <azure enabled="false">
-                <instance-metadata-available>false</instance-metadata-available>
-                <client-id>CLIENT_ID</client-id>
-                <client-secret>CLIENT_SECRET</client-secret>
-                <tenant-id>TENANT_ID</tenant-id>
-                <subscription-id>SUB_ID</subscription-id>
-                <resource-group>RESOURCE-GROUP-NAME</resource-group>
-                <scale-set>SCALE-SET-NAME</scale-set>
-                <tag>TAG-NAME=HZLCAST001</tag>
-                <hz-port>5701-5707</hz-port>
-                <use-public-ip>true</use-public-ip>
-            </azure>
             <kubernetes enabled="false">
                 <namespace>MY-KUBERNETES-NAMESPACE</namespace>
                 <service-name>MY-SERVICE-NAME</service-name>
                 <service-label-name>MY-SERVICE-LABEL-NAME</service-label-name>
                 <service-label-value>MY-SERVICE-LABEL-VALUE</service-label-value>
             </kubernetes>
-            <eureka enabled="false">
-                <self-registration>true</self-registration>
-                <namespace>hecaton</namespace>
-            </eureka>
             <discovery-strategies>
                 <node-filter class="com.yourpackage.NodeFilter"/>
                 <discovery-strategy class="uk.org.hecaton.jclouds.JCloudsDiscoveryStrategy" enabled="true">
@@ -3084,23 +2984,9 @@
                     IP address(es) of one or more well known members listed with the <member> element.
                 - <interface>:
                     IP address(es) of one or more well known members.
-            - <aws>:
-                Set its "enabled" attribute to true for discovery within Amazon EC2.
-                Please refer to https://github.com/hazelcast/hazelcast-aws/#configuration for the configuration details.
-            - <gcp>:
-                Set its "enabled" attribute to true for discovery within the Google Cloud Platform.
-                Please refer to https://github.com/hazelcast/hazelcast-gcp/#configuration for the configuration details.
-            - <azure>:
-                Set its "enabled" attribute to true for discovery within Microsoft Azure.
-                Please refer to https://github.com/hazelcast/hazelcast-azure/#configuring-at-hazelcast-side for
-                the configuration details.
             - <kubernetes>:
                 Set its "enabled" attribute to true for discovery in the Kubernetes environment.
                 Please refer to https://docs.hazelcast.com/hazelcast/latest/kubernetes/kubernetes-auto-discovery#hazelcast-configuration for
-                the configuration details.
-            - <eureka>:
-                Set its "enabled" attribute to true for discovery with using Eureka Service Registry.
-                Please refer to https://github.com/hazelcast/hazelcast-eureka#hazelcast-configuration for
                 the configuration details.
             - <discovery-strategies>:
                 Set its "enabled" attribute to true for discovery in various cloud infrastructures. You also need to set the
@@ -3370,57 +3256,12 @@
                     <member>dummy6</member>
                 </member-list>
             </tcp-ip>
-            <aws enabled="false">
-                <access-key>my-access-key</access-key>
-                <secret-key>my-secret-key</secret-key>
-                <region>us-west-1</region>
-                <host-header>ec2.amazonaws.com</host-header>
-                <connection-timeout-seconds>7</connection-timeout-seconds>
-                <read-timeout-seconds>7</read-timeout-seconds>
-                <connection-retries>4</connection-retries>
-                <hz-port>5701-5710</hz-port>
-                <tag-key>type</tag-key>
-                <tag-value>hz-nodes</tag-value>
-                <security-group-name>hecaton-sg</security-group-name>
-                <iam-role>dummy</iam-role>
-                <use-public-ip>true</use-public-ip>
-                <!--
-                <cluster>my-cluster</cluster>
-                <family>test-family</family>
-                <service-name>test-service</service-name>
-                -->
-            </aws>
-            <gcp enabled="false">
-                <private-key-path>key-path</private-key-path>
-                <projects>project-1,project-2</projects>
-                <region>us-central1</region>
-                <zones>us-central1-b,us-central1-c</zones>
-                <label>key=value</label>
-                <hz-port>5701-5710</hz-port>
-                <use-public-ip>true</use-public-ip>
-            </gcp>
-            <azure enabled="false">
-                <instance-metadata-available>false</instance-metadata-available>
-                <client-id>CLIENT_ID</client-id>
-                <client-secret>CLIENT_SECRET</client-secret>
-                <tenant-id>TENANT_ID</tenant-id>
-                <subscription-id>SUB_ID</subscription-id>
-                <resource-group>RESOURCE-GROUP-NAME</resource-group>
-                <scale-set>SCALE-SET-NAME</scale-set>
-                <tag>TAG-NAME=HZLCAST001</tag>
-                <hz-port>5701-5707</hz-port>
-                <use-public-ip>true</use-public-ip>
-            </azure>
             <kubernetes enabled="false">
                 <namespace>MY-KUBERNETES-NAMESPACE</namespace>
                 <service-name>MY-SERVICE-NAME</service-name>
                 <service-label-name>MY-SERVICE-LABEL-NAME</service-label-name>
                 <service-label-value>MY-SERVICE-LABEL-VALUE</service-label-value>
             </kubernetes>
-            <eureka enabled="false">
-                <self-registration>true</self-registration>
-                <namespace>hecaton</namespace>
-            </eureka>
             <!--            <discovery-strategies>
                             <node-filter class="DummyFilterClass"/>
                             <discovery-strategy class="DummyClass" enabled="true">

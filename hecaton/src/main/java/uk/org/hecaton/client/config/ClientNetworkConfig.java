@@ -17,11 +17,7 @@
 package uk.org.hecaton.client.config;
 
 import uk.org.hecaton.config.AutoDetectionConfig;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
 import uk.org.hecaton.config.DiscoveryConfig;
-import uk.org.hecaton.config.EurekaConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.KubernetesConfig;
 import uk.org.hecaton.config.SSLConfig;
 import uk.org.hecaton.config.SocketInterceptorConfig;
@@ -52,12 +48,7 @@ public class ClientNetworkConfig {
     private SocketInterceptorConfig socketInterceptorConfig = new SocketInterceptorConfig();
     private SocketOptions socketOptions = new SocketOptions();
     private SSLConfig sslConfig;
-    private AwsConfig awsConfig = new AwsConfig();
-    private GcpConfig gcpConfig = new GcpConfig();
-    private AzureConfig azureConfig = new AzureConfig();
     private KubernetesConfig kubernetesConfig = new KubernetesConfig();
-    private EurekaConfig eurekaConfig = new EurekaConfig();
-    private ClientCloudConfig cloudConfig = new ClientCloudConfig();
     private DiscoveryConfig discoveryConfig = new DiscoveryConfig();
     private AutoDetectionConfig autoDetectionConfig = new AutoDetectionConfig();
     private Collection<String> outboundPortDefinitions;
@@ -76,12 +67,7 @@ public class ClientNetworkConfig {
         socketInterceptorConfig = new SocketInterceptorConfig(networkConfig.socketInterceptorConfig);
         socketOptions = new SocketOptions(networkConfig.socketOptions);
         sslConfig = networkConfig.sslConfig == null ? null : new SSLConfig(networkConfig.sslConfig);
-        awsConfig = new AwsConfig(networkConfig.awsConfig);
-        gcpConfig = new GcpConfig(networkConfig.gcpConfig);
-        azureConfig = new AzureConfig(networkConfig.azureConfig);
         kubernetesConfig = new KubernetesConfig(networkConfig.kubernetesConfig);
-        eurekaConfig = new EurekaConfig(networkConfig.eurekaConfig);
-        cloudConfig = new ClientCloudConfig(networkConfig.cloudConfig);
         discoveryConfig = new DiscoveryConfig(networkConfig.discoveryConfig);
         outboundPortDefinitions = networkConfig.outboundPortDefinitions == null
                 ? null : new HashSet<>(networkConfig.outboundPortDefinitions);
@@ -130,12 +116,7 @@ public class ClientNetworkConfig {
     public boolean isAutoDetectionEnabled() {
         return autoDetectionConfig.isEnabled()
                 && addressList.isEmpty()
-                && !cloudConfig.isEnabled()
-                && !awsConfig.isEnabled()
-                && !gcpConfig.isEnabled()
-                && !azureConfig.isEnabled()
                 && !kubernetesConfig.isEnabled()
-                && !eurekaConfig.isEnabled()
                 && !discoveryConfig.isEnabled();
     }
 
@@ -328,72 +309,6 @@ public class ClientNetworkConfig {
     }
 
     /**
-     * Sets configuration to connect nodes in AWS environment.
-     *
-     * @param clientAwsConfig the ClientAwsConfig
-     * @see #getAwsConfig()
-     */
-    public ClientNetworkConfig setAwsConfig(AwsConfig clientAwsConfig) {
-        isNotNull(clientAwsConfig, "clientAwsConfig");
-        this.awsConfig = clientAwsConfig;
-        return this;
-    }
-
-    /**
-     * Returns the current {@link AwsConfig}.
-     *
-     * @return ClientAwsConfig
-     * @see #setAwsConfig(AwsConfig)
-     */
-    public AwsConfig getAwsConfig() {
-        return awsConfig;
-    }
-
-    /**
-     * Sets configuration to connect nodes in GCP environment.
-     *
-     * @param gcpConfig the GcpConfig
-     * @see #getGcpConfig()
-     */
-    public ClientNetworkConfig setGcpConfig(GcpConfig gcpConfig) {
-        isNotNull(gcpConfig, "gcpConfig");
-        this.gcpConfig = gcpConfig;
-        return this;
-    }
-
-    /**
-     * Returns the current {@link GcpConfig}.
-     *
-     * @return GcpConfig
-     * @see #setGcpConfig(GcpConfig)
-     */
-    public GcpConfig getGcpConfig() {
-        return gcpConfig;
-    }
-
-    /**
-     * Sets configuration to connect nodes in Azure environment.
-     *
-     * @param azureConfig the AzureConfig
-     * @see #getAzureConfig()
-     */
-    public ClientNetworkConfig setAzureConfig(AzureConfig azureConfig) {
-        isNotNull(azureConfig, "azureConfig");
-        this.azureConfig = azureConfig;
-        return this;
-    }
-
-    /**
-     * Returns the current {@link AzureConfig}.
-     *
-     * @return AzureConfig
-     * @see #setAzureConfig(AzureConfig)
-     */
-    public AzureConfig getAzureConfig() {
-        return azureConfig;
-    }
-
-    /**
      * Sets configuration to connect nodes in Kubernetes environment.
      *
      * @param kubernetesConfig the KubernetesConfig
@@ -413,38 +328,6 @@ public class ClientNetworkConfig {
      */
     public KubernetesConfig getKubernetesConfig() {
         return kubernetesConfig;
-    }
-
-    /**
-     * Sets configuration to connect nodes in Eureka environment.
-     *
-     * @param eurekaConfig the EurekaConfig
-     * @see #getEurekaConfig()
-     */
-    public ClientNetworkConfig setEurekaConfig(EurekaConfig eurekaConfig) {
-        isNotNull(eurekaConfig, "eurekaConfig");
-        this.eurekaConfig = eurekaConfig;
-        return this;
-    }
-
-    /**
-     * Returns the current {@link EurekaConfig}.
-     *
-     * @return EurekaConfig
-     * @see #setEurekaConfig(EurekaConfig)
-     */
-    public EurekaConfig getEurekaConfig() {
-        return eurekaConfig;
-    }
-
-    public ClientCloudConfig getCloudConfig() {
-        return cloudConfig;
-    }
-
-    public ClientNetworkConfig setCloudConfig(ClientCloudConfig cloudConfig) {
-        isNotNull(cloudConfig, "cloudConfig");
-        this.cloudConfig = cloudConfig;
-        return this;
     }
 
     /**
@@ -584,22 +467,7 @@ public class ClientNetworkConfig {
         if (!Objects.equals(sslConfig, that.sslConfig)) {
             return false;
         }
-        if (!awsConfig.equals(that.awsConfig)) {
-            return false;
-        }
-        if (!gcpConfig.equals(that.gcpConfig)) {
-            return false;
-        }
-        if (!azureConfig.equals(that.azureConfig)) {
-            return false;
-        }
         if (!kubernetesConfig.equals(that.kubernetesConfig)) {
-            return false;
-        }
-        if (!eurekaConfig.equals(that.eurekaConfig)) {
-            return false;
-        }
-        if (!cloudConfig.equals(that.cloudConfig)) {
             return false;
         }
         if (!discoveryConfig.equals(that.discoveryConfig)) {
@@ -625,12 +493,7 @@ public class ClientNetworkConfig {
         result = 31 * result + socketInterceptorConfig.hashCode();
         result = 31 * result + socketOptions.hashCode();
         result = 31 * result + (sslConfig != null ? sslConfig.hashCode() : 0);
-        result = 31 * result + awsConfig.hashCode();
-        result = 31 * result + gcpConfig.hashCode();
-        result = 31 * result + azureConfig.hashCode();
         result = 31 * result + kubernetesConfig.hashCode();
-        result = 31 * result + eurekaConfig.hashCode();
-        result = 31 * result + cloudConfig.hashCode();
         result = 31 * result + discoveryConfig.hashCode();
         result = 31 * result + (outboundPortDefinitions != null ? outboundPortDefinitions.hashCode() : 0);
         result = 31 * result + (outboundPorts != null ? outboundPorts.hashCode() : 0);
@@ -648,12 +511,7 @@ public class ClientNetworkConfig {
                 + ", socketInterceptorConfig=" + socketInterceptorConfig
                 + ", socketOptions=" + socketOptions
                 + ", sslConfig=" + sslConfig
-                + ", awsConfig=" + awsConfig
-                + ", gcpConfig=" + gcpConfig
-                + ", azureConfig=" + azureConfig
                 + ", kubernetesConfig=" + kubernetesConfig
-                + ", eurekaConfig=" + eurekaConfig
-                + ", cloudConfig=" + cloudConfig
                 + ", discoveryConfig=" + discoveryConfig
                 + ", outboundPortDefinitions=" + outboundPortDefinitions
                 + ", outboundPorts=" + outboundPorts

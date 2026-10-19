@@ -213,9 +213,6 @@
                                reuse-address="false"
                                tcp-no-delay="false"/>
 
-            <hz:aws enabled="false" use-public-ip="true" access-key="sample-access-key" secret-key="sample-secret-key"
-                    region="sample-region" security-group-name="sample-group"
-                    tag-key="sample-tag-key" tag-value="sample-tag-value"/>
         </hz:network>
 
     </hz:client>
@@ -423,26 +420,6 @@
 
     </hz:client>
 
-    <hz:client id="client12-hecaton-cloud">
-        <hz:cluster-name>${cluster.name}-node-client</hz:cluster-name>
-        <hz:network>
-            <hz:member>127.0.0.1:6150</hz:member>
-            <hz:member>127.0.0.1:6151</hz:member>
-            <hz:member>127.0.0.1:6152</hz:member>
-            <hz:member>127.0.0.1:6153</hz:member>
-            <hz:member>127.0.0.1:6154</hz:member>
-            <hz:member>127.0.0.1:6155</hz:member>
-            <hz:member>127.0.0.1:6156</hz:member>
-            <hz:member>127.0.0.1:6157</hz:member>
-            <hz:member>127.0.0.1:6158</hz:member>
-            <hz:member>127.0.0.1:6159</hz:member>
-
-            <hz:hecaton-cloud enabled="false">
-                <hz:discovery-token>EXAMPLE_TOKEN</hz:discovery-token>
-            </hz:hecaton-cloud>
-        </hz:network>
-
-    </hz:client>
 
     <hz:client id="client13-exponential-connection-retry">
         <hz:cluster-name>${cluster.name}-node-client</hz:cluster-name>

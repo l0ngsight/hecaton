@@ -17,6 +17,3 @@
 
 uk.org.hecaton.spi.discovery.multicast.MulticastDiscoveryStrategyFactory
 uk.org.hecaton.kubernetes.HecatonKubernetesDiscoveryStrategyFactory
-uk.org.hecaton.gcp.GcpDiscoveryStrategyFactory
-uk.org.hecaton.aws.AwsDiscoveryStrategyFactory
-uk.org.hecaton.azure.AzureDiscoveryStrategyFactory

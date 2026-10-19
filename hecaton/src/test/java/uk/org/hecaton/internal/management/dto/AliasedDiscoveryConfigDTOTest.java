@@ -17,11 +17,7 @@
 package uk.org.hecaton.internal.management.dto;
 
 import uk.org.hecaton.config.AliasedDiscoveryConfig;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
 import uk.org.hecaton.config.ConfigCompatibilityChecker.AliasedDiscoveryConfigsChecker;
-import uk.org.hecaton.config.EurekaConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.KubernetesConfig;
 import uk.org.hecaton.internal.json.JsonObject;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
@@ -39,7 +35,7 @@ public class AliasedDiscoveryConfigDTOTest {
 
     @Test
     public void testSerialization() {
-        GcpConfig expected = new GcpConfig().setEnabled(true)
+        KubernetesConfig expected = new KubernetesConfig().setEnabled(true)
                                             .setUsePublicIp(true)
                                             .setProperty("key1", "value1")
                                             .setProperty("key2", "value2");
@@ -51,10 +47,6 @@ public class AliasedDiscoveryConfigDTOTest {
 
     @Test
     public void testDefault() {
-        testDefault(new GcpConfig());
-        testDefault(new AzureConfig());
-        testDefault(new AwsConfig());
-        testDefault(new EurekaConfig());
         testDefault(new KubernetesConfig());
     }
 

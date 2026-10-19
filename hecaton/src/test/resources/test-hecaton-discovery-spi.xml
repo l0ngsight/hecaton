@@ -28,7 +28,6 @@
     <join>
       <multicast enabled="false"/>
       <tcp-ip enabled="false" />
-      <aws enabled="false"/>
       <discovery-strategies>
         <node-filter class="uk.org.hecaton.spi.discovery.DiscoverySpiTest$TestNodeFilter"/>
         <discovery-strategy enabled="true" class="uk.org.hecaton.spi.discovery.DiscoverySpiTest$TestDiscoveryStrategy">

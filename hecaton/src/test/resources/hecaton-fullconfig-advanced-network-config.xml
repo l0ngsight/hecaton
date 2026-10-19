@@ -64,43 +64,12 @@
                     <member>dummy6</member>
                 </member-list>
             </tcp-ip>
-            <aws enabled="false">
-                <access-key>my-access-key</access-key>
-                <secret-key>my-secret-key</secret-key>
-                <iam-role>dummy</iam-role>
-                <!--optional, default is us-east-1 -->
-                <region>us-west-1</region>
-                <!--optional, default is ec2.amazonaws.com. If set, region shouldn't be set as it will override this property -->
-                <host-header>ec2.amazonaws.com</host-header>
-                <!-- optional, only instances belonging to this group will be discovered, default will try all running instances -->
-                <security-group-name>hecaton-sg</security-group-name>
-                <tag-key>type</tag-key>
-                <tag-value>hz-nodes</tag-value>
-                <use-public-ip>true</use-public-ip>
-            </aws>
-            <gcp enabled="false">
-                <zones>us-east1-b,us-east1-c</zones>
-            </gcp>
-            <azure enabled="false">
-                <instance-metadata-available>false</instance-metadata-available>
-                <client-id>CLIENT_ID</client-id>
-                <client-secret>CLIENT_SECRET</client-secret>
-                <tenant-id>TENANT_ID</tenant-id>
-                <subscription-id>SUB_ID</subscription-id>
-                <resource-group>RESOURCE-GROUP-NAME</resource-group>
-                <scale-set>SCALE-SET-NAME</scale-set>
-                <tag>TAG-NAME=HZLCAST001</tag>
-            </azure>
             <kubernetes enabled="false">
                 <namespace>MY-KUBERNETES-NAMESPACE</namespace>
                 <service-name>MY-SERVICE-NAME</service-name>
                 <service-label-name>MY-SERVICE-LABEL-NAME</service-label-name>
                 <service-label-value>MY-SERVICE-LABEL-VALUE</service-label-value>
             </kubernetes>
-            <eureka enabled="false">
-                <self-registration>true</self-registration>
-                <namespace>hecaton</namespace>
-            </eureka>
 <!--            <discovery-strategies>
                 <node-filter class="DummyFilterClass"/>
                 <discovery-strategy class="DummyClass" enabled="true">

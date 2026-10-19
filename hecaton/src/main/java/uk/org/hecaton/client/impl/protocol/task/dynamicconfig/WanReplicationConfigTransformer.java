@@ -15,6 +15,7 @@
  */
 package uk.org.hecaton.client.impl.protocol.task.dynamicconfig;
 
+import uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder;
 import uk.org.hecaton.client.impl.protocol.codec.holder.DiscoveryConfigHolder;
 import uk.org.hecaton.client.impl.protocol.codec.holder.DiscoveryStrategyConfigHolder;
 import uk.org.hecaton.client.impl.protocol.codec.holder.WanBatchPublisherConfigHolder;
@@ -30,6 +31,7 @@ import uk.org.hecaton.config.WanConsumerConfig;
 import uk.org.hecaton.config.WanCustomPublisherConfig;
 import uk.org.hecaton.config.WanQueueFullBehavior;
 import uk.org.hecaton.config.WanSyncConfig;
+import uk.org.hecaton.internal.config.RemovedCloudDiscovery;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.spi.discovery.NodeFilter;
@@ -121,11 +123,11 @@ public final class WanReplicationConfigTransformer {
                 config.getIdleMinParkNs(),
                 config.getIdleMaxParkNs(),
                 config.getTargetEndpoints(),
-                config.getAwsConfig(),
-                config.getGcpConfig(),
-                config.getAzureConfig(),
+                RemovedDiscoveryConfigHolder.disabled("aws"),
+                RemovedDiscoveryConfigHolder.disabled("gcp"),
+                RemovedDiscoveryConfigHolder.disabled("azure"),
                 config.getKubernetesConfig(),
-                config.getEurekaConfig(),
+                RemovedDiscoveryConfigHolder.disabled("eureka"),
                 toHolder(config.getDiscoveryConfig()),
                 toHolder(config.getSyncConfig()),
                 config.getEndpoint()
@@ -317,15 +319,24 @@ public final class WanReplicationConfigTransformer {
         config.setIdleMaxParkNs(holder.getIdleMaxParkNs());
         config.setTargetEndpoints(holder.getTargetEndpoints());
 
-        config.setAwsConfig(holder.getAwsConfig());
-        config.setGcpConfig(holder.getGcpConfig());
-        config.setAzureConfig(holder.getAzureConfig());
+        rejectEnabled(holder.getAwsConfig());
+        rejectEnabled(holder.getGcpConfig());
+        rejectEnabled(holder.getAzureConfig());
         config.setKubernetesConfig(holder.getKubernetesConfig());
-        config.setEurekaConfig(holder.getEurekaConfig());
+        rejectEnabled(holder.getEurekaConfig());
         config.setDiscoveryConfig(toConfig(holder.getDiscoveryConfig()));
         config.setSyncConfig(toConfig(holder.getSyncConfig()));
 
         config.setEndpoint(holder.getEndpoint());
         return config;
+    }
+
+    /**
+     * Official clients still send the cloud-provider discovery sections Hecaton removed (D9).
+     */
+    private static void rejectEnabled(RemovedDiscoveryConfigHolder section) {
+        if (section != null && section.isEnabled()) {
+            RemovedCloudDiscovery.check(section.getTag());
+        }
     }
 }

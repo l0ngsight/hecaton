@@ -38,7 +38,6 @@
             <hz:network port="5950">
                 <hz:join>
                     <hz:multicast enabled="${boolean.false}"/>
-                    <hz:aws enabled="false"/>
                     <hz:auto-detection enabled="${boolean:false}"/>
                 </hz:join>
                 <hz:interfaces enabled="true">

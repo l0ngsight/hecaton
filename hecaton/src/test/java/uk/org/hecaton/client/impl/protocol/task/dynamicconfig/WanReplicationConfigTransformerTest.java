@@ -15,16 +15,14 @@
  */
 package uk.org.hecaton.client.impl.protocol.task.dynamicconfig;
 
+import uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder;
 import uk.org.hecaton.client.impl.protocol.codec.holder.WanBatchPublisherConfigHolder;
 import uk.org.hecaton.client.impl.protocol.codec.holder.WanConsumerConfigHolder;
 import uk.org.hecaton.client.impl.protocol.codec.holder.WanCustomPublisherConfigHolder;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
 import uk.org.hecaton.config.ConsistencyCheckStrategy;
 import uk.org.hecaton.config.DiscoveryConfig;
 import uk.org.hecaton.config.DiscoveryStrategyConfig;
-import uk.org.hecaton.config.EurekaConfig;
-import uk.org.hecaton.config.GcpConfig;
+import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.KubernetesConfig;
 import uk.org.hecaton.config.WanAcknowledgeType;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
@@ -51,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(HecatonParallelClassRunner.class)
@@ -221,11 +220,7 @@ public class WanReplicationConfigTransformerTest {
         assertEquals(expected.getTargetEndpoints(), actual.getTargetEndpoints());
         assertEquals(expected.getEndpoint(), actual.getEndpoint());
 
-        assertEquals(expected.getAwsConfig(), actual.getAwsConfig());
-        assertEquals(expected.getGcpConfig(), actual.getGcpConfig());
-        assertEquals(expected.getAzureConfig(), actual.getAzureConfig());
         assertEquals(expected.getKubernetesConfig(), actual.getKubernetesConfig());
-        assertEquals(expected.getEurekaConfig(), actual.getEurekaConfig());
 
         assertEquals(expected.getDiscoveryConfig().getNodeFilterClass(), actual.getDiscoveryConfig().getNodeFilterClass());
         assertEquals(expected.getDiscoveryConfig().getNodeFilter(), actual.getDiscoveryConfig().getNodeFilter());
@@ -271,16 +266,8 @@ public class WanReplicationConfigTransformerTest {
 
         Map<String, String> cloudProperties = new HashMap<>();
         cloudProperties.put("cloud-key", "cloud-value");
-        AwsConfig awsConfig = new AwsConfig("aws-test", true, true, cloudProperties);
-        GcpConfig gcpConfig = new GcpConfig("gcp-test", true, true, cloudProperties);
-        AzureConfig azureConfig = new AzureConfig("azure-test", true, true, cloudProperties);
         KubernetesConfig k8sConfig = new KubernetesConfig("k8s-test", true, true, cloudProperties);
-        EurekaConfig eurekaConfig = new EurekaConfig("eureka-test", true, true, cloudProperties);
-        expected.setAwsConfig(awsConfig);
-        expected.setGcpConfig(gcpConfig);
-        expected.setAzureConfig(azureConfig);
         expected.setKubernetesConfig(k8sConfig);
-        expected.setEurekaConfig(eurekaConfig);
         WanSyncConfig wanSyncConfig = new WanSyncConfig();
         wanSyncConfig.setConsistencyCheckStrategy(ConsistencyCheckStrategy.MERKLE_TREES);
         expected.setSyncConfig(wanSyncConfig);
@@ -296,5 +283,25 @@ public class WanReplicationConfigTransformerTest {
         WanBatchPublisherConfig actual = transformer.toConfig(holder);
 
         assertWanBatchPublisherEqual(expected, actual);
+    }
+
+    @Test
+    public void testWanBatchPublisherConfig_rejectsEnabledCloudDiscovery() {
+        // Official Hazelcast clients still send the AWS/GCP/Azure/Eureka sections that Hecaton removed (D9)
+        WanBatchPublisherConfigHolder h = transformer.toHolder(new WanBatchPublisherConfig());
+        WanBatchPublisherConfigHolder withAws = new WanBatchPublisherConfigHolder(h.getPublisherId(), h.getClassName(),
+                h.getImplementation(), h.getProperties(), h.getClusterName(), h.isSnapshotEnabled(),
+                h.getInitialPublisherState(), h.getQueueCapacity(), h.getBatchSize(), h.getBatchMaxDelayMillis(),
+                h.getResponseTimeoutMillis(), h.getQueueFullBehavior(), h.getAcknowledgeType(), h.getDiscoveryPeriodSeconds(),
+                h.getMaxTargetEndpoints(), h.getMaxConcurrentInvocations(), h.isUseEndpointPrivateAddress(),
+                h.getIdleMinParkNs(), h.getIdleMaxParkNs(), h.getTargetEndpoints(),
+                new RemovedDiscoveryConfigHolder("aws", true, false, Map.of()), h.getGcpConfig(), h.getAzureConfig(),
+                h.getKubernetesConfig(), h.getEurekaConfig(), h.getDiscoveryConfig(), h.getSyncConfig(), h.getEndpoint());
+
+        assertThatThrownBy(() -> transformer.toConfig(withAws))
+                .isInstanceOf(InvalidConfigurationException.class)
+                .hasMessageContaining("Cloud-provider discovery is not supported in Hecaton");
+        // disabled sections, as Hecaton clients send them, are accepted
+        assertEquals(new WanBatchPublisherConfig().getClusterName(), transformer.toConfig(h).getClusterName());
     }
 }

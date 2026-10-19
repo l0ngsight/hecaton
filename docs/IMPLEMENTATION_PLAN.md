@@ -184,7 +184,7 @@ Est.: 2 ew.
 
 Est.: 2.5 ew.
 
-### 1.6 Remove cloud-provider support (D9, spec NG6)
+### 1.6 Remove cloud-provider support (D9, spec NG6) — done
 
 The self-contained plugin and connector directories were left out at import. M1 deletes
 what the rest of the code base references. With D10 there is no patch budget, so the
@@ -397,8 +397,7 @@ Budget: ~1 ew per month, more after 1.0.
      renamed, 0 leftovers); renamed baseline merged and building on JDK 25; nightly suite
      with a frozen 5.7.0 baseline (73,584 tests, no untriaged failures); client smoke tests
      on JDK 17/21/25; REST `/hazelcast` alias; Kafka Connect test downloads off Hazelcast's
-     servers;
-   - next: retire the sync tooling (1.8), cloud-provider removal (1.6), migration tooling
-     (1.5), official-client compat tests (1.4), Spring Boot auto-configuration, tag
-     `v0.1.0`.
+     servers; sync tooling retired (1.8); cloud-provider support removed (1.6);
+   - next: migration tooling (1.5), official-client compat tests (1.4), the open items in
+     1.9 (Spring Boot auto-configuration first), tag `v0.1.0`.
 3. **M2 Core cleanup**, then M3–M7 in parallel.

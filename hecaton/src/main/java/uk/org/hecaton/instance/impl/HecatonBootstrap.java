@@ -148,11 +148,7 @@ public final class HecatonBootstrap {
         join.getAutoDetectionConfig().setEnabled(false);
         join.getMulticastConfig().setEnabled(false);
         join.getTcpIpConfig().setEnabled(false);
-        join.getAwsConfig().setEnabled(false);
-        join.getGcpConfig().setEnabled(false);
-        join.getAzureConfig().setEnabled(false);
         join.getKubernetesConfig().setEnabled(false);
-        join.getEurekaConfig().setEnabled(false);
         join.setDiscoveryConfig(new DiscoveryConfig());
         return Hecaton.newHecatonInstance(config);
     }

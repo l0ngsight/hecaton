@@ -67,34 +67,11 @@
                     <hz:idle-max-park-ns>5</hz:idle-max-park-ns>
                     <hz:max-concurrent-invocations>5</hz:max-concurrent-invocations>
                     <hz:target-endpoints>10.3.5.1:5701, 10.3.5.2:5701</hz:target-endpoints>
-                    <hz:aws enabled="false"
-                            access-key="sample-access-key"
-                            secret-key="sample-secret-key"
-                            region="sample-region"
-                            host-header="sample-header"
-                            security-group-name="sample-group"
-                            tag-key="sample-tag-key"
-                            tag-value="sample-tag-value"
-                            iam-role="sample-role"/>
-                    <hz:gcp enabled="false"
-                            zones="us-east1-b,us-east1-c"/>
-                    <hz:azure enabled="false"
-                              instance-metadata-available="false"
-                              client-id="CLIENT_ID"
-                              client-secret="CLIENT_SECRET"
-                              tenant-id="TENANT_ID"
-                              subscription-id="SUB_ID"
-                              resource-group="RESOURCE-GROUP-NAME"
-                              scale-set="SCALE-SET"
-                              tag="TAG-NAME=HZLCAST001"/>
                     <hz:kubernetes enabled="false"
                                    namespace="MY-KUBERNETES-NAMESPACE"
                                    service-name="${kubernetes.service.name}"
                                    service-label-name="MY-SERVICE-LABEL-NAME"
                                    service-label-value="${kubernetes.service.label}"/>
-                    <hz:eureka enabled="false"
-                               self-registration="true"
-                               namespace="hecaton"/>
                 </hz:batch-publisher>
                 <hz:batch-publisher>
                     <hz:cluster-name>ankara</hz:cluster-name>
@@ -143,34 +120,11 @@
                         <hz:interface>127.0.0.1:5700</hz:interface>
                         <hz:interface>127.0.0.1:5701</hz:interface>
                     </hz:tcp-ip>
-                    <hz:aws enabled="false"
-                            access-key="sample-access-key"
-                            secret-key="sample-secret-key"
-                            region="sample-region"
-                            host-header="sample-header"
-                            security-group-name="sample-group"
-                            tag-key="sample-tag-key"
-                            tag-value="sample-tag-value"
-                            iam-role="sample-role"/>
-                    <hz:gcp enabled="false"
-                            zones="us-east1-b,us-east1-c"/>
-                    <hz:azure enabled="false"
-                              instance-metadata-available="false"
-                              client-id="CLIENT_ID"
-                              client-secret="CLIENT_SECRET"
-                              tenant-id="TENANT_ID"
-                              subscription-id="SUB_ID"
-                              resource-group="RESOURCE-GROUP-NAME"
-                              scale-set="SCALE-SET"
-                              tag="TAG-NAME=HZLCAST001"/>
                     <hz:kubernetes enabled="false"
                                    namespace="MY-KUBERNETES-NAMESPACE"
                                    service-name="${kubernetes.service.name}"
                                    service-label-name="MY-SERVICE-LABEL-NAME"
                                    service-label-value="${kubernetes.service.label}"/>
-                    <hz:eureka enabled="false"
-                               self-registration="true"
-                               namespace="hecaton"/>
                     <hz:auto-detection enabled="${boolean.false}"/>
                 </hz:join>
                 <hz:interfaces enabled="false">

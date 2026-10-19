@@ -85,6 +85,20 @@
         <xs:attribute name="class-name" use="required"/>
     </xs:complexType>
 
+    <xs:complexType name="removed-cloud-discovery">
+        <xs:annotation>
+            <xs:documentation>
+                Cloud-provider discovery (AWS, GCP, Azure, Eureka, Hazelcast Cloud) is not supported in Hecaton.
+                A configuration that contains this element fails to load. Use tcp-ip, multicast, kubernetes or a
+                Discovery SPI implementation instead.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+        </xs:sequence>
+        <xs:anyAttribute processContents="skip"/>
+    </xs:complexType>
+
     <xs:complexType name="aliased-discovery-strategy">
         <xs:sequence>
             <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
@@ -117,16 +131,16 @@
             <xs:element ref="socket-options" minOccurs="0"/>
             <xs:element name="socket-interceptor" type="socket-interceptor" minOccurs="0"/>
             <xs:element name="ssl" type="ssl" minOccurs="0"/>
-            <xs:element name="aws" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="gcp" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="azure" type="aliased-discovery-strategy" minOccurs="0"/>
+            <xs:element name="aws" type="removed-cloud-discovery" minOccurs="0"/>
+            <xs:element name="gcp" type="removed-cloud-discovery" minOccurs="0"/>
+            <xs:element name="azure" type="removed-cloud-discovery" minOccurs="0"/>
             <xs:element name="kubernetes" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="eureka" type="aliased-discovery-strategy" minOccurs="0"/>
+            <xs:element name="eureka" type="removed-cloud-discovery" minOccurs="0"/>
             <xs:element name="discovery-strategies" type="discovery-strategies" minOccurs="0"/>
             <xs:element name="auto-detection" type="auto-detection" minOccurs="0"/>
             <xs:element name="outbound-ports" type="outbound-ports" minOccurs="0"/>
             <xs:element name="icmp-ping" type="icmp-ping" minOccurs="0"/>
-            <xs:element name="hecaton-cloud" type="hecaton-cloud" minOccurs="0"/>
+            <xs:element name="hecaton-cloud" type="removed-cloud-discovery" minOccurs="0"/>
         </xs:all>
     </xs:complexType>
 
@@ -152,12 +166,6 @@
         <xs:attribute name="enabled" type="xs:boolean" use="required"/>
     </xs:complexType>
 
-    <xs:complexType name="hecaton-cloud">
-        <xs:all>
-            <xs:element name="discovery-token" type="xs:string" minOccurs="0"/>
-        </xs:all>
-        <xs:attribute name="enabled" type="xs:boolean" use="required"/>
-    </xs:complexType>
 
     <xs:complexType name="discovery-node-filter">
         <xs:attribute name="class" type="xs:string" use="required"/>

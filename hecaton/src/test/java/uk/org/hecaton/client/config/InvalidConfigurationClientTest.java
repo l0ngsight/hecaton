@@ -114,21 +114,6 @@ public class InvalidConfigurationClientTest {
     }
 
     @Test
-    public void testWhenValid_AwsEnabled() {
-        buildConfig("aws-enabled", "true");
-    }
-
-    @Test(expected = InvalidConfigurationException.class)
-    public void testWhenInvalid_AwsEnabled() {
-        buildConfig("aws-enabled", "falsee");
-    }
-
-    @Test
-    public void testWhenValid_InsideAwsEnabled() {
-        buildConfig("inside-aws-enabled", "true");
-    }
-
-    @Test
     public void WhenValid_CredentialsClassName() {
         buildConfig("credentials-factory-class-name", "uk.org.hecaton.security.ICredentialsFactory");
         buildConfig("credentials-factory-class-name", " uk.org.hecaton.security.ICredentialsFactory");
@@ -266,12 +251,6 @@ public class InvalidConfigurationClientTest {
                     <socket-interceptor enabled="${socket-interceptor-enabled}">
                       <class-name>uk.org.hecaton.examples.MySocketInterceptor</class-name>
                     </socket-interceptor>
-                    <aws enabled="${aws-enabled}" connection-timeout-seconds="${aws-timeout}">
-                      <inside-aws>${inside-aws-enabled}</inside-aws>
-                      <access-key>TEST_ACCESS_KEY</access-key>
-                      <secret-key>TEST_SECRET_KEY</secret-key>
-                      <iam-role>TEST_IAM_ROLE</iam-role>
-                    </aws>
                   </network>
                   <security>
                     <credentials-factory class-name='${credentials-factory-class-name}'/>
@@ -303,9 +282,6 @@ public class InvalidConfigurationClientTest {
         properties.setProperty("cluster-routing-mode", "ALL_MEMBERS");
         properties.setProperty("redo-operation-enabled", "true");
         properties.setProperty("socket-interceptor-enabled", "true");
-        properties.setProperty("aws-enabled", "true");
-        properties.setProperty("aws-timeout", "10");
-        properties.setProperty("inside-aws-enabled", "true");
         properties.setProperty("credentials-factory-class-name", "uk.org.hecaton.security.impl.DefaultCredentialsFactory");
         properties.setProperty("listener-class-name", "uk.org.hecaton.examples.MembershipListener");
         properties.setProperty("use-native-byte-order", "true");

@@ -13,7 +13,8 @@ can observe (API, config, wire, REST, metrics, file names, behaviour).
 
 | Area | Hazelcast 5.7 | Hecaton | Since |
 |---|---|---|---|
-| Cloud-provider discovery (D9) | `aws`, `azure`, `gcp`, `eureka` join/discovery config; client `hazelcast-cloud` | Removed; Kubernetes, TCP/IP, multicast and the Discovery SPI remain. Configs using the removed elements fail with a targeted error. | 0.1.0 |
+| Cloud-provider discovery (D9) | `aws`, `azure`, `gcp`, `eureka` join/discovery config (also in WAN batch publishers); client `hazelcast-cloud` and the `hazelcast.client.cloud.discovery.token` property; `AwsConfig`, `GcpConfig`, `AzureConfig`, `EurekaConfig`, `ClientCloudConfig` and their getters/setters | Removed; Kubernetes, TCP/IP, multicast and the Discovery SPI remain. XML/YAML/Spring configs and the client property fail with "Cloud-provider discovery is not supported in Hecaton; use tcp-ip, multicast, kubernetes or a Discovery SPI implementation". Official clients that add a WAN config dynamically still work; an enabled cloud section in it is rejected. | 0.1.0 |
+| Spring XML namespace | `http(s)://www.hazelcast.com/schema/spring` | `http(s)://hecaton.org.uk/schema/spring` (both schemes resolve) | 0.1.0 |
 | Jet connectors | Kinesis, S3, and the S3/GCS/Azure file systems | Removed (D9) | 0.1.0 |
 | External integrations | `hazelcast-hibernate53`, `hazelcast-wm` (separate Hazelcast projects) | Not available; they are built against `com.hazelcast` | 0.1.0 |
 | REST paths | `/hazelcast/rest/...`, `/hazelcast/health/...` | `/hecaton/...`; the `/hazelcast/...` paths are still served as aliases | 0.1.0 |

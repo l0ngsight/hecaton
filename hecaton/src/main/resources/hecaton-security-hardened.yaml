@@ -71,15 +71,7 @@ hecaton:
           - 192.168.1.101:15701
           - 192.168.1.102:15701
           - 192.168.1.103:15701
-      aws:
-        enabled: false
-      gcp:
-        enabled: false
-      azure:
-        enabled: false
       kubernetes:
-        enabled: false
-      eureka:
         enabled: false
     # The following part defines different kind of endpoints (protocols) each with its own socket address and configuration.'
     # Enable only endpoints (protocols) you will need!

@@ -375,88 +375,6 @@ public class YamlConfigBuilderTest extends AbstractConfigBuilderTest {
 
     @Override
     @Test
-    public void readAwsConfig() {
-        String yaml = """
-                hecaton:
-                  network:
-                    port:
-                      auto-increment: true
-                      port: 5701
-                    join:
-                      multicast:
-                        enabled: false
-                      aws:
-                        enabled: true
-                        use-public-ip: true
-                        connection-timeout-seconds: 10
-                        access-key: sample-access-key
-                        secret-key: sample-secret-key
-                        iam-role: sample-role
-                        region: sample-region
-                        host-header: sample-header
-                        security-group-name: sample-group
-                        tag-key: sample-tag-key
-                        tag-value: sample-tag-value
-                """;
-
-        Config config = buildConfig(yaml);
-
-        AwsConfig awsConfig = config.getNetworkConfig().getJoin().getAwsConfig();
-        assertTrue(awsConfig.isEnabled());
-        assertTrue(awsConfig.isUsePublicIp());
-        assertAwsConfig(awsConfig);
-    }
-
-    @Override
-    @Test
-    public void readGcpConfig() {
-        String yaml = """
-                hecaton:
-                  network:
-                    join:
-                      multicast:
-                        enabled: false
-                      gcp:
-                        enabled: true
-                        use-public-ip: true
-                        zones: us-east1-b
-                """;
-
-        Config config = buildConfig(yaml);
-
-        GcpConfig gcpConfig = config.getNetworkConfig().getJoin().getGcpConfig();
-
-        assertTrue(gcpConfig.isEnabled());
-        assertTrue(gcpConfig.isUsePublicIp());
-        assertEquals("us-east1-b", gcpConfig.getProperty("zones"));
-    }
-
-    @Override
-    @Test
-    public void readAzureConfig() {
-        String yaml = """
-                hecaton:
-                  network:
-                    join:
-                      multicast:
-                        enabled: false
-                      azure:
-                        enabled: true
-                        use-public-ip: true
-                        client-id: 123456789!
-                """;
-
-        Config config = buildConfig(yaml);
-
-        AzureConfig azureConfig = config.getNetworkConfig().getJoin().getAzureConfig();
-
-        assertTrue(azureConfig.isEnabled());
-        assertTrue(azureConfig.isUsePublicIp());
-        assertEquals("123456789!", azureConfig.getProperty("client-id"));
-    }
-
-    @Override
-    @Test
     public void readKubernetesConfig() {
         String yaml = """
                 hecaton:
@@ -477,34 +395,6 @@ public class YamlConfigBuilderTest extends AbstractConfigBuilderTest {
         assertTrue(kubernetesConfig.isEnabled());
         assertTrue(kubernetesConfig.isUsePublicIp());
         assertEquals("hecaton", kubernetesConfig.getProperty("namespace"));
-    }
-
-    @Override
-    @Test
-    public void readEurekaConfig() {
-        String yaml = """
-                hecaton:
-                  network:
-                    join:
-                      multicast:
-                        enabled: false
-                      eureka:
-                        enabled: true
-                        use-public-ip: true
-                        shouldUseDns: false
-                        serviceUrl.default: http://localhost:8082/eureka
-                        namespace: hecaton
-                """;
-
-        Config config = buildConfig(yaml);
-
-        EurekaConfig eurekaConfig = config.getNetworkConfig().getJoin().getEurekaConfig();
-
-        assertTrue(eurekaConfig.isEnabled());
-        assertTrue(eurekaConfig.isUsePublicIp());
-        assertEquals("hecaton", eurekaConfig.getProperty("namespace"));
-        assertEquals("false", eurekaConfig.getProperty("shouldUseDns"));
-        assertEquals("http://localhost:8082/eureka", eurekaConfig.getProperty("serviceUrl.default"));
     }
 
     @Override
@@ -1945,17 +1835,6 @@ public class YamlConfigBuilderTest extends AbstractConfigBuilderTest {
                           max-target-endpoints: 800
                           queue-capacity: 21
                           target-endpoints: a,b,c,d
-                          aws:
-                            enabled: false
-                            connection-timeout-seconds: 10
-                            access-key: sample-access-key
-                            secret-key: sample-secret-key
-                            iam-role: sample-role
-                            region: sample-region
-                            host-header: sample-header
-                            security-group-name: sample-group
-                            tag-key: sample-tag-key
-                            tag-value: sample-tag-value
                           discovery-strategies:
                             node-filter:
                               class: DummyFilterClass
@@ -2005,12 +1884,7 @@ public class YamlConfigBuilderTest extends AbstractConfigBuilderTest {
 
         Map<String, Comparable> pubProperties = pc1.getProperties();
         assertEquals("prop.publisher", pubProperties.get("custom.prop.publisher"));
-        assertFalse(pc1.getAwsConfig().isEnabled());
-        assertAwsConfig(pc1.getAwsConfig());
-        assertFalse(pc1.getGcpConfig().isEnabled());
-        assertFalse(pc1.getAzureConfig().isEnabled());
         assertFalse(pc1.getKubernetesConfig().isEnabled());
-        assertFalse(pc1.getEurekaConfig().isEnabled());
         assertDiscoveryConfig(pc1.getDiscoveryConfig());
 
         WanBatchPublisherConfig pc2 = publisherConfigs.get(1);

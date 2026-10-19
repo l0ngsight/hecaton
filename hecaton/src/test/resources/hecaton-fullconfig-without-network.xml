@@ -78,39 +78,12 @@
             <queue-capacity>12345</queue-capacity>
             <discovery-period-seconds>5</discovery-period-seconds>
             <max-target-endpoints>2</max-target-endpoints>
-            <aws enabled="false" connection-timeout-seconds="10">
-                <access-key>sample-access-key</access-key>
-                <secret-key>sample-secret-key</secret-key>
-                <iam-role>sample-role</iam-role>
-                <region>sample-region</region>
-                <host-header>sample-header</host-header>
-                <security-group-name>sample-group</security-group-name>
-                <tag-key>sample-tag-key</tag-key>
-                <tag-value>sample-tag-value</tag-value>
-            </aws>
-            <gcp enabled="false">
-                <zones>us-east1-b,us-east1-c</zones>
-            </gcp>
-            <azure enabled="false">
-                <instance-metadata-available>false</instance-metadata-available>
-                <client-id>CLIENT_ID</client-id>
-                <client-secret>CLIENT_SECRET</client-secret>
-                <tenant-id>TENANT_ID</tenant-id>
-                <subscription-id>SUB_ID</subscription-id>
-                <resource-group>RESOURCE-GROUP-NAME</resource-group>
-                <scale-set>SCALE-SET-NAME</scale-set>
-                <tag>TAG-NAME=HZLCAST001</tag>
-            </azure>
             <kubernetes enabled="false">
                 <namespace>MY-KUBERNETES-NAMESPACE</namespace>
                 <service-name>MY-SERVICE-NAME</service-name>
                 <service-label-name>MY-SERVICE-LABEL-NAME</service-label-name>
                 <service-label-value>MY-SERVICE-LABEL-VALUE</service-label-value>
             </kubernetes>
-            <eureka enabled="false">
-                <self-registration>true</self-registration>
-                <namespace>hecaton</namespace>
-            </eureka>
             <discovery-strategies>
                 <node-filter class="DummyFilterClass"/>
                 <discovery-strategy class="DummyDiscoveryStrategy1" enabled="true">

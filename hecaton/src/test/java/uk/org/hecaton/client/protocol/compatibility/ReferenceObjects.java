@@ -42,8 +42,6 @@ import uk.org.hecaton.client.impl.protocol.task.dynamicconfig.ResourceDefinition
 import uk.org.hecaton.client.impl.protocol.task.dynamicconfig.RingbufferStoreConfigHolder;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.config.AttributeConfig;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
 import uk.org.hecaton.config.BTreeIndexConfig;
 import uk.org.hecaton.config.BitmapIndexOptions;
 import uk.org.hecaton.config.CacheSimpleConfig.ExpiryPolicyFactoryConfig.DurationConfig;
@@ -51,9 +49,7 @@ import uk.org.hecaton.config.CacheSimpleConfig.ExpiryPolicyFactoryConfig.TimedEx
 import uk.org.hecaton.config.CacheSimpleEntryListenerConfig;
 import uk.org.hecaton.config.DataPersistenceConfig;
 import uk.org.hecaton.config.DiskTierConfig;
-import uk.org.hecaton.config.EurekaConfig;
 import uk.org.hecaton.config.EventJournalConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.HotRestartConfig;
 import uk.org.hecaton.config.IndexConfig;
 import uk.org.hecaton.config.KubernetesConfig;
@@ -1036,11 +1032,11 @@ public class ReferenceObjects {
                             aLong,
                             aLong,
                             aString,
-                            new AwsConfig(aString, aBoolean, aBoolean, Map.of(aString, aString)),
-                            new GcpConfig(aString, aBoolean, aBoolean, Map.of(aString, aString)),
-                            new AzureConfig(aString, aBoolean, aBoolean, Map.of(aString, aString)),
+                            new uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder(aString, aBoolean, aBoolean, Map.of(aString, aString)),
+                            new uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder(aString, aBoolean, aBoolean, Map.of(aString, aString)),
+                            new uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder(aString, aBoolean, aBoolean, Map.of(aString, aString)),
                             new KubernetesConfig(aString, aBoolean, aBoolean, Map.of(aString, aString)),
-                            new EurekaConfig(aString, aBoolean, aBoolean, Map.of(aString, aString)),
+                            new uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder(aString, aBoolean, aBoolean, Map.of(aString, aString)),
                             new DiscoveryConfigHolder(
                                     Collections.singletonList(new DiscoveryStrategyConfigHolder(aString, Map.of(aString, aData))),
                                     aData,

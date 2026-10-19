@@ -32,7 +32,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.*;
 import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCodec.*;
 
 @SuppressWarnings("unused")
-@Generated("c582fd267689d64f7ec48f95d02171d0")
+@Generated("23e70d69166c9145fbe3743833dff0e1")
 public final class WanBatchPublisherConfigHolderCodec {
     private static final int SNAPSHOT_ENABLED_FIELD_OFFSET = 0;
     private static final int INITIAL_PUBLISHER_STATE_FIELD_OFFSET = SNAPSHOT_ENABLED_FIELD_OFFSET + BOOLEAN_SIZE_IN_BYTES;
@@ -79,11 +79,11 @@ public final class WanBatchPublisherConfigHolderCodec {
         MapCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getProperties(), StringCodec::encode, DataCodec::encode);
         CodecUtil.encodeNullable(clientMessage, wanBatchPublisherConfigHolder.getClusterName(), StringCodec::encode);
         StringCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getTargetEndpoints());
-        AwsConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getAwsConfig());
-        GcpConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getGcpConfig());
-        AzureConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getAzureConfig());
+        RemovedDiscoveryConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getAwsConfig());
+        RemovedDiscoveryConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getGcpConfig());
+        RemovedDiscoveryConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getAzureConfig());
         KubernetesConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getKubernetesConfig());
-        EurekaConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getEurekaConfig());
+        RemovedDiscoveryConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getEurekaConfig());
         DiscoveryConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getDiscoveryConfig());
         WanSyncConfigCodec.encode(clientMessage, wanBatchPublisherConfigHolder.getSyncConfig());
         CodecUtil.encodeNullable(clientMessage, wanBatchPublisherConfigHolder.getEndpoint(), StringCodec::encode);
@@ -117,11 +117,11 @@ public final class WanBatchPublisherConfigHolderCodec {
         java.util.Map<java.lang.String, uk.org.hecaton.internal.serialization.Data> properties = MapCodec.decode(iterator, StringCodec::decode, DataCodec::decode);
         java.lang.String clusterName = CodecUtil.decodeNullable(iterator, StringCodec::decode);
         java.lang.String targetEndpoints = StringCodec.decode(iterator);
-        uk.org.hecaton.config.AwsConfig awsConfig = AwsConfigCodec.decode(iterator);
-        uk.org.hecaton.config.GcpConfig gcpConfig = GcpConfigCodec.decode(iterator);
-        uk.org.hecaton.config.AzureConfig azureConfig = AzureConfigCodec.decode(iterator);
+        uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder awsConfig = RemovedDiscoveryConfigCodec.decode(iterator);
+        uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder gcpConfig = RemovedDiscoveryConfigCodec.decode(iterator);
+        uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder azureConfig = RemovedDiscoveryConfigCodec.decode(iterator);
         uk.org.hecaton.config.KubernetesConfig kubernetesConfig = KubernetesConfigCodec.decode(iterator);
-        uk.org.hecaton.config.EurekaConfig eurekaConfig = EurekaConfigCodec.decode(iterator);
+        uk.org.hecaton.client.impl.protocol.codec.holder.RemovedDiscoveryConfigHolder eurekaConfig = RemovedDiscoveryConfigCodec.decode(iterator);
         uk.org.hecaton.client.impl.protocol.codec.holder.DiscoveryConfigHolder discoveryConfig = DiscoveryConfigCodec.decode(iterator);
         uk.org.hecaton.client.impl.protocol.codec.holder.WanSyncConfigHolder syncConfig = WanSyncConfigCodec.decode(iterator);
         java.lang.String endpoint = CodecUtil.decodeNullable(iterator, StringCodec::decode);

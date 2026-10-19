@@ -17,7 +17,6 @@
 package uk.org.hecaton.spring;
 
 import uk.org.hecaton.client.HecatonClient;
-import uk.org.hecaton.client.config.ClientCloudConfig;
 import uk.org.hecaton.client.config.ClientConnectionStrategyConfig;
 import uk.org.hecaton.client.config.ClientFlakeIdGeneratorConfig;
 import uk.org.hecaton.client.config.ClientIcmpPingConfig;
@@ -54,6 +53,7 @@ import uk.org.hecaton.config.security.TokenIdentityConfig;
 import uk.org.hecaton.config.security.UsernamePasswordIdentityConfig;
 import uk.org.hecaton.cp.CPSubsystem;
 import uk.org.hecaton.internal.config.AliasedDiscoveryConfigUtils;
+import uk.org.hecaton.internal.config.RemovedCloudDiscovery;
 import uk.org.hecaton.spring.config.ConfigFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
@@ -333,9 +333,8 @@ public class HecatonClientBeanDefinitionParser extends AbstractHecatonBeanDefini
                 } else if ("icmp-ping".equals(nodeName)) {
                     createAndFillBeanBuilder(child, ClientIcmpPingConfig.class,
                             "clientIcmpPingConfig", clientNetworkConfig);
-                } else if ("hecaton-cloud".equals(nodeName)) {
-                    createAndFillBeanBuilder(child, ClientCloudConfig.class,
-                            "cloudConfig", clientNetworkConfig);
+                } else if (RemovedCloudDiscovery.CLIENT_CLOUD_TAG.equals(nodeName)) {
+                    RemovedCloudDiscovery.check(nodeName);
                 } else if ("cluster-routing".equals(nodeName)) {
                     handleClusterRouting(child, clientNetworkConfig);
                 }

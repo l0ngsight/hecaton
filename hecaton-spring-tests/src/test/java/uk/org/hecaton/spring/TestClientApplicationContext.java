@@ -18,14 +18,12 @@ package uk.org.hecaton.spring;
 
 import uk.org.hecaton.client.HecatonClient;
 import uk.org.hecaton.client.LoadBalancer;
-import uk.org.hecaton.client.config.ClientCloudConfig;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.ClientConnectionStrategyConfig;
 import uk.org.hecaton.client.config.ClientConnectionStrategyConfig.ReconnectMode;
 import uk.org.hecaton.client.config.ClientFlakeIdGeneratorConfig;
 import uk.org.hecaton.client.config.ClientIcmpPingConfig;
 import uk.org.hecaton.client.config.ClientMetricsConfig;
-import uk.org.hecaton.client.config.ClientNetworkConfig;
 import uk.org.hecaton.client.config.ClientReliableTopicConfig;
 import uk.org.hecaton.client.config.ClientSqlConfig;
 import uk.org.hecaton.client.config.ClientSqlResubmissionMode;
@@ -38,7 +36,6 @@ import uk.org.hecaton.client.util.RoundRobinLB;
 import uk.org.hecaton.collection.IList;
 import uk.org.hecaton.collection.IQueue;
 import uk.org.hecaton.collection.ISet;
-import uk.org.hecaton.config.AwsConfig;
 import uk.org.hecaton.config.ClassFilter;
 import uk.org.hecaton.config.CompactSerializationConfig;
 import uk.org.hecaton.config.CompactSerializationConfigAccessor;
@@ -148,10 +145,6 @@ class TestClientApplicationContext {
     @Autowired
     @Qualifier(value = "client11-icmp-ping")
     private HecatonClientProxy icmpPingTestClient;
-
-    @Autowired
-    @Qualifier(value = "client12-hecaton-cloud")
-    private HecatonClientProxy hecatonCloudClient;
 
     @Autowired
     @Qualifier(value = "client13-exponential-connection-retry")
@@ -320,23 +313,6 @@ class TestClientApplicationContext {
         assertTrue(nearCacheConfig.isInvalidateOnChange());
         assertFalse(nearCacheConfig.isSerializeKeys());
         assertEquals(CACHE_ON_UPDATE, nearCacheConfig.getLocalUpdatePolicy());
-    }
-
-    @Test
-    void testAwsClientConfig() {
-        assertNotNull(client4);
-        ClientConfig config = client4.getClientConfig();
-        ClientNetworkConfig networkConfig = config.getNetworkConfig();
-
-        AwsConfig awsConfig = networkConfig.getAwsConfig();
-        assertFalse(awsConfig.isEnabled());
-        assertTrue(awsConfig.isUsePublicIp());
-        assertEquals("sample-access-key", awsConfig.getProperty("access-key"));
-        assertEquals("sample-secret-key", awsConfig.getProperty("secret-key"));
-        assertEquals("sample-region", awsConfig.getProperty("region"));
-        assertEquals("sample-group", awsConfig.getProperty("security-group-name"));
-        assertEquals("sample-tag-key", awsConfig.getProperty("tag-key"));
-        assertEquals("sample-tag-value", awsConfig.getProperty("tag-value"));
     }
 
     @Test
@@ -542,14 +518,6 @@ class TestClientApplicationContext {
         assertEquals(50, icmpPingConfig.getTtl());
         assertEquals(5, icmpPingConfig.getMaxAttempts());
         assertFalse(icmpPingConfig.isEchoFailFastOnStartup());
-    }
-
-    @Test
-    void testCloudConfig() {
-        ClientCloudConfig cloudConfig = hecatonCloudClient.getClientConfig()
-                .getNetworkConfig().getCloudConfig();
-        assertFalse(cloudConfig.isEnabled());
-        assertEquals("EXAMPLE_TOKEN", cloudConfig.getDiscoveryToken());
     }
 
     @Test

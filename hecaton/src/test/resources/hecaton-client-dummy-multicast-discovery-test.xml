@@ -34,7 +34,6 @@
         </connection-retry>
     </connection-strategy>
     <network>
-        <aws enabled="false"/>
         <connection-timeout>5000</connection-timeout>
         <cluster-routing mode="ALL_MEMBERS"/>
         <redo-operation>true</redo-operation>

@@ -85,10 +85,9 @@ public class FailoverConfigTest {
         Collections.addAll(allClientNetworkConfigMethods, "isSmartRouting", "setSmartRouting", "getSocketInterceptorConfig",
                 "setSocketInterceptorConfig", "getConnectionTimeout", "setConnectionTimeout", "addAddress", "setAddresses",
                 "getAddresses", "isRedoOperation", "setRedoOperation", "getSocketOptions", "setSocketOptions",
-                "getDiscoveryConfig", "setDiscoveryConfig", "getSSLConfig", "setSSLConfig", "setAwsConfig", "getAwsConfig",
-                "setGcpConfig", "getGcpConfig", "setAzureConfig", "getAzureConfig", "setKubernetesConfig", "getKubernetesConfig",
-                "setEurekaConfig", "getEurekaConfig", "setAutoDetectionConfig", "getAutoDetectionConfig", "isAutoDetectionEnabled",
-                "getCloudConfig", "setCloudConfig", "getOutboundPortDefinitions", "getOutboundPorts", "setOutboundPortDefinitions",
+                "getDiscoveryConfig", "setDiscoveryConfig", "getSSLConfig", "setSSLConfig", "setKubernetesConfig",
+                "getKubernetesConfig", "setAutoDetectionConfig", "getAutoDetectionConfig", "isAutoDetectionEnabled",
+                "getOutboundPortDefinitions", "getOutboundPorts", "setOutboundPortDefinitions",
                 "setOutboundPorts", "addOutboundPort", "addOutboundPortDefinition", "getClientIcmpPingConfig",
                 "setClientIcmpPingConfig", "equals", "hashCode", "toString", "setClusterRoutingConfig",
                 "getClusterRoutingConfig");

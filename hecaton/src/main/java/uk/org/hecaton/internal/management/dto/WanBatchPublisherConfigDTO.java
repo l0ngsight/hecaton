@@ -17,11 +17,7 @@
 package uk.org.hecaton.internal.management.dto;
 
 import uk.org.hecaton.config.AliasedDiscoveryConfig;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
 import uk.org.hecaton.config.DiscoveryConfig;
-import uk.org.hecaton.config.EurekaConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.KubernetesConfig;
 import uk.org.hecaton.config.WanAcknowledgeType;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
@@ -88,11 +84,7 @@ public class WanBatchPublisherConfigDTO implements JsonSerializable {
             root.add("targetEndpoints", config.getTargetEndpoints());
         }
 
-        serializeAliasedDiscoveryConfig(root, "aws", config.getAwsConfig());
-        serializeAliasedDiscoveryConfig(root, "gcp", config.getGcpConfig());
-        serializeAliasedDiscoveryConfig(root, "azure", config.getAzureConfig());
         serializeAliasedDiscoveryConfig(root, "kubernetes", config.getKubernetesConfig());
-        serializeAliasedDiscoveryConfig(root, "eureka", config.getEurekaConfig());
 
         DiscoveryConfig discoveryConfig = config.getDiscoveryConfig();
         if (discoveryConfig != null) {
@@ -138,26 +130,9 @@ public class WanBatchPublisherConfigDTO implements JsonSerializable {
         consumeIfExists(json, "queueCapacity", v -> config.setQueueCapacity(v.asInt()));
         consumeIfExists(json, "targetEndpoints", v -> config.setTargetEndpoints(v.asString()));
 
-        AwsConfig awsConfig = (AwsConfig) this.deserializeAliasedDiscoveryConfig(json, "aws");
-        if (awsConfig != null) {
-            config.setAwsConfig(awsConfig);
-        }
-
-        GcpConfig gcpConfig = (GcpConfig) this.deserializeAliasedDiscoveryConfig(json, "gcp");
-        if (gcpConfig != null) {
-            config.setGcpConfig(gcpConfig);
-        }
-        AzureConfig azureConfig = (AzureConfig) this.deserializeAliasedDiscoveryConfig(json, "azure");
-        if (azureConfig != null) {
-            config.setAzureConfig(azureConfig);
-        }
         KubernetesConfig kubernetesConfig = (KubernetesConfig) this.deserializeAliasedDiscoveryConfig(json, "kubernetes");
         if (kubernetesConfig != null) {
             config.setKubernetesConfig(kubernetesConfig);
-        }
-        EurekaConfig eurekaConfig = (EurekaConfig) this.deserializeAliasedDiscoveryConfig(json, "eureka");
-        if (eurekaConfig != null) {
-            config.setEurekaConfig(eurekaConfig);
         }
 
         JsonValue discoveryJson = json.get("discovery");

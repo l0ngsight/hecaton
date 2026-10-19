@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.client.impl.clientside;
 
-import uk.org.hecaton.client.config.ClientCloudConfig;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.ClientNetworkConfig;
 import uk.org.hecaton.client.config.ClientSecurityConfig;
@@ -27,9 +26,7 @@ import uk.org.hecaton.client.impl.connection.AddressProvider;
 import uk.org.hecaton.client.impl.spi.ClientClusterService;
 import uk.org.hecaton.client.impl.spi.impl.DefaultAddressProvider;
 import uk.org.hecaton.client.impl.spi.impl.TranslateToPublicAddressProvider;
-import uk.org.hecaton.client.impl.spi.impl.discovery.HecatonCloudDiscovery;
 import uk.org.hecaton.client.impl.spi.impl.discovery.RemoteAddressProvider;
-import uk.org.hecaton.client.impl.spi.impl.discovery.ViridianAddressProvider;
 import uk.org.hecaton.client.properties.ClientProperty;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.config.DiscoveryConfig;
@@ -39,6 +36,7 @@ import uk.org.hecaton.config.SocketInterceptorConfig;
 import uk.org.hecaton.config.security.StaticCredentialsFactory;
 import uk.org.hecaton.core.LifecycleService;
 import uk.org.hecaton.internal.config.DiscoveryConfigReadOnly;
+import uk.org.hecaton.internal.config.RemovedCloudDiscovery;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.LoggingService;
 import uk.org.hecaton.nio.SocketInterceptor;
@@ -52,6 +50,7 @@ import uk.org.hecaton.spi.discovery.integration.DiscoveryService;
 import uk.org.hecaton.spi.discovery.integration.DiscoveryServiceProvider;
 import uk.org.hecaton.spi.discovery.integration.DiscoveryServiceSettings;
 import uk.org.hecaton.spi.properties.HecatonProperties;
+import uk.org.hecaton.spi.properties.HecatonProperty;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,12 +59,18 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.org.hecaton.client.properties.ClientProperty.DISCOVERY_SPI_ENABLED;
-import static uk.org.hecaton.client.properties.ClientProperty.HECATON_CLOUD_DISCOVERY_TOKEN;
 import static uk.org.hecaton.internal.config.AliasedDiscoveryConfigUtils.allUsePublicAddress;
 import static uk.org.hecaton.internal.util.Preconditions.checkNotNull;
 import static java.util.Collections.unmodifiableList;
 
 class ClusterDiscoveryServiceBuilder {
+
+    /**
+     * Hazelcast Cloud (Viridian) discovery token property. Hecaton removed Hazelcast Cloud
+     * discovery (D9); a client that still sets it fails with an explanation.
+     */
+    private static final HecatonProperty REMOVED_CLOUD_DISCOVERY_TOKEN =
+            new HecatonProperty("hecaton.client.cloud.discovery.token");
 
     private final int configsTryCount;
     private final LoggingService loggingService;
@@ -119,37 +124,18 @@ class ClusterDiscoveryServiceBuilder {
 
     private AddressProvider createAddressProvider(ClientConfig clientConfig, DiscoveryService discoveryService) {
         ClientNetworkConfig networkConfig = clientConfig.getNetworkConfig();
-        ClientCloudConfig cloudConfig = networkConfig.getCloudConfig();
 
         List<String> addresses = networkConfig.getAddresses();
         boolean addressListProvided = !addresses.isEmpty();
-        boolean awsDiscoveryEnabled = networkConfig.getAwsConfig() != null && networkConfig.getAwsConfig().isEnabled();
-        boolean gcpDiscoveryEnabled = networkConfig.getGcpConfig() != null && networkConfig.getGcpConfig().isEnabled();
-        boolean azureDiscoveryEnabled = networkConfig.getAzureConfig() != null && networkConfig.getAzureConfig().isEnabled();
         boolean kubernetesDiscoveryEnabled = networkConfig.getKubernetesConfig() != null
                 && networkConfig.getKubernetesConfig().isEnabled();
-        boolean eurekaDiscoveryEnabled = networkConfig.getEurekaConfig() != null && networkConfig.getEurekaConfig().isEnabled();
         boolean discoverySpiEnabled = discoverySpiEnabled(networkConfig);
-        String cloudDiscoveryToken = properties.getString(HECATON_CLOUD_DISCOVERY_TOKEN);
-        if (cloudDiscoveryToken != null && cloudConfig.isEnabled()) {
-            throw new IllegalStateException("Ambiguous hazelcast.cloud configuration. "
-                    + "Both property based and client configuration based settings are provided for "
-                    + "Hecaton cloud discovery together. Use only one.");
+        if (properties.getString(REMOVED_CLOUD_DISCOVERY_TOKEN) != null) {
+            RemovedCloudDiscovery.check(RemovedCloudDiscovery.CLIENT_CLOUD_TAG);
         }
-        boolean hecatonCloudEnabled = cloudDiscoveryToken != null || cloudConfig.isEnabled();
-        isDiscoveryConfigurationConsistent(addressListProvided, awsDiscoveryEnabled, gcpDiscoveryEnabled, azureDiscoveryEnabled,
-                kubernetesDiscoveryEnabled, eurekaDiscoveryEnabled, discoverySpiEnabled, hecatonCloudEnabled);
+        isDiscoveryConfigurationConsistent(addressListProvided, kubernetesDiscoveryEnabled, discoverySpiEnabled);
 
-        if (hecatonCloudEnabled) {
-            String discoveryToken = cloudDiscoveryToken(cloudConfig, cloudDiscoveryToken);
-            String cloudUrlBase = properties.getString(HecatonCloudDiscovery.CLOUD_URL_BASE_PROPERTY);
-            String urlEndpoint = HecatonCloudDiscovery.createUrlEndpoint(cloudUrlBase, discoveryToken);
-            int connectionTimeoutMillis = getConnectionTimeoutMillis(networkConfig);
-            boolean tpcEnabled = clientConfig.getTpcConfig().isEnabled();
-            HecatonCloudDiscovery cloudDiscovery
-                    = new HecatonCloudDiscovery(urlEndpoint, connectionTimeoutMillis, tpcEnabled);
-            return new ViridianAddressProvider(cloudDiscovery);
-        } else if (networkConfig.getAddresses().isEmpty() && discoveryService != null) {
+        if (networkConfig.getAddresses().isEmpty() && discoveryService != null) {
             return new RemoteAddressProvider(() -> discoverAddresses(discoveryService), usePublicAddress(clientConfig));
         }
         TranslateToPublicAddressProvider toPublicAddressProvider = new TranslateToPublicAddressProvider(networkConfig,
@@ -179,57 +165,26 @@ class ClusterDiscoveryServiceBuilder {
                 || allUsePublicAddress(ClientAliasedDiscoveryConfigUtils.aliasedDiscoveryConfigsFrom(config.getNetworkConfig()));
     }
 
-    @SuppressWarnings({"checkstyle:booleanexpressioncomplexity", "checkstyle:npathcomplexity"})
-    private void isDiscoveryConfigurationConsistent(boolean addressListProvided, boolean awsDiscoveryEnabled,
-                                                    boolean gcpDiscoveryEnabled, boolean azureDiscoveryEnabled,
-                                                    boolean kubernetesDiscoveryEnabled, boolean eurekaDiscoveryEnabled,
-                                                    boolean discoverySpiEnabled, boolean hecatonCloudEnabled) {
+    private void isDiscoveryConfigurationConsistent(boolean addressListProvided, boolean kubernetesDiscoveryEnabled,
+                                                    boolean discoverySpiEnabled) {
         List<String> enabledDiscoveries = new ArrayList<>();
         int count = 0;
         if (addressListProvided) {
             count++;
             enabledDiscoveries.add("cluster members given explicitly");
         }
-        if (awsDiscoveryEnabled) {
-            count++;
-            enabledDiscoveries.add("AWS discovery");
-        }
-        if (gcpDiscoveryEnabled) {
-            count++;
-            enabledDiscoveries.add("GCP discovery");
-        }
-        if (azureDiscoveryEnabled) {
-            count++;
-            enabledDiscoveries.add("Azure discovery");
-        }
         if (kubernetesDiscoveryEnabled) {
             count++;
             enabledDiscoveries.add("Kubernetes discovery");
-        }
-        if (eurekaDiscoveryEnabled) {
-            count++;
-            enabledDiscoveries.add("Eureka discovery");
         }
         if (discoverySpiEnabled) {
             count++;
             enabledDiscoveries.add("Discovery SPI");
         }
-        if (hecatonCloudEnabled) {
-            count++;
-            enabledDiscoveries.add("Hecaton Cloud");
-        }
         if (count > 1) {
             throw new IllegalStateException("Only one discovery method can be enabled at a time. "
                     + "Keep only one of the following method enabled by removing the others from the configuration, "
                     + "or setting enabled to 'false': " + String.join(",", enabledDiscoveries));
-        }
-    }
-
-    private static String cloudDiscoveryToken(ClientCloudConfig cloudConfig, String cloudDiscoveryToken) {
-        if (cloudConfig.isEnabled()) {
-            return cloudConfig.getDiscoveryToken();
-        } else {
-            return cloudDiscoveryToken;
         }
     }
 
@@ -286,8 +241,4 @@ class ClusterDiscoveryServiceBuilder {
         return null;
     }
 
-    private int getConnectionTimeoutMillis(ClientNetworkConfig networkConfig) {
-        int connTimeout = networkConfig.getConnectionTimeout();
-        return connTimeout == 0 ? Integer.MAX_VALUE : connTimeout;
-    }
 }

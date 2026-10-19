@@ -15,10 +15,6 @@
  */
 package uk.org.hecaton.client.impl.protocol.codec.holder;
 
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
-import uk.org.hecaton.config.EurekaConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.KubernetesConfig;
 import uk.org.hecaton.config.WanSyncConfig;
 import uk.org.hecaton.internal.serialization.Data;
@@ -47,11 +43,11 @@ public final class WanBatchPublisherConfigHolder {
     private final long idleMinParkNs;
     private final long idleMaxParkNs;
     private final String targetEndpoints;
-    private final AwsConfig awsConfig;
-    private final GcpConfig gcpConfig;
-    private final AzureConfig azureConfig;
+    private final RemovedDiscoveryConfigHolder awsConfig;
+    private final RemovedDiscoveryConfigHolder gcpConfig;
+    private final RemovedDiscoveryConfigHolder azureConfig;
     private final KubernetesConfig kubernetesConfig;
-    private final EurekaConfig eurekaConfig;
+    private final RemovedDiscoveryConfigHolder eurekaConfig;
     private final DiscoveryConfigHolder discoveryConfig;
     private final WanSyncConfigHolder syncConfig;
     private final String endpoint;
@@ -62,9 +58,10 @@ public final class WanBatchPublisherConfigHolder {
                                          int queueCapacity, int batchSize, int batchMaxDelayMillis, int responseTimeoutMillis,
                                          int queueFullBehavior, int acknowledgeType, int discoveryPeriodSeconds,
                                          int maxTargetEndpoints, int maxConcurrentInvocations, boolean useEndpointPrivateAddress,
-                                         long idleMinParkNs, long idleMaxParkNs, String targetEndpoints, AwsConfig awsConfig,
-                                         GcpConfig gcpConfig, AzureConfig azureConfig, KubernetesConfig kubernetesConfig,
-                                         EurekaConfig eurekaConfig, DiscoveryConfigHolder discoveryConfig,
+                                         long idleMinParkNs, long idleMaxParkNs, String targetEndpoints,
+                                         RemovedDiscoveryConfigHolder awsConfig, RemovedDiscoveryConfigHolder gcpConfig,
+                                         RemovedDiscoveryConfigHolder azureConfig, KubernetesConfig kubernetesConfig,
+                                         RemovedDiscoveryConfigHolder eurekaConfig, DiscoveryConfigHolder discoveryConfig,
                                          WanSyncConfigHolder syncConfig, String endpoint) {
         this.publisherId = publisherId;
         this.className = className;
@@ -160,15 +157,15 @@ public final class WanBatchPublisherConfigHolder {
         return targetEndpoints;
     }
 
-    public AwsConfig getAwsConfig() {
+    public RemovedDiscoveryConfigHolder getAwsConfig() {
         return awsConfig;
     }
 
-    public GcpConfig getGcpConfig() {
+    public RemovedDiscoveryConfigHolder getGcpConfig() {
         return gcpConfig;
     }
 
-    public AzureConfig getAzureConfig() {
+    public RemovedDiscoveryConfigHolder getAzureConfig() {
         return azureConfig;
     }
 
@@ -176,7 +173,7 @@ public final class WanBatchPublisherConfigHolder {
         return kubernetesConfig;
     }
 
-    public EurekaConfig getEurekaConfig() {
+    public RemovedDiscoveryConfigHolder getEurekaConfig() {
         return eurekaConfig;
     }
 

@@ -118,46 +118,11 @@
                 </member-list>
             </tcp-ip>
             <!--
-                Specifies whether the member use the AWS API to get a list of candidate IPs to
-                check. "access-key" and "secret-key" are needed to access the AWS APIs and the
-                rest of the parameters work as filtering criteria that narrow down the list of
-                IPs to check. Default value is false.
-            -->
-            <aws enabled="false">
-            </aws>
-            <!--
-                Specifies whether the member use the GCP APIs to get a list of candidate IPs to
-                check.
-            -->
-            <gcp enabled="false">
-            </gcp>
-            <!-- Specifies whether the member use the Azure REST API to get a list of candidate IPs to
-                 check.
-            -->
-            <azure enabled="false">
-            </azure>
-            <!--
                 Specifies whether the member use the Kubernetes APIs to get a list of candidate IPs to
                 check.
             -->
             <kubernetes enabled="false">
             </kubernetes>
-            <!--
-                Specifies whether the member use the Eureka Service Registry to get a list of candidate
-                IPs to check.
-            -->
-            <eureka enabled="false">
-                <!--
-                    Defines if the Eureka Discovery SPI plugin will register itself with the Eureka 1
-                    service discovery. It is optional. Default value is true.
-                -->
-                <self-registration>true</self-registration>
-                <!--
-                    Defines an eureka namespace to not collide with other service registry clients
-                    in eureka-client.properties file. It is optional. Default value is hecaton.
-                -->
-                <namespace>hecaton</namespace>
-            </eureka>
             <discovery-strategies>
             </discovery-strategies>
         </join>

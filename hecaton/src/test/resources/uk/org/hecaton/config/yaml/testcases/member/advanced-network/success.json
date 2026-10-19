@@ -28,42 +28,12 @@
               "dummy6"
             ]
           },
-          "aws": {
-            "enabled": false,
-            "access-key": "my-access-key",
-            "secret-key": "my-secret-key",
-            "iam-role": "dummy",
-            "region": "us-west-1",
-            "host-header": "ec2.amazonaws.com",
-            "security-group-name": "hecaton-sg",
-            "tag-key": "type",
-            "tag-value": "hz-nodes",
-            "use-public-ip": true
-          },
-          "gcp": {
-            "enabled": false,
-            "zones": "us-east1-b,us-east1-c"
-          },
-          "azure": {
-            "enabled": false,
-            "client-id": "CLIENT_ID",
-            "client-secret": "CLIENT_SECRET",
-            "tenant-id": "TENANT_ID",
-            "subscription-id": "SUB_ID",
-            "cluster-id": "HZLCAST001",
-            "group-name": "RESOURCE-GROUP-NAME"
-          },
           "kubernetes": {
             "enabled": false,
             "namespace": "MY-KUBERNETES-NAMESPACE",
             "service-name": "MY-SERVICE-NAME",
             "service-label-name": "MY-SERVICE-LABEL-NAME",
             "service-label-value": "MY-SERVICE-LABEL-VALUE"
-          },
-          "eureka": {
-            "enabled": false,
-            "self-registration": true,
-            "namespace": "hecaton"
           }
         },
         "interfaces": {

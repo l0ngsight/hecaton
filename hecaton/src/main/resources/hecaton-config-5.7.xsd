@@ -1572,6 +1572,20 @@
             <xs:element name="interface" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
     </xs:complexType>
+    <xs:complexType name="removed-cloud-discovery">
+        <xs:annotation>
+            <xs:documentation>
+                Cloud-provider discovery (AWS, GCP, Azure, Eureka, Hazelcast Cloud) is not supported in Hecaton.
+                A configuration that contains this element fails to load. Use tcp-ip, multicast, kubernetes or a
+                Discovery SPI implementation instead.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+        </xs:sequence>
+        <xs:anyAttribute processContents="skip"/>
+    </xs:complexType>
+
     <xs:complexType name="aliased-discovery-strategy">
         <xs:sequence>
             <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
@@ -1612,11 +1626,11 @@
         <xs:all>
             <xs:element name="multicast" type="multicast" minOccurs="0"/>
             <xs:element name="tcp-ip" type="tcp-ip" minOccurs="0"/>
-            <xs:element name="aws" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="gcp" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="azure" type="aliased-discovery-strategy" minOccurs="0"/>
+            <xs:element name="aws" type="removed-cloud-discovery" minOccurs="0"/>
+            <xs:element name="gcp" type="removed-cloud-discovery" minOccurs="0"/>
+            <xs:element name="azure" type="removed-cloud-discovery" minOccurs="0"/>
             <xs:element name="kubernetes" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="eureka" type="aliased-discovery-strategy" minOccurs="0"/>
+            <xs:element name="eureka" type="removed-cloud-discovery" minOccurs="0"/>
             <xs:element name="auto-detection" type="aliased-discovery-strategy" minOccurs="0"/>
             <xs:element name="discovery-strategies" type="discovery-strategies" minOccurs="0"/>
         </xs:all>
@@ -2473,11 +2487,11 @@
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
-            <xs:element name="aws" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="gcp" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="azure" type="aliased-discovery-strategy" minOccurs="0"/>
+            <xs:element name="aws" type="removed-cloud-discovery" minOccurs="0"/>
+            <xs:element name="gcp" type="removed-cloud-discovery" minOccurs="0"/>
+            <xs:element name="azure" type="removed-cloud-discovery" minOccurs="0"/>
             <xs:element name="kubernetes" type="aliased-discovery-strategy" minOccurs="0"/>
-            <xs:element name="eureka" type="aliased-discovery-strategy" minOccurs="0"/>
+            <xs:element name="eureka" type="removed-cloud-discovery" minOccurs="0"/>
             <xs:element name="discovery-strategies" type="discovery-strategies" minOccurs="0"/>
             <xs:element name="sync" type="wan-sync" minOccurs="0"/>
             <xs:element name="endpoint" type="xs:string" minOccurs="0">

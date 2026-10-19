@@ -52,7 +52,6 @@ public class CacheClientListenerTest extends CacheListenerTest {
     protected CachingProvider getCachingProvider() {
         Config config = new Config();
         JoinConfig joinConfig = config.getNetworkConfig().getJoin();
-        joinConfig.getAwsConfig().setEnabled(false);
         joinConfig.getMulticastConfig().setEnabled(false);
         joinConfig.getTcpIpConfig().setEnabled(false);
 

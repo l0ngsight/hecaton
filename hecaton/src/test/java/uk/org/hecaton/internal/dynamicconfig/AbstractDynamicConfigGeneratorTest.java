@@ -20,7 +20,6 @@ import uk.org.hecaton.collection.QueueStore;
 import uk.org.hecaton.collection.QueueStoreFactory;
 import uk.org.hecaton.config.AdvancedNetworkConfig;
 import uk.org.hecaton.config.AttributeConfig;
-import uk.org.hecaton.config.AwsConfig;
 import uk.org.hecaton.config.BTreeIndexConfig;
 import uk.org.hecaton.config.CacheDeserializedValues;
 import uk.org.hecaton.config.CachePartitionLostListenerConfig;
@@ -46,6 +45,7 @@ import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.IndexConfig;
 import uk.org.hecaton.config.IndexType;
 import uk.org.hecaton.config.ItemListenerConfig;
+import uk.org.hecaton.config.KubernetesConfig;
 import uk.org.hecaton.config.ListConfig;
 import uk.org.hecaton.config.ListenerConfig;
 import uk.org.hecaton.config.MapConfig;
@@ -860,7 +860,7 @@ public abstract class AbstractDynamicConfigGeneratorTest extends HecatonTestSupp
                 .setIdleMinParkNs(100)
                 .setIdleMaxParkNs(1000)
                 .setTargetEndpoints("a,b,c,d")
-                .setAwsConfig(getDummyAwsConfig())
+                .setKubernetesConfig(getDummyKubernetesConfig())
                 .setDiscoveryConfig(getDummyDiscoveryConfig())
                 .setEndpoint("WAN")
                 .setProperties(props);
@@ -1302,19 +1302,6 @@ public abstract class AbstractDynamicConfigGeneratorTest extends HecatonTestSupp
                 .setMaxSizePolicy(MaxSizePolicy.ENTRY_COUNT);
     }
 
-    private static AwsConfig getDummyAwsConfig() {
-        return new AwsConfig().setProperty("host-header", "dummyHost")
-                .setProperty("region", "dummyRegion")
-                .setEnabled(true)
-                .setProperty("connection-timeout-seconds", "1")
-                .setProperty("access-key", "dummyKey")
-                .setProperty("iam-role", "dummyIam")
-                .setProperty("secret-key", "dummySecretKey")
-                .setProperty("security-group-name", "dummyGroupName")
-                .setProperty("tag-key", "dummyTagKey")
-                .setProperty("tag-value", "dummyTagValue");
-    }
-
     private static DiscoveryConfig getDummyDiscoveryConfig() {
         DiscoveryStrategyConfig strategyConfig = new DiscoveryStrategyConfig(new TestDiscoveryStrategyFactory());
         strategyConfig.addProperty("prop1", "val1");
@@ -1328,5 +1315,11 @@ public abstract class AbstractDynamicConfigGeneratorTest extends HecatonTestSupp
         discoveryConfig.addDiscoveryStrategyConfig(new DiscoveryStrategyConfig("dummyClass2"));
 
         return discoveryConfig;
+    }
+
+    private static KubernetesConfig getDummyKubernetesConfig() {
+        return new KubernetesConfig().setEnabled(true)
+                .setProperty("namespace", "dummyNamespace")
+                .setProperty("service-name", "dummyService");
     }
 }

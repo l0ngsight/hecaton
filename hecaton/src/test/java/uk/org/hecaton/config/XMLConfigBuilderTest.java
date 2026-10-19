@@ -412,95 +412,6 @@ public class XMLConfigBuilderTest extends AbstractConfigBuilderTest {
 
     @Override
     @Test
-    public void readAwsConfig() {
-        String xml = HECATON_START_TAG
-                + "    <cluster-name>dev</cluster-name>\n"
-                + "    <network>\n"
-                + "        <port auto-increment=\"true\">5701</port>\n"
-                + "        <join>\n"
-                + "            <multicast enabled=\"false\">\n"
-                + "                <multicast-group>224.2.2.3</multicast-group>\n"
-                + "                <multicast-port>54327</multicast-port>\n"
-                + "            </multicast>\n"
-                + "            <tcp-ip enabled=\"false\">\n"
-                + "                <interface>127.0.0.1</interface>\n"
-                + "            </tcp-ip>\n"
-                + "            <aws enabled=\"true\" connection-timeout-seconds=\"10\" >\n"
-                + "                <access-key>sample-access-key</access-key>\n"
-                + "                <secret-key>sample-secret-key</secret-key>\n"
-                + "                <iam-role>sample-role</iam-role>\n"
-                + "                <region>sample-region</region>\n"
-                + "                <host-header>sample-header</host-header>\n"
-                + "                <security-group-name>sample-group</security-group-name>\n"
-                + "                <tag-key>sample-tag-key</tag-key>\n"
-                + "                <tag-value>sample-tag-value</tag-value>\n"
-                + "            </aws>\n"
-                + "        </join>\n"
-                + "        <interfaces enabled=\"false\">\n"
-                + "            <interface>10.10.1.*</interface>\n"
-                + "        </interfaces>\n"
-                + "    </network>"
-                + HECATON_END_TAG;
-
-        Config config = buildConfig(xml);
-
-        AwsConfig awsConfig = config.getNetworkConfig().getJoin().getAwsConfig();
-        assertTrue(awsConfig.isEnabled());
-        assertAwsConfig(awsConfig);
-    }
-
-    @Override
-    @Test
-    public void readGcpConfig() {
-        String xml = HECATON_START_TAG
-                + "    <network>\n"
-                + "        <join>\n"
-                + "            <multicast enabled=\"false\"/>\n"
-                + "            <tcp-ip enabled=\"false\"/>\n"
-                + "            <gcp enabled=\"true\">\n"
-                + "                <use-public-ip>true</use-public-ip>\n"
-                + "                <zones>us-east1-b</zones>\n"
-                + "            </gcp>\n"
-                + "        </join>\n"
-                + "    </network>"
-                + HECATON_END_TAG;
-
-        Config config = buildConfig(xml);
-
-        GcpConfig gcpConfig = config.getNetworkConfig().getJoin().getGcpConfig();
-
-        assertTrue(gcpConfig.isEnabled());
-        assertTrue(gcpConfig.isUsePublicIp());
-        assertEquals("us-east1-b", gcpConfig.getProperty("zones"));
-    }
-
-    @Override
-    @Test
-    public void readAzureConfig() {
-        String xml = HECATON_START_TAG
-                + "    <network>\n"
-                + "        <join>\n"
-                + "            <multicast enabled=\"false\"/>\n"
-                + "            <tcp-ip enabled=\"false\"/>\n"
-                + "            <azure enabled=\"true\">\n"
-                + "                <client-id>123456789!</client-id>\n"
-                + "                <use-public-ip>true</use-public-ip>\n"
-                + "            </azure>\n"
-                + "        </join>\n"
-                + "    </network>"
-                + HECATON_END_TAG;
-
-        Config config = buildConfig(xml);
-
-        AzureConfig azureConfig = config.getNetworkConfig().getJoin().getAzureConfig();
-
-        assertTrue(azureConfig.isEnabled());
-        assertTrue(azureConfig.isUsePublicIp());
-        assertEquals("123456789!", azureConfig.getProperty("client-id"));
-    }
-
-    @Override
-    @Test
     public void readKubernetesConfig() {
         String xml = HECATON_START_TAG
                 + "    <network>\n"
@@ -522,35 +433,6 @@ public class XMLConfigBuilderTest extends AbstractConfigBuilderTest {
         assertTrue(kubernetesConfig.isEnabled());
         assertTrue(kubernetesConfig.isUsePublicIp());
         assertEquals("hecaton", kubernetesConfig.getProperty("namespace"));
-    }
-
-    @Override
-    @Test
-    public void readEurekaConfig() {
-        String xml = HECATON_START_TAG
-                + "    <network>\n"
-                + "        <join>\n"
-                + "            <multicast enabled=\"false\"/>\n"
-                + "            <tcp-ip enabled=\"false\"/>\n"
-                + "            <eureka enabled=\"true\">\n"
-                + "                <use-public-ip>true</use-public-ip>\n"
-                + "                <namespace>hecaton</namespace>\n"
-                + "                <shouldUseDns>false</shouldUseDns>\n"
-                + "                <serviceUrl.default>http://localhost:8082/eureka</serviceUrl.default>\n"
-                + "            </eureka>\n"
-                + "        </join>\n"
-                + "    </network>"
-                + HECATON_END_TAG;
-
-        Config config = buildConfig(xml);
-
-        EurekaConfig eurekaConfig = config.getNetworkConfig().getJoin().getEurekaConfig();
-
-        assertTrue(eurekaConfig.isEnabled());
-        assertTrue(eurekaConfig.isUsePublicIp());
-        assertEquals("hecaton", eurekaConfig.getProperty("namespace"));
-        assertEquals("false", eurekaConfig.getProperty("shouldUseDns"));
-        assertEquals("http://localhost:8082/eureka", eurekaConfig.getProperty("serviceUrl.default"));
     }
 
     @Override
@@ -1889,16 +1771,6 @@ public class XMLConfigBuilderTest extends AbstractConfigBuilderTest {
                 + "            <sync>\n"
                 + "                <consistency-check-strategy>MERKLE_TREES</consistency-check-strategy>\n"
                 + "            </sync>\n"
-                + "            <aws enabled=\"false\" connection-timeout-seconds=\"10\" >\n"
-                + "               <access-key>sample-access-key</access-key>\n"
-                + "               <secret-key>sample-secret-key</secret-key>\n"
-                + "               <iam-role>sample-role</iam-role>\n"
-                + "               <region>sample-region</region>\n"
-                + "               <host-header>sample-header</host-header>\n"
-                + "               <security-group-name>sample-group</security-group-name>\n"
-                + "               <tag-key>sample-tag-key</tag-key>\n"
-                + "               <tag-value>sample-tag-value</tag-value>\n"
-                + "            </aws>\n"
                 + "            <discovery-strategies>\n"
                 + "               <node-filter class=\"DummyFilterClass\" />\n"
                 + "               <discovery-strategy class=\"DummyDiscoveryStrategy1\" enabled=\"true\">\n"
@@ -1964,12 +1836,7 @@ public class XMLConfigBuilderTest extends AbstractConfigBuilderTest {
         assertEquals(ConsistencyCheckStrategy.MERKLE_TREES, pc1.getSyncConfig().getConsistencyCheckStrategy());
         Map<String, Comparable> pubProperties = pc1.getProperties();
         assertEquals("prop.publisher", pubProperties.get("custom.prop.publisher"));
-        assertFalse(pc1.getAwsConfig().isEnabled());
-        assertAwsConfig(pc1.getAwsConfig());
-        assertFalse(pc1.getGcpConfig().isEnabled());
-        assertFalse(pc1.getAzureConfig().isEnabled());
         assertFalse(pc1.getKubernetesConfig().isEnabled());
-        assertFalse(pc1.getEurekaConfig().isEnabled());
         assertDiscoveryConfig(pc1.getDiscoveryConfig());
 
         WanBatchPublisherConfig pc2 = publisherConfigs.get(1);

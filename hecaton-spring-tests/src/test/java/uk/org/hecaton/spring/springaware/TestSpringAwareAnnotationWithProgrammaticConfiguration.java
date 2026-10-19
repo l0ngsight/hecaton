@@ -62,7 +62,6 @@ class TestSpringAwareAnnotationWithProgrammaticConfiguration {
         config.setClusterName("second-spring-cluster");
         config.getNetworkConfig().getJoin().getMulticastConfig().setEnabled(false);
         config.getNetworkConfig().getJoin().getTcpIpConfig().setEnabled(false);
-        config.getNetworkConfig().getJoin().getAwsConfig().setEnabled(false);
 
         HecatonInstance instance = Hecaton.newHecatonInstance(config);
 

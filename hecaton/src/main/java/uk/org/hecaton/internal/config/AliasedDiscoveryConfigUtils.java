@@ -17,11 +17,7 @@
 package uk.org.hecaton.internal.config;
 
 import uk.org.hecaton.config.AliasedDiscoveryConfig;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
 import uk.org.hecaton.config.DiscoveryStrategyConfig;
-import uk.org.hecaton.config.EurekaConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.JoinConfig;
 import uk.org.hecaton.config.KubernetesConfig;
@@ -33,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
 
 /**
  * Utility class for Aliased Discovery Configs.
@@ -45,11 +40,7 @@ public final class AliasedDiscoveryConfigUtils {
     }
 
     static {
-        ALIAS_MAPPINGS.put("aws", "uk.org.hecaton.aws.AwsDiscoveryStrategy");
-        ALIAS_MAPPINGS.put("gcp", "uk.org.hecaton.gcp.GcpDiscoveryStrategy");
-        ALIAS_MAPPINGS.put("azure", "uk.org.hecaton.azure.AzureDiscoveryStrategy");
         ALIAS_MAPPINGS.put("kubernetes", "uk.org.hecaton.kubernetes.HecatonKubernetesDiscoveryStrategy");
-        ALIAS_MAPPINGS.put("eureka", "uk.org.hecaton.eureka.one.EurekaOneDiscoveryStrategy");
     }
 
     /**
@@ -61,8 +52,12 @@ public final class AliasedDiscoveryConfigUtils {
 
     /**
      * Checks whether the given XML {@code tag} is supported.
+     *
+     * @throws InvalidConfigurationException if {@code tag} names a cloud-provider discovery
+     *                                       that Hecaton removed ({@link RemovedCloudDiscovery})
      */
     public static boolean supports(String tag) {
+        RemovedCloudDiscovery.check(tag);
         return ALIAS_MAPPINGS.containsKey(tag);
     }
 
@@ -132,16 +127,9 @@ public final class AliasedDiscoveryConfigUtils {
      * Gets the {@link AliasedDiscoveryConfig} from {@code config} by {@code tag}.
      */
     public static AliasedDiscoveryConfig getConfigByTag(JoinConfig config, String tag) {
-        if ("aws".equals(tag)) {
-            return config.getAwsConfig();
-        } else if ("gcp".equals(tag)) {
-            return config.getGcpConfig();
-        } else if ("azure".equals(tag)) {
-            return config.getAzureConfig();
-        } else if ("kubernetes".equals(tag)) {
+        RemovedCloudDiscovery.check(tag);
+        if ("kubernetes".equals(tag)) {
             return config.getKubernetesConfig();
-        } else if ("eureka".equals(tag)) {
-            return config.getEurekaConfig();
         } else {
             throw new IllegalArgumentException(String.format("Invalid tag: '%s'", tag));
         }
@@ -151,16 +139,9 @@ public final class AliasedDiscoveryConfigUtils {
      * Gets the {@link AliasedDiscoveryConfig} from {@code config} by {@code tag}.
      */
     public static AliasedDiscoveryConfig getConfigByTag(WanBatchPublisherConfig config, String tag) {
-        if ("aws".equals(tag)) {
-            return config.getAwsConfig();
-        } else if ("gcp".equals(tag)) {
-            return config.getGcpConfig();
-        } else if ("azure".equals(tag)) {
-            return config.getAzureConfig();
-        } else if ("kubernetes".equals(tag)) {
+        RemovedCloudDiscovery.check(tag);
+        if ("kubernetes".equals(tag)) {
             return config.getKubernetesConfig();
-        } else if ("eureka".equals(tag)) {
-            return config.getEurekaConfig();
         } else {
             throw new IllegalArgumentException(String.format("Invalid tag: '%s'", tag));
         }
@@ -170,16 +151,14 @@ public final class AliasedDiscoveryConfigUtils {
      * Gets a list of all aliased discovery configs from {@code config}.
      */
     public static List<AliasedDiscoveryConfig<?>> aliasedDiscoveryConfigsFrom(JoinConfig config) {
-        return asList(config.getAwsConfig(), config.getGcpConfig(), config.getAzureConfig(), config.getKubernetesConfig(),
-                config.getEurekaConfig());
+        return List.of(config.getKubernetesConfig());
     }
 
     /**
      * Gets a list of all aliased discovery configs from {@code config}.
      */
     public static List<AliasedDiscoveryConfig<?>> aliasedDiscoveryConfigsFrom(WanBatchPublisherConfig config) {
-        return asList(config.getAwsConfig(), config.getGcpConfig(), config.getAzureConfig(), config.getKubernetesConfig(),
-                config.getEurekaConfig());
+        return List.of(config.getKubernetesConfig());
     }
 
     /**
@@ -205,16 +184,9 @@ public final class AliasedDiscoveryConfigUtils {
      */
     @SuppressWarnings("unchecked")
     public static AliasedDiscoveryConfig newConfigFor(String tag) {
-        if ("aws".equals(tag)) {
-            return new AwsConfig();
-        } else if ("gcp".equals(tag)) {
-            return new GcpConfig();
-        } else if ("azure".equals(tag)) {
-            return new AzureConfig();
-        } else if ("kubernetes".equals(tag)) {
+        RemovedCloudDiscovery.check(tag);
+        if ("kubernetes".equals(tag)) {
             return new KubernetesConfig();
-        } else if ("eureka".equals(tag)) {
-            return new EurekaConfig();
         } else {
             throw new IllegalArgumentException(String.format("Invalid tag: '%s'", tag));
         }

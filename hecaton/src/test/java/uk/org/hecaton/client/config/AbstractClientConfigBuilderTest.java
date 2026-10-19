@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.client.config;
 
-import uk.org.hecaton.config.AwsConfig;
 import uk.org.hecaton.config.ClassFilter;
 import uk.org.hecaton.config.CredentialsFactoryConfig;
 import uk.org.hecaton.config.DiscoveryConfig;
@@ -97,19 +96,7 @@ public abstract class AbstractClientConfigBuilderTest extends HecatonTestSupport
         assertEquals("uk.org.hecaton.examples.MySocketInterceptor", socketInterceptorConfig.getClassName());
         assertEquals("bar", socketInterceptorConfig.getProperty("foo"));
 
-        AwsConfig awsConfig = networkConfig.getAwsConfig();
-        assertTrue(awsConfig.isEnabled());
-        assertEquals("TEST_ACCESS_KEY", awsConfig.getProperty("access-key"));
-        assertEquals("TEST_SECRET_KEY", awsConfig.getProperty("secret-key"));
-        assertEquals("us-east-1", awsConfig.getProperty("region"));
-        assertEquals("ec2.amazonaws.com", awsConfig.getProperty("host-header"));
-        assertEquals("type", awsConfig.getProperty("tag-key"));
-        assertEquals("hz-nodes", awsConfig.getProperty("tag-value"));
-        assertEquals("11", awsConfig.getProperty("connection-timeout-seconds"));
-        assertFalse(networkConfig.getGcpConfig().isEnabled());
-        assertFalse(networkConfig.getAzureConfig().isEnabled());
         assertFalse(networkConfig.getKubernetesConfig().isEnabled());
-        assertFalse(networkConfig.getEurekaConfig().isEnabled());
     }
 
     @Test
@@ -346,20 +333,6 @@ public abstract class AbstractClientConfigBuilderTest extends HecatonTestSupport
         ClientReliableTopicConfig reliableTopicConfig = fullClientConfig.getReliableTopicConfig("rel-topic");
         assertEquals(100, reliableTopicConfig.getReadBatchSize());
         assertEquals(TopicOverloadPolicy.DISCARD_NEWEST, reliableTopicConfig.getTopicOverloadPolicy());
-    }
-
-    @Test
-    public void testCloudConfig() {
-        ClientCloudConfig cloudConfig = fullClientConfig.getNetworkConfig().getCloudConfig();
-        assertFalse(cloudConfig.isEnabled());
-        assertEquals("EXAMPLE_TOKEN", cloudConfig.getDiscoveryToken());
-    }
-
-    @Test
-    public void testCloudConfig_defaults() {
-        ClientCloudConfig cloudConfig = defaultClientConfig.getNetworkConfig().getCloudConfig();
-        assertFalse(cloudConfig.isEnabled());
-        assertNull(cloudConfig.getDiscoveryToken());
     }
 
     @Test

@@ -25,8 +25,6 @@ import uk.org.hecaton.collection.QueueStore;
 import uk.org.hecaton.collection.QueueStoreFactory;
 import uk.org.hecaton.config.AttributeConfig;
 import uk.org.hecaton.config.AuditlogConfig;
-import uk.org.hecaton.config.AwsConfig;
-import uk.org.hecaton.config.AzureConfig;
 import uk.org.hecaton.config.CRDTReplicationConfig;
 import uk.org.hecaton.config.CacheDeserializedValues;
 import uk.org.hecaton.config.CacheSimpleConfig;
@@ -44,13 +42,11 @@ import uk.org.hecaton.config.DurableExecutorConfig;
 import uk.org.hecaton.config.DynamicConfigurationConfig;
 import uk.org.hecaton.config.EncryptionAtRestConfig;
 import uk.org.hecaton.config.EntryListenerConfig;
-import uk.org.hecaton.config.EurekaConfig;
 import uk.org.hecaton.config.EventJournalConfig;
 import uk.org.hecaton.config.EvictionConfig;
 import uk.org.hecaton.config.EvictionPolicy;
 import uk.org.hecaton.config.ExecutorConfig;
 import uk.org.hecaton.config.FlakeIdGeneratorConfig;
-import uk.org.hecaton.config.GcpConfig;
 import uk.org.hecaton.config.GlobalSerializerConfig;
 import uk.org.hecaton.config.IcmpFailureDetectorConfig;
 import uk.org.hecaton.config.InMemoryFormat;
@@ -859,11 +855,7 @@ public class TestFullApplicationContext {
         assertEquals("127.0.0.1:5700", members.get(0));
         assertEquals("127.0.0.1:5701", members.get(1));
         assertEquals("127.0.0.1:5700", tcp.getRequiredMember());
-        assertAwsConfig(networkConfig.getJoin().getAwsConfig());
-        assertGcpConfig(networkConfig.getJoin().getGcpConfig());
-        assertAzureConfig(networkConfig.getJoin().getAzureConfig());
         assertKubernetesConfig(networkConfig.getJoin().getKubernetesConfig());
-        assertEurekaConfig(networkConfig.getJoin().getEurekaConfig());
 
         assertTrue(networkConfig.isReuseAddress(), "reuse-address");
 
@@ -889,47 +881,12 @@ public class TestFullApplicationContext {
         assertEquals(256, tpcSocketConfig.getSendBufferSizeKB());
     }
 
-    private void assertAwsConfig(AwsConfig aws) {
-        assertFalse(aws.isEnabled());
-        assertEquals("sample-access-key", aws.getProperty("access-key"));
-        assertEquals("sample-secret-key", aws.getProperty("secret-key"));
-        assertEquals("sample-region", aws.getProperty("region"));
-        assertEquals("sample-header", aws.getProperty("host-header"));
-        assertEquals("sample-group", aws.getProperty("security-group-name"));
-        assertEquals("sample-tag-key", aws.getProperty("tag-key"));
-        assertEquals("sample-tag-value", aws.getProperty("tag-value"));
-        assertEquals("sample-role", aws.getProperty("iam-role"));
-    }
-
-    private void assertGcpConfig(GcpConfig gcp) {
-        assertFalse(gcp.isEnabled());
-        assertEquals("us-east1-b,us-east1-c", gcp.getProperty("zones"));
-    }
-
-    private void assertAzureConfig(AzureConfig azure) {
-        assertFalse(azure.isEnabled());
-        assertEquals("false", azure.getProperty("instance-metadata-available"));
-        assertEquals("CLIENT_ID", azure.getProperty("client-id"));
-        assertEquals("CLIENT_SECRET", azure.getProperty("client-secret"));
-        assertEquals("TENANT_ID", azure.getProperty("tenant-id"));
-        assertEquals("SUB_ID", azure.getProperty("subscription-id"));
-        assertEquals("RESOURCE-GROUP-NAME", azure.getProperty("resource-group"));
-        assertEquals("SCALE-SET", azure.getProperty("scale-set"));
-        assertEquals("TAG-NAME=HZLCAST001", azure.getProperty("tag"));
-    }
-
     private void assertKubernetesConfig(KubernetesConfig kubernetes) {
         assertFalse(kubernetes.isEnabled());
         assertEquals("MY-KUBERNETES-NAMESPACE", kubernetes.getProperty("namespace"));
         assertEquals("MY-SERVICE-NAME", kubernetes.getProperty("service-name"));
         assertEquals("MY-SERVICE-LABEL-NAME", kubernetes.getProperty("service-label-name"));
         assertEquals("MY-SERVICE-LABEL-VALUE", kubernetes.getProperty("service-label-value"));
-    }
-
-    private void assertEurekaConfig(EurekaConfig eureka) {
-        assertFalse(eureka.isEnabled());
-        assertEquals("true", eureka.getProperty("self-registration"));
-        assertEquals("hecaton", eureka.getProperty("namespace"));
     }
 
     private void assertDiscoveryConfig(DiscoveryConfig discoveryConfig) {
@@ -1031,11 +988,7 @@ public class TestFullApplicationContext {
         assertEquals(WanAcknowledgeType.ACK_ON_RECEIPT, pc.getAcknowledgeType());
         assertEquals(5, pc.getDiscoveryPeriodSeconds());
         assertEquals(5, pc.getMaxTargetEndpoints());
-        assertAwsConfig(pc.getAwsConfig());
-        assertGcpConfig(pc.getGcpConfig());
-        assertAzureConfig(pc.getAzureConfig());
         assertKubernetesConfig(pc.getKubernetesConfig());
-        assertEurekaConfig(pc.getEurekaConfig());
 
         WanCustomPublisherConfig customPublisher = wcfg.getCustomPublisherConfigs().get(0);
         assertEquals("istanbulPublisherId", customPublisher.getPublisherId());

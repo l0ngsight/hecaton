@@ -107,39 +107,12 @@
             </properties>
         </ssl>
         <auto-detection enabled="false"/>
-        <aws enabled="true" connection-timeout-seconds="11">
-            <inside-aws>true</inside-aws>
-            <access-key>TEST_ACCESS_KEY</access-key>
-            <secret-key>TEST_SECRET_KEY</secret-key>
-            <region>us-east-1</region>
-            <host-header>ec2.amazonaws.com</host-header>
-            <security-group-name>hecaton-sg</security-group-name>
-            <tag-key>type</tag-key>
-            <tag-value>hz-nodes</tag-value>
-        </aws>
-        <gcp enabled="false">
-            <zones>us-east1-b,us-east1-c</zones>
-        </gcp>
-        <azure enabled="false">
-            <instance-metadata-available>false</instance-metadata-available>
-            <client-id>CLIENT_ID</client-id>
-            <client-secret>CLIENT_SECRET</client-secret>
-            <tenant-id>TENANT_ID</tenant-id>
-            <subscription-id>SUB_ID</subscription-id>
-            <resource-group>RESOURCE-GROUP-NAME</resource-group>
-            <scale-set>SCALE-SET-NAME</scale-set>
-            <tag>TAG-NAME=HZLCAST001</tag>
-        </azure>
         <kubernetes enabled="false">
             <namespace>MY-KUBERNETES-NAMESPACE</namespace>
             <service-name>MY-SERVICE-NAME</service-name>
             <service-label-name>MY-SERVICE-LABEL-NAME</service-label-name>
             <service-label-value>MY-SERVICE-LABEL-VALUE</service-label-value>
         </kubernetes>
-        <eureka enabled="false">
-            <self-registration>true</self-registration>
-            <namespace>hecaton</namespace>
-        </eureka>
         <icmp-ping enabled="false">
             <timeout-milliseconds>2000</timeout-milliseconds>
             <interval-milliseconds>3000</interval-milliseconds>
@@ -147,9 +120,6 @@
             <max-attempts>5</max-attempts>
             <echo-fail-fast-on-startup>false</echo-fail-fast-on-startup>
         </icmp-ping>
-        <hecaton-cloud enabled="false">
-            <discovery-token>EXAMPLE_TOKEN</discovery-token>
-        </hecaton-cloud>
         <discovery-strategies>
             <node-filter class="DummyFilterClass"/>
             <discovery-strategy class="DummyDiscoveryStrategy1" enabled="true">
