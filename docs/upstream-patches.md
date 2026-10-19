@@ -8,7 +8,8 @@ Generated changes are not listed. They are fully described by
 [`tools/rebrand/rename-table.yaml`](../tools/rebrand/rename-table.yaml) and
 [`tools/upstream/excluded-paths.txt`](../tools/upstream/excluded-paths.txt). That includes
 the eight upstream test jars, which `tools/rebrand` rewrites (entry paths and class-file
-constant pools).
+constant pools), and the `@Generated` integrity hashes of the client-protocol codecs, which it
+recomputes.
 
 Budget: fewer than 40 patched upstream files (spec §7.4).
 
@@ -24,6 +25,7 @@ Budget: fewer than 40 patched upstream files (spec §7.4).
 | 6 | `hecaton-tpc-engine/src/main/resources/lib/linux-x86_64/libaffinity_helper.so`, `.../linux-x86_64/libicmp_helper.so`, `.../linux-x86/libicmp_helper.so` | Rebuilt from the renamed C sources with `tools/native/build-native.sh`. The upstream binaries export `Java_com_hazelcast_*` symbols and threw `UnsatisfiedLinkError` after the rename (thread affinity, ICMP ping). `tools/ci/check-native.sh` keeps binaries and sources in sync. | M1 |
 | 7 | `hecaton/src/test/resources/1.serialization.compatibility.binary`, `testHz3Object`, `testHz3ObjectLittleEndian` | Regenerated with `tools/fixtures/regenerate-serialization-fixtures.sh` (upstream's `BinaryCompatibilityFileGenerator` and the `CompatibilitySerializationServiceTest` object). The serialized streams embed class names with length prefixes, so they cannot be renamed in place. Deterministic; byte layout otherwise unchanged. | M1 |
 | 8 | deleted `hecaton/src/test/resources/uk/org/hecaton/nio/hz-3.1.5-multicast-package.dump` | Unused upstream fixture (no test reads it) that embeds Hazelcast 3 class names. | M1 |
+| 9 | `XmlClientConfigBuilderTest`, `YamlClientConfigBuilderTest`, `WildcardConfigPatternMatcherTest`, `MatchingPointConfigPatternMatcherTest`, `AddressUtilTest`, `JobUploadClientSuccessTest`, `ReflectionUtilsTest` (hecaton), `SqlMappingTest` (hecaton-sql) | Test data the rename made inconsistent (one side of a pair renamed, lengths, checksums), found by the first nightly run: base64 token, wildcard patterns, a protected domain's pattern, SHA-256 of a rewritten jar, a fixed-size class-file buffer, an SQL error column. | M1 |
 
 ## Pending
 
