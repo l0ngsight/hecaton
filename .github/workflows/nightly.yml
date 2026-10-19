@@ -1,0 +1,141 @@
+name: Nightly tests
+
+# Full test suite (upstream's `parallelTest` level: SlowTest/NightlyTest excluded),
+# sharded across jobs. Logic lives in tools/ci/nightly.py and tools/ci/run-test-shard.sh
+# of the tested ref, so this file only changes when the job layout does.
+#
+# suite=hecaton   tests `ref` of this repository and compares failures with the committed
+#                 upstream baseline and tools/ci/known-test-failures.txt; fails on new,
+#                 untriaged failures.
+# suite=upstream  tests the Hazelcast CE tag in tools/upstream/version (from `ref`) to
+#                 produce the baseline (docs/test-baseline/upstream-<tag>-jdk25.txt).
+
+on:
+  schedule:
+    - cron: '17 1 * * *'
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'hecaton or upstream'
+        type: choice
+        options: [hecaton, upstream]
+        default: hecaton
+      ref:
+        description: 'Branch of this repository to test (and to take the tools from)'
+        default: feature/m1-rebranded-ce
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ inputs.suite || 'hecaton' }}-${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+  cancel-in-progress: false
+
+env:
+  SUITE: ${{ inputs.suite || 'hecaton' }}
+  # Scheduled runs test the active milestone branch; switch to main once M1 is merged.
+  REF: ${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      upstream_tag: ${{ steps.matrix.outputs.upstream_tag }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.REF }}
+          path: hc
+      - id: matrix
+        run: |
+          echo "matrix=$(python3 hc/tools/ci/nightly.py matrix)" >> "$GITHUB_OUTPUT"
+          echo "upstream_tag=$(cat hc/tools/upstream/version)" >> "$GITHUB_OUTPUT"
+
+  test:
+    name: ${{ matrix.name }}
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJson(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.REF }}
+          path: hc
+      - if: env.SUITE == 'upstream'
+        uses: actions/checkout@v5
+        with:
+          repository: hazelcast/hazelcast
+          ref: ${{ needs.plan.outputs.upstream_tag }}
+          path: up
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: ${{ env.SUITE == 'upstream' && 'up/**/pom.xml' || 'hc/**/pom.xml' }}
+      - name: Run shard
+        env:
+          GROUP: ${{ matrix.group }}
+          SHARD: ${{ matrix.shard }}
+          SHARDS: ${{ matrix.shards }}
+        run: |
+          root=hc
+          [ "$SUITE" = upstream ] && root=up
+          hc/tools/ci/run-test-shard.sh "$root" "$SUITE" "$GROUP" "$SHARD" "$SHARDS"
+      - if: always()
+        name: Collect reports
+        env:
+          NAME: ${{ matrix.name }}
+        run: |
+          mkdir -p "reports/$NAME"
+          find hc up -path '*/target/surefire-reports/TEST-*.xml' -exec cp {} "reports/$NAME/" \; 2>/dev/null || true
+          echo "$(ls "reports/$NAME" | wc -l) report files"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-${{ matrix.name }}
+          path: reports
+          retention-days: 14
+
+  report:
+    needs: [plan, test]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.REF }}
+          path: hc
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: reports-*
+          path: reports
+          merge-multiple: true
+      - name: Compare results
+        env:
+          UPSTREAM_TAG: ${{ needs.plan.outputs.upstream_tag }}
+        run: |
+          python3 hc/tools/ci/nightly.py report --reports reports --suite "$SUITE" \
+            --baseline "hc/docs/test-baseline/upstream-$UPSTREAM_TAG-jdk25.txt" \
+            --known hc/tools/ci/known-test-failures.txt \
+            --failures-out failures.txt --summary-out summary.md
+      - if: always()
+        name: Publish summary
+        run: |
+          cat summary.md >> "$GITHUB_STEP_SUMMARY" || true
+          echo "----- BEGIN FAILING TESTS -----"
+          cat failures.txt || true
+          echo "----- END FAILING TESTS -----"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ env.SUITE }}
+          path: |
+            failures.txt
+            summary.md
+          retention-days: 30
