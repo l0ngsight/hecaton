@@ -78,6 +78,12 @@ jobs:
           java-version: '25'
           cache: maven
           cache-dependency-path: ${{ env.SUITE == 'upstream' && 'up/**/pom.xml' || 'hc/**/pom.xml' }}
+      # The Python tests install the protobuf/grpcio versions pinned by the build, which do
+      # not support the runner image's newer default Python (3.14); pin a supported one.
+      - if: matrix.group == 'ext-streaming'
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       - name: Run shard
         env:
           GROUP: ${{ matrix.group }}
