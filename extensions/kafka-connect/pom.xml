@@ -81,7 +81,7 @@
                         </goals>
                         <configuration>
                             <url>
-                                https://repository.hazelcast.com/download/tests/confluentinc-kafka-connect-datagen-0.6.0.zip
+                                https://hub-downloads.confluent.io/api/plugins/confluentinc/kafka-connect-datagen/versions/0.6.0/confluentinc-kafka-connect-datagen-0.6.0.zip
                             </url>
                             <unpack>false</unpack>
                             <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
@@ -94,7 +94,7 @@
                         </goals>
                         <configuration>
                             <url>
-                                https://repository.hazelcast.com/download/tests/confluentinc-kafka-connect-jdbc-10.8.4.zip
+                                https://hub-downloads.confluent.io/api/plugins/confluentinc/kafka-connect-jdbc/versions/10.8.4/confluentinc-kafka-connect-jdbc-10.8.4.zip
                             </url>
                             <unpack>false</unpack>
                             <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
@@ -107,7 +107,7 @@
                         </goals>
                         <configuration>
                             <url>
-                                https://repository.hazelcast.com/download/tests/couchbase-kafka-connect-couchbase-4.1.11.zip
+                                https://hub-downloads.confluent.io/api/plugins/couchbase/kafka-connect-couchbase/versions/4.1.11/couchbase-kafka-connect-couchbase-4.1.11.zip
                             </url>
                             <unpack>false</unpack>
                             <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
@@ -119,7 +119,7 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <url>https://repository.hazelcast.com/download/tests/neo4j-kafka-connect-neo4j-2.0.1.zip
+                            <url>https://hub-downloads.confluent.io/api/plugins/neo4j/kafka-connect-neo4j/versions/2.0.1/neo4j-kafka-connect-neo4j-2.0.1.zip
                             </url>
                             <unpack>false</unpack>
                             <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
@@ -131,22 +131,10 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <url>https://repository.hazelcast.com/download/tests/redis-kafka-connect-0.9.0.zip
+                            <url>https://hub-downloads.confluent.io/api/plugins/redis/redis-kafka-connect/versions/0.9.0/redis-redis-kafka-connect-0.9.0.zip
                             </url>
                             <unpack>true</unpack>
                             <outputDirectory>${project.build.directory}/</outputDirectory>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>download-sqs-jar-file</id>
-                        <goals>
-                            <goal>wget</goal>
-                        </goals>
-                        <configuration>
-                            <url>https://repository.hazelcast.com/download/tests/kafka-connect-sqs-1.5.0.jar
-                            </url>
-                            <unpack>false</unpack>
-                            <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
                         </configuration>
                     </execution>
                     <execution>
@@ -155,7 +143,7 @@
                             <goal>wget</goal>
                         </goals>
                         <configuration>
-                            <url>https://repository.hazelcast.com/download/tests/mongo-kafka-connect-1.16.0-all.jar
+                            <url>https://repo1.maven.org/maven2/org/mongodb/kafka/mongo-kafka-connect/1.16.0/mongo-kafka-connect-1.16.0-all.jar
                             </url>
                             <unpack>false</unpack>
                             <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
@@ -263,17 +251,6 @@
             <artifactId>lettuce-core</artifactId>
             <!-- When bumping this version check our netty version is compatible -->
             <version>6.8.2.RELEASE</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- AWS SQS-->
-        <dependency>
-            <groupId>org.testcontainers</groupId>
-            <artifactId>localstack</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>sqs</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Mongo connector tests -->
