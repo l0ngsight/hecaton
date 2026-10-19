@@ -225,6 +225,7 @@ Upstream's `README.md`, `LICENSE`, `NOTICE`, `CONTRIBUTING.md`, `SECURITY.md` an
 | Spring Hibernate XML support | `RegionFactoryBeanDefinitionParser` serves the removed Hibernate integration; delete it. |
 | Python 3.14 | The pinned protobuf 4.25.8 / grpcio 1.73.0 fail on Python 3.14; bump them (the nightly pins Python 3.12 meanwhile). |
 | Deep JSON nesting | `JsonParser` can overflow the stack before its 1,000-level limit on JDK 25 (known nightly failure); bound the recursion depth. |
+| Priority queue failover duplicate | `QueueMigrationTest#testPromotion` with a priority comparator once saw 101 items instead of 100 after the owner was terminated (nightly 2026-10-19; did not reproduce in 60 local runs). Find out how the promoted backup gets a duplicate item and fix it (known nightly failure meanwhile). |
 | Schema hosting | `XmlConfigSchemaLocationTest` needs the XSDs at `https://hecaton.org.uk/schema/...` (M8, D7). |
 
 **M1 exit:** tag `v0.1.0` (CE 5.7.0 parity minus cloud-provider support, renamed, Java 25 build).
