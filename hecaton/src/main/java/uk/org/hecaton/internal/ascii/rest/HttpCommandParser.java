@@ -39,7 +39,7 @@ abstract class HttpCommandParser<HC extends HttpCommand> implements CommandParse
         } else {
             return new ErrorCommand(ERROR_CLIENT);
         }
-        String urlDecodedUri = URLDecoder.decode(uri, StandardCharsets.UTF_8);
+        String urlDecodedUri = RestPathAliases.canonical(URLDecoder.decode(uri, StandardCharsets.UTF_8));
         return createHttpCommand(decoder, urlDecodedUri);
     }
 

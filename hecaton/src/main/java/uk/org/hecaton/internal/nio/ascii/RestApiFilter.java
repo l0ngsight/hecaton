@@ -19,6 +19,7 @@ package uk.org.hecaton.internal.nio.ascii;
 import uk.org.hecaton.config.RestApiConfig;
 import uk.org.hecaton.config.RestEndpointGroup;
 import uk.org.hecaton.internal.ascii.rest.HttpCommandProcessor;
+import uk.org.hecaton.internal.ascii.rest.RestPathAliases;
 import uk.org.hecaton.internal.server.ServerConnection;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.LoggingService;
@@ -79,7 +80,7 @@ public class RestApiFilter implements TextProtocolFilter {
             return null;
         }
         // the operation is an HTTP method so the next token should be a resource path
-        String requestUri = nextToken(st);
+        String requestUri = RestPathAliases.canonical(nextToken(st));
         return requestUri != null ? getHttpApiEndpointGroup(operation, requestUri) : null;
     }
 
