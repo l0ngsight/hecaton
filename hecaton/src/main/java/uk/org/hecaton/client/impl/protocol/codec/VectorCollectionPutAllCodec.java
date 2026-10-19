@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * The API implementation using this request may need to send multiple of these request messages for different partitions.
  */
 @SuppressWarnings("unused")
-@Generated("3ac925e3d2b81be943e339af8fab2491")
+@Generated("1f67df8bee8cdf1bc880f111aa7d88bb")
 public final class VectorCollectionPutAllCodec {
     //hex: 0x240300
     public static final int REQUEST_MESSAGE_TYPE = 2360064;

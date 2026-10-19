@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * from the underlying MapStore, evict only removes the entry from the memory.
  */
 @SuppressWarnings("unused")
-@Generated("76ef5fe9b6dcb43cdde83625ccf0d302")
+@Generated("05a0a151f39997ba95006e0138f71af0")
 public final class MapEvictCodec {
     //hex: 0x011E00
     public static final int REQUEST_MESSAGE_TYPE = 73216;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns true if this set contains no elements.
  */
 @SuppressWarnings("unused")
-@Generated("8102e7b7ef3a691d0d7ce937a50d7c82")
+@Generated("43dc54a7c870480cdcacd0835563c47f")
 public final class SetIsEmptyCodec {
     //hex: 0x060D00
     public static final int REQUEST_MESSAGE_TYPE = 396544;

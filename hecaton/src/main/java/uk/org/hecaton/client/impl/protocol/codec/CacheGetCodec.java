@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * javax.cache.integration.CacheLoader might be called to retrieve the value of the key from any kind of external resource.
  */
 @SuppressWarnings("unused")
-@Generated("e9fb018e11aea4541095dd752954283f")
+@Generated("314a59a4edf0be61fdd346993f39ebca")
 public final class CacheGetCodec {
     //hex: 0x130D00
     public static final int REQUEST_MESSAGE_TYPE = 1248512;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets the latest TimedMemberState of the member it's called on.
  */
 @SuppressWarnings("unused")
-@Generated("a62a3036a5a2010eae596c0eca691446")
+@Generated("8259d409bb8dc0469f41e6192ce616b8")
 public final class MCGetTimedMemberStateCodec {
     //hex: 0x200B00
     public static final int REQUEST_MESSAGE_TYPE = 2099968;

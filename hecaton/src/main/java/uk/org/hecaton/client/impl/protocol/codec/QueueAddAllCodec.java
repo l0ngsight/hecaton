@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * and this collection is nonempty.)
  */
 @SuppressWarnings("unused")
-@Generated("34520dc698d520febf7a8beaedbfc8a7")
+@Generated("63515fa9c6a54e9a70a811a340801694")
 public final class QueueAddAllCodec {
     //hex: 0x031000
     public static final int REQUEST_MESSAGE_TYPE = 200704;

@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * the request fails by throwing an IllegalStateException exception but the other members for which the invocation succeeded will have the new config applied. 
  */
 @SuppressWarnings("unused")
-@Generated("432f69dc7e7ad7ee95fa7cbf10cad0de")
+@Generated("4d0879dbe628aa7ec9cb54fe44312462")
 public final class MCSetDiagnosticsConfigCodec {
     //hex: 0x202700
     public static final int REQUEST_MESSAGE_TYPE = 2107136;

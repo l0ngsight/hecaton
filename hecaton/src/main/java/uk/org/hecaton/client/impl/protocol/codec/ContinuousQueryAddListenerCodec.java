@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a listener to be notified for the events fired on the underlying map on all nodes.
  */
 @SuppressWarnings("unused")
-@Generated("0d6aaf3341ae0f834e693195f077020b")
+@Generated("0ea239841c2e2b19905d5af2981f6878")
 public final class ContinuousQueryAddListenerCodec {
     //hex: 0x160400
     public static final int REQUEST_MESSAGE_TYPE = 1442816;

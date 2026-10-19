@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Updates the configuration on the member with the passed configuration, applies (merges) the passed config to the current config
  */
 @SuppressWarnings("unused")
-@Generated("17ecd9b62f545f3802a34e56b16d6d7f")
+@Generated("dc5a9db0357858294cf989ab7bd88c9c")
 public final class MCUpdateConfigCodec {
     //hex: 0x202300
     public static final int REQUEST_MESSAGE_TYPE = 2106112;

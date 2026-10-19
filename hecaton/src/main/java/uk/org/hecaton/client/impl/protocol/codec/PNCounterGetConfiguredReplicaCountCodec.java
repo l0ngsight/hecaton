@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * members in the cluster (members that own data).
  */
 @SuppressWarnings("unused")
-@Generated("c719952a30e7d54b78ae5bc8a4ac7c04")
+@Generated("652538d73742b7aed9bf3ef60752b12e")
 public final class PNCounterGetConfiguredReplicaCountCodec {
     //hex: 0x1D0300
     public static final int REQUEST_MESSAGE_TYPE = 1901312;

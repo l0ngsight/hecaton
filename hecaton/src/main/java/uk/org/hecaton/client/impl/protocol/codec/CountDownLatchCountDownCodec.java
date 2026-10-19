@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * null. If the current count equals zero, then nothing happens.
  */
 @SuppressWarnings("unused")
-@Generated("1fe1c6f56c8332f7fe3db6f3a59310c1")
+@Generated("d01945fb81a0b41fd7f05e6ea7fb6fb2")
 public final class CountDownLatchCountDownCodec {
     //hex: 0x0B0300
     public static final int REQUEST_MESSAGE_TYPE = 721664;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes the mapping for a key from this map if existing value equal to the this value
  */
 @SuppressWarnings("unused")
-@Generated("84cf0c93ab6ae06fe7f66265ab5d760f")
+@Generated("e6b6176a0c643360e3e30d65fed6c8ce")
 public final class MapRemoveIfSameCodec {
     //hex: 0x010800
     public static final int REQUEST_MESSAGE_TYPE = 67584;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Reloads the configuration on the member from its config file, applies (merges) the new config to the current config
  */
 @SuppressWarnings("unused")
-@Generated("17d116329b1e1f26dec3522d9e0480b6")
+@Generated("1bce9f8dd876502b3200c7692999de2f")
 public final class MCReloadConfigCodec {
     //hex: 0x202200
     public static final int REQUEST_MESSAGE_TYPE = 2105856;

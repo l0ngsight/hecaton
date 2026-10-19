@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * modified while the operation is in progress.
  */
 @SuppressWarnings("unused")
-@Generated("0721882b883e479f1036ceda7f3efc0b")
+@Generated("d25bb510953a2cc26cf0003085a15057")
 public final class QueueDrainToMaxSizeCodec {
     //hex: 0x030A00
     public static final int REQUEST_MESSAGE_TYPE = 199168;

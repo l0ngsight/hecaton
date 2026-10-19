@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Submits the task to a member for execution. Member is provided with its uuid.
  */
 @SuppressWarnings("unused")
-@Generated("4ddb34bb9dffa6c637a61ddcca7b7a3d")
+@Generated("c1cf3cbe71c8fcfc52b3a0c0da5e1c31")
 public final class ScheduledExecutorSubmitToMemberCodec {
     //hex: 0x1A0300
     public static final int REQUEST_MESSAGE_TYPE = 1704704;

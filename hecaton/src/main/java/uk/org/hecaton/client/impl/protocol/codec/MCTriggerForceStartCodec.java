@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Triggers force start
  */
 @SuppressWarnings("unused")
-@Generated("a4df4b8ee74db0926bb56eacacab64bf")
+@Generated("a1d525becc1a87d5872980d4aa9e5ac8")
 public final class MCTriggerForceStartCodec {
     //hex: 0x201E00
     public static final int REQUEST_MESSAGE_TYPE = 2104832;

@@ -49,7 +49,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Individual set implementations should clearly document any restrictions on the elements that they may contain.
  */
 @SuppressWarnings("unused")
-@Generated("0ccfae62f0e86e486fd8b0cc92980b1f")
+@Generated("0c06bdadb7a96c971dc6476cec779910")
 public final class SetAddCodec {
     //hex: 0x060400
     public static final int REQUEST_MESSAGE_TYPE = 394240;

@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * with a value. Entry will expire and get evicted after the ttl or maxIdle, whichever comes first.
  */
 @SuppressWarnings("unused")
-@Generated("46055f30da20949939ab653cd0c85f76")
+@Generated("6143b4cb56061d2c8dd9868cf8c728f9")
 public final class MapPutIfAbsentWithMaxIdleCodec {
     //hex: 0x014600
     public static final int REQUEST_MESSAGE_TYPE = 83456;

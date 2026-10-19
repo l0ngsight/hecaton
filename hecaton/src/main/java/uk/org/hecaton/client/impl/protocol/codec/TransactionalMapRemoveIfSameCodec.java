@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * from only the current transaction context until the transaction is committed.
  */
 @SuppressWarnings("unused")
-@Generated("558bf19a976b63791cd171491cd39dd4")
+@Generated("927101cfc029ae7ee29b11a6a12952a0")
 public final class TransactionalMapRemoveIfSameCodec {
     //hex: 0x0E0D00
     public static final int REQUEST_MESSAGE_TYPE = 920832;

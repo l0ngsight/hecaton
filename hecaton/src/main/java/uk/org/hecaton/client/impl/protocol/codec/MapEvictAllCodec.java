@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * fired for any registered listeners.
  */
 @SuppressWarnings("unused")
-@Generated("d6b0bc04db9e40bc78889ae9c6b6d49e")
+@Generated("54e13e7077826b5f39725c7cee99af91")
 public final class MapEvictAllCodec {
     //hex: 0x011F00
     public static final int REQUEST_MESSAGE_TYPE = 73472;

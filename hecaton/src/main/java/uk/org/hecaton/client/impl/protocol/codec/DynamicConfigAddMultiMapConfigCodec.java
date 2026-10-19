@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * the new multimap config is ignored and the existing one is preserved.
  */
 @SuppressWarnings("unused")
-@Generated("915eaa63380c368316652deafd4c58bd")
+@Generated("6ac30de0a171d364ba07e22f75920c8d")
 public final class DynamicConfigAddMultiMapConfigCodec {
     //hex: 0x1B0100
     public static final int REQUEST_MESSAGE_TYPE = 1769728;

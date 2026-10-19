@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Puts a document into the Vector Collection without returning previous value.
  */
 @SuppressWarnings("unused")
-@Generated("b78203333c5264f90f72b30a2e22ca2a")
+@Generated("e63a97e67c4379df4412ffc434fad79a")
 public final class VectorCollectionSetCodec {
     //hex: 0x240600
     public static final int REQUEST_MESSAGE_TYPE = 2360832;

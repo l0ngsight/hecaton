@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Commits the transaction with the given id.
  */
 @SuppressWarnings("unused")
-@Generated("e58016d11a22cd83f9a5ddfbe24946f6")
+@Generated("b84c330c89d8998e7caf10de9a2ab751")
 public final class TransactionCommitCodec {
     //hex: 0x150100
     public static final int REQUEST_MESSAGE_TYPE = 1376512;

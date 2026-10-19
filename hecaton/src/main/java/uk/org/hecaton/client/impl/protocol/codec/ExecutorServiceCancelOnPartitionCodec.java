@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Cancels the task running on the member that owns the partition with the given id.
  */
 @SuppressWarnings("unused")
-@Generated("9fe31fcc2f0f06fc90e16b05bb08317f")
+@Generated("4b36b944df3585deda6e39ecc2d93676")
 public final class ExecutorServiceCancelOnPartitionCodec {
     //hex: 0x080300
     public static final int REQUEST_MESSAGE_TYPE = 525056;

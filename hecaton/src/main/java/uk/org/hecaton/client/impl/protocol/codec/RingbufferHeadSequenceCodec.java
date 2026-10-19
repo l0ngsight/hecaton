@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * The initial value of the head is 0 (1 more than tail).
  */
 @SuppressWarnings("unused")
-@Generated("a7d7619811db22c74dad00eb3c3f37bf")
+@Generated("a696328d6175aa9f233b8d7621b5905b")
 public final class RingbufferHeadSequenceCodec {
     //hex: 0x170300
     public static final int REQUEST_MESSAGE_TYPE = 1508096;

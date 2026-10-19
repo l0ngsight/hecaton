@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Takes a thread dump of the member it's called on.
  */
 @SuppressWarnings("unused")
-@Generated("115c210de981841414581ec567b1c847")
+@Generated("7a24d5ba01a3cbc1a2f2861d3cd40cf4")
 public final class MCGetThreadDumpCodec {
     //hex: 0x200700
     public static final int REQUEST_MESSAGE_TYPE = 2098944;

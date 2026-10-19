@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Rollbacks the transaction with the given id.
  */
 @SuppressWarnings("unused")
-@Generated("fcff73593f300574170bf54532905eff")
+@Generated("afdc53f0b1dfbcd07e675a0715ce60fa")
 public final class TransactionRollbackCodec {
     //hex: 0x150300
     public static final int REQUEST_MESSAGE_TYPE = 1377024;

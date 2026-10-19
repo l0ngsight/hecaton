@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * list and all CP groups it belongs to.
  */
 @SuppressWarnings("unused")
-@Generated("93c8dd224218a577ae02f2f713903b8e")
+@Generated("5bc49a907a0975e934e838b4f86a8fe4")
 public final class MCRemoveCPMemberCodec {
     //hex: 0x201B00
     public static final int REQUEST_MESSAGE_TYPE = 2104064;

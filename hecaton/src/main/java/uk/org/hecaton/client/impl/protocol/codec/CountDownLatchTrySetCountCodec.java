@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * and returns false
  */
 @SuppressWarnings("unused")
-@Generated("ab89ba2d282c5cdebcedca1e8d8aefe9")
+@Generated("4d45db6caf9552ed1d83ba9bbef23b9f")
 public final class CountDownLatchTrySetCountCodec {
     //hex: 0x0B0100
     public static final int REQUEST_MESSAGE_TYPE = 721152;

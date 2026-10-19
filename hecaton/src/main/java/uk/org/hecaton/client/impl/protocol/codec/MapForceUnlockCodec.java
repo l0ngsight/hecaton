@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * never blocks,and returns immediately.
  */
 @SuppressWarnings("unused")
-@Generated("a996cf390d728e85ee3bd0c2b55b5914")
+@Generated("6a3fb1ca05db70e6ee5b02235b4fa6be")
 public final class MapForceUnlockCodec {
     //hex: 0x013300
     public static final int REQUEST_MESSAGE_TYPE = 78592;

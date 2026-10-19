@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Fetches the next row page.
  */
 @SuppressWarnings("unused")
-@Generated("dda7c13c640d0288cef819568fe5511c")
+@Generated("12687354afa9fa85fcb2a4ab4d83bb4e")
 public final class SqlFetchCodec {
     //hex: 0x210500
     public static final int REQUEST_MESSAGE_TYPE = 2163968;

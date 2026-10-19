@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Return true if this map contains no key-value mappings
  */
 @SuppressWarnings("unused")
-@Generated("b77adcff3fa31ee5e6c0b4a87a5b975f")
+@Generated("22fd2234e684690b140a119cb415e349")
 public final class ReplicatedMapIsEmptyCodec {
     //hex: 0x0D0300
     public static final int REQUEST_MESSAGE_TYPE = 852736;

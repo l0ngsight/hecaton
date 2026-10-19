@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Puts the key-value into the specified map if the key is not currently associated with a value.
  */
 @SuppressWarnings("unused")
-@Generated("7db2bba2bcff702db3a2e70720780e27")
+@Generated("178c62315d2c2fa34213fd7c5ca66365")
 public final class CPMapPutIfAbsentCodec {
     //hex: 0x230700
     public static final int REQUEST_MESSAGE_TYPE = 2295552;

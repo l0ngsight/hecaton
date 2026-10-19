@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Checks if the reference contains the value.
  */
 @SuppressWarnings("unused")
-@Generated("b79153125a0838281b61b3f61772f64e")
+@Generated("844eacb2c5ae23a2ff218f6d6d31f079")
 public final class AtomicRefContainsCodec {
     //hex: 0x0A0300
     public static final int REQUEST_MESSAGE_TYPE = 656128;

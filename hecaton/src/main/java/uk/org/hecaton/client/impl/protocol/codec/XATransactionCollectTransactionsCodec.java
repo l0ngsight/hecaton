@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Obtains a list of prepared transaction from the cluster.
  */
 @SuppressWarnings("unused")
-@Generated("4d63056f15913b640b42a1f3fb6a6cb5")
+@Generated("140fe78ecd8b308f151d4460f6e15719")
 public final class XATransactionCollectTransactionsCodec {
     //hex: 0x140200
     public static final int REQUEST_MESSAGE_TYPE = 1311232;

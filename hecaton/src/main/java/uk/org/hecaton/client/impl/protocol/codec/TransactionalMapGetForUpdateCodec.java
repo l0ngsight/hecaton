@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * the end of the transaction (either commit or rollback).
  */
 @SuppressWarnings("unused")
-@Generated("f2f5707c358a28c325d923909383c5d0")
+@Generated("d2dcf985ecd1e4d01dd9b79e7919f8ce")
 public final class TransactionalMapGetForUpdateCodec {
     //hex: 0x0E0300
     public static final int REQUEST_MESSAGE_TYPE = 918272;

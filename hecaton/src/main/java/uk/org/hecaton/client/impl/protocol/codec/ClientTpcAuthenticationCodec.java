@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Makes an authentication request to TPC channels.
  */
 @SuppressWarnings("unused")
-@Generated("fe76c6f6f7b7bfa6d385a4a9738c46cd")
+@Generated("7336817d05ada38568c68959889155c3")
 public final class ClientTpcAuthenticationCodec {
     //hex: 0x001600
     public static final int REQUEST_MESSAGE_TYPE = 5632;

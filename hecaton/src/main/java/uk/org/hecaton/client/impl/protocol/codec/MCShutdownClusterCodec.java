@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Shuts down the cluster.
  */
 @SuppressWarnings("unused")
-@Generated("e222150f0ab178018232995749ef1f52")
+@Generated("d4eb3eae83da4d64f8d87cbb7dea2923")
 public final class MCShutdownClusterCodec {
     //hex: 0x200F00
     public static final int REQUEST_MESSAGE_TYPE = 2100992;

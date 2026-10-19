@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Promotes the local member to the CP role.
  */
 @SuppressWarnings("unused")
-@Generated("4e2081316df70d0046020e825f9e529d")
+@Generated("1ea8afd77e80e8cacadd5fb6b90fe772")
 public final class MCPromoteToCPMemberCodec {
     //hex: 0x201A00
     public static final int REQUEST_MESSAGE_TYPE = 2103808;

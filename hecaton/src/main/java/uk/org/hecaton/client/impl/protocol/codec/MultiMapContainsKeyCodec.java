@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns whether the multimap contains an entry with the key.
  */
 @SuppressWarnings("unused")
-@Generated("be5319073863f98a070cb6b927a1463c")
+@Generated("a802a8bfee7689a722f7987b1b05fa40")
 public final class MultiMapContainsKeyCodec {
     //hex: 0x020700
     public static final int REQUEST_MESSAGE_TYPE = 132864;

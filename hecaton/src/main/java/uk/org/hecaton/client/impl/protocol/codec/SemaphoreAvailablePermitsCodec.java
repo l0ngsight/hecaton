@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the number of available permits.
  */
 @SuppressWarnings("unused")
-@Generated("92194469913495c458aabfa8bc5af3b3")
+@Generated("8cef660179882e028f26b59a316526dc")
 public final class SemaphoreAvailablePermitsCodec {
     //hex: 0x0C0600
     public static final int REQUEST_MESSAGE_TYPE = 787968;

@@ -51,7 +51,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * and no projection is applied.
  */
 @SuppressWarnings("unused")
-@Generated("45e611b7a961801213442e499794b594")
+@Generated("46a3533b6f7d35ddb3acdce14654ca95")
 public final class CacheEventJournalReadCodec {
     //hex: 0x132000
     public static final int REQUEST_MESSAGE_TYPE = 1253376;

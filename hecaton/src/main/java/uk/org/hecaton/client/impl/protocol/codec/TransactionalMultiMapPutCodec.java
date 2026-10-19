@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Stores a key-value pair in the multimap.
  */
 @SuppressWarnings("unused")
-@Generated("edcbeaa19392ab2ccd13e74b21b22feb")
+@Generated("f3e9753c6651f81b5f7625d26f4299bd")
 public final class TransactionalMultiMapPutCodec {
     //hex: 0x0F0100
     public static final int REQUEST_MESSAGE_TYPE = 983296;

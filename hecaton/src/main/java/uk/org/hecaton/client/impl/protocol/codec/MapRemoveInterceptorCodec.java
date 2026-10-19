@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes the given interceptor for this map so it will not intercept operations anymore.
  */
 @SuppressWarnings("unused")
-@Generated("a89beab6dc2cee40ac948969ed808230")
+@Generated("f1defce08cf5dbd7f991af9e16a2f577")
 public final class MapRemoveInterceptorCodec {
     //hex: 0x011500
     public static final int REQUEST_MESSAGE_TYPE = 70912;

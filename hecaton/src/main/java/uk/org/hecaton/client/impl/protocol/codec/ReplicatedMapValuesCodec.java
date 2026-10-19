@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns a lazy collection view of the values contained in this map.
  */
 @SuppressWarnings("unused")
-@Generated("172231a6100112788c68b60f4fbe906e")
+@Generated("ec3dc06856459218c0834bdb432ca2b1")
 public final class ReplicatedMapValuesCodec {
     //hex: 0x0D1000
     public static final int REQUEST_MESSAGE_TYPE = 856064;

@@ -50,7 +50,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * {@code LockOwnershipLostException}.
  */
 @SuppressWarnings("unused")
-@Generated("b855410c018c5c4844528b1b235b1ccb")
+@Generated("0e1fff056e2d3919a7f235ed90deb5c0")
 public final class FencedLockLockCodec {
     //hex: 0x070100
     public static final int REQUEST_MESSAGE_TYPE = 459008;

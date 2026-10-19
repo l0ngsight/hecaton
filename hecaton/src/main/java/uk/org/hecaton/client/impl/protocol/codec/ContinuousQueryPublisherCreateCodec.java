@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Creates a publisher that does not include value for the cache events it sends.
  */
 @SuppressWarnings("unused")
-@Generated("bbf7fc298fc4ca4f05165e021baa31d8")
+@Generated("1f7cb4b5afd90fdf1616549e44c662ad")
 public final class ContinuousQueryPublisherCreateCodec {
     //hex: 0x160200
     public static final int REQUEST_MESSAGE_TYPE = 1442304;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Updates the config of a map on the member it's called on.
  */
 @SuppressWarnings("unused")
-@Generated("20fdb5154776e9c5d2cdda38b2e9dcb9")
+@Generated("49ff113025744aef67cca35c876b788e")
 public final class MCUpdateMapConfigCodec {
     //hex: 0x200400
     public static final int REQUEST_MESSAGE_TYPE = 2098176;

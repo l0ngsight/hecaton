@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns true if the semaphore is JDK compatible
  */
 @SuppressWarnings("unused")
-@Generated("f9ca880aa48ea65be09da14cfa6333e2")
+@Generated("bab77d6482716146e5a3a3946bed9b28")
 public final class SemaphoreGetSemaphoreTypeCodec {
     //hex: 0x0C0700
     public static final int REQUEST_MESSAGE_TYPE = 788224;

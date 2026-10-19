@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets the member configuration file content (XML or YAML string) of the member.
  */
 @SuppressWarnings("unused")
-@Generated("ae75aed91398e6cf2869ae2844995a40")
+@Generated("67dbd19b5d7f8586422d9893aeddec0b")
 public final class MCGetConfigFileContentCodec {
     //hex: 0x202600
     public static final int REQUEST_MESSAGE_TYPE = 2106880;

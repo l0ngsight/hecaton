@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Cancels the task running on the member with the given address.
  */
 @SuppressWarnings("unused")
-@Generated("948ff9b03e35f3f4095b63915dd90277")
+@Generated("a1c4d45e5806d06021687ecd499d254f")
 public final class ExecutorServiceCancelOnMemberCodec {
     //hex: 0x080400
     public static final int REQUEST_MESSAGE_TYPE = 525312;

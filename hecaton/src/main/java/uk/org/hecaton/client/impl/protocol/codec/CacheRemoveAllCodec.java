@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * This is potentially an expensive operation as listeners are invoked. Use  #clear() to avoid this.
  */
 @SuppressWarnings("unused")
-@Generated("f4b9006ca368d7b92b66f940239ab5c9")
+@Generated("fcf4355fc54395b70b4e452090970655")
 public final class CacheRemoveAllCodec {
     //hex: 0x130400
     public static final int REQUEST_MESSAGE_TYPE = 1246208;

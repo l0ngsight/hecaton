@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * to be deleted will be removed from only the current transaction context until the transaction is committed.
  */
 @SuppressWarnings("unused")
-@Generated("9e92a22fbb012c22c7d97ddd77e840e0")
+@Generated("2654b5c24ae6f81684f86d296cba3d73")
 public final class TransactionalMapDeleteCodec {
     //hex: 0x0E0C00
     public static final int REQUEST_MESSAGE_TYPE = 920576;

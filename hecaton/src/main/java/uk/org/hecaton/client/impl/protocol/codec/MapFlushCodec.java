@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * and/or MapStore.deleteAll().
  */
 @SuppressWarnings("unused")
-@Generated("e46bd695212e2f0e14ab2d8f69d7dff3")
+@Generated("a7a41e0e8866c910c2c64df150031e8b")
 public final class MapFlushCodec {
     //hex: 0x010A00
     public static final int REQUEST_MESSAGE_TYPE = 68096;

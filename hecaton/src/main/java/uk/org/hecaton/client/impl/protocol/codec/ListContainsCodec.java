@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns true if this list contains the specified element.
  */
 @SuppressWarnings("unused")
-@Generated("aeb4b66b3f1f0f914152e6563f19a4e2")
+@Generated("e9b574e07b65f35f12e653a12687d0f5")
 public final class ListContainsCodec {
     //hex: 0x050200
     public static final int REQUEST_MESSAGE_TYPE = 328192;

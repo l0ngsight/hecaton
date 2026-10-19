@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Add new item to transactional set.
  */
 @SuppressWarnings("unused")
-@Generated("53bb16112bf02e466f71beda36606b9e")
+@Generated("47aa764a5296ebba01a436f155c04bdc")
 public final class TransactionalSetAddCodec {
     //hex: 0x100100
     public static final int REQUEST_MESSAGE_TYPE = 1048832;

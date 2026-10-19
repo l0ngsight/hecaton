@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes the specified migration listener.
  */
 @SuppressWarnings("unused")
-@Generated("2ae3abbbe79f6af4d5f6d533ba7ca46a")
+@Generated("06f9bef8540e7501fedc24699baeed67")
 public final class ClientRemoveMigrationListenerCodec {
     //hex: 0x001200
     public static final int REQUEST_MESSAGE_TYPE = 4608;

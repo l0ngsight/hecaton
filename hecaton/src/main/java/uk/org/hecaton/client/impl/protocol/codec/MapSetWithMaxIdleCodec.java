@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Similar to the put operation except that set doesn't return the old value, which is more efficient.
  */
 @SuppressWarnings("unused")
-@Generated("7eaf27324d76ef03372906858f4c5167")
+@Generated("41d8bb8e6691a2873d6506066282c162")
 public final class MapSetWithMaxIdleCodec {
     //hex: 0x014700
     public static final int REQUEST_MESSAGE_TYPE = 83712;

@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * If it was previously estimated and never invalidated, then the cached version is used.
  */
 @SuppressWarnings("unused")
-@Generated("6d29bfd9f407556cb336da28a8168d0e")
+@Generated("0ce80d7d883b2e1aa8c4c6e2825112b2")
 public final class CardinalityEstimatorEstimateCodec {
     //hex: 0x190200
     public static final int REQUEST_MESSAGE_TYPE = 1638912;

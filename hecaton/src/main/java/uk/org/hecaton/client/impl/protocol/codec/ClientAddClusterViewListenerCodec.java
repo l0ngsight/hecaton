@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a cluster view listener to a connection.
  */
 @SuppressWarnings("unused")
-@Generated("4de2b6d19493c28117859b703ad819e9")
+@Generated("0dc8701a1445f9d6a2faf17f1bfa6a44")
 public final class ClientAddClusterViewListenerCodec {
     //hex: 0x000300
     public static final int REQUEST_MESSAGE_TYPE = 768;

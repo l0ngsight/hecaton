@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a migration listener to the cluster.
  */
 @SuppressWarnings("unused")
-@Generated("317b0701818d686f87cc20ad959e4d63")
+@Generated("dd24f52a23093b148f7e6af4f4db0f17")
 public final class ClientAddMigrationListenerCodec {
     //hex: 0x001100
     public static final int REQUEST_MESSAGE_TYPE = 4352;

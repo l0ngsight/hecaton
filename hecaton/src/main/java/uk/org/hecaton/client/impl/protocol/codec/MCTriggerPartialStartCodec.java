@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Triggers partial start
  */
 @SuppressWarnings("unused")
-@Generated("ffbe7ba2ab0b2340f12a36f1f8b3a2be")
+@Generated("695b9c2af39acf4384ef144f8fa8fa3a")
 public final class MCTriggerPartialStartCodec {
     //hex: 0x201D00
     public static final int REQUEST_MESSAGE_TYPE = 2104576;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes all of the elements from this list (optional operation). The list will be empty after this call returns.
  */
 @SuppressWarnings("unused")
-@Generated("d6b8ad9a913b2cd3ee54108b74841984")
+@Generated("05de697f1ceaae9eb47c2c055a27f23c")
 public final class ListClearCodec {
     //hex: 0x050900
     public static final int REQUEST_MESSAGE_TYPE = 329984;

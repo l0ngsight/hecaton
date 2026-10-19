@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Stops receiving messages for the given message listener.If the given listener already removed, this method does nothing.
  */
 @SuppressWarnings("unused")
-@Generated("5d9b4341a3b6b92ab1af33589e619e22")
+@Generated("7a3f52f9de05ac557483a19d3dd9dc77")
 public final class TopicRemoveMessageListenerCodec {
     //hex: 0x040300
     public static final int REQUEST_MESSAGE_TYPE = 262912;

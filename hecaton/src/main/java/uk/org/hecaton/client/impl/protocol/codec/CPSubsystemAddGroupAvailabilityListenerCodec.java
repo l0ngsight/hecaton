@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Registers a new CP group availability listener.
  */
 @SuppressWarnings("unused")
-@Generated("bd4f6629e5177abc08a0065c3c09ff8a")
+@Generated("d6bfe9a8d288dd7693b8334db8d242d4")
 public final class CPSubsystemAddGroupAvailabilityListenerCodec {
     //hex: 0x220300
     public static final int REQUEST_MESSAGE_TYPE = 2228992;

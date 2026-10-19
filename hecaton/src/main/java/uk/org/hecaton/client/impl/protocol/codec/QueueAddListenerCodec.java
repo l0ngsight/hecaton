@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds an listener for this collection. Listener will be notified or all collection add/remove events.
  */
 @SuppressWarnings("unused")
-@Generated("4b5053391d9986217ab77a52728209ba")
+@Generated("624f56d3cbf6c57e81df729c80de931a")
 public final class QueueAddListenerCodec {
     //hex: 0x031100
     public static final int REQUEST_MESSAGE_TYPE = 200960;

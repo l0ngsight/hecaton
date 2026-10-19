@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes the given key value pair from the multimap.
  */
 @SuppressWarnings("unused")
-@Generated("6fe2618d57887a9f569311cea534dfa3")
+@Generated("13aae44af1e0b416382625259d63fa26")
 public final class MultiMapRemoveCodec {
     //hex: 0x020300
     public static final int REQUEST_MESSAGE_TYPE = 131840;

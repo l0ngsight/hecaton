@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the current count.
  */
 @SuppressWarnings("unused")
-@Generated("2b8e79467f0870b45f8afaabc2d563d0")
+@Generated("a8ff18f04ccbea2836d306e5d6b476c7")
 public final class CountDownLatchGetCountCodec {
     //hex: 0x0B0400
     public static final int REQUEST_MESSAGE_TYPE = 721920;

@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds an entry listener for this multimap. The listener will be notified for all multimap add/remove/update/evict events.
  */
 @SuppressWarnings("unused")
-@Generated("e261d2ae733e3f573eabd5da833c3214")
+@Generated("978aec3ef4beb906f65d578dd3808bf9")
 public final class MultiMapAddEntryListenerCodec {
     //hex: 0x020E00
     public static final int REQUEST_MESSAGE_TYPE = 134656;

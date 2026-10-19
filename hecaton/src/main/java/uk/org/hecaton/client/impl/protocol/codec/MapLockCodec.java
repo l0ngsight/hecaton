@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * so if the key is locked N times then it should be unlocked N times before another thread can acquire it.
  */
 @SuppressWarnings("unused")
-@Generated("16f60ec259e60b3b95b8c6c91eba8397")
+@Generated("36f4f378af04b8461c5733f099e8ee10")
 public final class MapLockCodec {
     //hex: 0x011000
     public static final int REQUEST_MESSAGE_TYPE = 69632;

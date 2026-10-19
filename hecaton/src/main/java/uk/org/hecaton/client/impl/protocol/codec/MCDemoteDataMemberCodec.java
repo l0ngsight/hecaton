@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * May throw an exception if the operation is not successful.
  */
 @SuppressWarnings("unused")
-@Generated("dc902a46801c9f534268399930deffc9")
+@Generated("d1d7df4613f3e233bedddc801a7cb83b")
 public final class MCDemoteDataMemberCodec {
     //hex: 0x202500
     public static final int REQUEST_MESSAGE_TYPE = 2106624;

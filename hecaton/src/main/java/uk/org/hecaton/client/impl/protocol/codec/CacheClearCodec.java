@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Clears the contents of the cache, without notifying listeners or CacheWriters.
  */
 @SuppressWarnings("unused")
-@Generated("d507e41d6cc4e4e977f68e80aaf3c0a3")
+@Generated("ac35082de5ebccb54effa71ccb48e0f4")
 public final class CacheClearCodec {
     //hex: 0x130200
     public static final int REQUEST_MESSAGE_TYPE = 1245696;

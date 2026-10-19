@@ -43,7 +43,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
 /**
  */
 @SuppressWarnings("unused")
-@Generated("52f81da06fe92e713d1298bdecf4ed15")
+@Generated("c5b89a1c00eff0da6a544311a1db0878")
 public final class JetGetJobSubmissionTimeCodec {
     //hex: 0xFE0700
     public static final int REQUEST_MESSAGE_TYPE = 16647936;

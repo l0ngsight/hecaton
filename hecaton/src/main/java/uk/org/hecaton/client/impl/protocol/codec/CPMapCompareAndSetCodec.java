@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * newValue.
  */
 @SuppressWarnings("unused")
-@Generated("41b334d57e3fed666e1cf4a4cccb962e")
+@Generated("f923d8e3067cccbaa06a51c9d3a39eac")
 public final class CPMapCompareAndSetCodec {
     //hex: 0x230600
     public static final int REQUEST_MESSAGE_TYPE = 2295296;

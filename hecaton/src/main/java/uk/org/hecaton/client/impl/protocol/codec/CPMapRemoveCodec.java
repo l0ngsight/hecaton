@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes the value associated with the key in the specified map.
  */
 @SuppressWarnings("unused")
-@Generated("5e2f4c70a458cb58d8f77d3dcc1624e6")
+@Generated("b466b6a200322f64449f7e3e1a7f1180")
 public final class CPMapRemoveCodec {
     //hex: 0x230400
     public static final int REQUEST_MESSAGE_TYPE = 2294784;

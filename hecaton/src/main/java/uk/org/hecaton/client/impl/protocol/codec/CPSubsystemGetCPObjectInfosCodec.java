@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * A snapshot is used to retrieve the result.
  */
 @SuppressWarnings("unused")
-@Generated("1d72d5b05daf473b9b43946008ccb58e")
+@Generated("242124e92b521bd336bb7a8e3d26c502")
 public final class CPSubsystemGetCPObjectInfosCodec {
     //hex: 0x220600
     public static final int REQUEST_MESSAGE_TYPE = 2229760;

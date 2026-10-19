@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Remove item from the transactional list
  */
 @SuppressWarnings("unused")
-@Generated("0bd0416a7e209b6533a77cdddc9c1d61")
+@Generated("db8928ff60f3628b63d2636857e849f0")
 public final class TransactionalListRemoveCodec {
     //hex: 0x110200
     public static final int REQUEST_MESSAGE_TYPE = 1114624;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Makes an authentication request to the cluster.
  */
 @SuppressWarnings("unused")
-@Generated("6fe5484648ba4e66e1b392f9ccada464")
+@Generated("b6ff817f69297052cd5b3bb87fad0946")
 public final class ClientAuthenticationCodec {
     //hex: 0x000100
     public static final int REQUEST_MESSAGE_TYPE = 256;

@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds listener to cache. This listener will be used to listen near cache invalidation events.
  */
 @SuppressWarnings("unused")
-@Generated("ecc61467ce8a457a2478fcb8f480b6ad")
+@Generated("b6a4aca7d34dc7b931d77d582e84402c")
 public final class CacheAddNearCacheInvalidationListenerCodec {
     //hex: 0x131D00
     public static final int REQUEST_MESSAGE_TYPE = 1252608;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Checks the lock for the specified key. If the lock is acquired, this method returns true, else it returns false.
  */
 @SuppressWarnings("unused")
-@Generated("0a3e715202eab589df41b55115693b7c")
+@Generated("70e172c8a7448345f2193af423f24fae")
 public final class MultiMapIsLockedCodec {
     //hex: 0x021200
     public static final int REQUEST_MESSAGE_TYPE = 135680;

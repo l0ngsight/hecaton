@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * linear in the map size for most implementations of the Map interface.
  */
 @SuppressWarnings("unused")
-@Generated("e9675191d54dcfa19bee6ce1bff9f8b2")
+@Generated("a3b32a93bb2181a48da95dd856dff6ee")
 public final class MapContainsValueCodec {
     //hex: 0x010700
     public static final int REQUEST_MESSAGE_TYPE = 67328;

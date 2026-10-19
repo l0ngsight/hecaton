@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * returns Integer.MAX_VALUE
  */
 @SuppressWarnings("unused")
-@Generated("96c7e8d3f61593513daf779a20938d74")
+@Generated("fe5eedd2bc6374df16431b662c685a87")
 public final class MapSizeCodec {
     //hex: 0x012A00
     public static final int REQUEST_MESSAGE_TYPE = 76288;

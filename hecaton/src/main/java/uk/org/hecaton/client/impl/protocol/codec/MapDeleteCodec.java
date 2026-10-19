@@ -49,7 +49,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * with a null oldValue. Also, a listener with predicates will have null values, so only keys can be queried via predicates
  */
 @SuppressWarnings("unused")
-@Generated("2c372b64190bbb869a8191ac7d7716bb")
+@Generated("cb8624bc8c940c4a9e59b8bf457dffdb")
 public final class MapDeleteCodec {
     //hex: 0x010900
     public static final int REQUEST_MESSAGE_TYPE = 67840;

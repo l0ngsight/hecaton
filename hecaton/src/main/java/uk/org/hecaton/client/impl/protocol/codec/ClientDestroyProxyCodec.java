@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Destroys the proxy given by its name cluster-wide. Also, clears and releases all resources of this proxy.
  */
 @SuppressWarnings("unused")
-@Generated("9544cc9fd02357bee6cdd0e2e1628369")
+@Generated("9471e1b2ce4bf4d3607d6d297c3de890")
 public final class ClientDestroyProxyCodec {
     //hex: 0x000500
     public static final int REQUEST_MESSAGE_TYPE = 1280;

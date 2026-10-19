@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns true if this collection contains no elements.
  */
 @SuppressWarnings("unused")
-@Generated("99d8e77ab93ecbbdd8203a7cbc2eaaef")
+@Generated("66fa339c324c6f230fa00da293fcfdfb")
 public final class QueueIsEmptyCodec {
     //hex: 0x031400
     public static final int REQUEST_MESSAGE_TYPE = 201728;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Interrupts hot restart backup
  */
 @SuppressWarnings("unused")
-@Generated("fe23ff22754ac75a9ae61603e7e6ed07")
+@Generated("27eb161ea3fc7164fd8688798ddc7239")
 public final class MCInterruptHotRestartBackupCodec {
     //hex: 0x202000
     public static final int REQUEST_MESSAGE_TYPE = 2105344;

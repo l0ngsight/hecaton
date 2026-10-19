@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * amount for acquiring the lock.
  */
 @SuppressWarnings("unused")
-@Generated("e99cee24cd4d05377ba2926dfb56dd12")
+@Generated("63f380460f598a0d2a9b1f1e343dc1ae")
 public final class MapTryRemoveCodec {
     //hex: 0x010B00
     public static final int REQUEST_MESSAGE_TYPE = 68352;

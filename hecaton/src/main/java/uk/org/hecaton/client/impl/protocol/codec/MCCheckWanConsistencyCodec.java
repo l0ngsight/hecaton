@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Initiate WAN consistency check for a specific map
  */
 @SuppressWarnings("unused")
-@Generated("b6c6c3a42e6513819c224e1982f70e1d")
+@Generated("b1e7bef9abb59e00dd9f18215aac04a6")
 public final class MCCheckWanConsistencyCodec {
     //hex: 0x201700
     public static final int REQUEST_MESSAGE_TYPE = 2103040;

@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * return the old value, which is more efficient.
  */
 @SuppressWarnings("unused")
-@Generated("52eb4f8af65804e08220636be13748c8")
+@Generated("3b98280225a89c516d9a36bf28a3718a")
 public final class MapSetCodec {
     //hex: 0x010F00
     public static final int REQUEST_MESSAGE_TYPE = 69376;

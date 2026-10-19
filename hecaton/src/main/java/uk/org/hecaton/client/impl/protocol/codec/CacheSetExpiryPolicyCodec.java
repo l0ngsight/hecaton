@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * If some keys in {@code keys} do not exist or are already expired, this call has no effect for those.
  */
 @SuppressWarnings("unused")
-@Generated("bfa34546155d3bde2e634f391b1186a9")
+@Generated("50bccf798e1ea42f3c2f35e9a7b282dc")
 public final class CacheSetExpiryPolicyCodec {
     //hex: 0x132100
     public static final int REQUEST_MESSAGE_TYPE = 1253632;

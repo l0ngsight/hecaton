@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Creates a session for the caller on the given CP group.
  */
 @SuppressWarnings("unused")
-@Generated("5dba6c50b850d4259ae353a02fa6d375")
+@Generated("2b9c6635eddfa5a71ebf4d563c2333aa")
 public final class CPSessionCreateSessionCodec {
     //hex: 0x1F0100
     public static final int REQUEST_MESSAGE_TYPE = 2031872;

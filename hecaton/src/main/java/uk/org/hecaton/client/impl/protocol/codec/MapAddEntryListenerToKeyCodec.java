@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * sub-interface for that event.
  */
 @SuppressWarnings("unused")
-@Generated("5c8db8c4b3ef829b29412492cd04f308")
+@Generated("840bb60048afc5cd9df8ff3ce1f43d65")
 public final class MapAddEntryListenerToKeyCodec {
     //hex: 0x011800
     public static final int REQUEST_MESSAGE_TYPE = 71680;

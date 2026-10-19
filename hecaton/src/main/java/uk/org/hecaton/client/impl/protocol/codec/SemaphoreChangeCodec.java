@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Increases or decreases the number of permits by the given value.
  */
 @SuppressWarnings("unused")
-@Generated("f4b5ed9a23ab9cf039d1fcc8c0124b36")
+@Generated("168e70b5b999feee925decc93847bb6a")
 public final class SemaphoreChangeCodec {
     //hex: 0x0C0500
     public static final int REQUEST_MESSAGE_TYPE = 787712;

@@ -51,7 +51,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * The result of the future contains the sequenceId of the last written item
  */
 @SuppressWarnings("unused")
-@Generated("6794a90cdcd195e9bb587f9a9b348df0")
+@Generated("25cc41521a2ae051872d9cac80c04d2f")
 public final class RingbufferAddAllCodec {
     //hex: 0x170800
     public static final int REQUEST_MESSAGE_TYPE = 1509376;

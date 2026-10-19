@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Requests garbage collection to be performed on the member it's called on.
  */
 @SuppressWarnings("unused")
-@Generated("539139ef3ea60fac8275ccf36aa6225d")
+@Generated("c7aecf00bd555585c0563937606e7cc8")
 public final class MCRunGcCodec {
     //hex: 0x200600
     public static final int REQUEST_MESSAGE_TYPE = 2098688;

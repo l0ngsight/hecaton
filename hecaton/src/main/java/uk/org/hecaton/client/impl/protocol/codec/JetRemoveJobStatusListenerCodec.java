@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * added before, this call does no change in the cluster and returns false.
  */
 @SuppressWarnings("unused")
-@Generated("86788d4013ca43f5d589f267de34d334")
+@Generated("b12826ecada75e6e3f57db48e1842adc")
 public final class JetRemoveJobStatusListenerCodec {
     //hex: 0xFE1400
     public static final int REQUEST_MESSAGE_TYPE = 16651264;

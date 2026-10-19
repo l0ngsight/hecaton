@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Optimize index.
  */
 @SuppressWarnings("unused")
-@Generated("1b00e2448584a732ad4c92cff5657607")
+@Generated("cd7094f64423b860f543582a84e6a614")
 public final class VectorCollectionOptimizeCodec {
     //hex: 0x240900
     public static final int REQUEST_MESSAGE_TYPE = 2361600;

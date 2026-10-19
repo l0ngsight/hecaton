@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns true if this map contains no entries.
  */
 @SuppressWarnings("unused")
-@Generated("5d41c56d547fcb6f946254dbcb11f04b")
+@Generated("97738331162da5a4e68b4fe2e5e38614")
 public final class TransactionalMapIsEmptyCodec {
     //hex: 0x0E0500
     public static final int REQUEST_MESSAGE_TYPE = 918784;

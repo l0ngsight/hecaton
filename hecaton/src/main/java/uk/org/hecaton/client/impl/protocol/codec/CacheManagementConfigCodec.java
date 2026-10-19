@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * cache with the given name on a member with the given address.
  */
 @SuppressWarnings("unused")
-@Generated("2c6dbb8c04d0ced9671a70e6c4a5ab42")
+@Generated("a67a5754dbd576244b73f88ef55df26b")
 public final class CacheManagementConfigCodec {
     //hex: 0x131100
     public static final int REQUEST_MESSAGE_TYPE = 1249536;

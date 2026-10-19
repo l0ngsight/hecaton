@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * in the cluster and returns false.
  */
 @SuppressWarnings("unused")
-@Generated("efff13da408cb5469c03bd6f0f5b2bda")
+@Generated("609161a5a52fba1112948abae00c5ed6")
 public final class CacheRemoveInvalidationListenerCodec {
     //hex: 0x131500
     public static final int REQUEST_MESSAGE_TYPE = 1250560;

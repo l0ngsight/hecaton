@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * extends its session expiration time.
  */
 @SuppressWarnings("unused")
-@Generated("47d8df580a766f94fcae1acd88cd8346")
+@Generated("5d206e80eb61caa7178be1b42f33119d")
 public final class CPSessionHeartbeatSessionCodec {
     //hex: 0x1F0300
     public static final int REQUEST_MESSAGE_TYPE = 2032384;

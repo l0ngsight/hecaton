@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * will be notified for, see the documentation of the type field of the Cache event below.
  */
 @SuppressWarnings("unused")
-@Generated("9d9570714b71b5cf19efc6f7aa4b314f")
+@Generated("0a29c44c140962626be262d4d93c5418")
 public final class CacheAddEntryListenerCodec {
     //hex: 0x130100
     public static final int REQUEST_MESSAGE_TYPE = 1245440;

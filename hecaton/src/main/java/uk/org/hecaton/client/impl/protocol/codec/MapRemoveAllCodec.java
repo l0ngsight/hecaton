@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Removes all entries which match with the supplied predicate
  */
 @SuppressWarnings("unused")
-@Generated("92e770041300bb94a8a39acc3e589eb9")
+@Generated("7a74f6ed6fb7e3d03f1a07aac95136d2")
 public final class MapRemoveAllCodec {
     //hex: 0x013E00
     public static final int REQUEST_MESSAGE_TYPE = 81408;

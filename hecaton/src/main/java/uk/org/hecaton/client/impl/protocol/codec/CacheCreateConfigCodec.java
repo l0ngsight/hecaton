@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Creates the given cache configuration on Hecaton members.
  */
 @SuppressWarnings("unused")
-@Generated("38830419ed366b4e2d3fbfe817d2037d")
+@Generated("ceada988a4f74f547858512788419959")
 public final class CacheCreateConfigCodec {
     //hex: 0x130600
     public static final int REQUEST_MESSAGE_TYPE = 1246720;

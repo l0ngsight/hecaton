@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Commits the global transaction specified by xid.
  */
 @SuppressWarnings("unused")
-@Generated("b47a717ab8026eb6cd8b0d1a67d9db19")
+@Generated("a89b0703e4ff123654aedead084ac457")
 public final class XATransactionCommitCodec {
     //hex: 0x140400
     public static final int REQUEST_MESSAGE_TYPE = 1311744;

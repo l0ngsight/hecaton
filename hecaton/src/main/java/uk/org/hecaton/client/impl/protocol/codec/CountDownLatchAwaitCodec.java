@@ -59,7 +59,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * less than or equal to zero, the method will not wait at all.
  */
 @SuppressWarnings("unused")
-@Generated("f966a38c700225dd6a32faf0eab42235")
+@Generated("eca08bb2b20f25d59d419c8b202df3de")
 public final class CountDownLatchAwaitCodec {
     //hex: 0x0B0200
     public static final int REQUEST_MESSAGE_TYPE = 721408;

@@ -46,7 +46,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * to define when the value is outdated and thus should be removed from the replicated map.
  */
 @SuppressWarnings("unused")
-@Generated("0f63b92ab4dde3e4d25e486d9e8e650f")
+@Generated("2166fd151de8dbd922dd9b0449c6b61f")
 public final class ReplicatedMapPutCodec {
     //hex: 0x0D0100
     public static final int REQUEST_MESSAGE_TYPE = 852224;

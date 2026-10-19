@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Creates an XA transaction with the given parameters.
  */
 @SuppressWarnings("unused")
-@Generated("a527a1247d028efae9bea358c7e5ffd0")
+@Generated("79e7571f617f0bac705ed84a8f030ff5")
 public final class XATransactionCreateCodec {
     //hex: 0x140500
     public static final int REQUEST_MESSAGE_TYPE = 1312000;

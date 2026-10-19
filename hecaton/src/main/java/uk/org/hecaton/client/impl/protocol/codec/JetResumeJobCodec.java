@@ -43,7 +43,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
 /**
  */
 @SuppressWarnings("unused")
-@Generated("91c0c1f42cb7f7dcfeb3a03109ed085d")
+@Generated("b07b693c7736e158731d973db48deb68")
 public final class JetResumeJobCodec {
     //hex: 0xFE0900
     public static final int REQUEST_MESSAGE_TYPE = 16648448;

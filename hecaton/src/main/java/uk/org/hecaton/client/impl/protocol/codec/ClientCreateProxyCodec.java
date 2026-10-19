@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Creates a cluster-wide proxy with the given name and service.
  */
 @SuppressWarnings("unused")
-@Generated("d75f704eda7fe7165eecfa177de89b1d")
+@Generated("1fd84630bffc3a8dd9955b94e8f25c36")
 public final class ClientCreateProxyCodec {
     //hex: 0x000400
     public static final int REQUEST_MESSAGE_TYPE = 1024;

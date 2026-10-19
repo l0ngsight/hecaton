@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Returns the capacity of this Ringbuffer.
  */
 @SuppressWarnings("unused")
-@Generated("6a2108b3e36235d60d89f25dac732933")
+@Generated("36a5ef619b34f951b58e1f0352505848")
 public final class RingbufferCapacityCodec {
     //hex: 0x170400
     public static final int REQUEST_MESSAGE_TYPE = 1508352;

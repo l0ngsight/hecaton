@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Size of vector collection.
  */
 @SuppressWarnings("unused")
-@Generated("4221bdb81cf8521e977eacce3a714da1")
+@Generated("37b832ceff08f8b1afd972d0ad92fa2e")
 public final class VectorCollectionSizeCodec {
     //hex: 0x240B00
     public static final int REQUEST_MESSAGE_TYPE = 2362112;

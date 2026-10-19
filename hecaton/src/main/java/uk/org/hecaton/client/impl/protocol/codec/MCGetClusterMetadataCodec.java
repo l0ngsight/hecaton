@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets the current metadata of a cluster.
  */
 @SuppressWarnings("unused")
-@Generated("ab62c8bd9639f8efee37275a163a4330")
+@Generated("ac44b6d821282f724a0abe16906a2db2")
 public final class MCGetClusterMetadataCodec {
     //hex: 0x200E00
     public static final int REQUEST_MESSAGE_TYPE = 2100736;

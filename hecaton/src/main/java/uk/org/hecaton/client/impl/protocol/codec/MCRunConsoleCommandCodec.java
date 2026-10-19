@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Runs given console command on the member it's called on.
  */
 @SuppressWarnings("unused")
-@Generated("5035e23e88bea1001bddbab2ff261bbd")
+@Generated("afc488d6d339eef0bb709699ed7422ca")
 public final class MCRunConsoleCommandCodec {
     //hex: 0x201200
     public static final int REQUEST_MESSAGE_TYPE = 2101760;

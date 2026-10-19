@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * initialized before.
  */
 @SuppressWarnings("unused")
-@Generated("77591a649f09dd15eaef6ed8316a0b51")
+@Generated("dccced6316070c512c56ccd819b97174")
 public final class SemaphoreInitCodec {
     //hex: 0x0C0100
     public static final int REQUEST_MESSAGE_TYPE = 786688;

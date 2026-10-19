@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Closes the given session on the given CP group
  */
 @SuppressWarnings("unused")
-@Generated("21d32aa7f158ec39515dcc1545f91c44")
+@Generated("0002970f88acd97118dffd7a7d1fc014")
 public final class CPSessionCloseSessionCodec {
     //hex: 0x1F0200
     public static final int REQUEST_MESSAGE_TYPE = 2032128;

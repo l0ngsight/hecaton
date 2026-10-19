@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Makes the query cache with the given name for a specific map publishable.
  */
 @SuppressWarnings("unused")
-@Generated("8519f3ced31caba1746191ee54b6f0cd")
+@Generated("3e035d82389f761d2082a4d9819296fe")
 public final class ContinuousQueryMadePublishableCodec {
     //hex: 0x160300
     public static final int REQUEST_MESSAGE_TYPE = 1442560;

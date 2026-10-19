@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Adds a new vector collection configuration to a running cluster.
  */
 @SuppressWarnings("unused")
-@Generated("aecfb195d2ff3584092448bb98763999")
+@Generated("cc8b2e056b287e429438e5adc643fb7c")
 public final class DynamicConfigAddVectorCollectionConfigCodec {
     //hex: 0x1B1400
     public static final int REQUEST_MESSAGE_TYPE = 1774592;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Runs given script on the member it's called on.
  */
 @SuppressWarnings("unused")
-@Generated("ac21010f1e851194cbcd49ea20a6ecfe")
+@Generated("bb106f9c29bb1eea114f0fa6beb1b36f")
 public final class MCRunScriptCodec {
     //hex: 0x201100
     public static final int REQUEST_MESSAGE_TYPE = 2101504;

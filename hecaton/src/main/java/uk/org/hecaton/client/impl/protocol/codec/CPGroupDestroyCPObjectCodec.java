@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * CP group
  */
 @SuppressWarnings("unused")
-@Generated("d059bf96542932ab453853e2f48b8649")
+@Generated("05d691726ddb28dd88215288b4ef8f4e")
 public final class CPGroupDestroyCPObjectCodec {
     //hex: 0x1E0200
     public static final int REQUEST_MESSAGE_TYPE = 1966592;

@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Gets the list of distributed objects in the cluster.
  */
 @SuppressWarnings("unused")
-@Generated("25acd563292353225f22361ea6806f4f")
+@Generated("5eae60ba02a790c911cbc74ec5d2be5f")
 public final class ClientGetDistributedObjectsCodec {
     //hex: 0x000800
     public static final int REQUEST_MESSAGE_TYPE = 2048;

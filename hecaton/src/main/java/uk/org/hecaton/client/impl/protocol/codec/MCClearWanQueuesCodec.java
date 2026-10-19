@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Clear WAN replication queues for the given wan replication and publisher
  */
 @SuppressWarnings("unused")
-@Generated("bdf102f006f3c1a267a45feed50a558e")
+@Generated("f150a40cb5329141bd98c92efe30a10d")
 public final class MCClearWanQueuesCodec {
     //hex: 0x201400
     public static final int REQUEST_MESSAGE_TYPE = 2102272;

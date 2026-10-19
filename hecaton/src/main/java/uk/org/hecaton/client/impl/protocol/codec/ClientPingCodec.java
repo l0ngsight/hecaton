@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Sends a ping to the given connection.
  */
 @SuppressWarnings("unused")
-@Generated("2996d02f88c6b091540840a4b0c8e9d5")
+@Generated("22c17a83846a81affcd47eb9c104d48f")
 public final class ClientPingCodec {
     //hex: 0x000B00
     public static final int REQUEST_MESSAGE_TYPE = 2816;

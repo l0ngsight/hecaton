@@ -48,7 +48,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * held by the caller after a successful unlock() call, false otherwise.
  */
 @SuppressWarnings("unused")
-@Generated("3ae8aa2d1ece05f5b4487d505a8f960e")
+@Generated("0dabfa58173936dfbf2fe6fd7ac1e2a5")
 public final class FencedLockUnlockCodec {
     //hex: 0x070300
     public static final int REQUEST_MESSAGE_TYPE = 459520;

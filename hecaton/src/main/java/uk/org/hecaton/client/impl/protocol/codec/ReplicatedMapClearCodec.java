@@ -47,7 +47,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * method throws a OPERATION_TIMEOUT back to the caller.
  */
 @SuppressWarnings("unused")
-@Generated("e22f4da7228873d20e4ce4fcd15d242d")
+@Generated("cdd8d816b38d8a269bdd64631d10ce81")
 public final class ReplicatedMapClearCodec {
     //hex: 0x0D0900
     public static final int REQUEST_MESSAGE_TYPE = 854272;

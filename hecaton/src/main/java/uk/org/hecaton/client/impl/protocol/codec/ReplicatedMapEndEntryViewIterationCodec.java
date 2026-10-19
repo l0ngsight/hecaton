@@ -45,7 +45,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * longer need the iterator.
  */
 @SuppressWarnings("unused")
-@Generated("4ddced0e8dfaaf89f4a3a0491f20934c")
+@Generated("26aa7d354e0c80a091b5e001b8a5fe81")
 public final class ReplicatedMapEndEntryViewIterationCodec {
     //hex: 0x0D1500
     public static final int REQUEST_MESSAGE_TYPE = 857344;

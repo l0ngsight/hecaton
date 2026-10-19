@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Destroys the query cache with the given name for a specific map.
  */
 @SuppressWarnings("unused")
-@Generated("9fa6db6d8a6be8cf0809c1978f3b25f0")
+@Generated("94eee1daab44d165876b72d5fbb66098")
 public final class ContinuousQueryDestroyCacheCodec {
     //hex: 0x160600
     public static final int REQUEST_MESSAGE_TYPE = 1443328;

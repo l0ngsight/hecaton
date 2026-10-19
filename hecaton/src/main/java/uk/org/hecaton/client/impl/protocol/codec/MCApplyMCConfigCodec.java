@@ -44,7 +44,7 @@ import static uk.org.hecaton.client.impl.protocol.codec.builtin.FixedSizeTypesCo
  * Applies given MC config (client filter list).
  */
 @SuppressWarnings("unused")
-@Generated("b1e43bf5f9516b83f5ac41f379c611dc")
+@Generated("4ac14701b7e7aff86446c6690cd0553c")
 public final class MCApplyMCConfigCodec {
     //hex: 0x200D00
     public static final int REQUEST_MESSAGE_TYPE = 2100480;
