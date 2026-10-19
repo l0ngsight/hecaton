@@ -91,7 +91,18 @@ jobs:
         name: Collect reports
         env:
           NAME: ${{ matrix.name }}
-        run: hc/tools/ci/collect-test-reports.sh "reports/$NAME" hc up
+        # run-test-shard.sh keeps the parallel-JVM pass's reports in
+        # target/surefire-reports-paralleljvm; suffix them so they do not replace the
+        # single-JVM reports of the same class. Inline (not a script of the tested ref) so
+        # it also works for refs that predate the two-pass layout.
+        run: |
+          mkdir -p "reports/$NAME"
+          { find hc up -path '*/target/surefire-reports*/TEST-*.xml' 2>/dev/null || true; } |
+            while IFS= read -r report; do
+              suffix="$(basename "$(dirname "$report")")"
+              cp "$report" "reports/$NAME/$(basename "$report" .xml)${suffix#surefire-reports}.xml"
+            done
+          echo "$(ls "reports/$NAME" | wc -l) report files"
       - if: always()
         uses: actions/upload-artifact@v4
         with:

@@ -7,7 +7,7 @@
 # Builds the group's modules and their dependencies (tests skipped), then runs the
 # group's tests with upstream's standard `parallelTest` profile (SlowTest and
 # NightlyTest excluded). Test failures do not fail the script; the report job
-# evaluates the surefire XML (gathered by collect-test-reports.sh).
+# evaluates the surefire XML.
 set -euo pipefail
 
 root="$1" suite="$2" group="$3" shard="$4" shards="$5"
