@@ -27,7 +27,9 @@ if [ "$shards" -gt 1 ]; then
     test_args=(-Dtest="$tests" -Dsurefire.failIfNoSpecifiedTests=false)
 fi
 
+# surefire.timeout kills a test JVM that runs longer than an hour (a hanging test), so the
+# shard still finishes and reports what ran instead of hitting the job timeout.
 ./mvnw -B -ntp -pl "$modules" -PparallelTest test "${skip[@]}" "${test_args[@]}" \
-    -Dmaven.test.failure.ignore=true -DtrimStackTrace=true || {
+    -Dmaven.test.failure.ignore=true -DtrimStackTrace=true -Dsurefire.timeout=3600 || {
     echo "::warning::Maven exited with an error in $group shard $shard (see log); reports collected anyway."
 }
