@@ -41,13 +41,19 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.AccessControlException;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static uk.org.hecaton.internal.util.EmptyStatement.ignore;
 import static uk.org.hecaton.test.Accessors.getNode;
 
 /**
@@ -141,6 +147,52 @@ public class SecurityTest extends HecatonTestSupport {
         assertThatThrownBy(() -> Hecaton.newHecatonInstance(memberIdentityConfig("guess")))
                 .isInstanceOf(IllegalStateException.class);
         assertClusterSize(2, member1);
+    }
+
+    @Test
+    public void malformedAndRandomAuthenticationDoesNotHarmTheMember() throws Exception {
+        Config config = memberConfig();
+        config.getSecurityConfig()
+                .setClientRealmConfig("users", new RealmConfig()
+                        .setSimpleAuthenticationConfig(new SimpleAuthenticationConfig().addUser("alice", "alice-pw")))
+                .addClientPermissionConfig(new PermissionConfig(PermissionType.ALL, null, "*"));
+        HecatonInstance member = Hecaton.newHecatonInstance(config);
+        int port = member.getCluster().getLocalMember().getAddress().getPort();
+        Random random = new Random(42);
+
+        // random bytes after the client protocol header
+        for (int i = 0; i < 200; i++) {
+            byte[] garbage = new byte[1 + random.nextInt(4096)];
+            random.nextBytes(garbage);
+            try (Socket socket = new Socket("127.0.0.1", port)) {
+                socket.setSoTimeout(2000);
+                OutputStream out = socket.getOutputStream();
+                out.write("CP2".getBytes(StandardCharsets.US_ASCII));
+                out.write(garbage);
+                out.flush();
+            } catch (IOException expected) {
+                // the member may close the connection first
+                ignore(expected);
+            }
+        }
+        // random credentials (each refused client retries until its connect timeout)
+        for (int i = 0; i < 5; i++) {
+            String user = randomString(random);
+            String password = randomString(random);
+            assertThatThrownBy(() -> client(member, user, password)).isInstanceOf(IllegalStateException.class);
+        }
+
+        assertThat(member.getLifecycleService().isRunning()).isTrue();
+        client(member, "alice", "alice-pw").getMap("m").put("k", "v");
+    }
+
+    private static String randomString(Random random) {
+        StringBuilder value = new StringBuilder();
+        int length = random.nextInt(64);
+        for (int i = 0; i < length; i++) {
+            value.append((char) (random.nextInt(0xD7FF - 1) + 1));
+        }
+        return value.toString();
     }
 
     @Test
