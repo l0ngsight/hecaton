@@ -51,6 +51,7 @@
         <module>hecaton-build-utils</module>
         <module>hecaton-sql</module>
         <module>hecaton-migrate</module>
+        <module>hecaton-migrate-rewrite</module>
     </modules>
 
     <properties>

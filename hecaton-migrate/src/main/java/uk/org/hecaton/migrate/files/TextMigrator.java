@@ -104,6 +104,14 @@ public final class TextMigrator {
         return new Result(renamed, leftovers(renamed));
     }
 
+    /**
+     * Migrates the value of a string literal in source code (a property key, a config file
+     * name, a class name, an SQL query): the rules for {@link FileKind#OTHER_TEXT} files.
+     */
+    public static String migrateString(String value) {
+        return transformUnprotected(value, segment -> renameSegment(segment, FileKind.OTHER_TEXT));
+    }
+
     private static String renameSegment(String s, FileKind kind) {
         s = SCHEMA_NAMESPACE.matcher(s).replaceAll("https://hecaton.org.uk/schema/");
         s = SCHEMA_FILE.matcher(s).replaceAll("hecaton-$1");
