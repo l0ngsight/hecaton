@@ -23,10 +23,12 @@ import uk.org.hecaton.config.SSLConfig;
 import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.nio.ascii.TextChannelInitializer;
+import uk.org.hecaton.internal.nio.ssl.SSLEngineFactories;
+import uk.org.hecaton.internal.nio.ssl.TlsChannelInitializer;
 import uk.org.hecaton.internal.server.ServerContext;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.Logger;
+import uk.org.hecaton.nio.ssl.SSLEngineFactory;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,10 +44,13 @@ public class ChannelInitializerFunction implements Function<EndpointQualifier, C
     private volatile Map<EndpointQualifier, ChannelInitializer> initializerMap;
 
     public ChannelInitializerFunction(ServerContext serverContext, Config config) {
-        checkSslConfigAvailability(config);
         this.serverContext = serverContext;
-        this.uniChannelInitializer = new UnifiedChannelInitializer(serverContext);
         this.config = config;
+        ChannelInitializer unified = new UnifiedChannelInitializer(serverContext);
+        // unisocket: one SSL configuration for all connections
+        this.uniChannelInitializer = config.getAdvancedNetworkConfig().isEnabled()
+                ? unified
+                : withTls(unified, config.getNetworkConfig().getSSLConfig());
     }
 
     @Override
@@ -62,25 +67,26 @@ public class ChannelInitializerFunction implements Function<EndpointQualifier, C
 
         Map<EndpointQualifier, ChannelInitializer> map = new HashMap<>();
         for (EndpointConfig endpointConfig : advancedNetworkConfig.getEndpointConfigs().values()) {
-            checkSslConfigAvailability(endpointConfig.getSSLConfig());
-
             logSSLConfig(endpointConfig);
 
+            SSLConfig sslConfig = endpointConfig.getSSLConfig();
             switch (endpointConfig.getProtocolType()) {
                 case MEMBER:
-                    map.put(EndpointQualifier.MEMBER, provideMemberChannelInitializer(endpointConfig));
+                    map.put(EndpointQualifier.MEMBER, withTls(provideMemberChannelInitializer(endpointConfig), sslConfig));
                     break;
                 case CLIENT:
-                    map.put(EndpointQualifier.CLIENT, provideClientChannelInitializer(endpointConfig));
+                    map.put(EndpointQualifier.CLIENT, withTls(provideClientChannelInitializer(endpointConfig), sslConfig));
                     break;
                 case REST:
-                    map.put(EndpointQualifier.REST, provideTextChannelInitializer(endpointConfig, true));
+                    map.put(EndpointQualifier.REST, withTls(provideTextChannelInitializer(endpointConfig, true), sslConfig));
                     break;
                 case MEMCACHE:
-                    map.put(EndpointQualifier.MEMCACHE, provideTextChannelInitializer(endpointConfig, false));
+                    map.put(EndpointQualifier.MEMCACHE,
+                            withTls(provideTextChannelInitializer(endpointConfig, false), sslConfig));
                     break;
                 case WAN:
-                    map.put(endpointConfig.getQualifier(), provideMemberChannelInitializer(endpointConfig));
+                    map.put(endpointConfig.getQualifier(),
+                            withTls(provideMemberChannelInitializer(endpointConfig), sslConfig));
                     break;
                 default:
                     throw new IllegalStateException("Cannot build channel initializer for protocol type "
@@ -125,21 +131,13 @@ public class ChannelInitializerFunction implements Function<EndpointQualifier, C
         throw new UnsupportedOperationException("TODO");
     }
 
-    // check SSL config for unisocket member configuration
-    private void checkSslConfigAvailability(Config config) {
-        if (config.getAdvancedNetworkConfig().isEnabled()) {
-            return;
+    /** Adds TLS (F1) to the channels of {@code initializer} if {@code sslConfig} enables it. */
+    private ChannelInitializer withTls(ChannelInitializer initializer, SSLConfig sslConfig) {
+        if (sslConfig == null || !sslConfig.isEnabled()) {
+            return initializer;
         }
-        SSLConfig sslConfig = config.getNetworkConfig().getSSLConfig();
-        checkSslConfigAvailability(sslConfig);
-    }
-
-    // check given SSL config
-    private void checkSslConfigAvailability(SSLConfig sslConfig) {
-        if (sslConfig != null && sslConfig.isEnabled()) {
-            if (!HecatonFeature.TLS.isAvailable()) {
-                throw new IllegalStateException(HecatonFeature.TLS.notAvailableMessage());
-            }
-        }
+        SSLEngineFactory engineFactory = SSLEngineFactories.create(sslConfig, false, config.getClassLoader());
+        return new TlsChannelInitializer(initializer, engineFactory,
+                SSLEngineFactories.handshakeTimeoutMillis(sslConfig));
     }
 }

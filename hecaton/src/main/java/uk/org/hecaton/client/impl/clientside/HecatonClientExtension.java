@@ -52,6 +52,8 @@ import uk.org.hecaton.internal.nearcache.NearCacheManager;
 import uk.org.hecaton.internal.nearcache.impl.DefaultNearCacheManager;
 import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.nio.ClassLoaderUtil;
+import uk.org.hecaton.internal.nio.ssl.SSLEngineFactories;
+import uk.org.hecaton.internal.nio.ssl.TlsChannelInitializer;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.internal.serialization.SerializationServiceBuilder;
@@ -65,6 +67,7 @@ import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.Logger;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.nio.SocketInterceptor;
+import uk.org.hecaton.nio.ssl.SSLEngineFactory;
 import uk.org.hecaton.partition.PartitioningStrategy;
 import uk.org.hecaton.partition.strategy.DefaultPartitioningStrategy;
 import uk.org.hecaton.spi.impl.executionservice.TaskScheduler;
@@ -198,15 +201,15 @@ public class HecatonClientExtension implements ClientExtension {
 
     @Override
     public ChannelInitializer createChannelInitializer(SSLConfig sslConfig, SocketOptions socketOptions) {
-        if (sslConfig != null && sslConfig.isEnabled()) {
-            if (!HecatonFeature.TLS.isAvailable()) {
-                throw new IllegalStateException(HecatonFeature.TLS.notAvailableMessage());
-            }
-        }
-
         HecatonProperties properties = client.getProperties();
         boolean directBuffer = properties.getBoolean(SOCKET_CLIENT_BUFFER_DIRECT);
-        return new ClientPlainChannelInitializer(socketOptions, directBuffer);
+        ChannelInitializer plain = new ClientPlainChannelInitializer(socketOptions, directBuffer);
+        if (sslConfig == null || !sslConfig.isEnabled()) {
+            return plain;
+        }
+        SSLEngineFactory engineFactory = SSLEngineFactories.create(sslConfig, true, client.getClientConfig().getClassLoader());
+        return new TlsChannelInitializer(plain, engineFactory,
+                SSLEngineFactories.handshakeTimeoutMillis(sslConfig));
     }
 
     @Override

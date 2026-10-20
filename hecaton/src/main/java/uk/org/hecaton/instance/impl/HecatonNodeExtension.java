@@ -36,6 +36,7 @@ import uk.org.hecaton.config.SecurityConfig;
 import uk.org.hecaton.config.SerializationConfig;
 import uk.org.hecaton.config.SymmetricEncryptionConfig;
 import uk.org.hecaton.config.cp.CPSubsystemConfig;
+import uk.org.hecaton.config.security.RealmConfig;
 import uk.org.hecaton.core.HecatonInstanceAware;
 import uk.org.hecaton.core.HecatonInstanceNotActiveException;
 import uk.org.hecaton.cp.CPSubsystem;
@@ -89,6 +90,7 @@ import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.networking.InboundHandler;
 import uk.org.hecaton.internal.networking.OutboundHandler;
 import uk.org.hecaton.internal.nio.ClassLoaderUtil;
+import uk.org.hecaton.internal.nio.ssl.SSLEngineFactories;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.serialization.SerializationServiceBuilder;
 import uk.org.hecaton.internal.serialization.impl.CodebaseClusterVersionAware;
@@ -116,7 +118,11 @@ import uk.org.hecaton.nio.MemberSocketInterceptor;
 import uk.org.hecaton.nio.ssl.SSLEngineFactory;
 import uk.org.hecaton.partition.PartitioningStrategy;
 import uk.org.hecaton.partition.strategy.DefaultPartitioningStrategy;
+import uk.org.hecaton.security.SecurityService;
 import uk.org.hecaton.security.impl.InternalSecurityContext;
+import uk.org.hecaton.security.impl.PermissionSyncService;
+import uk.org.hecaton.security.impl.SecurityContextImpl;
+import uk.org.hecaton.security.impl.SecurityServiceImpl;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.eventservice.impl.EventServiceImpl;
@@ -129,7 +135,6 @@ import uk.org.hecaton.wan.impl.WanReplicationService;
 import uk.org.hecaton.wan.impl.WanReplicationServiceImpl;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -216,8 +221,12 @@ public class HecatonNodeExtension implements NodeExtension {
 
     private void checkSecurityAllowed() {
         SecurityConfig securityConfig = node.getConfig().getSecurityConfig();
-        if (securityConfig != null && securityConfig.isEnabled() && !HecatonFeature.SECURITY.isAvailable()) {
-            throw new IllegalStateException(HecatonFeature.SECURITY.notAvailableMessage());
+        if (securityConfig != null && securityConfig.isEnabled()) {
+            for (RealmConfig realm : securityConfig.getRealmConfigs().values()) {
+                if (realm.getLdapAuthenticationConfig() != null || realm.getKerberosAuthenticationConfig() != null) {
+                    throw new IllegalStateException(HecatonFeature.LDAP_KERBEROS_AUTHENTICATION.notAvailableMessage());
+                }
+            }
         }
         SymmetricEncryptionConfig symmetricEncryptionConfig =
                 getActiveMemberNetworkConfig(node.getConfig()).getSymmetricEncryptionConfig();
@@ -348,14 +357,18 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public InternalSecurityContext getSecurityContext() {
-        logger.warning(HecatonFeature.SECURITY.notAvailableMessage());
-        return null;
+        return new SecurityContextImpl(node);
     }
 
     @Nullable
     @Override
     public InternalSecurityContext getSecurityContextOrNull() {
-        return null;
+        return node.securityContext instanceof InternalSecurityContext context ? context : null;
+    }
+
+    @Override
+    public SecurityService getSecurityService() {
+        return node.getConfig().getSecurityConfig().isEnabled() ? new SecurityServiceImpl(node) : null;
     }
 
     @Override
@@ -463,13 +476,15 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public Map<String, Object> createExtensionServices() {
+        Map<String, Object> services = new HashMap<>();
         if (jetServiceBackend != null) {
-            Map<String, Object> services = new HashMap<>();
             services.put(JetServiceBackend.SERVICE_NAME, jetServiceBackend);
             services.put(JobEventService.SERVICE_NAME, new JobEventService(node.getNodeEngine()));
-            return services;
         }
-        return Collections.emptyMap();
+        if (node.getConfig().getSecurityConfig().isEnabled()) {
+            services.put(PermissionSyncService.SERVICE_NAME, new PermissionSyncService(node));
+        }
+        return services;
     }
 
     @Override
@@ -730,7 +745,7 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public SSLEngineFactory createSslEngineFactory(SSLConfig sslConfig) {
-        throw new IllegalStateException(HecatonFeature.TLS.notAvailableMessage());
+        return SSLEngineFactories.create(sslConfig, false, node.getConfigClassLoader());
     }
 
     @Override
