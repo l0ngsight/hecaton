@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.instance.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.auditlog.AuditlogService;
 import uk.org.hecaton.auditlog.impl.NoOpAuditlogService;
 import uk.org.hecaton.cache.impl.CacheService;
@@ -103,6 +102,7 @@ import uk.org.hecaton.internal.server.tcp.PacketEncoder;
 import uk.org.hecaton.internal.tpc.TpcServerBootstrap;
 import uk.org.hecaton.internal.tpc.TpcServerBootstrapImpl;
 import uk.org.hecaton.internal.util.ConstructorFunction;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.JVMUtil;
 import uk.org.hecaton.internal.util.MapUtil;
 import uk.org.hecaton.internal.util.Preconditions;
@@ -584,6 +584,15 @@ public class DefaultNodeExtension implements NodeExtension {
         if (service != null) {
             service.onClusterVersionChange();
         }
+    }
+
+    /**
+     * Hecaton members accept failover clients (F15): a client configured with
+     * {@code ClientFailoverConfig} may connect and later move to another cluster.
+     */
+    @Override
+    public boolean isClientFailoverSupported() {
+        return true;
     }
 
     @Override

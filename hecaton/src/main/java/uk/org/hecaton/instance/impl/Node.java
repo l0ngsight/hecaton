@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.instance.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.ClientListener;
 import uk.org.hecaton.client.impl.ClientEngine;
 import uk.org.hecaton.client.impl.ClientEngineImpl;
@@ -83,6 +82,7 @@ import uk.org.hecaton.internal.services.GracefulShutdownAwareService;
 import uk.org.hecaton.internal.usercodedeployment.UserCodeDeploymentClassLoader;
 import uk.org.hecaton.internal.util.Clock;
 import uk.org.hecaton.internal.util.FutureUtil;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.jet.impl.util.ReflectionUtils;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.Logger;

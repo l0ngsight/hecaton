@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.internal.ascii.rest;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.cp.CPSubsystem;
@@ -28,6 +27,7 @@ import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonArray;
 import uk.org.hecaton.internal.json.JsonObject;
 import uk.org.hecaton.internal.management.dto.WanReplicationConfigDTO;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.StringUtil;
 import uk.org.hecaton.logging.impl.LoggingServiceImpl;
 import uk.org.hecaton.version.Version;

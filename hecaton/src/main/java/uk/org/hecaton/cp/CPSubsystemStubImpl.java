@@ -16,12 +16,12 @@
 
 package uk.org.hecaton.cp;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.impl.spi.ClientContext;
 import uk.org.hecaton.cp.event.CPGroupAvailabilityListener;
 import uk.org.hecaton.cp.event.CPMembershipListener;
 import uk.org.hecaton.cp.lock.FencedLock;
 import uk.org.hecaton.cp.session.CPSessionManagementService;
+import uk.org.hecaton.internal.util.HecatonFeature;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;

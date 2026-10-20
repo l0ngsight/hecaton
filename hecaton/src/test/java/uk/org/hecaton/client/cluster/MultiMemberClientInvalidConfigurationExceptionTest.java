@@ -16,12 +16,12 @@
 
 package uk.org.hecaton.client.cluster;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.RoutingMode;
 import uk.org.hecaton.client.test.ClientTestSupport;
 import uk.org.hecaton.client.test.TestHecatonFactory;
 import uk.org.hecaton.config.InvalidConfigurationException;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.annotation.ParallelJVMTest;
 import uk.org.hecaton.test.annotation.QuickTest;

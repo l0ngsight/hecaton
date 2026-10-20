@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.cache.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cache.CacheNotExistsException;
 import uk.org.hecaton.cache.HecatonCacheManager;
 import uk.org.hecaton.cache.impl.event.CachePartitionLostEventFilter;
@@ -54,6 +53,7 @@ import uk.org.hecaton.internal.util.ConcurrencyUtil;
 import uk.org.hecaton.internal.util.ConstructorFunction;
 import uk.org.hecaton.internal.util.ContextMutexFactory;
 import uk.org.hecaton.internal.util.FutureUtil;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.InvocationUtil;
 import uk.org.hecaton.internal.util.MapUtil;
 import uk.org.hecaton.logging.ILogger;

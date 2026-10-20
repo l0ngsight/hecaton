@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.jet.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.impl.ClientEngine;
 import uk.org.hecaton.client.impl.ClientEngineImpl;
 import uk.org.hecaton.client.impl.protocol.ClientExceptionFactory;
@@ -37,6 +36,7 @@ import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.services.ManagedService;
 import uk.org.hecaton.internal.services.MembershipAwareService;
 import uk.org.hecaton.internal.services.MembershipServiceEvent;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.InvocationUtil;
 import uk.org.hecaton.jet.JetException;
 import uk.org.hecaton.jet.JetService;

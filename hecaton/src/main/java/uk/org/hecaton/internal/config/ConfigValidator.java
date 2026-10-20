@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.internal.config;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cache.ICache;
 import uk.org.hecaton.config.CacheConfig;
 import uk.org.hecaton.config.CacheSimpleConfig;
@@ -53,6 +52,7 @@ import uk.org.hecaton.config.security.RealmConfig;
 import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.instance.ProtocolType;
 import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.MutableInteger;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.spi.eviction.EvictionPolicyComparator;

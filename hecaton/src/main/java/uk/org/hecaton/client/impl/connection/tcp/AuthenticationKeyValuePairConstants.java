@@ -16,12 +16,12 @@
 
 package uk.org.hecaton.client.impl.connection.tcp;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.UnsupportedClusterVersionException;
 import uk.org.hecaton.client.UnsupportedRoutingModeException;
 import uk.org.hecaton.client.config.ClusterRoutingConfig;
 import uk.org.hecaton.client.config.RoutingMode;
 import uk.org.hecaton.internal.cluster.Versions;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.version.Version;
 
 import java.util.Map;

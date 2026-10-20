@@ -16,8 +16,8 @@
 
 package uk.org.hecaton.internal.util.comparators;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.InMemoryFormat;
+import uk.org.hecaton.internal.util.HecatonFeature;
 
 /**
  * Utility class to get comparators by {@link InMemoryFormat} of stored values.

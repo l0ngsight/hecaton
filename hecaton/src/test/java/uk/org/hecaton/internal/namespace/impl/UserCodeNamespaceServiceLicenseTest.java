@@ -16,10 +16,10 @@
 
 package uk.org.hecaton.internal.namespace.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.UserCodeNamespaceConfig;
 import uk.org.hecaton.core.Hecaton;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.test.annotation.QuickTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

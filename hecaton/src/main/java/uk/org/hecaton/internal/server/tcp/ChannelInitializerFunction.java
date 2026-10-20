@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.internal.server.tcp;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.AdvancedNetworkConfig;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.EndpointConfig;
@@ -25,6 +24,7 @@ import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.nio.ascii.TextChannelInitializer;
 import uk.org.hecaton.internal.server.ServerContext;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.Logger;
 

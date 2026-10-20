@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.wan.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.AbstractWanPublisherConfig;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
@@ -36,6 +35,7 @@ import uk.org.hecaton.internal.services.ManagedService;
 import uk.org.hecaton.internal.services.ObjectNamespace;
 import uk.org.hecaton.internal.services.ServiceNamespace;
 import uk.org.hecaton.internal.util.ConstructorFunction;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.operationservice.Operation;

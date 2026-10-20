@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.internal.ascii;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.collection.IQueue;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.RestApiConfig;
@@ -30,6 +29,7 @@ import uk.org.hecaton.internal.ascii.rest.RestValue;
 import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonObject;
 import uk.org.hecaton.internal.management.dto.WanReplicationConfigDTO;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.TestAwareInstanceFactory;

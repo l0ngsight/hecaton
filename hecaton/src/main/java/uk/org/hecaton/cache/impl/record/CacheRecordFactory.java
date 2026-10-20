@@ -16,10 +16,10 @@
 
 package uk.org.hecaton.cache.impl.record;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.serialization.SerializationService;
+import uk.org.hecaton.internal.util.HecatonFeature;
 
 /**
  * Provides factory for {@link uk.org.hecaton.cache.impl.record.CacheRecord}.

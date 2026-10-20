@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.internal.ascii.rest;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.config.Config;
@@ -39,6 +38,7 @@ import uk.org.hecaton.internal.partition.InternalPartitionService;
 import uk.org.hecaton.internal.server.Server;
 import uk.org.hecaton.internal.server.ServerConnection;
 import uk.org.hecaton.internal.server.ServerConnectionManager;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.StringUtil;
 import uk.org.hecaton.logging.impl.LoggingServiceImpl;
 

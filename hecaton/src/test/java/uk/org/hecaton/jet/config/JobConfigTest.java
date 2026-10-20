@@ -16,9 +16,9 @@
 
 package uk.org.hecaton.jet.config;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.jet.core.DAG;
 import uk.org.hecaton.jet.core.JetTestSupport;
 import uk.org.hecaton.nio.ObjectDataInput;

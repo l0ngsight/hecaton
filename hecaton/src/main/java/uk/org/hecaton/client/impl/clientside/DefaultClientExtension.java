@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.client.impl.clientside;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.HecatonClientNotActiveException;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.ClientNetworkConfig;
@@ -57,6 +56,7 @@ import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.internal.serialization.SerializationServiceBuilder;
 import uk.org.hecaton.internal.serialization.impl.DefaultSerializationServiceBuilder;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.JVMUtil;
 import uk.org.hecaton.internal.util.MapUtil;
 import uk.org.hecaton.jet.JetService;

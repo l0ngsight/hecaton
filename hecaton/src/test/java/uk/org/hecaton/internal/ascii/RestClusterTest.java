@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.internal.ascii;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.JoinConfig;
@@ -31,6 +30,7 @@ import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonArray;
 import uk.org.hecaton.internal.json.JsonObject;
 import uk.org.hecaton.internal.json.JsonValue;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.spi.properties.ClusterProperty;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;

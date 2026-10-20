@@ -16,10 +16,10 @@
 
 package uk.org.hecaton.map.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.WanAcknowledgeType;
 import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.internal.services.WanSupportingService;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.impl.operation.MapOperation;
 import uk.org.hecaton.map.impl.operation.MapOperationProvider;
 import uk.org.hecaton.map.impl.wan.WanMapAddOrUpdateEvent;

@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.internal.dynamicconfig;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.CacheSimpleConfig;
 import uk.org.hecaton.config.CardinalityEstimatorConfig;
 import uk.org.hecaton.config.Config;
@@ -56,6 +55,7 @@ import uk.org.hecaton.internal.services.ManagedService;
 import uk.org.hecaton.internal.services.PreJoinAwareService;
 import uk.org.hecaton.internal.services.SplitBrainHandlerService;
 import uk.org.hecaton.internal.util.FutureUtil;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.nio.serialization.IdentifiedDataSerializable;
 import uk.org.hecaton.spi.impl.InternalCompletableFuture;

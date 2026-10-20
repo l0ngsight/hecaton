@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.client;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.RoutingStrategy;
 import uk.org.hecaton.client.impl.ClientExtension;
@@ -29,6 +28,7 @@ import uk.org.hecaton.client.impl.spi.ClientProxyFactory;
 import uk.org.hecaton.client.impl.spi.impl.ClientClusterServiceImpl;
 import uk.org.hecaton.client.test.TestHecatonFactory;
 import uk.org.hecaton.config.InvalidConfigurationException;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;

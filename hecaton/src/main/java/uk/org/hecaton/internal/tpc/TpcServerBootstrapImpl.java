@@ -16,10 +16,10 @@
 
 package uk.org.hecaton.internal.tpc;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.tpc.TpcSocketConfig;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.tpcengine.TpcEngine;
+import uk.org.hecaton.internal.util.HecatonFeature;
 
 import java.util.Collections;
 import java.util.List;

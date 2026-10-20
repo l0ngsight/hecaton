@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.jet.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.cluster.impl.MemberImpl;
@@ -35,6 +34,7 @@ import uk.org.hecaton.internal.partition.impl.InternalPartitionServiceImpl;
 import uk.org.hecaton.internal.partition.impl.PartitionServiceState;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.util.ExceptionUtil;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.counters.Counter;
 import uk.org.hecaton.internal.util.counters.MwCounter;
 import uk.org.hecaton.internal.util.executor.ManagedExecutorService;

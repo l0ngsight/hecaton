@@ -16,8 +16,8 @@
 
 package uk.org.hecaton.jet.sql.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.jet.Job;
 import uk.org.hecaton.jet.config.JobConfig;
 import uk.org.hecaton.jet.impl.JetClientInstanceImpl;
