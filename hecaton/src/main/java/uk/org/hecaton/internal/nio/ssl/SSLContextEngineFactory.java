@@ -42,7 +42,6 @@ import java.util.Properties;
 public class SSLContextEngineFactory implements SSLEngineFactory {
 
     private final SSLContextFactory contextFactory;
-    private SSLContext context;
     private String[] cipherSuites;
     private String[] protocols;
     private MutualAuthentication mutualAuthentication;
@@ -64,8 +63,7 @@ public class SSLContextEngineFactory implements SSLEngineFactory {
                     + "configuration (and keyStorePassword, keyStoreType)");
         }
         contextFactory.init(properties);
-        context = contextFactory.getSSLContext();
-        if (context == null) {
+        if (contextFactory.getSSLContext() == null) {
             throw new IllegalStateException(contextFactory.getClass().getName() + " returned no SSLContext");
         }
         cipherSuites = list(properties.getProperty("ciphersuites"));
@@ -79,6 +77,8 @@ public class SSLContextEngineFactory implements SSLEngineFactory {
 
     @Override
     public SSLEngine create(boolean clientMode, Address peerAddress) {
+        // asked every time: the context factory may renew its key material
+        SSLContext context = contextFactory.getSSLContext();
         SSLEngine engine = peerAddress == null
                 ? context.createSSLEngine()
                 : context.createSSLEngine(peerAddress.getHost(), peerAddress.getPort());

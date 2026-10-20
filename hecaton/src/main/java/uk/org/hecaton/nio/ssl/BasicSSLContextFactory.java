@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
+import java.time.Duration;
 import java.util.Properties;
 
 /**
@@ -42,6 +43,9 @@ import java.util.Properties;
  *     {@code JKS}), {@code trustManagerAlgorithm} (default: the JDK's) – the certificates this
  *     side trusts. Without a trust store, the JDK's default trust store is used.</li>
  *     <li>{@code protocol} (default {@code TLS}) – the {@link SSLContext} protocol.</li>
+ *     <li>{@code keyMaterialDuration} – an ISO-8601 duration such as {@code PT1H}: the stores
+ *     are read again when it has passed since they were last read, so renewed certificates are
+ *     used for new connections without a restart. By default they are read once.</li>
  * </ul>
  * Cipher suites, enabled protocols, mutual authentication and hostname validation are applied
  * to each connection; see {@link uk.org.hecaton.config.SSLConfig}.
@@ -51,20 +55,44 @@ public class BasicSSLContextFactory implements SSLContextFactory {
     /** Default key and trust store type. */
     public static final String DEFAULT_STORE_TYPE = "JKS";
 
-    private SSLContext sslContext;
+    private Properties properties;
+    private Duration keyMaterialDuration;
+    private volatile SSLContext sslContext;
+    private volatile long loadedAtNanos;
 
     @Override
     public void init(Properties properties) throws Exception {
+        this.properties = properties;
+        String duration = properties.getProperty("keyMaterialDuration");
+        keyMaterialDuration = duration == null || duration.isBlank() ? null : Duration.parse(duration.trim());
+        load();
+    }
+
+    @Override
+    public SSLContext getSSLContext() {
+        if (keyMaterialDuration != null && System.nanoTime() - loadedAtNanos > keyMaterialDuration.toNanos()) {
+            synchronized (this) {
+                if (System.nanoTime() - loadedAtNanos > keyMaterialDuration.toNanos()) {
+                    try {
+                        load();
+                    } catch (Exception e) {
+                        // keep the current key material; try again after another period
+                        loadedAtNanos = System.nanoTime();
+                        throw new IllegalStateException("Reading the key or trust store failed", e);
+                    }
+                }
+            }
+        }
+        return sslContext;
+    }
+
+    private void load() throws GeneralSecurityException, IOException {
         KeyManager[] keyManagers = keyManagers(properties);
         TrustManager[] trustManagers = trustManagers(properties);
         SSLContext context = SSLContext.getInstance(properties.getProperty("protocol", "TLS"));
         context.init(keyManagers, trustManagers, null);
         sslContext = context;
-    }
-
-    @Override
-    public SSLContext getSSLContext() {
-        return sslContext;
+        loadedAtNanos = System.nanoTime();
     }
 
     private static KeyManager[] keyManagers(Properties properties) throws GeneralSecurityException, IOException {

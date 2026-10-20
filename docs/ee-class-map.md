@@ -7,7 +7,7 @@ public documentation only (clean-room policy, CONTRIBUTING §1); their behaviour
 
 | Name in a Hazelcast Enterprise configuration | Hecaton class | Since | Notes |
 |---|---|---|---|
-| `com.hazelcast.nio.ssl.BasicSSLContextFactory` | `uk.org.hecaton.nio.ssl.BasicSSLContextFactory` | M3 | The default SSL factory when `factory-class-name` is not set. Properties: `keyStore`, `keyStorePassword`, `keyStoreType` (default `JKS`, which also reads PKCS#12), `keyManagerAlgorithm`, `trustStore`, `trustStorePassword`, `trustStoreType`, `trustManagerAlgorithm`, `protocol` (default `TLS`). Per connection: `ciphersuites`, `protocols`, `mutualAuthentication` (`REQUIRED`/`OPTIONAL`), `validateIdentity`; `handshakeTimeoutSeconds` (Hecaton, default 10) closes connections that do not complete the handshake. A member needs `keyStore`. |
+| `com.hazelcast.nio.ssl.BasicSSLContextFactory` | `uk.org.hecaton.nio.ssl.BasicSSLContextFactory` | M3 | The default SSL factory when `factory-class-name` is not set. Properties: `keyStore`, `keyStorePassword`, `keyStoreType` (default `JKS`, which also reads PKCS#12), `keyManagerAlgorithm`, `trustStore`, `trustStorePassword`, `trustStoreType`, `trustManagerAlgorithm`, `protocol` (default `TLS`), `keyMaterialDuration` (ISO-8601, e.g. `PT1H`: re-read the stores after that long, for certificate renewal without restart). Per connection: `ciphersuites`, `protocols`, `mutualAuthentication` (`REQUIRED`/`OPTIONAL`), `validateIdentity`; `handshakeTimeoutSeconds` (Hecaton, default 10) closes connections that do not complete the handshake. A member needs `keyStore`. |
 
 Not provided yet: `com.hazelcast.nio.ssl.OpenSSLEngineFactory` (planned with F1, optional
 netty-tcnative), the login modules and credential factories (F2, M3).
