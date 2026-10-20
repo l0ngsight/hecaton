@@ -16,53 +16,47 @@
 
 import uk.org.hecaton.client.HecatonClient;
 import uk.org.hecaton.client.config.ClientConfig;
-import uk.org.hecaton.config.Config;
-import uk.org.hecaton.config.JoinConfig;
-import uk.org.hecaton.core.Hecaton;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.map.IMap;
 
 /**
  * Smoke test for the Hecaton client library on the JDK it runs on (CI matrix: 17, 21, 25).
- * Starts one member and one client in this JVM and round-trips a map entry.
+ * Connects to a member of cluster {@code client-smoke} at the given address (which runs on
+ * Java 25, see tools/ci/client-tests.sh), writes a map entry with one client and reads it with
+ * another.
  *
- * <pre>java -cp hecaton/target/hecaton-VERSION.jar tools/ci/ClientSmoke.java</pre>
+ * <pre>java -cp hecaton/target/hecaton-VERSION.jar tools/ci/ClientSmoke.java HOST:PORT</pre>
  *
  * Source-file mode keeps this runnable on JDK 17 without a build step.
  */
 public class ClientSmoke {
 
     public static void main(String[] args) {
-        String cluster = "client-smoke";
-        Config config = new Config().setClusterName(cluster);
-        JoinConfig join = config.getNetworkConfig().getJoin();
-        join.getMulticastConfig().setEnabled(false);
-        join.getAutoDetectionConfig().setEnabled(false);
-
-        HecatonInstance member = Hecaton.newHecatonInstance(config);
+        HecatonInstance writer = client(args[0]);
+        HecatonInstance reader = client(args[0]);
         int exitCode = 1;
         try {
-            int port = member.getCluster().getLocalMember().getAddress().getPort();
-            ClientConfig clientConfig = new ClientConfig().setClusterName(cluster);
-            clientConfig.getNetworkConfig().addAddress("127.0.0.1:" + port);
-            HecatonInstance client = HecatonClient.newHecatonClient(clientConfig);
-            try {
-                IMap<String, String> map = client.getMap("smoke");
-                map.put("key", "value");
-                String fromMember = member.<String, String>getMap("smoke").get("key");
-                if (!"value".equals(fromMember)) {
-                    throw new AssertionError("expected 'value' on the member, got " + fromMember);
-                }
-                System.out.println("Client smoke test passed: Hecaton "
-                        + BuildInfoProvider.getBuildInfo().getVersion() + " on Java " + Runtime.version());
-                exitCode = 0;
-            } finally {
-                client.shutdown();
+            IMap<String, String> map = writer.getMap("smoke");
+            map.put("key", "value");
+            String read = reader.<String, String>getMap("smoke").get("key");
+            if (!"value".equals(read)) {
+                throw new AssertionError("expected 'value', read " + read);
             }
+            System.out.println("Client smoke test passed: Hecaton "
+                    + BuildInfoProvider.getBuildInfo().getProductVersion() + " client on Java " + Runtime.version());
+            exitCode = 0;
         } finally {
-            member.shutdown();
+            writer.shutdown();
+            reader.shutdown();
         }
         System.exit(exitCode);
+    }
+
+    private static HecatonInstance client(String address) {
+        ClientConfig config = new ClientConfig().setClusterName("client-smoke");
+        config.getNetworkConfig().addAddress(address);
+        config.getConnectionStrategyConfig().getConnectionRetryConfig().setClusterConnectTimeoutMillis(120_000);
+        return HecatonClient.newHecatonClient(config);
     }
 }

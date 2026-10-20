@@ -209,6 +209,7 @@ public class Node {
 
     @SuppressWarnings({"checkstyle:executablestatementcount", "checkstyle:methodlength"})
     public Node(HecatonInstanceImpl hecatonInstance, Config staticConfig, NodeContext nodeContext) {
+        MemberJavaVersion.check();
         this.properties = new HecatonProperties(staticConfig);
         DynamicConfigurationAwareConfig config = new DynamicConfigurationAwareConfig(staticConfig, this.properties);
         this.hecatonInstance = hecatonInstance;
