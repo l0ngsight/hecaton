@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           http://www.hazelcast.com/schema/config/hazelcast-config-5.7.xsd">
+
+    <cluster-name>migration-test</cluster-name>
+
+    <properties>
+        <property name="hazelcast.logging.type">jdk</property>
+        <property name="hazelcast.shutdownhook.enabled">false</property>
+    </properties>
+
+    <network>
+        <port auto-increment="true">5901</port>
+        <join>
+            <multicast enabled="false"/>
+            <tcp-ip enabled="true">
+                <member>127.0.0.1:5901</member>
+            </tcp-ip>
+        </join>
+    </network>
+
+    <!-- The application's own name: stays as it is -->
+    <map name="hazelcast-counters">
+        <backup-count>0</backup-count>
+    </map>
+</hazelcast>

@@ -8,6 +8,7 @@ replication, and more. Cloud-provider integrations (AWS, Azure, GCP) are not inc
 
 - [Specification](docs/SPEC.md)
 - [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
+- [Migrating from Hazelcast](docs/migration.md) and [changes from Hazelcast](docs/changes-from-hazelcast.md)
 
 Status: M1 (renamed code base) in progress on `feature/m1-rebranded-ce`.
 

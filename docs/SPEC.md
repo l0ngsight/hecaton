@@ -171,16 +171,29 @@ Principles:
 
 ## 5. Rebranding & migration contract
 
-A versioned **rename table** (`tools/rebrand/rename-table.yaml`) describes every rename. It
-produced the fork once (`tools/rebrand` on the 5.7.0 sources, §9) and now drives the user
-migration tooling: an **OpenRewrite recipe** `uk.org.hecaton.migrate.FromHazelcast` and a
-standalone `hecaton-migrate` CLI for non-Java files, which reuses the `tools/rebrand`
-text engine.
+A **rename table** (`tools/rebrand/rename-table.yaml`) produced the fork once
+(`tools/rebrand` on the 5.7.0 sources, §9). Applications migrate with two tools that apply
+the same rules:
 
-Because the fork and the tooling come from one table, "simple rename" holds by
-construction for the 5.7 API. Later Hecaton API changes must keep the contract: the
-migration acceptance test (§5.5) guards it, and anything that cannot be renamed
-mechanically is listed in `docs/changes-from-hazelcast.md`.
+- the **OpenRewrite recipe** `uk.org.hecaton.migrate.FromHazelcast`
+  (`hecaton-migrate-rewrite`) for Java code and Maven/Gradle builds. It finds the
+  `com.hazelcast` types, methods and constants an application uses and derives each
+  Hecaton name with the fork's rules (package prefix swap, "Hazelcast" → "Hecaton" in
+  identifiers), so no list of renamed API has to be maintained;
+- the **`hecaton-migrate` CLI** for configuration, properties, environment, container,
+  Kubernetes and script files.
+
+The fork's catch-all `hazelcast` → `hecaton` text rule is not applied to applications: it
+would also rename an application's own names (a map called `hazelcast.sessions`) in
+configuration but not in code. The tools rename only names Hecaton reads: those in the
+tables below, plus property keys and file names found as string literals in the Hecaton
+sources (`known-names.txt`, kept current by a test). String literals in Java code get the
+same rules as configuration files. Remaining mentions of Hazelcast are reported for review.
+
+Because the fork and the tools share these rules, "simple rename" holds by construction for
+the 5.7 API. Later Hecaton API changes must keep the contract: the migration acceptance
+test (§5.5) guards it, and anything that cannot be renamed mechanically is listed in
+`docs/changes-from-hazelcast.md`.
 
 ### 5.1 Java
 
@@ -239,10 +252,13 @@ These carry no brand and appear in user data.
 
 ### 5.5 Migration acceptance test
 
-CI keeps a set of sample applications (embedded member, client, Spring Boot, Jet pipeline,
-an EE-style config using TLS + security + WAN + persistence). For each one, CI runs the
-OpenRewrite recipe and the CLI, builds, and runs the app against a Hecaton cluster. **The
-only allowed diff is what the tooling produced.**
+CI keeps a set of sample applications under `migration-tests/` (embedded member, client,
+Spring Boot, Jet pipeline, an EE-style config using TLS + security + WAN + persistence).
+Each has the Hazelcast application (`before/`) and the reviewed result of migrating it
+(`expected/`). For each one, CI runs the app against Hazelcast 5.7, runs the OpenRewrite
+recipe and the CLI on a copy, requires the result to equal `expected/`, then builds and
+runs the migrated app against Hecaton. **The only allowed diff is what the tooling
+produced.**
 
 ---
 
@@ -402,7 +418,7 @@ from then on:
   public CVEs and advisories for issues in inherited code, and ships patch releases.
 - **Tools that only existed for syncing** (snapshot import, rebrand determinism job,
   upstream test suite in the nightly, `docs/upstream-patches.md` budget) are retired. The
-  rebrand engine and rename table stay as the base of the migration tooling (§5).
+  rename table stays as the record of the fork; the migration tools apply its rules (§5).
 
 ## 10. Quality requirements
 

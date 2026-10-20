@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: embedded-member
+spec:
+  serviceName: embedded-member
+  replicas: 3
+  selector:
+    matchLabels:
+      app: embedded-member
+  template:
+    metadata:
+      labels:
+        app: embedded-member
+        hazelcast.com/service-per-pod: "true"
+    spec:
+      containers:
+        - name: app
+          image: example/embedded-member:1.0
+          env:
+            - name: HC_NETWORK_JOIN_KUBERNETES_ENABLED
+              value: "true"
+            - name: JAVA_OPTS
+              value: "-Dhecaton.config=/opt/app/hecaton.xml"

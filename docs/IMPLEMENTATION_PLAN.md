@@ -175,12 +175,13 @@ Est.: 2 ew.
 
 ### 1.5 Migration tooling (§5)
 
-| Deliverable | Work |
-|---|---|
-| `hecaton-migrate-rewrite` | OpenRewrite recipe `uk.org.hecaton.migrate.FromHazelcast`, generated from `rename-table.yaml`: `ChangePackage`, `ChangeType`, `ChangeMethodName`, Maven/Gradle dependency changes, Spring property keys. |
-| `hecaton-migrate` CLI | Non-Java files: config XML/YAML, `.properties`, env files, Dockerfiles, Helm/K8s manifests, shell scripts. Dry-run diff mode. |
-| `hecaton-migrate data` | Client-based copier (Hazelcast cluster → Hecaton cluster) for IMap/ICache/MultiMap/ReplicatedMap, using official Hazelcast client + Hecaton client in one JVM. |
-| Acceptance | The §5.5 sample apps under `migration-tests/`. CI fails if anything beyond tool output had to change. |
+| Deliverable | Work | Status |
+|---|---|---|
+| `hecaton-migrate-rewrite` | OpenRewrite recipe `uk.org.hecaton.migrate.FromHazelcast`: renames the `com.hazelcast` types, methods and constants an application uses (derived with the fork's rules, not from a list), string literals with the CLI's rules, Maven/Gradle dependencies. | Done |
+| `hecaton-migrate` CLI | Non-Java files: config XML/YAML, `.properties`, env files, Dockerfiles, Helm/K8s manifests, shell scripts; default config file names. Dry run by default, `--apply`, `--check`. Only names Hecaton reads are renamed (spec §5). | Done |
+| Acceptance | `migration-tests/` samples, run by the `migration` CI job (`tools/ci/migration-tests.sh`). | Embedded member and client + Jet + SQL done; Spring Boot after `HecatonAutoConfiguration` (1.9); EE-style config once those features exist (M3+). |
+| `hecaton-migrate data` | Client-based copier (Hazelcast cluster → Hecaton cluster) for IMap/ICache/MultiMap/ReplicatedMap, using official Hazelcast client + Hecaton client in one JVM. | Open |
+| Gradle | The recipe changes Gradle dependencies, but no test or sample covers it yet. | Open |
 
 Est.: 2.5 ew.
 
@@ -398,7 +399,9 @@ Budget: ~1 ew per month, more after 1.0.
      renamed, 0 leftovers); renamed baseline merged and building on JDK 25; nightly suite
      with a frozen 5.7.0 baseline (73,584 tests, no untriaged failures); client smoke tests
      on JDK 17/21/25; REST `/hazelcast` alias; Kafka Connect test downloads off Hazelcast's
-     servers; sync tooling retired (1.8); cloud-provider support removed (1.6);
-   - next: migration tooling (1.5), official-client compat tests (1.4), the open items in
-     1.9 (Spring Boot auto-configuration first), tag `v0.1.0`.
+     servers; sync tooling retired (1.8); cloud-provider support removed (1.6); phone home
+     removed; migration recipe, CLI and acceptance samples (1.5);
+   - next: official-client compat tests (1.4), the open items in 1.9 (Spring Boot
+     auto-configuration first, then its migration sample), `hecaton-migrate data` (1.5),
+     tag `v0.1.0`.
 3. **M2 Core cleanup**, then M3–M7 in parallel.
