@@ -120,6 +120,7 @@ import uk.org.hecaton.partition.PartitioningStrategy;
 import uk.org.hecaton.partition.strategy.DefaultPartitioningStrategy;
 import uk.org.hecaton.security.SecurityService;
 import uk.org.hecaton.security.impl.InternalSecurityContext;
+import uk.org.hecaton.security.impl.PermissionSyncService;
 import uk.org.hecaton.security.impl.SecurityContextImpl;
 import uk.org.hecaton.security.impl.SecurityServiceImpl;
 import uk.org.hecaton.spi.impl.NodeEngine;
@@ -134,7 +135,6 @@ import uk.org.hecaton.wan.impl.WanReplicationService;
 import uk.org.hecaton.wan.impl.WanReplicationServiceImpl;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -476,13 +476,15 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public Map<String, Object> createExtensionServices() {
+        Map<String, Object> services = new HashMap<>();
         if (jetServiceBackend != null) {
-            Map<String, Object> services = new HashMap<>();
             services.put(JetServiceBackend.SERVICE_NAME, jetServiceBackend);
             services.put(JobEventService.SERVICE_NAME, new JobEventService(node.getNodeEngine()));
-            return services;
         }
-        return Collections.emptyMap();
+        if (node.getConfig().getSecurityConfig().isEnabled()) {
+            services.put(PermissionSyncService.SERVICE_NAME, new PermissionSyncService(node));
+        }
+        return services;
     }
 
     @Override

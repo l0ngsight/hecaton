@@ -30,6 +30,7 @@ import uk.org.hecaton.security.IPermissionPolicy;
 import uk.org.hecaton.security.Parameters;
 import uk.org.hecaton.security.SecureCallable;
 import uk.org.hecaton.security.SecurityInterceptor;
+import uk.org.hecaton.security.UsernamePasswordCredentials;
 import uk.org.hecaton.sql.impl.security.SqlSecurityContext;
 
 import javax.annotation.Nonnull;
@@ -80,7 +81,7 @@ public class SecurityContextImpl implements InternalSecurityContext {
         this.permissionPolicy = createPermissionPolicy();
         this.interceptors = createInterceptors();
         ICredentialsFactory factory = securityConfig.getRealmCredentialsFactory(securityConfig.getMemberRealm());
-        // without an identity, the member presents no credentials
+        // without an identity, the member presents empty credentials
         this.credentialsFactory = factory == null ? new NoCredentialsFactory() : factory;
         credentialsFactory.configure(new SecurityCallbackHandler(node, this, node.getConfig().getClusterName(), null, null,
                 () -> null));
@@ -145,9 +146,9 @@ public class SecurityContextImpl implements InternalSecurityContext {
         return null;
     }
 
-    /** This member's own credentials, from its member realm's identity. */
+    /** This member's own credentials, from its member realm's identity, or {@code null} if it has none. */
     Credentials memberIdentity() {
-        return credentialsFactory.newCredentials();
+        return credentialsFactory instanceof NoCredentialsFactory ? null : credentialsFactory.newCredentials();
     }
 
     @Override
@@ -282,7 +283,10 @@ public class SecurityContextImpl implements InternalSecurityContext {
         return List.copyOf(list);
     }
 
-    /** The identity of a member realm without one. */
+    /**
+     * The identity of a member realm without one: empty credentials, since joining requires
+     * some (only the cluster name is checked then).
+     */
     private static final class NoCredentialsFactory implements ICredentialsFactory {
 
         @Override
@@ -291,7 +295,7 @@ public class SecurityContextImpl implements InternalSecurityContext {
 
         @Override
         public Credentials newCredentials() {
-            return null;
+            return new UsernamePasswordCredentials(null, null);
         }
 
         @Override

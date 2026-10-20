@@ -19,6 +19,7 @@ import uk.org.hecaton.client.HecatonClient;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.JoinConfig;
+import uk.org.hecaton.config.OnJoinPermissionOperationName;
 import uk.org.hecaton.config.PermissionConfig;
 import uk.org.hecaton.config.PermissionConfig.PermissionType;
 import uk.org.hecaton.config.SSLConfig;
@@ -42,10 +43,12 @@ import org.junit.runner.RunWith;
 
 import java.nio.file.Path;
 import java.security.AccessControlException;
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static uk.org.hecaton.test.Accessors.getNode;
 
 /**
  * Authentication (F2) and client permissions (F3).
@@ -138,6 +141,40 @@ public class SecurityTest extends HecatonTestSupport {
         assertThatThrownBy(() -> Hecaton.newHecatonInstance(memberIdentityConfig("guess")))
                 .isInstanceOf(IllegalStateException.class);
         assertClusterSize(2, member1);
+    }
+
+    @Test
+    public void joiningMemberReceivesTheClustersPermissions() {
+        Config config1 = memberConfig();
+        config1.getSecurityConfig().addClientPermissionConfig(permission(PermissionType.MAP, "a", "*", "read"));
+        HecatonInstance member1 = Hecaton.newHecatonInstance(config1);
+        Config config2 = memberConfig();
+        config2.getSecurityConfig().addClientPermissionConfig(permission(PermissionType.MAP, "b", "*", "read"));
+        HecatonInstance member2 = Hecaton.newHecatonInstance(config2);
+        assertClusterSizeEventually(2, member1, member2);
+
+        assertTrueEventually(() -> assertThat(permissionNames(member2)).containsExactly("a"));
+        assertThat(permissionNames(member1)).containsExactly("a");
+    }
+
+    @Test
+    public void joiningMemberCanSendItsPermissions() {
+        Config config1 = memberConfig();
+        config1.getSecurityConfig().addClientPermissionConfig(permission(PermissionType.MAP, "a", "*", "read"));
+        HecatonInstance member1 = Hecaton.newHecatonInstance(config1);
+        Config config2 = memberConfig();
+        config2.getSecurityConfig().setOnJoinPermissionOperation(OnJoinPermissionOperationName.SEND)
+                .addClientPermissionConfig(permission(PermissionType.MAP, "b", "*", "read"));
+        HecatonInstance member2 = Hecaton.newHecatonInstance(config2);
+        assertClusterSizeEventually(2, member1, member2);
+
+        assertTrueEventually(() -> assertThat(permissionNames(member1)).containsExactly("b"));
+        assertThat(permissionNames(member2)).containsExactly("b");
+    }
+
+    private static List<String> permissionNames(HecatonInstance member) {
+        return ((SecurityContextImpl) getNode(member).securityContext).getClientPermissions().stream()
+                .map(PermissionConfig::getName).toList();
     }
 
     @Test
