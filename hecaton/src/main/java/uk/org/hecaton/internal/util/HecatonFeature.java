@@ -27,7 +27,7 @@ package uk.org.hecaton.internal.util;
 public enum HecatonFeature {
 
     /** F1. */
-    TLS("F1", "TLS/SSL", "M3"),
+    TLS("F1", "TLS/SSL", "M3", null, true),
     /** F2, F3: authentication and authorization ({@code SecurityConfig}). */
     SECURITY("F2/F3", "Security (authentication and authorization)", "M3"),
     /** F4. */
@@ -75,21 +75,27 @@ public enum HecatonFeature {
     private final String displayName;
     private final String milestone;
     private final String alternative;
+    private final boolean available;
 
     HecatonFeature(String id, String displayName, String milestone) {
-        this(id, displayName, milestone, null);
+        this(id, displayName, milestone, null, false);
     }
 
     HecatonFeature(String id, String displayName, String milestone, String alternative) {
+        this(id, displayName, milestone, alternative, false);
+    }
+
+    HecatonFeature(String id, String displayName, String milestone, String alternative, boolean available) {
         this.id = id;
         this.displayName = displayName;
         this.milestone = milestone;
         this.alternative = alternative;
+        this.available = available;
     }
 
     /** Whether Hecaton implements the feature. */
     public boolean isAvailable() {
-        return false;
+        return available;
     }
 
     /** The spec ID, such as {@code F1}. */

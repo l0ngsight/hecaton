@@ -734,6 +734,13 @@
         <!-- Tests like CacheExpiryTest won't work if it's not provided, -->
         <!-- although javax.cache does not declare dependency -->
         <dependency>
+            <!-- generates the CA and certificates for the TLS tests -->
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>1.82</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-core</artifactId>
             <version>3.0</version>

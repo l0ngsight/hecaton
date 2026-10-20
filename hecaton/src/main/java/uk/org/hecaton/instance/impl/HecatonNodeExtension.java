@@ -89,6 +89,7 @@ import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.networking.InboundHandler;
 import uk.org.hecaton.internal.networking.OutboundHandler;
 import uk.org.hecaton.internal.nio.ClassLoaderUtil;
+import uk.org.hecaton.internal.nio.ssl.SSLEngineFactories;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.serialization.SerializationServiceBuilder;
 import uk.org.hecaton.internal.serialization.impl.CodebaseClusterVersionAware;
@@ -730,7 +731,7 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public SSLEngineFactory createSslEngineFactory(SSLConfig sslConfig) {
-        throw new IllegalStateException(HecatonFeature.TLS.notAvailableMessage());
+        return SSLEngineFactories.create(sslConfig, false, node.getConfigClassLoader());
     }
 
     @Override
