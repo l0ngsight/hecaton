@@ -29,7 +29,9 @@ public enum HecatonFeature {
     /** F1. */
     TLS("F1", "TLS/SSL", "M3", null, true),
     /** F2, F3: authentication and authorization ({@code SecurityConfig}). */
-    SECURITY("F2/F3", "Security (authentication and authorization)", "M3"),
+    SECURITY("F2/F3", "Security (authentication and authorization)", "M3", null, true),
+    /** F2 (P1): LDAP and Kerberos realms. */
+    LDAP_KERBEROS_AUTHENTICATION("F2", "LDAP and Kerberos authentication", "M9"),
     /** F4. */
     AUDIT_LOG("F4", "Audit log", "M9"),
     /** F5. */

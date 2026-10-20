@@ -29,23 +29,26 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import static uk.org.hecaton.test.Accessors.getNode;
 import static uk.org.hecaton.test.Accessors.getSerializationService;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @RunWith(HecatonParallelClassRunner.class)
 @Category({QuickTest.class, ParallelJVMTest.class})
 public class SecurityWithoutEnterpriseTest extends HecatonTestSupport {
 
     @Test
-    public void test() {
+    public void securityIsAvailable() {
         SecurityConfig securityConfig = new SecurityConfig()
                 .setEnabled(true);
 
-        Config config = new Config()
+        Config config = smallInstanceConfig()
                 .setSecurityConfig(securityConfig);
 
-        assertThrows(IllegalStateException.class, () -> createHecatonInstance(config));
+        HecatonInstance hz = createHecatonInstance(config);
+        assertNotNull(getNode(hz).securityContext);
     }
 
     @Test

@@ -36,6 +36,7 @@ import uk.org.hecaton.config.SecurityConfig;
 import uk.org.hecaton.config.SerializationConfig;
 import uk.org.hecaton.config.SymmetricEncryptionConfig;
 import uk.org.hecaton.config.cp.CPSubsystemConfig;
+import uk.org.hecaton.config.security.RealmConfig;
 import uk.org.hecaton.core.HecatonInstanceAware;
 import uk.org.hecaton.core.HecatonInstanceNotActiveException;
 import uk.org.hecaton.cp.CPSubsystem;
@@ -117,7 +118,10 @@ import uk.org.hecaton.nio.MemberSocketInterceptor;
 import uk.org.hecaton.nio.ssl.SSLEngineFactory;
 import uk.org.hecaton.partition.PartitioningStrategy;
 import uk.org.hecaton.partition.strategy.DefaultPartitioningStrategy;
+import uk.org.hecaton.security.SecurityService;
 import uk.org.hecaton.security.impl.InternalSecurityContext;
+import uk.org.hecaton.security.impl.SecurityContextImpl;
+import uk.org.hecaton.security.impl.SecurityServiceImpl;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.eventservice.impl.EventServiceImpl;
@@ -217,8 +221,12 @@ public class HecatonNodeExtension implements NodeExtension {
 
     private void checkSecurityAllowed() {
         SecurityConfig securityConfig = node.getConfig().getSecurityConfig();
-        if (securityConfig != null && securityConfig.isEnabled() && !HecatonFeature.SECURITY.isAvailable()) {
-            throw new IllegalStateException(HecatonFeature.SECURITY.notAvailableMessage());
+        if (securityConfig != null && securityConfig.isEnabled()) {
+            for (RealmConfig realm : securityConfig.getRealmConfigs().values()) {
+                if (realm.getLdapAuthenticationConfig() != null || realm.getKerberosAuthenticationConfig() != null) {
+                    throw new IllegalStateException(HecatonFeature.LDAP_KERBEROS_AUTHENTICATION.notAvailableMessage());
+                }
+            }
         }
         SymmetricEncryptionConfig symmetricEncryptionConfig =
                 getActiveMemberNetworkConfig(node.getConfig()).getSymmetricEncryptionConfig();
@@ -349,14 +357,18 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public InternalSecurityContext getSecurityContext() {
-        logger.warning(HecatonFeature.SECURITY.notAvailableMessage());
-        return null;
+        return new SecurityContextImpl(node);
     }
 
     @Nullable
     @Override
     public InternalSecurityContext getSecurityContextOrNull() {
-        return null;
+        return node.securityContext instanceof InternalSecurityContext context ? context : null;
+    }
+
+    @Override
+    public SecurityService getSecurityService() {
+        return node.getConfig().getSecurityConfig().isEnabled() ? new SecurityServiceImpl(node) : null;
     }
 
     @Override

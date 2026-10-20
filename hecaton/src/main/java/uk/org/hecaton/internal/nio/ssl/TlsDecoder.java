@@ -21,6 +21,7 @@ import uk.org.hecaton.internal.networking.InboundHandler;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSession;
 import java.io.EOFException;
 import java.nio.ByteBuffer;
 
@@ -82,6 +83,8 @@ public class TlsDecoder extends InboundHandler<ByteBuffer, ByteBuffer> {
                 switch (result.getStatus()) {
                     case OK:
                         if (result.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.FINISHED) {
+                            // for authentication by client certificate
+                            channel.attributeMap().put(SSLSession.class, engine.getSession());
                             // application data the encoder holds back can go now
                             channel.outboundPipeline().wakeup();
                         }
