@@ -30,11 +30,9 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration(proxyBeanMethods = false)
 @AutoConfiguration
-@AutoConfigureAfter(name = {
-        // Boot 3.x, avoid direct class usage due to JavaDoc generation error - it does not see actuator 3.x when
-        // applying javadoc:aggregate, as it sees 4.x from the boot 4 module.
-        "org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration",
-        "uk.org.hecaton.spring.HecatonExposeObjectRegistrar" })
+@AutoConfigureAfter({
+        HecatonAutoConfiguration.class,
+        uk.org.hecaton.spring.HecatonExposeObjectRegistrar.class })
 @Import(HecatonObjectExtractionConfiguration.class)
 public class HecatonBoot3ObjectExtractionAutoConfiguration implements InitializingBean {
 

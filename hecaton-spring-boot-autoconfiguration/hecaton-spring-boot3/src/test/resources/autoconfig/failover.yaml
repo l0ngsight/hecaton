@@ -1,0 +1,4 @@
+hecaton-client-failover:
+  try-count: 1
+  clients:
+    - classpath:autoconfig/no-such-client.yaml

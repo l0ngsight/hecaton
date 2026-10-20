@@ -36,6 +36,13 @@ The recipe:
 Your own names are left alone: a variable called `hazelcastInstance` or a map called
 `"hazelcast-sessions"` keeps its name. Comments are not changed.
 
+**Spring Boot:** Spring Boot's built-in Hazelcast support only recognises `com.hazelcast`, so
+add Hecaton's auto-configuration for your Spring Boot version, `uk.org.hecaton:hecaton-spring-boot4`
+(or `hecaton-spring-boot3`). It creates the `HecatonInstance` bean the same way: from a
+`Config` or `ClientConfig` bean, from `spring.hecaton.config` (renamed from
+`spring.hazelcast.config` by `hecaton-migrate`), or from a default `hecaton.xml`/`.yaml` or
+`hecaton-client.xml`/`.yaml`.
+
 ## 2. Configuration and other files
 
 ```sh

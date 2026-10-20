@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.org.hecaton.spring.boot;
+package uk.org.hecaton.spring.boot3.app;
 
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.spring.ConfigCreator;

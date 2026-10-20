@@ -1,0 +1,9 @@
+hecaton:
+  cluster-name: autoconfig-yaml
+  network:
+    port:
+      port: 5981
+      auto-increment: true
+    join:
+      multicast:
+        enabled: false

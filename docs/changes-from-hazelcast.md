@@ -19,6 +19,7 @@ can observe (API, config, wire, REST, metrics, file names, behaviour).
 | External integrations | `hazelcast-hibernate53`, `hazelcast-wm` (separate Hazelcast projects) | Not available; they are built against `com.hazelcast` | 0.1.0 |
 | REST paths | `/hazelcast/rest/...`, `/hazelcast/health/...` | `/hecaton/...`; the `/hazelcast/...` paths are still served as aliases | 0.1.0 |
 | SQL catalog name | `hazelcast` | `hecaton` (only fully qualified names `hazelcast.public.x` change) | 0.1.0 |
+| Spring Boot | Spring Boot's built-in Hazelcast auto-configuration creates the instance (`spring.hazelcast.config`) | Spring Boot's built-in support only knows `com.hazelcast`. Add `hecaton-spring-boot3` or `hecaton-spring-boot4`, whose `HecatonAutoConfiguration` does the same from a `Config`/`ClientConfig` bean, `spring.hecaton.config` or a default `hecaton.xml`/`hecaton-client.xml` (YAML too) | 0.1.0 |
 | Member protocol | Members open connections with `HZC` | `HCC`. A Hazelcast member cannot join a Hecaton cluster: its connections are closed and the Hecaton member logs a warning. Clients are not affected (`CP2` is unchanged) | 0.1.0 |
 | Usage reporting ("phone home") | Members send usage statistics to `phonehome.hazelcast.com` once a day and probe cloud metadata endpoints to detect the environment; `hazelcast.phone.home.enabled` / `HZ_PHONE_HOME_ENABLED` turn it off | Removed: members send nothing anywhere. `hecaton.phone.home.enabled` is ignored | 0.1.0 |
 

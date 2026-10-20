@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.org.hecaton.spring.boot;
+package uk.org.hecaton.spring.boot3.app;
 
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.core.HecatonInstance;

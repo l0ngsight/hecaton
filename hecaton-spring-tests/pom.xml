@@ -172,14 +172,6 @@
                     <name>!tested.spring.override</name>
                 </property>
             </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-hazelcast</artifactId>
-                    <version>${spring.boot4.version}</version>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
         </profile>
     </profiles>
 

@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Import;
 @Configuration(proxyBeanMethods = false)
 @AutoConfiguration
 @AutoConfigureAfter({
-        org.springframework.boot.hazelcast.autoconfigure.HazelcastAutoConfiguration.class,
+        HecatonAutoConfiguration.class,
         uk.org.hecaton.spring.HecatonExposeObjectRegistrar.class })
 @Import(HecatonObjectExtractionConfiguration.class)
 public class HecatonBoot4ObjectExtractionAutoConfiguration implements InitializingBean {
