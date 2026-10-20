@@ -445,7 +445,7 @@ public class ClusterWideConfigurationService implements
     public void persist(Object subConfig) {
         if (nodeEngine.getConfig().getDynamicConfigurationConfig().isPersistenceEnabled()) {
             // Code should never come here. We should fast fail in
-            // DefaultNodeExtension#checkDynamicConfigurationPersistenceAllowed()
+            // HecatonNodeExtension#checkDynamicConfigurationPersistenceAllowed()
             throw new UnsupportedOperationException(HecatonFeature.DYNAMIC_CONFIGURATION_PERSISTENCE.notAvailableMessage());
         }
     }

@@ -22,7 +22,7 @@ import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.core.HecatonInstanceNotActiveException;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.longregister.LongRegisterService;
 import uk.org.hecaton.internal.longregister.operations.AddAndGetOperation;
@@ -362,7 +362,7 @@ public class AdvancedClusterStateTest extends HecatonTestSupport {
     public void changeClusterState_shouldFail_whenStartupIsNotCompleted() throws Exception {
         AtomicBoolean startupDone = new AtomicBoolean();
         HecatonInstance instance = createHecatonInstanceFactory()
-                .withNodeExtensionCustomizer(node -> new DefaultNodeExtension(node) {
+                .withNodeExtensionCustomizer(node -> new HecatonNodeExtension(node) {
                     @Override
                     public boolean isStartCompleted() {
                         return startupDone.get() && super.isStartCompleted();

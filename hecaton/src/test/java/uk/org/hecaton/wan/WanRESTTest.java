@@ -62,7 +62,7 @@ public class WanRESTTest extends HecatonTestSupport {
     public void setupFactoryAndMock() {
         wanServiceMock = mock(WanReplicationService.class);
         factory = new TestHecatonInstanceFactory().withNodeExtensionCustomizer(
-                node -> new WanServiceMockingDefaultNodeExtension(node, wanServiceMock));
+                node -> new WanServiceMockingHecatonNodeExtension(node, wanServiceMock));
     }
 
     @Test

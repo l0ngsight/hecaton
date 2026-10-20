@@ -58,12 +58,12 @@ import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 /**
- * Test DefaultNodeExtension behavior
+ * Test HecatonNodeExtension behavior
  */
 @RunWith(HecatonParametrizedRunner.class)
 @UseParametersRunnerFactory(HecatonSerialParametersRunnerFactory.class)
 @Category({QuickTest.class, ParallelJVMTest.class})
-public class DefaultNodeExtensionTest extends HecatonTestSupport {
+public class HecatonNodeExtensionTest extends HecatonTestSupport {
 
     private static final String ROLLING_UPGRADES_MESSAGE = "rolling member upgrades, F14, are planned for milestone M9";
 

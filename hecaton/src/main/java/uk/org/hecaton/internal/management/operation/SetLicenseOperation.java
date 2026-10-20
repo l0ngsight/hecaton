@@ -16,7 +16,7 @@
 
 package uk.org.hecaton.internal.management.operation;
 
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.internal.management.ManagementDataSerializerHook;
 import uk.org.hecaton.nio.ObjectDataInput;
 import uk.org.hecaton.nio.ObjectDataOutput;
@@ -39,8 +39,8 @@ public class SetLicenseOperation extends AbstractManagementOperation {
 
     @Override
     public void run() throws Exception {
-        DefaultNodeExtension nodeExtension
-                = (DefaultNodeExtension) getNodeEngine().getNode().getNodeExtension();
+        HecatonNodeExtension nodeExtension
+                = (HecatonNodeExtension) getNodeEngine().getNode().getNodeExtension();
         nodeExtension.setLicenseKey(licenseKey);
     }
 

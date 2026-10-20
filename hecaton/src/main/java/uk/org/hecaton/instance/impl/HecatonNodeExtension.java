@@ -155,7 +155,7 @@ import static uk.org.hecaton.jet.impl.util.Util.checkJetIsEnabled;
 import static uk.org.hecaton.map.impl.MapServiceConstructor.getDefaultMapServiceConstructor;
 
 @SuppressWarnings({"checkstyle:methodcount", "checkstyle:classfanoutcomplexity", "checkstyle:classdataabstractioncoupling"})
-public class DefaultNodeExtension implements NodeExtension {
+public class HecatonNodeExtension implements NodeExtension {
     private static final String PLATFORM_LOGO = """
       o    o     o     o---o   o--o o      o---o     o     o----o o--o--o
       |    |    / \\       /         |     /         / \\    |         |
@@ -178,7 +178,7 @@ public class DefaultNodeExtension implements NodeExtension {
     private final MemoryStats memoryStats = new DefaultMemoryStats();
     private final Set<Version> supportedVersions;
 
-    public DefaultNodeExtension(Node node) {
+    public HecatonNodeExtension(Node node) {
         this.node = node;
         this.logger = node.getLogger(NodeExtension.class);
         this.logoLogger = node.getLogger("uk.org.hecaton.system.logo");

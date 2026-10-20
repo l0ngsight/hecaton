@@ -18,7 +18,7 @@ package uk.org.hecaton.internal.serialization.impl.compact.schema;
 
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.core.HecatonInstance;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.serialization.impl.compact.Schema;
 import uk.org.hecaton.map.IMap;
@@ -87,7 +87,7 @@ public class CompactSchemaReplicationTestBase extends HecatonTestSupport {
         return spy(new MemberSchemaService());
     }
 
-    private static class MemberSchemaServiceMockingNodeExtension extends DefaultNodeExtension {
+    private static class MemberSchemaServiceMockingNodeExtension extends HecatonNodeExtension {
         private final MemberSchemaService schemaService;
 
         MemberSchemaServiceMockingNodeExtension(Node node, MemberSchemaService schemaService) {

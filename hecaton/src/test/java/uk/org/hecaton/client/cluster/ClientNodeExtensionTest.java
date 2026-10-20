@@ -22,7 +22,7 @@ import uk.org.hecaton.client.test.TestHecatonFactory;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.core.OperationTimeoutException;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
@@ -97,7 +97,7 @@ public class ClientNodeExtensionTest extends HecatonTestSupport {
         map.get("dummy");
     }
 
-    private static class MockNodeExtension extends DefaultNodeExtension {
+    private static class MockNodeExtension extends HecatonNodeExtension {
         private final AtomicBoolean startupDone;
 
         MockNodeExtension(Node node, boolean isStarted) {

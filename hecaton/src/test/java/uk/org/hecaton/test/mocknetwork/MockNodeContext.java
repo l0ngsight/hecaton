@@ -19,11 +19,10 @@ package uk.org.hecaton.test.mocknetwork;
 import uk.org.hecaton.internal.cluster.Joiner;
 import uk.org.hecaton.instance.AddressPicker;
 import uk.org.hecaton.instance.BuildInfoProvider;
-import uk.org.hecaton.instance.impl.DefaultNodeContext;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.instance.impl.NodeContext;
 import uk.org.hecaton.instance.impl.NodeExtension;
-import uk.org.hecaton.instance.impl.NodeExtensionFactory;
 import uk.org.hecaton.internal.server.tcp.LocalAddressRegistry;
 import uk.org.hecaton.internal.server.tcp.ServerSocketRegistry;
 import uk.org.hecaton.cluster.Address;
@@ -54,7 +53,7 @@ public class MockNodeContext implements NodeContext {
     public NodeExtension createNodeExtension(Node node) {
         return TestEnvironment.isRecordingSerializedClassNames()
                 ? constructSamplingNodeExtension(node)
-                : NodeExtensionFactory.create(node, DefaultNodeContext.EXTENSION_PRIORITY_LIST);
+                : new HecatonNodeExtension(node);
     }
 
     @Override
@@ -89,7 +88,7 @@ public class MockNodeContext implements NodeContext {
                 throw rethrow(e);
             }
         } else {
-            NodeExtension wrapped = NodeExtensionFactory.create(node, DefaultNodeContext.EXTENSION_PRIORITY_LIST);
+            NodeExtension wrapped = new HecatonNodeExtension(node);
             return new SamplingNodeExtension(wrapped);
         }
     }

@@ -21,7 +21,7 @@ import uk.org.hecaton.client.config.RoutingStrategy;
 import uk.org.hecaton.client.impl.ClientExtension;
 import uk.org.hecaton.client.impl.clientside.ClientConnectionManagerFactory;
 import uk.org.hecaton.client.impl.clientside.DefaultClientConnectionManagerFactory;
-import uk.org.hecaton.client.impl.clientside.DefaultClientExtension;
+import uk.org.hecaton.client.impl.clientside.HecatonClientExtension;
 import uk.org.hecaton.client.impl.clientside.HecatonClientInstanceImpl;
 import uk.org.hecaton.client.config.RoutingMode;
 import uk.org.hecaton.client.impl.spi.ClientProxyFactory;
@@ -53,13 +53,13 @@ public class ClientExtensionTest extends HecatonTestSupport {
 
     @Test
     public void test_createServiceProxyFactory() {
-        ClientExtension clientExtension = new DefaultClientExtension();
+        ClientExtension clientExtension = new HecatonClientExtension();
         assertInstanceOf(ClientProxyFactory.class, clientExtension.createServiceProxyFactory(MapService.class));
     }
 
     @Test
     public void test_createServiceProxyFactory_whenUnknownServicePassed() {
-        ClientExtension clientExtension = new DefaultClientExtension();
+        ClientExtension clientExtension = new HecatonClientExtension();
         assertThatThrownBy(() -> clientExtension.createServiceProxyFactory(TestService.class))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Proxy factory cannot be created. Unknown service");
@@ -70,7 +70,7 @@ public class ClientExtensionTest extends HecatonTestSupport {
         String expectedMsg = HecatonFeature.MULTI_MEMBER_ROUTING.notAvailableMessage();
         try (var classLoader = new URLClassLoader(new URL[0])) {
             ClientConfig clientConfig = new ClientConfig();
-            // avoid loading anything but DefaultClientExtension
+            // avoid loading anything but HecatonClientExtension
             clientConfig.setClassLoader(classLoader);
             clientConfig.getNetworkConfig().getClusterRoutingConfig().setRoutingMode(RoutingMode.MULTI_MEMBER)
                         .setRoutingStrategy(RoutingStrategy.PARTITION_GROUPS);
@@ -86,12 +86,12 @@ public class ClientExtensionTest extends HecatonTestSupport {
 
     @Test
     public void test_createClientClusterService() throws IOException {
-        ClientExtension clientExtension = new DefaultClientExtension();
+        ClientExtension clientExtension = new HecatonClientExtension();
         ClientConfig clientConfig = new ClientConfig();
         var addressProvider = hecatonFactory.createAddressProvider(clientConfig);
 
         try (var classLoader = new URLClassLoader(new URL[0])) {
-            // avoid loading anything but DefaultClientExtension
+            // avoid loading anything but HecatonClientExtension
             clientConfig.setClassLoader(classLoader);
             var client = new HecatonClientInstanceImpl(UUID.randomUUID().toString(),
                                                          clientConfig, null,

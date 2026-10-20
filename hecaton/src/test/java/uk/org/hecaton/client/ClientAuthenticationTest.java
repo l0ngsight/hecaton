@@ -19,7 +19,7 @@ package uk.org.hecaton.client;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.test.TestHecatonFactory;
 import uk.org.hecaton.config.Config;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.nio.serialization.DataSerializableFactory;
 import uk.org.hecaton.nio.serialization.IdentifiedDataSerializable;
 import uk.org.hecaton.security.SimpleTokenCredentials;
@@ -90,7 +90,7 @@ public class ClientAuthenticationTest extends HecatonTestSupport {
     @Test
     public void testAuthentication_with_mcModeEnabled_when_clusterStart_isNotComplete() {
         hecatonFactory
-                .withNodeExtensionCustomizer(node -> new DefaultNodeExtension(node) {
+                .withNodeExtensionCustomizer(node -> new HecatonNodeExtension(node) {
                     @Override
                     public boolean isStartCompleted() {
                         return false;

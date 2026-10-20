@@ -84,9 +84,9 @@ import static uk.org.hecaton.internal.util.InstanceTrackingUtil.writeInstanceTra
 import static uk.org.hecaton.spi.properties.ClusterProperty.SOCKET_CLIENT_BUFFER_DIRECT;
 
 @SuppressWarnings({"WeakerAccess", "checkstyle:ClassFanOutComplexity", "ClassDataAbstractionCoupling"})
-public class DefaultClientExtension implements ClientExtension {
+public class HecatonClientExtension implements ClientExtension {
 
-    protected static final ILogger LOGGER = Logger.getLogger(DefaultClientExtension.class);
+    protected static final ILogger LOGGER = Logger.getLogger(HecatonClientExtension.class);
 
     protected volatile HecatonClientInstanceImpl client;
     protected JetClientInstanceImpl jetClient;
