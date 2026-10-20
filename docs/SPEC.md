@@ -288,7 +288,7 @@ Priority: **P0** = needed for a production 1.0, **P1** = 1.x, **P2** = later.
 | F18 | **Jet: lossless restart, isolated jobs, job upgrade / exported snapshots** | `JetConfig#losslessRestartEnabled`, `JobConfig` isolated-job flags, `Job#exportSnapshot` | P2 | `checkLosslessRestartAllowed`, `JetServiceBackend` | core + `hecaton-persistence` |
 | F19 | **SQL catalog persistence** | `SqlConfig#catalogPersistenceEnabled` | P2 | `checkSqlCatalogPersistenceAllowed` | core + `hecaton-persistence` |
 | F20 | **Vector collection** (HNSW index, similarity metrics, filtering, backups) | `VectorCollectionConfig`, `VectorIndexConfig`, `com.hazelcast.vector` API | P2 | `vector` package, `VectorCollectionServiceUtil` | `hecaton-vector` (on an Apache-2.0 ANN library such as jvector) |
-| F21 | **License handling** | — | **Removed.** `license-key` is ignored, `getLicense()` returns a "community, unlimited" descriptor | `NodeExtension#getLicense` | core |
+| F21 | **License handling** | — | **Removed.** `license-key` is ignored with an INFO message; `getLicense()` returns `null` | `NodeExtension#getLicense` | core |
 | F22 | **Management Center connectivity** | — | **Out of scope** (NG3) | — | — |
 
 Every feature must:
