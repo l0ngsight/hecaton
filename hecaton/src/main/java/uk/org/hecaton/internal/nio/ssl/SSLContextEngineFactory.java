@@ -32,7 +32,8 @@ import java.util.Properties;
  * properties it reads, for every engine:
  * <ul>
  *     <li>{@code ciphersuites}, {@code protocols} – comma-separated cipher suites and protocol
- *     versions to enable (default: the JDK's);</li>
+ *     versions to enable (default: the JDK's, without CBC cipher suites, which are open to
+ *     padding-oracle attacks such as LUCKY13);</li>
  *     <li>{@code mutualAuthentication} – {@code REQUIRED} or {@code OPTIONAL}: the accepting side
  *     asks the connecting side for a certificate (default: it does not);</li>
  *     <li>{@code validateIdentity} – {@code true}: the connecting side checks that the
@@ -83,9 +84,7 @@ public class SSLContextEngineFactory implements SSLEngineFactory {
                 ? context.createSSLEngine()
                 : context.createSSLEngine(peerAddress.getHost(), peerAddress.getPort());
         engine.setUseClientMode(clientMode);
-        if (cipherSuites != null) {
-            engine.setEnabledCipherSuites(cipherSuites);
-        }
+        engine.setEnabledCipherSuites(cipherSuites != null ? cipherSuites : withoutCbc(engine.getEnabledCipherSuites()));
         if (protocols != null) {
             engine.setEnabledProtocols(protocols);
         }
@@ -101,6 +100,10 @@ public class SSLContextEngineFactory implements SSLEngineFactory {
             engine.setWantClientAuth(true);
         }
         return engine;
+    }
+
+    static String[] withoutCbc(String[] cipherSuites) {
+        return Arrays.stream(cipherSuites).filter(suite -> !suite.contains("_CBC_")).toArray(String[]::new);
     }
 
     private static String[] list(String value) {

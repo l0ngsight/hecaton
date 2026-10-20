@@ -20,6 +20,7 @@ import uk.org.hecaton.internal.networking.InboundHandler;
 
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 import java.io.EOFException;
@@ -80,6 +81,7 @@ public class TlsDecoder extends InboundHandler<ByteBuffer, ByteBuffer> {
                 plain.clear();
                 SSLEngineResult result = engine.unwrap(src, plain);
                 plain.flip();
+                checkNoRenegotiation(result);
                 switch (result.getStatus()) {
                     case OK:
                         if (result.getHandshakeStatus() == SSLEngineResult.HandshakeStatus.FINISHED) {
@@ -105,6 +107,20 @@ public class TlsDecoder extends InboundHandler<ByteBuffer, ByteBuffer> {
             }
         } finally {
             compactOrClear(src);
+        }
+    }
+
+    /**
+     * Refuses a new TLS 1.2 handshake started by the connecting side after the first one
+     * (client-initiated renegotiation), which costs the member work for nothing.
+     */
+    private void checkNoRenegotiation(SSLEngineResult result) throws SSLException {
+        HandshakeStatus status = result.getHandshakeStatus();
+        // the first handshake is done once either handler stored the session (the encoder may finish it)
+        boolean handshakeDone = channel.attributeMap().containsKey(SSLSession.class);
+        if (handshakeDone && !engine.getUseClientMode() && status != HandshakeStatus.NOT_HANDSHAKING
+                && status != HandshakeStatus.FINISHED && "TLSv1.2".equals(engine.getSession().getProtocol())) {
+            throw new SSLException("Renegotiation is not allowed");
         }
     }
 

@@ -1,0 +1,33 @@
+name: TLS conformance
+
+# Plan M3 tests: a member with TLS, scanned with testssl.sh (tools/ci/tls-conformance.sh).
+
+on:
+  schedule:
+    - cron: '13 3 * * *'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch of this repository to test'
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  testssl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || 'main' }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Build the core jar
+        run: ./mvnw -B -ntp -T 1C install -DskipTests -pl hecaton -am
+      - run: sudo apt-get install -y -q bsdextrautils dnsutils jq
+      - run: tools/ci/tls-conformance.sh

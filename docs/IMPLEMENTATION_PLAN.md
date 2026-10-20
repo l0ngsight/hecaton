@@ -283,7 +283,7 @@ Est.: 2–3 ew.
 | F2.1 — done | `SecurityContext`/`SecurityService`: realms, JAAS login, `Credentials` types (username/password, token, cert), member-to-member authentication, client authentication in `AuthenticationBaseMessageTask`. | 2.5 ew |
 | F2.2 — done (simple, TLS cert, default; token via the default module) | Built-in login modules at the renamed EE class names (`docs/ee-class-map.md`): simple, username/password config realm, TLS cert, token. | 1 ew |
 | F3.1 — done except `client-block-unmapped-actions` | Permission evaluation for every `PermissionConfig.PermissionType` (map, cache, queue, topic, lock, atomic, executor, SQL, Jet job/connector, CP, user code namespace, vector, config, transaction, all); wildcards and principal matching; `SecurityInterceptor` chain; on-join permission policy (RECEIVE/SEND/NONE). | 2.5 ew |
-| Tests | Port of the public permission semantics into tests; TLS conformance (`testssl.sh`) in nightly; fuzzed auth messages. | incl. |
+| Tests — TLS conformance done (`tls-conformance.yml`, nightly); fuzzed auth messages open | Port of the public permission semantics into tests; TLS conformance (`testssl.sh`) in nightly; fuzzed auth messages. | incl. |
 
 ---
 
