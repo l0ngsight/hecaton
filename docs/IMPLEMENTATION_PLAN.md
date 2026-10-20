@@ -180,8 +180,8 @@ Est.: 2 ew.
 | `hecaton-migrate-rewrite` | OpenRewrite recipe `uk.org.hecaton.migrate.FromHazelcast`: renames the `com.hazelcast` types, methods and constants an application uses (derived with the fork's rules, not from a list), string literals with the CLI's rules, Maven/Gradle dependencies. | Done |
 | `hecaton-migrate` CLI | Non-Java files: config XML/YAML, `.properties`, env files, Dockerfiles, Helm/K8s manifests, shell scripts; default config file names. Dry run by default, `--apply`, `--check`. Only names Hecaton reads are renamed (spec §5). | Done |
 | Acceptance | `migration-tests/` samples, run by the `migration` CI job (`tools/ci/migration-tests.sh`). | Embedded member, client + Jet + SQL, and Spring Boot (the recipe adds `hecaton-spring-boot3`/`-boot4`) done; EE-style config once those features exist (M3+). |
-| `hecaton-migrate data` | Client-based copier (Hazelcast cluster → Hecaton cluster) for IMap/ICache/MultiMap/ReplicatedMap, using official Hazelcast client + Hecaton client in one JVM. | Open |
-| Gradle | The recipe changes Gradle dependencies, but no test or sample covers it yet. | Open |
+| `hecaton-migrate data` | Client-based copier (Hazelcast cluster → Hecaton cluster). The Hecaton client reads the Hazelcast cluster (same client protocol) and copies IMap, MultiMap and ReplicatedMap entries in serialized form; Compact values go through `GenericRecord` so their schemas reach the target. Tested against a real Hazelcast 5.7 cluster (`compat-tests`, `data-copy`). | Done; ICache open (needs the target cache configuration) |
+| Gradle | The recipe changes Gradle dependencies (`ChangeDependency`), but no test or sample covers it yet, and the Spring Boot auto-configuration dependency is only added for Maven. | Open (M8: Gradle migration sample) |
 
 Est.: 2.5 ew.
 

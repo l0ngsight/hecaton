@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.migrate;
 
+import uk.org.hecaton.migrate.data.DataCommand;
 import uk.org.hecaton.migrate.files.FileMigrator;
 
 import java.io.IOException;
@@ -30,6 +31,7 @@ import java.util.List;
  *
  * <pre>
  * hecaton-migrate [files] [--apply | --check] PATH...
+ * hecaton-migrate data --source SOURCE --target TARGET [OPTIONS]
  * </pre>
  */
 public final class Main {
@@ -40,6 +42,7 @@ public final class Main {
 
     private static final String USAGE_TEXT = """
             Usage: hecaton-migrate [files] [--apply | --check] PATH...
+                   hecaton-migrate data --source SOURCE --target TARGET [OPTIONS]  (see data --help)
 
             Migrates the configuration, properties, environment, Dockerfile, Kubernetes and
             script files under each PATH from Hazelcast to Hecaton. Java sources and build files
@@ -58,6 +61,14 @@ public final class Main {
     }
 
     static int run(String[] args, PrintStream out, PrintStream err) throws IOException {
+        if (args.length > 0 && args[0].equals("data")) {
+            List<String> rest = List.of(args).subList(1, args.length);
+            if (rest.contains("-h") || rest.contains("--help")) {
+                out.print(DataCommand.USAGE);
+                return OK;
+            }
+            return DataCommand.run(rest, out, err);
+        }
         if (List.of(args).contains("-h") || List.of(args).contains("--help")) {
             out.print(USAGE_TEXT);
             return OK;

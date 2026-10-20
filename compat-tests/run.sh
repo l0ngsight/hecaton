@@ -5,10 +5,12 @@
 # Starts a Hecaton member (hecaton + hecaton-sql jars from this build) and runs the official
 # Hazelcast clients against it: Java 5.5/5.6/5.7, Python, Node.js, Go and .NET, each with
 # IMap + entry listener, queue, topic, SQL and Compact scenarios. Then starts a Hazelcast 5.7
-# member that tries to join and checks that it is refused (spec NG1).
+# member that tries to join and checks that it is refused (spec NG1), and copies data from a
+# Hazelcast 5.7 cluster with `hecaton-migrate data` (plan §1.5).
 #
 # Usage: compat-tests/run.sh [SCENARIO...]
-#   SCENARIO: java-5.5.0 java-5.6.0 java-5.7.0 python nodejs go dotnet hazelcast-member (default: all)
+#   SCENARIO: java-5.5.0 java-5.6.0 java-5.7.0 python nodejs go dotnet hazelcast-member data-copy
+#             (default: all)
 #   COMPAT_SKIP_MISSING=1 skips clients whose runtime (python3, node, go, dotnet) is not installed.
 set -euo pipefail
 
@@ -18,7 +20,7 @@ mvn=("$root/mvnw" -B -ntp -q)
 
 scenarios=("$@")
 if [ ${#scenarios[@]} -eq 0 ]; then
-    scenarios=(java-5.5.0 java-5.6.0 java-5.7.0 python nodejs go dotnet hazelcast-member)
+    scenarios=(java-5.5.0 java-5.6.0 java-5.7.0 python nodejs go dotnet hazelcast-member data-copy)
 fi
 
 jar_of() {
@@ -104,6 +106,21 @@ run_scenario() {
                 return 1
             }
             echo "OK hazelcast-member"
+            ;;
+        data-copy)
+            local jar hz_pid classes="$work/java-data-copy" migrate_jar
+            jar="$(hazelcast_jar 5.7.0)"
+            migrate_jar="$(ls "$root"/hecaton-migrate/target/hecaton-migrate-*-cli.jar | head -n 1)"
+            java -Dhazelcast.config="$tests/member/hazelcast-source.yaml" -cp "$jar" \
+                com.hazelcast.core.server.HazelcastMemberStarter > "$work/hazelcast-source.log" 2>&1 &
+            hz_pid=$!
+            javac -d "$classes" -cp "$jar" "$tests/java/src/main/java/compat/DataCopyCompat.java"
+            java -cp "$classes:$jar" compat.DataCopyCompat write 127.0.0.1:5965 hz-source
+            java -jar "$migrate_jar" data --source 127.0.0.1:5965 --source-cluster hz-source \
+                --target 127.0.0.1:5961 --target-cluster compat
+            java -cp "$classes:$jar" compat.DataCopyCompat verify 127.0.0.1:5961 compat
+            kill "$hz_pid" && wait "$hz_pid" 2>/dev/null || true
+            echo "OK data-copy"
             ;;
         *)
             echo "unknown scenario: $scenario" >&2

@@ -1,0 +1,10 @@
+# A standalone Hazelcast 5.7 cluster that `hecaton-migrate data` copies from.
+hazelcast:
+  cluster-name: hz-source
+  network:
+    port:
+      port: 5965
+      auto-increment: false
+    join:
+      multicast:
+        enabled: false

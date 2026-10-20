@@ -68,11 +68,22 @@ exits with status 1 if anything would change, for use in CI.
 
 ## 3. Data
 
-Hecaton members cannot join a Hazelcast cluster, and persistence files are not compatible.
-Stand up a Hecaton cluster and copy the data with a client-based copier or a Jet job, then
-move the clients over. Official Hazelcast clients can connect to Hecaton (spec §5.4), so
-clients can move before or after the application code. A `hecaton-migrate data` command is
-planned (plan §1.5).
+Hecaton members cannot join a Hazelcast cluster (they refuse each other's connections), and
+persistence files are not compatible. Stand up a Hecaton cluster and copy the data:
+
+```sh
+java -jar hecaton-migrate-<hecaton-version>-cli.jar data \
+    --source hz1:5701,hz2:5701 --source-cluster prod \
+    --target hc1:5701 --target-cluster prod
+```
+
+It copies every IMap, MultiMap and ReplicatedMap (`--name` selects some) in serialized form,
+so it needs none of your classes; Compact data keeps its schemas. `--source` and `--target`
+also accept a client configuration file, for TLS or authentication. Stop writes to the source
+first for an exact copy. ICache contents are not copied yet.
+
+Official Hazelcast clients can connect to Hecaton (spec §5.4), so clients can move before or
+after the application code.
 
 ## What is checked
 

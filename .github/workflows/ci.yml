@@ -39,6 +39,7 @@ jobs:
           path: |
             hecaton/target/hecaton-*.jar
             hecaton-sql/target/hecaton-sql-*.jar
+            hecaton-migrate/target/hecaton-migrate-*-cli.jar
           retention-days: 3
 
   migration:
