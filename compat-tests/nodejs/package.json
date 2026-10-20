@@ -1,0 +1,8 @@
+{
+  "name": "nodejs-client-compat",
+  "private": true,
+  "description": "Basic scenarios with the official Hazelcast Node.js client against a Hecaton member",
+  "dependencies": {
+    "hazelcast-client": "5.7.0"
+  }
+}

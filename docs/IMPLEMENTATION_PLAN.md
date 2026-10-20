@@ -162,14 +162,11 @@ Est.: 0.5 ew.
 
 ### 1.4 Compatibility smoke tests
 
-- Testcontainers job: a Hecaton member image, with official **Hazelcast** clients for Java
-  (5.5, 5.6, 5.7), Python, Go, .NET and Node.js running basic IMap/queue/topic/SQL/Compact
-  scenarios.
-- Negative test: a Hazelcast 5.7 member trying to join a Hecaton cluster is rejected with
-  the documented message (needs the join-validation patch, which can land early).
-- Kubernetes job (nightly, kind): 3 Hecaton members form a cluster through Kubernetes
-  discovery in DNS and API modes using the renamed `kubernetes-rbac.yaml`, survive a
-  rolling restart of the StatefulSet, and a client pod connects.
+| Test | Status |
+|---|---|
+| Official **Hazelcast** clients against a Hecaton member: Java 5.5/5.6/5.7, Python, Node.js, Go and .NET, each with IMap + entry listener, queue, topic, SQL and Compact (`compat-tests/`, CI job `compat`). The member runs as a plain JVM process rather than a container image: the protocol coverage is the same, and the image comes with the distribution work (M8). | Done |
+| Negative test: a Hazelcast 5.7 member trying to join a Hecaton cluster is refused with the documented message. It used to join: the member protocol now opens with `HCC` instead of `HZC` (spec §5.4). | Done |
+| Kubernetes job (nightly, kind): 3 Hecaton members form a cluster through Kubernetes discovery in DNS and API modes using the renamed `kubernetes-rbac.yaml`, survive a rolling restart of the StatefulSet, and a client pod connects. Needs a Hecaton container image. | Open |
 
 Est.: 2 ew.
 
@@ -401,7 +398,7 @@ Budget: ~1 ew per month, more after 1.0.
      on JDK 17/21/25; REST `/hazelcast` alias; Kafka Connect test downloads off Hazelcast's
      servers; sync tooling retired (1.8); cloud-provider support removed (1.6); phone home
      removed; migration recipe, CLI and acceptance samples (1.5);
-   - next: official-client compat tests (1.4), the open items in 1.9 (Spring Boot
-     auto-configuration first, then its migration sample), `hecaton-migrate data` (1.5),
-     tag `v0.1.0`.
+   - official-client compatibility tests and the Hazelcast-member refusal (1.4);
+   - next: the open items in 1.9 (Spring Boot auto-configuration first, then its migration
+     sample), `hecaton-migrate data` (1.5), the Kubernetes job (1.4), tag `v0.1.0`.
 3. **M2 Core cleanup**, then M3–M7 in parallel.

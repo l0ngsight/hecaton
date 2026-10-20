@@ -1,0 +1,14 @@
+# A Hazelcast 5.7 member that tries to join the Hecaton member; it must be refused (spec NG1).
+hazelcast:
+  cluster-name: compat
+  network:
+    port:
+      port: 5962
+      auto-increment: false
+    join:
+      multicast:
+        enabled: false
+      tcp-ip:
+        enabled: true
+        member-list:
+          - 127.0.0.1:5961
