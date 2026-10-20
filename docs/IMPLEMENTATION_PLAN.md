@@ -176,7 +176,7 @@ Est.: 2 ew.
 |---|---|---|
 | `hecaton-migrate-rewrite` | OpenRewrite recipe `uk.org.hecaton.migrate.FromHazelcast`: renames the `com.hazelcast` types, methods and constants an application uses (derived with the fork's rules, not from a list), string literals with the CLI's rules, Maven/Gradle dependencies. | Done |
 | `hecaton-migrate` CLI | Non-Java files: config XML/YAML, `.properties`, env files, Dockerfiles, Helm/K8s manifests, shell scripts; default config file names. Dry run by default, `--apply`, `--check`. Only names Hecaton reads are renamed (spec §5). | Done |
-| Acceptance | `migration-tests/` samples, run by the `migration` CI job (`tools/ci/migration-tests.sh`). | Embedded member and client + Jet + SQL done; Spring Boot after `HecatonAutoConfiguration` (1.9); EE-style config once those features exist (M3+). |
+| Acceptance | `migration-tests/` samples, run by the `migration` CI job (`tools/ci/migration-tests.sh`). | Embedded member, client + Jet + SQL, and Spring Boot (the recipe adds `hecaton-spring-boot3`/`-boot4`) done; EE-style config once those features exist (M3+). |
 | `hecaton-migrate data` | Client-based copier (Hazelcast cluster → Hecaton cluster) for IMap/ICache/MultiMap/ReplicatedMap, using official Hazelcast client + Hecaton client in one JVM. | Open |
 | Gradle | The recipe changes Gradle dependencies, but no test or sample covers it yet. | Open |
 

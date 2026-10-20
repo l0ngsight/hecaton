@@ -8,7 +8,7 @@
 # against this build of Hecaton.
 #
 # Needs the Hecaton artifacts in the local Maven repository:
-#   ./mvnw -B -ntp install -DskipTests -pl hecaton-migrate-rewrite,hecaton-sql -am
+#   ./mvnw -B -ntp install -DskipTests -pl hecaton-migrate-rewrite,hecaton-sql,hecaton-spring-boot-autoconfiguration/hecaton-spring-boot3 -am
 #
 # Usage: migration-tests/run.sh [--update] [SAMPLE...]
 #   --update  replace expected/ with the tool output (review the diff before committing)

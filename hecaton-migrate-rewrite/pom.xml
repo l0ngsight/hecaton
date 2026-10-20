@@ -91,13 +91,7 @@
                 <filtering>true</filtering>
                 <includes>
                     <include>**/*.properties</include>
-                </includes>
-            </resource>
-            <resource>
-                <!-- declarative recipes, found by OpenRewrite as META-INF/rewrite/*.yml -->
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <includes>
+                    <!-- declarative recipes, found by OpenRewrite as META-INF/rewrite/*.yml -->
                     <include>META-INF/rewrite/*.yml</include>
                 </includes>
             </resource>

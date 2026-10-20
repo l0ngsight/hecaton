@@ -26,8 +26,10 @@ import org.openrewrite.java.ChangePackage;
 import org.openrewrite.java.ChangeType;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.tree.Flag;
+import org.openrewrite.java.tree.J;
 import org.openrewrite.java.tree.JavaSourceFile;
 import org.openrewrite.java.tree.JavaType;
+import org.openrewrite.java.tree.Space;
 import org.openrewrite.java.tree.TypeUtils;
 import uk.org.hecaton.migrate.HecatonNames;
 
@@ -140,6 +142,24 @@ public class RenameHazelcastJavaNames extends ScanningRecipe<RenameHazelcastJava
         }
     }
 
+    /**
+     * When the first import is replaced, the new first import does not inherit the blank line
+     * that separated the imports from the package declaration; put the original spacing back.
+     */
+    private static Tree keepFirstImportSpacing(JavaSourceFile before, Tree after) {
+        if (!(before instanceof J.CompilationUnit original) || !(after instanceof J.CompilationUnit renamed)
+                || original.getImports().isEmpty() || renamed.getImports().isEmpty()) {
+            return after;
+        }
+        Space spacing = original.getImports().get(0).getPrefix();
+        List<J.Import> imports = new ArrayList<>(renamed.getImports());
+        if (imports.get(0).getPrefix().equals(spacing)) {
+            return after;
+        }
+        imports.set(0, imports.get(0).withPrefix(spacing));
+        return renamed.withImports(imports);
+    }
+
     /** {@code com.hazelcast.x.HazelcastY} → {@code uk.org.hecaton.x.HazelcastY}: what ChangePackage leaves. */
     private static String movePackage(String fqn) {
         return HecatonNames.HECATON_PACKAGE + fqn.substring(HecatonNames.HAZELCAST_PACKAGE.length());
@@ -168,7 +188,7 @@ public class RenameHazelcastJavaNames extends ScanningRecipe<RenameHazelcastJava
                 for (TreeVisitor<?, ExecutionContext> rename : renames) {
                     result = rename.visit(result, ctx);
                 }
-                return result;
+                return keepFirstImportSpacing((JavaSourceFile) tree, result);
             }
         };
     }

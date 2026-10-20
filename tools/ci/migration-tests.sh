@@ -8,6 +8,6 @@ set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 java -version
 
-./mvnw -B -ntp -T 1C install -DskipTests -pl hecaton-migrate-rewrite,hecaton-sql -am
+./mvnw -B -ntp -T 1C install -DskipTests -pl hecaton-migrate-rewrite,hecaton-sql,hecaton-spring-boot-autoconfiguration/hecaton-spring-boot3 -am
 ./mvnw -B -ntp test -pl hecaton-migrate,hecaton-migrate-rewrite
 migration-tests/run.sh
