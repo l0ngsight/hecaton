@@ -19,6 +19,7 @@ package uk.org.hecaton.internal.namespace.impl;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.UserCodeNamespaceConfig;
 import uk.org.hecaton.core.Hecaton;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.test.annotation.QuickTest;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -40,7 +41,7 @@ public class UserCodeNamespaceServiceLicenseTest {
             throw new AssertionError("NamespaceService was created from OS Edition");
         } catch (IllegalStateException ex) {
             assertTrue("NamespaceService creation does not fail with expected IllegalStateException from OS",
-                    ex.getMessage().contains("User Code Namespaces requires Hecaton Enterprise Edition"));
+                    ex.getMessage().contains(HecatonFeature.USER_CODE_NAMESPACES.notAvailableMessage()));
         }
     }
 }

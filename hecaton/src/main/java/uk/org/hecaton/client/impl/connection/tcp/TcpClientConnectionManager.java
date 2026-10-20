@@ -1209,7 +1209,7 @@ public class TcpClientConnectionManager implements ClientConnectionManager, Memb
                                              AuthenticationResponse response) {
         AuthenticationStatus authenticationStatus = AuthenticationStatus.getById(response.getStatus());
         if (failoverConfigProvided && !response.isFailoverSupported()) {
-            logger.warning("Cluster does not support failover. This feature is available in Hecaton Enterprise");
+            logger.warning("Cluster does not support failover");
             authenticationStatus = NOT_ALLOWED_IN_CLUSTER;
         }
         switch (authenticationStatus) {

@@ -19,7 +19,7 @@ package uk.org.hecaton.spi.impl.operationexecutor.impl;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.instance.BuildInfo;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.nio.Packet;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
@@ -65,7 +65,7 @@ public abstract class OperationExecutorImpl_AbstractTest extends HecatonTestSupp
     HecatonProperties props;
     Address thisAddress;
     Node node;
-    DefaultNodeExtension nodeExtension;
+    HecatonNodeExtension nodeExtension;
     OperationRunnerFactory handlerFactory;
     InternalSerializationService serializationService;
     Consumer<Packet> responsePacketConsumer;
@@ -84,7 +84,7 @@ public abstract class OperationExecutorImpl_AbstractTest extends HecatonTestSupp
         when(node.getConfig()).thenReturn(config);
         when(node.getProperties()).thenReturn(new HecatonProperties(config));
         when(node.getVersion()).thenReturn(new MemberVersion(0, 0, 0));
-        nodeExtension = new DefaultNodeExtension(node);
+        nodeExtension = new HecatonNodeExtension(node);
         handlerFactory = new DummyOperationRunnerFactory();
 
         responsePacketConsumer = new DummyResponsePacketConsumer();

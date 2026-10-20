@@ -16,14 +16,14 @@
 
 package uk.org.hecaton.wan;
 
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.wan.impl.WanReplicationService;
 
-public class WanServiceMockingDefaultNodeExtension extends DefaultNodeExtension {
+public class WanServiceMockingHecatonNodeExtension extends HecatonNodeExtension {
     private final WanReplicationService wanReplicationService;
 
-    public WanServiceMockingDefaultNodeExtension(Node node,
+    public WanServiceMockingHecatonNodeExtension(Node node,
                                                  WanReplicationService wanReplicationService) {
         super(node);
         this.wanReplicationService = wanReplicationService;

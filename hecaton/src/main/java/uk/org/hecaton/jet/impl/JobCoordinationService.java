@@ -34,6 +34,7 @@ import uk.org.hecaton.internal.partition.impl.InternalPartitionServiceImpl;
 import uk.org.hecaton.internal.partition.impl.PartitionServiceState;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.util.ExceptionUtil;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.counters.Counter;
 import uk.org.hecaton.internal.util.counters.MwCounter;
 import uk.org.hecaton.internal.util.executor.ManagedExecutorService;
@@ -378,8 +379,7 @@ public class JobCoordinationService implements DynamicMetricsProvider {
     }
 
     protected void validateIsolatedJob(@Nonnull JetMemberSelector memberSelector) {
-        throw new UnsupportedOperationException(
-                "The Isolated Jobs feature is only available in Hecaton Enterprise Edition.");
+        throw new UnsupportedOperationException(HecatonFeature.JET_ISOLATED_JOBS.notAvailableMessage());
     }
 
     protected void onJobSubmitted(DAG dag, JobConfig config) {

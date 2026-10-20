@@ -35,6 +35,7 @@ import uk.org.hecaton.internal.services.ManagedService;
 import uk.org.hecaton.internal.services.ObjectNamespace;
 import uk.org.hecaton.internal.services.ServiceNamespace;
 import uk.org.hecaton.internal.util.ConstructorFunction;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
@@ -95,8 +96,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
             List<WanBatchPublisherConfig> batchPublisherConfigs
                     = wanReplicationConfig.getBatchPublisherConfigs();
             if (!batchPublisherConfigs.isEmpty()) {
-                throw new InvalidConfigurationException("Built-in batching WAN replication implementation "
-                        + "is only available in Hecaton enterprise edition.");
+                throw new InvalidConfigurationException(HecatonFeature.WAN_REPLICATION.notAvailableMessage());
             }
             return new DelegatingWanScheme(name, createPublishers(wanReplicationConfig));
         };

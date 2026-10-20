@@ -36,6 +36,7 @@ import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.services.ManagedService;
 import uk.org.hecaton.internal.services.MembershipAwareService;
 import uk.org.hecaton.internal.services.MembershipServiceEvent;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.InvocationUtil;
 import uk.org.hecaton.jet.JetException;
 import uk.org.hecaton.jet.JetService;
@@ -317,7 +318,7 @@ public class JetServiceBackend implements ManagedService, MembershipAwareService
 
     @SuppressWarnings("unused") // parameters are used from jet-enterprise
     public Operation createExportSnapshotOperation(long jobId, String name, boolean cancelJob) {
-        throw new UnsupportedOperationException("You need Hecaton Enterprise to use this feature");
+        throw new UnsupportedOperationException(HecatonFeature.JET_JOB_UPGRADE.notAvailableMessage());
     }
 
     public JetService getJet() {

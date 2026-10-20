@@ -22,7 +22,7 @@ import uk.org.hecaton.config.IndexConfig;
 import uk.org.hecaton.config.IndexType;
 import uk.org.hecaton.core.DistributedObject;
 import uk.org.hecaton.core.HecatonInstance;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.iteration.IndexIterationPointer;
 import uk.org.hecaton.internal.serialization.SerializationService;
@@ -664,7 +664,7 @@ public class MapFetchIndexOperationTest extends HecatonTestSupport {
         }
     }
 
-    private static class MockNodeExtension extends DefaultNodeExtension {
+    private static class MockNodeExtension extends HecatonNodeExtension {
 
         MockNodeExtension(Node node) {
             super(node);

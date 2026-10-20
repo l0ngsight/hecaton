@@ -102,6 +102,7 @@ import uk.org.hecaton.internal.server.tcp.PacketEncoder;
 import uk.org.hecaton.internal.tpc.TpcServerBootstrap;
 import uk.org.hecaton.internal.tpc.TpcServerBootstrapImpl;
 import uk.org.hecaton.internal.util.ConstructorFunction;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.JVMUtil;
 import uk.org.hecaton.internal.util.MapUtil;
 import uk.org.hecaton.internal.util.Preconditions;
@@ -148,12 +149,13 @@ import static uk.org.hecaton.internal.util.CollectionUtil.setOf;
 import static uk.org.hecaton.internal.util.ExceptionUtil.rethrow;
 import static uk.org.hecaton.internal.util.InstanceTrackingUtil.writeInstanceTrackingFile;
 import static uk.org.hecaton.internal.util.StringUtil.isNullOrEmpty;
+import static uk.org.hecaton.internal.util.StringUtil.isNullOrEmptyAfterTrim;
 import static uk.org.hecaton.jet.impl.util.Util.JET_IS_DISABLED_MESSAGE;
 import static uk.org.hecaton.jet.impl.util.Util.checkJetIsEnabled;
 import static uk.org.hecaton.map.impl.MapServiceConstructor.getDefaultMapServiceConstructor;
 
 @SuppressWarnings({"checkstyle:methodcount", "checkstyle:classfanoutcomplexity", "checkstyle:classdataabstractioncoupling"})
-public class DefaultNodeExtension implements NodeExtension {
+public class HecatonNodeExtension implements NodeExtension {
     private static final String PLATFORM_LOGO = """
       o    o     o     o---o   o--o o      o---o     o     o----o o--o--o
       |    |    / \\       /         |     /         / \\    |         |
@@ -176,7 +178,7 @@ public class DefaultNodeExtension implements NodeExtension {
     private final MemoryStats memoryStats = new DefaultMemoryStats();
     private final Set<Version> supportedVersions;
 
-    public DefaultNodeExtension(Node node) {
+    public HecatonNodeExtension(Node node) {
         this.node = node;
         this.logger = node.getLogger(NodeExtension.class);
         this.logoLogger = node.getLogger("uk.org.hecaton.system.logo");
@@ -200,47 +202,47 @@ public class DefaultNodeExtension implements NodeExtension {
     private void checkCPSubsystemAllowed() {
         CPSubsystemConfig cpSubsystemConfig = node.getConfig().getCPSubsystemConfig();
         if (cpSubsystemConfig != null && cpSubsystemConfig.getCPMemberCount() != 0
-                && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
+                && !HecatonFeature.CP_SUBSYSTEM.isAvailable()) {
             throw new IllegalStateException(CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_MEMBERS);
         }
     }
 
     private void checkPersistenceAllowed() {
         PersistenceConfig persistenceConfig = node.getConfig().getPersistenceConfig();
-        if (persistenceConfig != null && persistenceConfig.isEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Hot Restart requires Hecaton Enterprise Edition");
+        if (persistenceConfig != null && persistenceConfig.isEnabled() && !HecatonFeature.PERSISTENCE.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.PERSISTENCE.notAvailableMessage());
         }
     }
 
     private void checkSecurityAllowed() {
         SecurityConfig securityConfig = node.getConfig().getSecurityConfig();
-        if (securityConfig != null && securityConfig.isEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Security requires Hecaton Enterprise Edition");
+        if (securityConfig != null && securityConfig.isEnabled() && !HecatonFeature.SECURITY.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.SECURITY.notAvailableMessage());
         }
         SymmetricEncryptionConfig symmetricEncryptionConfig =
                 getActiveMemberNetworkConfig(node.getConfig()).getSymmetricEncryptionConfig();
         if (symmetricEncryptionConfig != null && symmetricEncryptionConfig.isEnabled()
-                && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Symmetric Encryption requires Hecaton Enterprise Edition");
+                && !HecatonFeature.SYMMETRIC_ENCRYPTION.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.SYMMETRIC_ENCRYPTION.notAvailableMessage());
         }
         AuditlogConfig auditlogConfig = node.getConfig().getAuditlogConfig();
-        if (auditlogConfig.isEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Auditlog requires Hecaton Enterprise Edition");
+        if (auditlogConfig.isEnabled() && !HecatonFeature.AUDIT_LOG.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.AUDIT_LOG.notAvailableMessage());
         }
     }
 
     private void checkLosslessRestartAllowed() {
         JetConfig jetConfig = node.getConfig().getJetConfig();
-        if (jetConfig.isLosslessRestartEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Lossless Restart requires Hecaton Enterprise Edition");
+        if (jetConfig.isLosslessRestartEnabled() && !HecatonFeature.JET_LOSSLESS_RESTART.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.JET_LOSSLESS_RESTART.notAvailableMessage());
         }
     }
 
     protected void checkDynamicConfigurationPersistenceAllowed() {
         Config config = node.getConfig();
         if (config.getDynamicConfigurationConfig().isPersistenceEnabled()) {
-            if (!BuildInfoProvider.getBuildInfo().isEnterprise()) {
-                throw new IllegalStateException("Dynamic Configuration Persistence requires Hecaton Enterprise Edition");
+            if (!HecatonFeature.DYNAMIC_CONFIGURATION_PERSISTENCE.isAvailable()) {
+                throw new IllegalStateException(HecatonFeature.DYNAMIC_CONFIGURATION_PERSISTENCE.notAvailableMessage());
             }
 
             if (config.getConfigurationFile() == null || !config.getConfigurationFile().exists()) {
@@ -254,14 +256,17 @@ public class DefaultNodeExtension implements NodeExtension {
 
     protected void checkSqlCatalogPersistenceAllowed() {
         Config config = node.getConfig();
-        if (config.getSqlConfig().isCatalogPersistenceEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("SQL Catalog Persistence requires Hecaton Enterprise Edition");
+        if (config.getSqlConfig().isCatalogPersistenceEnabled() && !HecatonFeature.SQL_CATALOG_PERSISTENCE.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.SQL_CATALOG_PERSISTENCE.notAvailableMessage());
         }
     }
 
     @Override
     public void beforeStart() {
         integrityChecker.checkIntegrity();
+        if (!isNullOrEmptyAfterTrim(node.getConfig().getLicenseKey())) {
+            systemLogger.info(HecatonFeature.LICENSE.notAvailableMessage());
+        }
 
         if (jetServiceBackend != null) {
             systemLogger.info("Jet is enabled");
@@ -343,7 +348,7 @@ public class DefaultNodeExtension implements NodeExtension {
 
     @Override
     public InternalSecurityContext getSecurityContext() {
-        logger.warning("Security features are only available on Hecaton Enterprise!");
+        logger.warning(HecatonFeature.SECURITY.notAvailableMessage());
         return null;
     }
 
@@ -469,7 +474,7 @@ public class DefaultNodeExtension implements NodeExtension {
 
     @Override
     public MemberSocketInterceptor getSocketInterceptor(EndpointQualifier endpointQualifier) {
-        logger.warning("SocketInterceptor feature is only available on Hecaton Enterprise!");
+        logger.warning(HecatonFeature.SOCKET_INTERCEPTOR.notAvailableMessage());
         return null;
     }
 
@@ -535,11 +540,7 @@ public class DefaultNodeExtension implements NodeExtension {
 
     private static String constructVersionMismatchMessage(MemberVersion memberVersion, Version clusterVersion) {
         String msg = "Joining node's version " + memberVersion + " is not compatible with cluster version " + clusterVersion;
-        if (!BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            msg += " (Rolling Member Upgrades are only supported in Hecaton Enterprise)";
-        } else {
-            msg += " (Rolling Member Upgrades is not licensed)";
-        }
+        msg += " (rolling member upgrades, F14, are planned for milestone M9)";
         return msg;
     }
 
@@ -587,6 +588,15 @@ public class DefaultNodeExtension implements NodeExtension {
         if (service != null) {
             service.onClusterVersionChange();
         }
+    }
+
+    /**
+     * Hecaton members accept failover clients (F15): a client configured with
+     * {@code ClientFailoverConfig} may connect and later move to another cluster.
+     */
+    @Override
+    public boolean isClientFailoverSupported() {
+        return true;
     }
 
     @Override
@@ -696,8 +706,9 @@ public class DefaultNodeExtension implements NodeExtension {
         return new CPSubsystemStubImpl(false);
     }
 
+    /** F21: Hecaton has no licenses; a license key set at runtime is ignored. */
     public void setLicenseKey(String licenseKey) {
-        // NOP
+        systemLogger.info(HecatonFeature.LICENSE.notAvailableMessage());
     }
 
     @Override
@@ -719,7 +730,7 @@ public class DefaultNodeExtension implements NodeExtension {
 
     @Override
     public SSLEngineFactory createSslEngineFactory(SSLConfig sslConfig) {
-        throw new IllegalStateException("SSL/TLS requires Hecaton Enterprise Edition");
+        throw new IllegalStateException(HecatonFeature.TLS.notAvailableMessage());
     }
 
     @Override

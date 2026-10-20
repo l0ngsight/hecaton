@@ -226,7 +226,7 @@ Upstream's `README.md`, `LICENSE`, `NOTICE`, `CONTRIBUTING.md`, `SECURITY.md` an
 | Spring Hibernate XML support — done | `RegionFactoryBeanDefinitionParser` deleted; `<hz:hibernate-region-factory>` now fails with a message. |
 | Python 3.14 — moved to M8 | The pinned protobuf 4.25.8 / grpcio 1.73.0 fail on Python 3.14. `grpc.version` and the protobuf version are shared with the Java gRPC extension, so this is the Java protobuf 4.x / gRPC upgrade with regenerated code; part of the M8 dependency refresh. The nightly pins Python 3.12 meanwhile. |
 | Deep JSON nesting — done | `JsonParser` reads arrays and objects with an explicit stack instead of recursion; the known failure is gone. |
-| Priority queue failover duplicate — moved to M2 | `QueueMigrationTest#testPromotion` with a priority comparator once saw 101 items instead of 100 after the owner was terminated (nightly 2026-10-19; did not reproduce in 60 local runs). Find out how the promoted backup gets a duplicate item and fix it (known nightly failure meanwhile). |
+| Priority queue failover duplicate — fixed in M2 | `QueueMigrationTest#testPromotion` with a priority comparator once saw 101 items instead of 100 after the owner was terminated. Cause: queue statistics (metrics collection, `getLocalQueueStats()`) called `QueueContainer#size()`/`backupSize()` outside the partition thread, and those move the items between the primary queue and the backup map; concurrently with the partition thread this can lose or duplicate items, most likely around a promotion. Statistics now count without moving anything (`QueueStatsReadOnlyTest`); the known-failure entry is removed. |
 | Schema hosting | `XmlConfigSchemaLocationTest` needs the XSDs at `https://hecaton.org.uk/schema/...` (M8, D7). |
 
 **M1 exit:** tag `v0.1.0` (CE 5.7.0 parity minus cloud-provider support, renamed, Java 25 build).
@@ -239,23 +239,34 @@ With D10 the provider indirection planned earlier (`hecaton-ext-spi`, `FeaturePr
 delegating `HecatonNodeExtension`) is not needed: Java 17 features are built directly in
 core (spec §7.1).
 
-1. **Edition gates out:** delete the "requires Enterprise" checks in `DefaultNodeExtension`,
-   `ConfigValidator`, `Node`, `ClientEndpointImpl`, `ChannelInitializerFunction`,
-   `DefaultClientExtension`, etc. Until a feature lands, its config fails with a precise
-   "not implemented yet (Fn)" message instead. `BuildInfo#isEnterprise()` becomes a
-   deprecated method returning `true`; the Enterprise build-properties lookup goes.
-   Rewrite the upstream tests that assert "requires Enterprise".
-2. **Licensing code out (F21):** `license-key` accepted and ignored with an INFO log;
-   `getLicense()` returns a "community, unlimited" descriptor; remove the license-related
-   REST/CLI paths' Enterprise branches.
-3. **`DefaultNodeExtension` → `HecatonNodeExtension`** (one class, no priority list
-   lookup); same for the client extension.
-4. **`MemberModule` SPI** (spec §7.2) with the capability interfaces for HD, persistence,
-   tiered storage and vector, and the "requires `uk.org.hecaton:hecaton-<module>`" errors.
-5. **Java 25 member check** (spec §8.2).
-6. **F15 client failover:** `isClientFailoverSupported() → true`, plus failover tests with
-   two clusters.
-7. **`hecaton-member` POM** that pulls in every member module as it appears.
+1. **Edition gates out — done:** the "requires Enterprise" checks in `HecatonNodeExtension`,
+   `ConfigValidator`, `Node`, `ChannelInitializerFunction`, `HecatonClientExtension`, the
+   cache, WAN, Jet, REST and TPC classes now ask `HecatonFeature#isAvailable()` and fail with
+   its message ("X (Fn) is not available in Hecaton yet; it is planned for milestone M…", or
+   "not supported; use …"). A feature's entry flips when its implementation lands.
+   `BuildInfo#isEnterprise()` stays `false` (not `true` as first planned): it is sent to
+   clients in the authentication response, and official clients would then expect
+   Enterprise behaviour. The upstream tests that asserted "requires Enterprise" use the new
+   messages.
+2. **Licensing code out (F21) — done:** `license-key` is accepted and ignored with an INFO
+   log, also when set through REST or Management Center; `getLicense()` returns `null` (no
+   caller needs a descriptor); instance tracking no longer looks for the Enterprise
+   built-in license.
+3. **`DefaultNodeExtension` → `HecatonNodeExtension` — done** (constructed directly; the
+   priority-list lookup and `NodeExtensionFactory` are gone); same for the client extension.
+4. **`MemberModule` SPI — done** (spec §7.2): `uk.org.hecaton.instance.module`, capability
+   interfaces for HD, persistence, tiered storage and vector (their operations come with
+   the modules), `MemberModules#require` for the "requires `uk.org.hecaton:hecaton-<module>`"
+   errors.
+5. **Java 25 member check — done** (spec §8.2): `MemberJavaVersion`; the client smoke test
+   on JDK 17/21 runs its member on Java 25 and checks that a member refuses an older Java.
+6. **F15 client failover — done:** `isClientFailoverSupported() → true`; `FailoverTest`
+   covers moving to the second cluster when the first goes down or blocks clients.
+7. **`hecaton-member` POM — done:** core plus `hecaton-sql`; member modules join it as they
+   appear.
+8. **Priority-queue failover duplicate — fixed** (moved from M1, see §1.9).
+
+**M2 exit:** merge to `main`, tag `v0.2.0`.
 
 Est.: 2–3 ew.
 

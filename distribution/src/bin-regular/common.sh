@@ -64,6 +64,10 @@ JAVA_VERSION=$(${JAVA} -version 2>&1 | sed -En 's/.* version "([0-9]+).*$/\1/p')
 if [[ "$JAVA_VERSION" -ge 24 && "$JAVA_VERSION" -le 25 ]]; then
     JDK_OPTS="$JDK_OPTS --sun-misc-unsafe-memory-access=allow"
 fi
+# Java 24 and later warn when a library calls native code (JEP 472) unless it is enabled.
+if [[ "$JAVA_VERSION" -ge 22 ]]; then
+    JDK_OPTS="$JDK_OPTS --enable-native-access=ALL-UNNAMED"
+fi
 
 # ensure CLASSPATH_DEFAULT is unix style + trimmed
 if [ -n "${CLASSPATH_DEFAULT}" ]; then

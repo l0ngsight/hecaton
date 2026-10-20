@@ -21,6 +21,7 @@ import uk.org.hecaton.client.UnsupportedRoutingModeException;
 import uk.org.hecaton.client.config.ClusterRoutingConfig;
 import uk.org.hecaton.client.config.RoutingMode;
 import uk.org.hecaton.internal.cluster.Versions;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.version.Version;
 
 import java.util.Map;
@@ -44,10 +45,9 @@ public final class AuthenticationKeyValuePairConstants {
     static {
         ROUTING_MODE_NOT_SUPPORTED_MESSAGE = String.format(
                 "%s routing mode %s cannot be supported because the server has not sent "
-                        + "the required information. %s routing is an Enterprise feature in Hecaton %s. "
-                        + "Make sure your cluster has Hecaton Enterprise JARs on its classpath.",
-                RoutingMode.MULTI_MEMBER, PARTITION_GROUPS, RoutingMode.MULTI_MEMBER,
-                MULTI_MEMBER_ROUTING_MINIMUM_SUPPORTED_CLUSTER_VERSION);
+                        + "the required information (cluster version %s or later needed). %s",
+                RoutingMode.MULTI_MEMBER, PARTITION_GROUPS, MULTI_MEMBER_ROUTING_MINIMUM_SUPPORTED_CLUSTER_VERSION,
+                HecatonFeature.MULTI_MEMBER_ROUTING.notAvailableMessage());
     }
 
     private AuthenticationKeyValuePairConstants() { }

@@ -6,4 +6,3 @@
 # item in docs/IMPLEMENTATION_PLAN.md or an issue, and remove it once fixed.
 
 uk.org.hecaton.config.XmlConfigSchemaLocationTest#testSchemaLocationsExist  Fetches the XSDs from https://hecaton.org.uk/schema/...; fails until the site hosts them (D7, M8).
-uk.org.hecaton.collection.impl.queue.QueueMigrationTest#testPromotion[comparatorClassName: uk.org.hecaton.collection.impl.queue.model.VersionedObjectComparator]  Intermittent: once 101 items instead of 100 after the owner was terminated; not reproduced locally. Possible duplicate on backup promotion (docs/IMPLEMENTATION_PLAN.md §1.9).

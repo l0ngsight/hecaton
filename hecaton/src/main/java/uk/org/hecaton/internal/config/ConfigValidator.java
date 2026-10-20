@@ -52,6 +52,7 @@ import uk.org.hecaton.config.security.RealmConfig;
 import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.instance.ProtocolType;
 import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.MutableInteger;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.spi.eviction.EvictionPolicyComparator;
@@ -84,7 +85,6 @@ import static uk.org.hecaton.config.MaxSizePolicy.USED_HEAP_SIZE;
 import static uk.org.hecaton.config.MaxSizePolicy.USED_NATIVE_MEMORY_PERCENTAGE;
 import static uk.org.hecaton.config.MaxSizePolicy.USED_NATIVE_MEMORY_SIZE;
 import static uk.org.hecaton.config.NearCacheConfig.LocalUpdatePolicy.INVALIDATE;
-import static uk.org.hecaton.instance.BuildInfoProvider.getBuildInfo;
 import static uk.org.hecaton.instance.ProtocolType.MEMBER;
 import static uk.org.hecaton.instance.ProtocolType.WAN;
 import static uk.org.hecaton.internal.config.MergePolicyValidator.checkMapMergePolicy;
@@ -139,8 +139,10 @@ public final class ConfigValidator {
         checkNotBitmapIndexWhenNativeMemory(mapConfig.getInMemoryFormat(), mapConfig.getIndexConfigs());
         checkTSEnabledOnEnterpriseJar(mapConfig.getTieredStoreConfig());
 
-        if (getBuildInfo().isEnterprise()) {
+        if (HecatonFeature.TIERED_STORE.isAvailable()) {
             checkTieredStoreMapConfig(config, mapConfig);
+        }
+        if (HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable()) {
             checkMapNativeConfig(mapConfig, config.getNativeMemoryConfig());
         }
 
@@ -383,7 +385,7 @@ public final class ConfigValidator {
                 evictionConfig.getComparatorClassName(), evictionConfig.getComparator());
         checkOnHeapNearCacheMaxSizePolicy(nearCacheConfig);
         checkNearCacheNativeMemoryConfig(nearCacheConfig.getInMemoryFormat(),
-                nativeMemoryConfig, getBuildInfo().isEnterprise());
+                nativeMemoryConfig, HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable());
 
         if (isClient && nearCacheConfig.isCacheLocalEntries()) {
             throw new InvalidConfigurationException("The Near Cache option `cache-local-entries` is not supported in "
@@ -732,9 +734,8 @@ public final class ConfigValidator {
      * @param inMemoryFormat supplied inMemoryFormat
      */
     private static void checkNotNativeWhenOpenSource(InMemoryFormat inMemoryFormat) {
-        if (inMemoryFormat == NATIVE && !getBuildInfo().isEnterprise()) {
-            throw new InvalidConfigurationException("NATIVE storage format is supported in Hecaton Enterprise only."
-                    + " Make sure you have Hecaton Enterprise JARs on your classpath!");
+        if (inMemoryFormat == NATIVE && !HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable()) {
+            throw new InvalidConfigurationException(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage());
         }
     }
 
@@ -745,9 +746,8 @@ public final class ConfigValidator {
      * @param tieredStoreConfig supplied tieredStoreConfig
      */
     private static void checkTSEnabledOnEnterpriseJar(TieredStoreConfig tieredStoreConfig) {
-        if (tieredStoreConfig.isEnabled() && !getBuildInfo().isEnterprise()) {
-            throw new InvalidConfigurationException("Tiered-Store is supported in Hecaton Enterprise only."
-                    + " Please make sure you have Hecaton Enterprise JARs on your classpath.");
+        if (tieredStoreConfig.isEnabled() && !HecatonFeature.TIERED_STORE.isAvailable()) {
+            throw new InvalidConfigurationException(HecatonFeature.TIERED_STORE.notAvailableMessage());
         }
     }
 

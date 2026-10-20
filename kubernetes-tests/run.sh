@@ -56,7 +56,11 @@ kubectl rollout status statefulset/hecaton --timeout=300s
 check_cluster
 echo "OK rolling restart ($mode)"
 
-kubectl create configmap image-smoke --from-file="$root/tools/ci/ImageSmoke.java"
+# compiled here: the image has a JRE only, which cannot run a source file
+classes="$(mktemp -d)"
+javac -d "$classes" -cp "$(ls "$root"/hecaton/target/hecaton-*.jar | grep -vE -- '-(sources|tests|javadoc)\.jar$' | head -n 1)" \
+    "$root/tools/ci/ImageSmoke.java"
+kubectl create configmap image-smoke --from-file="$classes"
 sed -e "s#IMAGE#$image#" "$dir/client.yaml" | kubectl apply -f -
 kubectl wait --for=jsonpath='{.status.phase}'=Succeeded pod/hecaton-client --timeout=180s \
     || { kubectl logs hecaton-client; echo "FAIL: client ($mode)"; exit 1; }

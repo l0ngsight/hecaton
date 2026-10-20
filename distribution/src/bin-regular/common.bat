@@ -96,6 +96,10 @@ set JAVA_OPTS=%JAVA_OPTS% -Dhecaton.config="%HECATON_HOME%\!HECATON_CONFIG!"
 IF %JAVA_VERSION% GEQ 24 IF %JAVA_VERSION% LEQ 25 (
     set JAVA_OPTS=%JAVA_OPTS% --sun-misc-unsafe-memory-access=allow
 )
+:: Java 24 and later warn when a library calls native code (JEP 472) unless it is enabled.
+IF %JAVA_VERSION% GEQ 22 (
+    set JAVA_OPTS=%JAVA_OPTS% --enable-native-access=ALL-UNNAMED
+)
 :: classpath
 
 set CLASSPATH="%HECATON_HOME%\lib\*;%HECATON_HOME%\bin\user-lib;%HECATON_HOME%\bin\user-lib\*;%CLASSPATH%"

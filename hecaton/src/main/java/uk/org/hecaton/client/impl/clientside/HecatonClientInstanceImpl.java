@@ -107,7 +107,6 @@ import uk.org.hecaton.internal.nio.Disposable;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.serialization.impl.compact.SchemaService;
 import uk.org.hecaton.internal.util.ConcurrencyDetection;
-import uk.org.hecaton.internal.util.ServiceLoader;
 import uk.org.hecaton.jet.JetService;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.LoggingService;
@@ -147,7 +146,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EventListener;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -252,7 +250,7 @@ public class HecatonClientInstanceImpl implements HecatonClientInstance, Seriali
         ClassLoader classLoader = config.getClassLoader();
         properties = new HecatonProperties(config.getProperties());
         concurrencyDetection = initConcurrencyDetection();
-        clientExtension = createClientInitializer(classLoader);
+        clientExtension = new HecatonClientExtension();
         clientExtension.beforeStart(this);
         clientExtension.logInstanceTrackingMetadata();
         lifecycleService = new LifecycleServiceImpl(this);
@@ -365,22 +363,6 @@ public class HecatonClientInstanceImpl implements HecatonClientInstance, Seriali
 
     public int getId() {
         return id;
-    }
-
-    private ClientExtension createClientInitializer(ClassLoader classLoader) {
-        try {
-            String factoryId = ClientExtension.class.getName();
-            Iterator<ClientExtension> iter = ServiceLoader.iterator(ClientExtension.class, factoryId, classLoader);
-            while (iter.hasNext()) {
-                ClientExtension initializer = iter.next();
-                if (!(initializer.getClass().equals(DefaultClientExtension.class))) {
-                    return initializer;
-                }
-            }
-        } catch (Exception e) {
-            throw rethrow(e);
-        }
-        return new DefaultClientExtension();
     }
 
     private ClientExecutionServiceImpl initExecutionService() {

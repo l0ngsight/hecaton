@@ -64,10 +64,13 @@ jobs:
         java: ['17', '21', '25']
     steps:
       - uses: actions/checkout@v5
+      # Java 25 for the member (JAVA_HOME_25_X64); the matrix JDK, listed last, is the default.
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: ${{ matrix.java }}
+          java-version: |
+            25
+            ${{ matrix.java }}
       - uses: actions/download-artifact@v4
         with:
           name: hecaton-jar

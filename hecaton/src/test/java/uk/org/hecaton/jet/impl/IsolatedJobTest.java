@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.jet.impl;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.jet.SimpleTestInClusterSupport;
 import uk.org.hecaton.jet.core.DAG;
 import uk.org.hecaton.jet.core.Vertex;
@@ -43,7 +44,7 @@ public class IsolatedJobTest extends SimpleTestInClusterSupport {
                         .start()
                         .join())
                 .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("The Isolated Jobs feature is only available in Hecaton Enterprise Edition.");
+                .hasMessageContaining(HecatonFeature.JET_ISOLATED_JOBS.notAvailableMessage());
     }
 
     @Test
@@ -55,6 +56,6 @@ public class IsolatedJobTest extends SimpleTestInClusterSupport {
                         .start()
                         .join())
                 .hasCauseInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("The Isolated Jobs feature is only available in Hecaton Enterprise Edition.");
+                .hasMessageContaining(HecatonFeature.JET_ISOLATED_JOBS.notAvailableMessage());
     }
 }

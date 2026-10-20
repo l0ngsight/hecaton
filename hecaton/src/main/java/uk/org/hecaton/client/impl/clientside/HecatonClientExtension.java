@@ -56,6 +56,7 @@ import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.internal.serialization.SerializationServiceBuilder;
 import uk.org.hecaton.internal.serialization.impl.DefaultSerializationServiceBuilder;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.JVMUtil;
 import uk.org.hecaton.internal.util.MapUtil;
 import uk.org.hecaton.jet.JetService;
@@ -83,9 +84,9 @@ import static uk.org.hecaton.internal.util.InstanceTrackingUtil.writeInstanceTra
 import static uk.org.hecaton.spi.properties.ClusterProperty.SOCKET_CLIENT_BUFFER_DIRECT;
 
 @SuppressWarnings({"WeakerAccess", "checkstyle:ClassFanOutComplexity", "ClassDataAbstractionCoupling"})
-public class DefaultClientExtension implements ClientExtension {
+public class HecatonClientExtension implements ClientExtension {
 
-    protected static final ILogger LOGGER = Logger.getLogger(DefaultClientExtension.class);
+    protected static final ILogger LOGGER = Logger.getLogger(HecatonClientExtension.class);
 
     protected volatile HecatonClientInstanceImpl client;
     protected JetClientInstanceImpl jetClient;
@@ -175,14 +176,14 @@ public class DefaultClientExtension implements ClientExtension {
 
     @Override
     public SocketInterceptor createSocketInterceptor() {
-        LOGGER.warning("SocketInterceptor feature is only available on Hecaton Enterprise!");
+        LOGGER.warning(HecatonFeature.SOCKET_INTERCEPTOR.notAvailableMessage());
         return null;
     }
 
     @Override
     public SocketInterceptor createSocketInterceptor(SocketInterceptorConfig socketInterceptorConfig) {
         if (socketInterceptorConfig != null && socketInterceptorConfig.isEnabled()) {
-            LOGGER.warning("SocketInterceptor feature is only available on Hecaton Enterprise!");
+            LOGGER.warning(HecatonFeature.SOCKET_INTERCEPTOR.notAvailableMessage());
         }
         return null;
     }
@@ -198,8 +199,8 @@ public class DefaultClientExtension implements ClientExtension {
     @Override
     public ChannelInitializer createChannelInitializer(SSLConfig sslConfig, SocketOptions socketOptions) {
         if (sslConfig != null && sslConfig.isEnabled()) {
-            if (!BuildInfoProvider.getBuildInfo().isEnterprise()) {
-                throw new IllegalStateException("SSL/TLS requires Hecaton Enterprise Edition");
+            if (!HecatonFeature.TLS.isAvailable()) {
+                throw new IllegalStateException(HecatonFeature.TLS.notAvailableMessage());
             }
         }
 
@@ -263,8 +264,7 @@ public class DefaultClientExtension implements ClientExtension {
     public ClientClusterService createClientClusterService(HecatonClientInstanceImpl clientInstance) {
         if (clientInstance.getClientConfig().getNetworkConfig()
                 .getClusterRoutingConfig().getRoutingMode() == RoutingMode.MULTI_MEMBER) {
-            throw new InvalidConfigurationException(String.format("%s routing is an enterprise feature since 5.5. "
-                    + "You must use Hecaton enterprise to enable this feature.", RoutingMode.MULTI_MEMBER));
+            throw new InvalidConfigurationException(HecatonFeature.MULTI_MEMBER_ROUTING.notAvailableMessage());
         }
         return new ClientClusterServiceImpl(clientInstance);
     }

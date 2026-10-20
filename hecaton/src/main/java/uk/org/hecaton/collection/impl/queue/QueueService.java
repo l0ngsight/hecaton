@@ -357,10 +357,11 @@ public class QueueService implements ManagedService, MigrationAwareService, Tran
         IPartition partition = partitionService.getPartition(partitionId, false);
 
         Address owner = partition.getOwnerOrNull();
+        // read-only: this runs outside the partition thread (metrics, getLocalQueueStats())
         if (thisAddress.equals(owner)) {
-            stats.setOwnedItemCount(container.size());
+            stats.setOwnedItemCount(Math.min(container.getConfig().getMaxSize(), container.itemCountForStats()));
         } else if (owner != null) {
-            stats.setBackupItemCount(container.backupSize());
+            stats.setBackupItemCount(container.itemCountForStats());
         }
         container.setStats(stats);
         return stats;

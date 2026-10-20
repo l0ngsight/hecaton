@@ -30,6 +30,7 @@ import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonArray;
 import uk.org.hecaton.internal.json.JsonObject;
 import uk.org.hecaton.internal.json.JsonValue;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.spi.properties.ClusterProperty;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
@@ -415,7 +416,7 @@ public class RestClusterTest {
         HTTPCommunicator communicator = new HTTPCommunicator(instance);
         ConnectionResponse response =
                 communicator.setLicense(config.getClusterName(), getPassword(), "whatever");
-        assertSuccessJson(response);
+        assertSuccessJson(response, "message", HecatonFeature.LICENSE.notAvailableMessage());
     }
 
     @Test
@@ -427,7 +428,7 @@ public class RestClusterTest {
 
         // Reload is enterprise feature. Should fail here.
         assertJsonContains(response.response, "status", "fail",
-                "message", "Configuration Reload requires Hecaton Enterprise Edition");
+                "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
     }
 
     @Test
@@ -441,7 +442,7 @@ public class RestClusterTest {
 
         // Reload is enterprise feature. Should fail here.
         assertJsonContains(response.response, "status", "fail",
-                "message", "Configuration Update requires Hecaton Enterprise Edition");
+                "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
     }
 
     @Test

@@ -19,7 +19,7 @@ package uk.org.hecaton.instance;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.core.HecatonException;
 import uk.org.hecaton.instance.impl.DefaultNodeContext;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.HecatonInstanceFactory;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.instance.impl.NodeExtension;
@@ -72,7 +72,7 @@ public class NodeThreadLeakTest extends HecatonTestSupport {
         testFailingHecatonCreation(new DefaultNodeContext() {
             @Override
             public NodeExtension createNodeExtension(Node node) {
-                return new DefaultNodeExtension(node) {
+                return new HecatonNodeExtension(node) {
                     @Override
                     public <T> T createService(Class<T> clazz, Object... params) {
                         NodeEngineImpl nodeEngine = (NodeEngineImpl) params[0];

@@ -29,6 +29,7 @@ import uk.org.hecaton.internal.ascii.rest.RestValue;
 import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonObject;
 import uk.org.hecaton.internal.management.dto.WanReplicationConfigDTO;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.TestAwareInstanceFactory;
@@ -270,7 +271,7 @@ public class RestTest {
         assertEquals(500, responseCode);
         assertJsonContains(result,
                 "status", "fail",
-                "message", "Wan Sync requires Hecaton Enterprise Edition.");
+                "message", HecatonFeature.WAN_SYNC.notAvailableMessage());
     }
 
     @Test

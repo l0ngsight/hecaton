@@ -20,11 +20,11 @@ import uk.org.hecaton.config.AdvancedNetworkConfig;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.EndpointConfig;
 import uk.org.hecaton.config.SSLConfig;
-import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.nio.ascii.TextChannelInitializer;
 import uk.org.hecaton.internal.server.ServerContext;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.logging.Logger;
 
@@ -137,8 +137,8 @@ public class ChannelInitializerFunction implements Function<EndpointQualifier, C
     // check given SSL config
     private void checkSslConfigAvailability(SSLConfig sslConfig) {
         if (sslConfig != null && sslConfig.isEnabled()) {
-            if (!BuildInfoProvider.getBuildInfo().isEnterprise()) {
-                throw new IllegalStateException("SSL/TLS requires Hecaton Enterprise Edition");
+            if (!HecatonFeature.TLS.isAvailable()) {
+                throw new IllegalStateException(HecatonFeature.TLS.notAvailableMessage());
             }
         }
     }

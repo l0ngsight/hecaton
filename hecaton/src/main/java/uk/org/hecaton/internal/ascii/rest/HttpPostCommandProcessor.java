@@ -27,6 +27,7 @@ import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonArray;
 import uk.org.hecaton.internal.json.JsonObject;
 import uk.org.hecaton.internal.management.dto.WanReplicationConfigDTO;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.StringUtil;
 import uk.org.hecaton.logging.impl.LoggingServiceImpl;
 import uk.org.hecaton.version.Version;
@@ -620,8 +621,8 @@ public class HttpPostCommandProcessor extends HttpCommandProcessor<HttpPostComma
     }
 
     protected void handleSetLicense(HttpPostCommand cmd) throws Throwable {
-        // NO-OP in OS
-        prepareResponse(cmd, response(SUCCESS));
+        // F21: Hecaton has no licenses; the key is ignored
+        prepareResponse(cmd, response(SUCCESS, "message", HecatonFeature.LICENSE.notAvailableMessage()));
     }
 
     private void handleLogLevelSet(HttpPostCommand command) {
@@ -645,7 +646,7 @@ public class HttpPostCommandProcessor extends HttpCommandProcessor<HttpPostComma
         prepareResponse(
                 SC_500,
                 command,
-                response(FAIL, "message", "Configuration Reload requires Hecaton Enterprise Edition")
+                response(FAIL, "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage())
         );
     }
 
@@ -653,7 +654,7 @@ public class HttpPostCommandProcessor extends HttpCommandProcessor<HttpPostComma
         prepareResponse(
                 SC_500,
                 command,
-                response(FAIL, "message", "Configuration Update requires Hecaton Enterprise Edition")
+                response(FAIL, "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage())
         );
     }
 

@@ -38,7 +38,6 @@ import uk.org.hecaton.logging.impl.LoggingServiceImpl;
 import uk.org.hecaton.spi.MemberAddressProvider;
 import uk.org.hecaton.spi.properties.HecatonProperties;
 
-import java.util.List;
 import java.util.Properties;
 
 import static uk.org.hecaton.config.ConfigAccessor.getActiveMemberNetworkConfig;
@@ -50,14 +49,9 @@ import static uk.org.hecaton.spi.properties.ClusterProperty.IO_WRITE_THROUGH_ENA
 
 public class DefaultNodeContext implements NodeContext {
 
-    public static final List<String> EXTENSION_PRIORITY_LIST = List.of(
-            "uk.org.hecaton.instance.impl.EnterpriseNodeExtension",
-            "uk.org.hecaton.instance.impl.DefaultNodeExtension"
-    );
-
     @Override
     public NodeExtension createNodeExtension(Node node) {
-        return NodeExtensionFactory.create(node, EXTENSION_PRIORITY_LIST);
+        return new HecatonNodeExtension(node);
     }
 
     @Override

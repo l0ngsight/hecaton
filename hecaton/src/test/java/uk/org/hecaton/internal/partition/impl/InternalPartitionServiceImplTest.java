@@ -20,7 +20,7 @@ import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.core.HecatonInstanceNotActiveException;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.internal.partition.InternalPartition;
 import uk.org.hecaton.internal.partition.PartitionReplica;
 import uk.org.hecaton.internal.partition.PartitionTableView;
@@ -62,7 +62,7 @@ public class InternalPartitionServiceImplTest extends HecatonTestSupport {
     @Before
     public void setup() {
         instance = createHecatonInstanceFactory()
-                .withNodeExtensionCustomizer(node -> new DefaultNodeExtension(node) {
+                .withNodeExtensionCustomizer(node -> new HecatonNodeExtension(node) {
                     @Override
                     public boolean isStartCompleted() {
                         return startupDone.get();

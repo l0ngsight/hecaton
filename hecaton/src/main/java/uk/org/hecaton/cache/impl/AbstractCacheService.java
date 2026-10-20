@@ -53,6 +53,7 @@ import uk.org.hecaton.internal.util.ConcurrencyUtil;
 import uk.org.hecaton.internal.util.ConstructorFunction;
 import uk.org.hecaton.internal.util.ContextMutexFactory;
 import uk.org.hecaton.internal.util.FutureUtil;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.InvocationUtil;
 import uk.org.hecaton.internal.util.MapUtil;
 import uk.org.hecaton.logging.ILogger;
@@ -705,8 +706,7 @@ public abstract class AbstractCacheService implements ICacheService,
     @Override
     public CacheOperationProvider getCacheOperationProvider(String cacheNameWithPrefix, InMemoryFormat inMemoryFormat) {
         if (InMemoryFormat.NATIVE == inMemoryFormat) {
-            throw new IllegalArgumentException("Native memory is available only in Hecaton Enterprise."
-                    + "Make sure you have Hecaton Enterprise JARs on your classpath!");
+            throw new IllegalArgumentException(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage());
         }
         CacheOperationProvider cacheOperationProvider = operationProviderCache.get(cacheNameWithPrefix);
         if (cacheOperationProvider != null) {

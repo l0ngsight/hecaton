@@ -16,10 +16,6 @@
 
 package uk.org.hecaton.config;
 
-import uk.org.hecaton.internal.util.EmptyStatement;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -55,9 +51,8 @@ public class InstanceTrackingConfig {
 
     /**
      * Setting whether instance tracking should be enabled or not.
-     * It depends on whether the instance is an OEM/NLC build or not.
      */
-    private boolean enabled = isOEMBuild();
+    private boolean enabled;
 
     private String fileName;
     private String formatPattern;
@@ -323,22 +318,5 @@ public class InstanceTrackingConfig {
         public String getModeName() {
             return modeName;
         }
-    }
-
-    /**
-     * Returns whether this build is an OEM/NLC build or not.
-     */
-    private static boolean isOEMBuild() {
-        try {
-            Class<?> helper = Class.forName("uk.org.hecaton.instance.impl.BuiltInLicenseHolder");
-            Method getLicense = helper.getMethod("getBuiltInLicense");
-            // enabled for OEM/NLC build
-            return getLicense.invoke(null) != null;
-        } catch (ClassNotFoundException | NoSuchMethodException
-                | IllegalAccessException | InvocationTargetException e) {
-            // running OS, instance tracking is disabled by default
-            EmptyStatement.ignore(e);
-        }
-        return false;
     }
 }

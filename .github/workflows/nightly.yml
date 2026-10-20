@@ -13,18 +13,18 @@ on:
     inputs:
       ref:
         description: 'Branch of this repository to test (and to take the tools from)'
-        default: feature/m1-rebranded-ce
+        default: main
 
 permissions:
   contents: read
 
 concurrency:
-  group: nightly-${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+  group: nightly-${{ inputs.ref || 'main' }}
   cancel-in-progress: false
 
 env:
-  # Scheduled runs test the active milestone branch; switch to main once M1 is merged.
-  REF: ${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+  # Scheduled runs test main.
+  REF: ${{ inputs.ref || 'main' }}
 
 jobs:
   plan:

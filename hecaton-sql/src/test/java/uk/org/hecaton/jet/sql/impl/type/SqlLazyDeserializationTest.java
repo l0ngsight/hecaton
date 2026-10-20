@@ -20,7 +20,7 @@ import uk.org.hecaton.client.test.TestHecatonFactory;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.SerializationConfig;
 import uk.org.hecaton.core.HecatonInstance;
-import uk.org.hecaton.instance.impl.DefaultNodeExtension;
+import uk.org.hecaton.instance.impl.HecatonNodeExtension;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
@@ -153,7 +153,7 @@ public class SqlLazyDeserializationTest {
         verify(results.get(1), times(1)).getInternalGenericRecord("office");
     }
 
-    private static class SerializationServiceMockingNodeExtension extends DefaultNodeExtension {
+    private static class SerializationServiceMockingNodeExtension extends HecatonNodeExtension {
 
         SerializationServiceMockingNodeExtension(Node node) {
             super(node);

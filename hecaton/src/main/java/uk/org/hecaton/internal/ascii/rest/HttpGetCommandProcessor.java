@@ -38,6 +38,7 @@ import uk.org.hecaton.internal.partition.InternalPartitionService;
 import uk.org.hecaton.internal.server.Server;
 import uk.org.hecaton.internal.server.ServerConnection;
 import uk.org.hecaton.internal.server.ServerConnectionManager;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.StringUtil;
 import uk.org.hecaton.logging.impl.LoggingServiceImpl;
 
@@ -445,7 +446,7 @@ public class HttpGetCommandProcessor extends HttpCommandProcessor<HttpGetCommand
         prepareResponse(
                 SC_500,
                 command,
-                response(FAIL, "message", "Wan Sync requires Hecaton Enterprise Edition.")
+                response(FAIL, "message", HecatonFeature.WAN_SYNC.notAvailableMessage())
         );
     }
 }
