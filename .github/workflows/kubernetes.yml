@@ -10,13 +10,13 @@ on:
     inputs:
       ref:
         description: 'Branch of this repository to test'
-        default: feature/m1-rebranded-ce
+        default: main
 
 permissions:
   contents: read
 
 concurrency:
-  group: kubernetes-${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+  group: kubernetes-${{ inputs.ref || 'main' }}
   cancel-in-progress: false
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+          ref: ${{ inputs.ref || 'main' }}
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
