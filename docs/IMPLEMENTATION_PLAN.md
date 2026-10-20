@@ -239,23 +239,34 @@ With D10 the provider indirection planned earlier (`hecaton-ext-spi`, `FeaturePr
 delegating `HecatonNodeExtension`) is not needed: Java 17 features are built directly in
 core (spec §7.1).
 
-1. **Edition gates out:** delete the "requires Enterprise" checks in `DefaultNodeExtension`,
-   `ConfigValidator`, `Node`, `ClientEndpointImpl`, `ChannelInitializerFunction`,
-   `DefaultClientExtension`, etc. Until a feature lands, its config fails with a precise
-   "not implemented yet (Fn)" message instead. `BuildInfo#isEnterprise()` becomes a
-   deprecated method returning `true`; the Enterprise build-properties lookup goes.
-   Rewrite the upstream tests that assert "requires Enterprise".
-2. **Licensing code out (F21):** `license-key` accepted and ignored with an INFO log;
-   `getLicense()` returns a "community, unlimited" descriptor; remove the license-related
-   REST/CLI paths' Enterprise branches.
-3. **`DefaultNodeExtension` → `HecatonNodeExtension`** (one class, no priority list
-   lookup); same for the client extension.
-4. **`MemberModule` SPI** (spec §7.2) with the capability interfaces for HD, persistence,
-   tiered storage and vector, and the "requires `uk.org.hecaton:hecaton-<module>`" errors.
-5. **Java 25 member check** (spec §8.2).
-6. **F15 client failover:** `isClientFailoverSupported() → true`, plus failover tests with
-   two clusters.
-7. **`hecaton-member` POM** that pulls in every member module as it appears.
+1. **Edition gates out — done:** the "requires Enterprise" checks in `HecatonNodeExtension`,
+   `ConfigValidator`, `Node`, `ChannelInitializerFunction`, `HecatonClientExtension`, the
+   cache, WAN, Jet, REST and TPC classes now ask `HecatonFeature#isAvailable()` and fail with
+   its message ("X (Fn) is not available in Hecaton yet; it is planned for milestone M…", or
+   "not supported; use …"). A feature's entry flips when its implementation lands.
+   `BuildInfo#isEnterprise()` stays `false` (not `true` as first planned): it is sent to
+   clients in the authentication response, and official clients would then expect
+   Enterprise behaviour. The upstream tests that asserted "requires Enterprise" use the new
+   messages.
+2. **Licensing code out (F21) — done:** `license-key` is accepted and ignored with an INFO
+   log, also when set through REST or Management Center; `getLicense()` returns `null` (no
+   caller needs a descriptor); instance tracking no longer looks for the Enterprise
+   built-in license.
+3. **`DefaultNodeExtension` → `HecatonNodeExtension` — done** (constructed directly; the
+   priority-list lookup and `NodeExtensionFactory` are gone); same for the client extension.
+4. **`MemberModule` SPI — done** (spec §7.2): `uk.org.hecaton.instance.module`, capability
+   interfaces for HD, persistence, tiered storage and vector (their operations come with
+   the modules), `MemberModules#require` for the "requires `uk.org.hecaton:hecaton-<module>`"
+   errors.
+5. **Java 25 member check — done** (spec §8.2): `MemberJavaVersion`; the client smoke test
+   on JDK 17/21 runs its member on Java 25 and checks that a member refuses an older Java.
+6. **F15 client failover — done:** `isClientFailoverSupported() → true`; `FailoverTest`
+   covers moving to the second cluster when the first goes down or blocks clients.
+7. **`hecaton-member` POM — done:** core plus `hecaton-sql`; member modules join it as they
+   appear.
+8. **Priority-queue failover duplicate — fixed** (moved from M1, see §1.9).
+
+**M2 exit:** merge to `main`, tag `v0.2.0`.
 
 Est.: 2–3 ew.
 

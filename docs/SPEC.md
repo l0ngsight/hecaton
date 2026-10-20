@@ -309,12 +309,12 @@ Every feature must:
 
 Features that run on Java 17 (§3.1) live in the `hecaton` module, in the packages where
 Hazelcast EE users expect them (`uk.org.hecaton.security`, `uk.org.hecaton.cp`,
-`uk.org.hecaton.wan`, ...). They plug into the existing hooks: `DefaultNodeExtension`
-(renamed `HecatonNodeExtension` in M2) implements the security context, SSL engine factory,
+`uk.org.hecaton.wan`, ...). They plug into the existing hooks: `HecatonNodeExtension`
+(Hazelcast's `DefaultNodeExtension`) implements the security context, SSL engine factory,
 CP subsystem, WAN service, socket interceptor, failover and version-compatibility methods
 directly instead of rejecting them. There is no provider indirection.
 
-The client side works the same way: `DefaultClientExtension` gains TLS, socket interceptor
+The client side works the same way: `HecatonClientExtension` gains TLS, socket interceptor
 and failover support in place.
 
 ### 7.2 `MemberModule` SPI
