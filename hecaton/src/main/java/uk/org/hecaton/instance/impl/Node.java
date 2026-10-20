@@ -46,6 +46,7 @@ import uk.org.hecaton.instance.BuildInfo;
 import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.instance.ProtocolType;
+import uk.org.hecaton.instance.module.MemberModules;
 import uk.org.hecaton.internal.ascii.TextCommandService;
 import uk.org.hecaton.internal.cluster.Joiner;
 import uk.org.hecaton.internal.cluster.impl.ClusterJoinManager;
@@ -207,6 +208,8 @@ public class Node {
      */
     private final MemberVersion version;
 
+    private final MemberModules memberModules;
+
     @SuppressWarnings({"checkstyle:executablestatementcount", "checkstyle:methodlength"})
     public Node(HecatonInstanceImpl hecatonInstance, Config staticConfig, NodeContext nodeContext) {
         MemberJavaVersion.check();
@@ -244,6 +247,7 @@ public class Node {
 
         try {
             boolean liteMember = config.isLiteMember();
+            memberModules = MemberModules.load(configClassLoader);
             nodeExtension = nodeContext.createNodeExtension(this);
             address = addressPicker.getPublicAddress(MEMBER);
             thisUuid = nodeExtension.createMemberUuid();
@@ -262,6 +266,7 @@ public class Node {
             logger = tmpLogger;
 
             nodeExtension.printNodeInfo();
+            memberModules.init(this, logger);
             nodeExtension.beforeStart();
             nodeExtension.logInstanceTrackingMetadata();
 
@@ -794,6 +799,11 @@ public class Node {
 
     public NodeExtension getNodeExtension() {
         return nodeExtension;
+    }
+
+    /** The member modules (spec §7.2) found at start. */
+    public MemberModules getMemberModules() {
+        return memberModules;
     }
 
     public DiscoveryService getDiscoveryService() {
