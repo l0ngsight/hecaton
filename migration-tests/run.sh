@@ -33,8 +33,8 @@ if [ ${#samples[@]} -eq 0 ]; then
     done
 fi
 
-migrate_jar="$(ls "$root"/hecaton-migrate/target/hecaton-migrate-*.jar | grep -vE -- '-(sources|tests|javadoc)\.jar$' | head -n 1)"
-version="$(basename "$migrate_jar" .jar)"
+migrate_jar="$(ls "$root"/hecaton-migrate/target/hecaton-migrate-*-cli.jar | head -n 1)"
+version="$(basename "$migrate_jar" -cli.jar)"
 version="${version#hecaton-migrate-}"
 
 # Builds the Maven project in $1 and runs org.example.migration.App; it must print "OK <sample>".
