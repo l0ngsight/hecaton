@@ -680,6 +680,17 @@ public class QueueContainer implements IdentifiedDataSerializable {
         return getBackupMap().size();
     }
 
+    /**
+     * Returns the number of items this replica holds, as the primary or as a backup, without
+     * moving them between the item queue and the backup map. Unlike {@link #size()} and
+     * {@link #backupSize()} it can be called outside the partition thread, as statistics are.
+     */
+    public int itemCountForStats() {
+        Queue<QueueItem> itemQueue = this.itemQueue;
+        ConcurrentMap<Long, QueueItem> backupMap = this.backupMap;
+        return (itemQueue == null ? 0 : itemQueue.size()) + (backupMap == null ? 0 : backupMap.size());
+    }
+
     public Map<Long, Data> clear() {
         long current = Clock.currentTimeMillis();
         Map<Long, Data> map = createLinkedHashMap(getItemQueue().size());
