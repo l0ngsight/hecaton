@@ -101,6 +101,11 @@ public class DefaultNodeExtensionTest extends HecatonTestSupport {
     }
 
     @Test
+    public void test_clientFailoverSupported() {
+        assertTrue(nodeExtension.isClientFailoverSupported());
+    }
+
+    @Test
     public void test_nodeVersionCompatibleWith_ownClusterVersion() {
         MemberVersion currentVersion = getNode(hecatonInstance).getVersion();
         assertTrue(nodeExtension.isNodeVersionCompatibleWith(currentVersion.asVersion()));

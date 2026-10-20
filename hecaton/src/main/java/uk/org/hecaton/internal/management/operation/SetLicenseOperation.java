@@ -17,9 +17,6 @@
 package uk.org.hecaton.internal.management.operation;
 
 import uk.org.hecaton.instance.impl.DefaultNodeExtension;
-import uk.org.hecaton.internal.config.LicenseKey;
-import uk.org.hecaton.internal.dynamicconfig.ClusterWideConfigurationService;
-import uk.org.hecaton.internal.dynamicconfig.ConfigurationService;
 import uk.org.hecaton.internal.management.ManagementDataSerializerHook;
 import uk.org.hecaton.nio.ObjectDataInput;
 import uk.org.hecaton.nio.ObjectDataOutput;
@@ -45,11 +42,6 @@ public class SetLicenseOperation extends AbstractManagementOperation {
         DefaultNodeExtension nodeExtension
                 = (DefaultNodeExtension) getNodeEngine().getNode().getNodeExtension();
         nodeExtension.setLicenseKey(licenseKey);
-
-        LicenseKey licenseKeyObject = new LicenseKey(licenseKey);
-        ConfigurationService configurationService
-                = getNodeEngine().getService(ClusterWideConfigurationService.SERVICE_NAME);
-        configurationService.persist(licenseKeyObject);
     }
 
     @Override

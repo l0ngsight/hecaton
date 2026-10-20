@@ -621,8 +621,8 @@ public class HttpPostCommandProcessor extends HttpCommandProcessor<HttpPostComma
     }
 
     protected void handleSetLicense(HttpPostCommand cmd) throws Throwable {
-        // NO-OP in OS
-        prepareResponse(cmd, response(SUCCESS));
+        // F21: Hecaton has no licenses; the key is ignored
+        prepareResponse(cmd, response(SUCCESS, "message", HecatonFeature.LICENSE.notAvailableMessage()));
     }
 
     private void handleLogLevelSet(HttpPostCommand command) {

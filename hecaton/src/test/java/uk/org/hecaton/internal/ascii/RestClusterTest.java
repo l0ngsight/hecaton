@@ -416,7 +416,7 @@ public class RestClusterTest {
         HTTPCommunicator communicator = new HTTPCommunicator(instance);
         ConnectionResponse response =
                 communicator.setLicense(config.getClusterName(), getPassword(), "whatever");
-        assertSuccessJson(response);
+        assertSuccessJson(response, "message", HecatonFeature.LICENSE.notAvailableMessage());
     }
 
     @Test

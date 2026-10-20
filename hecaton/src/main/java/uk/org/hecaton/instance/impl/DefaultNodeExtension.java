@@ -149,6 +149,7 @@ import static uk.org.hecaton.internal.util.CollectionUtil.setOf;
 import static uk.org.hecaton.internal.util.ExceptionUtil.rethrow;
 import static uk.org.hecaton.internal.util.InstanceTrackingUtil.writeInstanceTrackingFile;
 import static uk.org.hecaton.internal.util.StringUtil.isNullOrEmpty;
+import static uk.org.hecaton.internal.util.StringUtil.isNullOrEmptyAfterTrim;
 import static uk.org.hecaton.jet.impl.util.Util.JET_IS_DISABLED_MESSAGE;
 import static uk.org.hecaton.jet.impl.util.Util.checkJetIsEnabled;
 import static uk.org.hecaton.map.impl.MapServiceConstructor.getDefaultMapServiceConstructor;
@@ -263,6 +264,9 @@ public class DefaultNodeExtension implements NodeExtension {
     @Override
     public void beforeStart() {
         integrityChecker.checkIntegrity();
+        if (!isNullOrEmptyAfterTrim(node.getConfig().getLicenseKey())) {
+            systemLogger.info(HecatonFeature.LICENSE.notAvailableMessage());
+        }
 
         if (jetServiceBackend != null) {
             systemLogger.info("Jet is enabled");
@@ -702,8 +706,9 @@ public class DefaultNodeExtension implements NodeExtension {
         return new CPSubsystemStubImpl(false);
     }
 
+    /** F21: Hecaton has no licenses; a license key set at runtime is ignored. */
     public void setLicenseKey(String licenseKey) {
-        // NOP
+        systemLogger.info(HecatonFeature.LICENSE.notAvailableMessage());
     }
 
     @Override

@@ -452,7 +452,7 @@ public interface NodeExtension {
     ClientEngine createClientEngine();
 
     /**
-     * @return the license object, if a Hecaton Enterprise license is configured, otherwise {@code null}
+     * @return {@code null}: Hecaton has no licenses (F21)
      */
     @Nullable
     default Object getLicense() {
