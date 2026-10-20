@@ -39,10 +39,12 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.InputStream;
+import java.net.Socket;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyStore;
+import java.time.Duration;
 import java.util.Properties;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -131,6 +133,19 @@ public class TlsTest extends HecatonTestSupport {
         HecatonInstance other = member(ssl(ca.keyStore("elsewhere", "10.255.255.1"), trustStore));
         assertThatThrownBy(() -> client(ssl(null, trustStore).setProperty("validateIdentity", "true"), other))
                 .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void connectionThatDoesNotCompleteTheHandshakeIsClosed() throws Exception {
+        HecatonInstance member = member(ssl(memberKeyStore, trustStore).setProperty("handshakeTimeoutSeconds", "1"));
+        int port = member.getCluster().getLocalMember().getAddress().getPort();
+        try (Socket socket = new Socket("127.0.0.1", port)) {
+            socket.setSoTimeout(30_000);
+            long start = System.nanoTime();
+            // nothing is sent; the member closes the connection
+            assertThat(socket.getInputStream().read()).isEqualTo(-1);
+            assertThat(Duration.ofNanos(System.nanoTime() - start)).isLessThan(Duration.ofSeconds(20));
+        }
     }
 
     @Test

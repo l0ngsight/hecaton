@@ -22,6 +22,7 @@ import uk.org.hecaton.nio.ssl.SSLContextFactory;
 import uk.org.hecaton.nio.ssl.SSLEngineFactory;
 
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import static uk.org.hecaton.internal.util.ExceptionUtil.rethrow;
 
@@ -30,7 +31,19 @@ import static uk.org.hecaton.internal.util.ExceptionUtil.rethrow;
  */
 public final class SSLEngineFactories {
 
+    /** SSL property: seconds a connection may take to complete the TLS handshake (default 10). */
+    public static final String HANDSHAKE_TIMEOUT_SECONDS = "handshakeTimeoutSeconds";
+
+    private static final int DEFAULT_HANDSHAKE_TIMEOUT_SECONDS = 10;
+
     private SSLEngineFactories() {
+    }
+
+    /** The handshake timeout that {@code config} sets, in milliseconds. */
+    public static long handshakeTimeoutMillis(SSLConfig config) {
+        String value = config.getProperty(HANDSHAKE_TIMEOUT_SECONDS);
+        int seconds = value == null || value.isBlank() ? DEFAULT_HANDSHAKE_TIMEOUT_SECONDS : Integer.parseInt(value.trim());
+        return TimeUnit.SECONDS.toMillis(seconds);
     }
 
     /**

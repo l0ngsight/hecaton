@@ -137,6 +137,7 @@ public class ChannelInitializerFunction implements Function<EndpointQualifier, C
             return initializer;
         }
         SSLEngineFactory engineFactory = SSLEngineFactories.create(sslConfig, false, config.getClassLoader());
-        return new TlsChannelInitializer(initializer, engineFactory);
+        return new TlsChannelInitializer(initializer, engineFactory,
+                SSLEngineFactories.handshakeTimeoutMillis(sslConfig));
     }
 }

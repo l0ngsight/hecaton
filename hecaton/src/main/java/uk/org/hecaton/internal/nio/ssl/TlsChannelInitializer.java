@@ -33,10 +33,17 @@ public class TlsChannelInitializer implements ChannelInitializer {
 
     private final ChannelInitializer delegate;
     private final SSLEngineFactory engineFactory;
+    private final long handshakeTimeoutMillis;
 
-    public TlsChannelInitializer(ChannelInitializer delegate, SSLEngineFactory engineFactory) {
+    /**
+     * @param handshakeTimeoutMillis how long a connection may take to complete the handshake
+     *                               before it is closed
+     */
+    public TlsChannelInitializer(ChannelInitializer delegate, SSLEngineFactory engineFactory,
+                                 long handshakeTimeoutMillis) {
         this.delegate = delegate;
         this.engineFactory = engineFactory;
+        this.handshakeTimeoutMillis = handshakeTimeoutMillis;
     }
 
     @Override
@@ -45,6 +52,8 @@ public class TlsChannelInitializer implements ChannelInitializer {
         channel.inboundPipeline().addLast(new TlsDecoder(engine));
         delegate.initChannel(channel);
         channel.outboundPipeline().addLast(new TlsEncoder(engine));
+        engine.beginHandshake();
+        TlsHandshake.closeIfNotDoneWithin(channel, engine, handshakeTimeoutMillis);
     }
 
     private static Address peerAddress(Channel channel) {

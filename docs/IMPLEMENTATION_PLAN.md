@@ -277,7 +277,7 @@ Est.: 2–3 ew.
 | Step | Work | Est. |
 |---|---|---|
 | F1.1 — JDK factory done | `SSLEngineFactory` implementations: JDK (`BasicSSLContextFactory`-compatible properties: keystore/truststore type/password/path, protocol, ciphers, `mutualAuthentication` REQUIRED/OPTIONAL) and optional OpenSSL via netty-tcnative (Apache 2.0). | 2 ew |
-| F1.2 — done (handshake timeout open) | TLS channel handlers in `createChannelInitializerFn` for MEMBER, CLIENT, WAN, REST, MEMCACHE endpoint qualifiers (advanced networking). Handshake timeout, ALPN not required. | 1.5 ew |
+| F1.2 — done | TLS channel handlers in `createChannelInitializerFn` for MEMBER, CLIENT, WAN, REST, MEMCACHE endpoint qualifiers (advanced networking). Handshake timeout, ALPN not required. | 1.5 ew |
 | F1.3 — done | Client-side TLS in the client extension, Java 17 compatible. | 1 ew |
 | F1.4 | Keystore hot-reload (`keyStoreReload`/file-watch), cert expiry metrics. | 0.5 ew |
 | F2.1 | `SecurityContext`/`SecurityService`: realms, JAAS login, `Credentials` types (username/password, token, cert), member-to-member authentication, client authentication in `AuthenticationBaseMessageTask`. | 2.5 ew |

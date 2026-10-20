@@ -208,7 +208,8 @@ public class HecatonClientExtension implements ClientExtension {
             return plain;
         }
         SSLEngineFactory engineFactory = SSLEngineFactories.create(sslConfig, true, client.getClientConfig().getClassLoader());
-        return new TlsChannelInitializer(plain, engineFactory);
+        return new TlsChannelInitializer(plain, engineFactory,
+                SSLEngineFactories.handshakeTimeoutMillis(sslConfig));
     }
 
     @Override
