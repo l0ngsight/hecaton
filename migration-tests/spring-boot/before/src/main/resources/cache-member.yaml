@@ -1,0 +1,11 @@
+hazelcast:
+  cluster-name: migration-test-boot
+  properties:
+    hazelcast.logging.type: slf4j
+  network:
+    port:
+      port: 5921
+      auto-increment: true
+    join:
+      multicast:
+        enabled: false

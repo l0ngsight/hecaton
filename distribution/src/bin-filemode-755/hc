@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+
+function findScriptDir() {
+  CURRENT=$PWD
+
+  DIR=$(dirname "$0")
+  cd "$DIR" || exit
+  TARGET_FILE=$(basename "$0")
+
+  # Iterate down a (possible) chain of symlinks
+  while [ -L "$TARGET_FILE" ]
+  do
+      TARGET_FILE=$(readlink "$TARGET_FILE")
+      DIR=$(dirname "$TARGET_FILE")
+      cd "$DIR" || exit
+      TARGET_FILE=$(basename "$TARGET_FILE")
+  done
+
+  SCRIPT_DIR=$(pwd -P)
+  # Restore current directory
+  cd "$CURRENT" || exit
+}
+
+findScriptDir
+. "$SCRIPT_DIR"/common.sh
+
+if [ -z "$LOGGING_CONFIG" ]; then
+  # Use the default log4j2 file
+  LOGGING_CONFIG="file:$HECATON_HOME/config/log4j2.properties"
+else
+  if [ -f "$LOGGING_CONFIG" ]; then
+    # Try if the file exists - either absolute or relative path
+    LOGGING_CONFIG="file:$LOGGING_CONFIG"
+  elif [ -f "$HECATON_HOME/config/$LOGGING_CONFIG" ]; then
+    # Try file in the config directory
+    LOGGING_CONFIG="file:$HECATON_HOME/config/$LOGGING_CONFIG"
+  else
+    echo "Could not find specified LOGGING_CONFIG file."
+    exit 1
+  fi
+fi
+
+# HECATON_CONFIG holds the configuration path.
+# If the the path is relative, it is relative to the Hecaton installation directory (HECATON_HOME).
+# The path can be absolute.
+# By default, it is set to $HECATON_HOME/config/hecaton.xml, with fallback to $HECATON_HOME/config/hecaton.yaml
+# and to $HECATON_HOME/config/hecaton.yml if the xml file is not present.
+if [ -z "$HECATON_CONFIG" ]; then
+    HECATON_CONFIG="config/hecaton.xml"
+    if [ ! -f "$HECATON_HOME/$HECATON_CONFIG" ]; then
+        HECATON_CONFIG="config/hecaton.yaml"
+    fi
+    if [ ! -f "$HECATON_HOME/$HECATON_CONFIG" ]; then
+        HECATON_CONFIG="config/hecaton.yml"
+    fi
+
+    if [ ! -f "$HECATON_HOME/$HECATON_CONFIG" ]; then
+        echo "Configuration file is missing. Create hecaton.[xml|yaml|yml] in $HECATON_HOME/config or set the HECATON_CONFIG environment variable."
+        exit 1
+    fi
+fi
+# if the first character is /, then this is an absolute path, use as is
+# otherwise prepend (HECATON_HOME)
+if [ "${HECATON_CONFIG:0:1}" != "/" ]; then
+  HECATON_CONFIG="$HECATON_HOME/$HECATON_CONFIG"
+fi
+
+if [ "${PROMETHEUS_PORT}" ]; then
+    echo "Prometheus enabled on port ${PROMETHEUS_PORT}"
+    PROMETHEUS="-javaagent:${HECATON_HOME}/lib/jmx_prometheus_javaagent-${prometheus.version}.jar=${PROMETHEUS_PORT}:${HECATON_HOME}/config/jmx_agent_config.yaml"
+fi
+
+readJvmOptionsFile "jvm.options"
+
+if [ "$HECATON_LICENSE_KEY" ]; then
+    echo "HECATON_LICENSE_KEY env variable is deprecated. Use HC_LICENSEKEY instead."
+    LICENSING_OPT="-Dhecaton.enterprise.license.key=${HECATON_LICENSE_KEY}"
+fi
+
+JAVA_OPTS_ARRAY=(\
+$JDK_OPTS \
+"-Dhecaton.logging.type=log4j2" \
+"-Dlog4j.configurationFile=$LOGGING_CONFIG" \
+"-Dhecaton.config=$HECATON_CONFIG" \
+$PROMETHEUS \
+$LICENSING_OPT\
+$JVM_OPTIONS \
+$JAVA_OPTS \
+)
+
+if [ -z "$LOGGING_PATTERN" ]; then
+  if [ "$(arch)" == "s390x" ]; then
+    # Workaround for s390x architecture where the orignal pattern fails
+    export LOGGING_PATTERN="%d [%highlight{%5p}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=magenta}][%style{%t{1.}}{cyan}] [%style{%-10c}{blue}]: %m%n%xEx"
+  else
+    export LOGGING_PATTERN="%d [%highlight{%5p}{FATAL=red, ERROR=red, WARN=yellow, INFO=green, DEBUG=magenta}] [%style{%t{1.}}{cyan}] [%style{%c{1.}}{blue}]: %m%n%xEx"
+  fi
+fi
+
+source "$SCRIPT_DIR"/utils.sh
+prepare_java_opts_with_masking
+
+if [[ "$1" != "--version" ]] && [[ "$1" != "-V" ]]; then
+  echo "########################################"
+  echo "# JAVA=$JAVA"
+  echo "# JAVA_OPTS=${DISPLAY_OPTS[*]}"
+  echo "# CLASSPATH=$CLASSPATH"
+  echo "########################################"
+fi
+
+exec "${JAVA}" -cp "${CLASSPATH}" "${FILTERED_JAVA_OPTS[@]}" uk.org.hecaton.commandline.HecatonServerCommandLine "$@"

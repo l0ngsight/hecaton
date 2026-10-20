@@ -1,0 +1,22 @@
+{
+  "instance": {
+    "hecaton-client": {
+      "load-balancer": {
+        "type": "invalid"
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/LoadBalancer",
+    "pointerToViolation": "#/hecaton-client/load-balancer",
+    "causingExceptions": [{
+      "schemaLocation": "#/definitions/LoadBalancer/properties/type",
+      "pointerToViolation": "#/hecaton-client/load-balancer/type",
+      "causingExceptions": [],
+      "keyword": "enum",
+      "message": "invalid is not a valid enum value"
+    }],
+    "keyword": "allOf",
+    "message": "#: only 1 subschema matches out of 2"
+  }
+}

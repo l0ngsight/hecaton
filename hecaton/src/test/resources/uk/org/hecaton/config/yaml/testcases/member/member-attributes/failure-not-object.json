@@ -1,0 +1,14 @@
+{
+  "instance": {
+    "hecaton": {
+      "member-attributes": []
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/MemberAttributes",
+    "pointerToViolation": "#/hecaton/member-attributes",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: JSONObject, found: JSONArray"
+  }
+}

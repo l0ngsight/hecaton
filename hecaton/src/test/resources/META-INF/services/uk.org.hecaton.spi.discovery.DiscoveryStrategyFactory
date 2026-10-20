@@ -1,0 +1,8 @@
+uk.org.hecaton.spi.discovery.DiscoverySpiTest$TestDiscoveryStrategyFactory
+uk.org.hecaton.spi.discovery.DiscoverySpiTest$DeprecatedTestDiscoveryStrategyFactory
+uk.org.hecaton.spi.discovery.DiscoverySpiTest$MetadataProvidingDiscoveryStrategyFactory
+uk.org.hecaton.spi.discovery.DiscoverySpiTest$DeprecatedMetadataProvidingDiscoveryStrategyFactory
+uk.org.hecaton.spi.discovery.DiscoverySpiTest$ParametrizedDiscoveryStrategyFactory
+uk.org.hecaton.client.impl.spi.impl.discovery.ClientDiscoverySpiTest$TestDiscoveryStrategyFactory
+uk.org.hecaton.spi.discovery.impl.AutoDetectionDefaultDiscoveryServiceTest$TestDiscoveryStrategyFactory
+uk.org.hecaton.spi.discovery.impl.AutoDetectionDefaultDiscoveryServiceTest$TestHighPriorityDiscoveryStrategyFactory

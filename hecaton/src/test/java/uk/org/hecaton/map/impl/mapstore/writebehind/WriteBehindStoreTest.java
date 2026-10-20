@@ -1,0 +1,104 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.map.impl.mapstore.writebehind;
+
+import uk.org.hecaton.internal.serialization.Data;
+import uk.org.hecaton.internal.serialization.InternalSerializationService;
+import uk.org.hecaton.internal.serialization.impl.HeapData;
+import uk.org.hecaton.map.impl.mapstore.MapStoreContext;
+import uk.org.hecaton.map.impl.mapstore.writebehind.entry.DelayedEntries;
+import uk.org.hecaton.map.impl.mapstore.writebehind.entry.DelayedEntry;
+import uk.org.hecaton.test.HecatonParallelClassRunner;
+import uk.org.hecaton.test.annotation.ParallelJVMTest;
+import uk.org.hecaton.test.annotation.QuickTest;
+import uk.org.hecaton.test.starter.ReflectionUtils;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.io.Serializable;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+@RunWith(HecatonParallelClassRunner.class)
+@Category({QuickTest.class, ParallelJVMTest.class})
+public class WriteBehindStoreTest {
+
+    private final MapStoreContext mapStoreContext = mock(MapStoreContext.class, RETURNS_DEEP_STUBS);
+    private final WriteBehindProcessor writeBehindProcessor = mock(WriteBehindProcessor.class, RETURNS_DEEP_STUBS);
+
+    @Test
+    public void shouldNotChangeSequenceAfterAddingToQueue() throws IllegalAccessException {
+        // given
+        when(mapStoreContext.getMapServiceContext().getNodeEngine().getSerializationService()).thenReturn(mock(InternalSerializationService.class));
+        WriteBehindStore store = new WriteBehindStore(mapStoreContext, 1, writeBehindProcessor);
+        DummyQueue queue = mock(DummyQueue.class, CALLS_REAL_METHODS);
+        ReflectionUtils.setFieldValueReflectively(store, "writeBehindQueue", queue);
+        DelayedEntry<Data, Object> delayedEntry = DelayedEntries.newAddedDelayedEntry(mock(HeapData.class), new Entry(1, 1), 0, 0, 1, null);
+        assertEquals(0L, delayedEntry.getSequence());
+
+        // when
+        store.add(delayedEntry);
+
+        // then
+        assertEquals(1L, delayedEntry.getSequence());
+        assertEquals(1L, queue.getSequence());
+
+    }
+
+    private static final class Entry implements Serializable {
+
+        private int id;
+        private int version;
+
+        Entry() {
+            // serialization
+        }
+
+        Entry(int id, int version) {
+            this.id = id;
+            this.version = version;
+        }
+
+        Entry newVersion() {
+            return new Entry(id, version + 1);
+        }
+
+    }
+
+    abstract static class DummyQueue implements WriteBehindQueue {
+
+        long sequence = 0;
+
+        public long getSequence() {
+            return sequence;
+        }
+
+        @Override
+        public void addLast(Object o, boolean addWithoutCapacityCheck) {
+            if (o instanceof DelayedEntry entry) {
+                sequence = entry.getSequence();
+            }
+        }
+
+
+    }
+}

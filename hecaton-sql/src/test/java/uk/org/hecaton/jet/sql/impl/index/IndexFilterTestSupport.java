@@ -1,0 +1,71 @@
+/*
+ * Copyright 2026 Hazelcast Inc.
+ *
+ * Licensed under the Hazelcast Community License (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://hazelcast.com/hazelcast-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.sql.impl.index;
+
+import uk.org.hecaton.jet.sql.SqlTestSupport;
+import uk.org.hecaton.query.impl.CompositeValue;
+import uk.org.hecaton.sql.impl.exec.scan.index.IndexFilterValue;
+import uk.org.hecaton.sql.impl.expression.ConstantExpression;
+import uk.org.hecaton.sql.impl.type.QueryDataType;
+import uk.org.hecaton.test.HecatonSerialClassRunner;
+import org.junit.runner.RunWith;
+
+import java.util.Arrays;
+import java.util.Collections;
+
+/**
+ * Utility stuff for index filter tests.
+ */
+@SuppressWarnings("rawtypes")
+@RunWith(HecatonSerialClassRunner.class)
+public abstract class IndexFilterTestSupport extends SqlTestSupport {
+
+    public static ConstantExpression constant(Object value, QueryDataType type) {
+        return ConstantExpression.create(value, type);
+    }
+
+    public static CompositeValue composite(Comparable... components) {
+        return new CompositeValue(components);
+    }
+
+    protected static IndexFilterValue intValue(Integer value) {
+        return intValue(value, false);
+    }
+
+    protected static IndexFilterValue intValue(Integer value, boolean allowNull) {
+        return new IndexFilterValue(
+                Collections.singletonList(constant(value, QueryDataType.INT)),
+                Collections.singletonList(allowNull)
+        );
+    }
+
+    protected static IndexFilterValue intValues(Integer value1, Integer value2) {
+        return intValues(value1, false, value2, false);
+    }
+
+    protected static IndexFilterValue intValues(
+            Integer value1,
+            boolean allowNull1,
+            Integer value2,
+            boolean allowNull2
+    ) {
+        return new IndexFilterValue(
+                Arrays.asList(constant(value1, QueryDataType.INT), constant(value2, QueryDataType.INT)),
+                Arrays.asList(allowNull1, allowNull2)
+        );
+    }
+}

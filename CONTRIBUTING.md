@@ -56,23 +56,24 @@ Signed-off-by: Your Name <you@example.com>
 |---|---|
 | `main` | Integrated, releasable state |
 | `feature/mN-*` | One long-lived branch per milestone (see [implementation plan](docs/IMPLEMENTATION_PLAN.md#branching-model)). Task PRs target the milestone branch. |
-| `upstream/main` | Snapshots of Hazelcast CE releases, one commit per release tag, made by `tools/upstream/import-snapshot.sh`. Files are unmodified; paths in `tools/upstream/excluded-paths.txt` are left out. Never edited by hand. |
-| `rebrand/vX.Y.Z` | Output of `tools/rebrand` for an upstream release. Generated, never edited by hand. |
-| `sync/vX.Y.Z` | Merging a new upstream release into `main` |
+| `upstream/main`, `rebrand/v5.7.0` | Read-only record of how the fork was made: the Hazelcast CE 5.7.0 snapshot and its renamed form. Hecaton does not merge later upstream releases ([spec §9](docs/SPEC.md#9-relationship-with-upstream-d10)). |
 
-## 5. Changing upstream (Hazelcast-derived) code
+## 5. Changing Hazelcast-derived code
 
-Keep changes to Hazelcast-derived files to a minimum. Put new features in Hecaton-owned
-modules that plug into the existing SPI (see [spec §7](docs/SPEC.md#7-extension-design)).
-If you must change an upstream file, add an entry to `docs/upstream-patches.md` in the same
-PR explaining why. CI will enforce this once the code is imported.
+The whole code base is Hecaton's: change, refactor or delete inherited code when that makes
+Hecaton better (see [spec §4 and §7](docs/SPEC.md#7-extension-design)). Keep the original
+copyright header on files derived from Hazelcast.
+
+If a change is visible to applications migrating from Hazelcast 5.7 (API, config, wire,
+REST, metrics, file names), add it to `docs/changes-from-hazelcast.md` in the same PR.
 
 ## 6. Build requirements
 
 - JDK 25 (Temurin recommended) for building.
-- Modules derived from Hazelcast and all client-side code compile with `--release 17`.
-  Member-only `hecaton-ext-*` modules compile with `--release 25`.
-- Hecaton-owned code must not use `sun.misc.Unsafe`. Use `VarHandle` or the FFM API.
+- The core module `hecaton` (member and client in one jar) and the other inherited modules
+  compile with `--release 17`. Member-only modules (`hecaton-hd`, `hecaton-persistence`, ...)
+  compile with `--release 25`.
+- New code must not use `sun.misc.Unsafe`. Use `VarHandle` or the FFM API.
 
 ## 7. Pull requests
 

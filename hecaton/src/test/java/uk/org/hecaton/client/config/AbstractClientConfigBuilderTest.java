@@ -1,0 +1,551 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.config;
+
+import uk.org.hecaton.config.ClassFilter;
+import uk.org.hecaton.config.CredentialsFactoryConfig;
+import uk.org.hecaton.config.DiscoveryConfig;
+import uk.org.hecaton.config.DiscoveryStrategyConfig;
+import uk.org.hecaton.config.EntryListenerConfig;
+import uk.org.hecaton.config.EvictionConfig;
+import uk.org.hecaton.config.EvictionPolicy;
+import uk.org.hecaton.config.GlobalSerializerConfig;
+import uk.org.hecaton.config.InMemoryFormat;
+import uk.org.hecaton.config.IndexConfig;
+import uk.org.hecaton.config.IndexType;
+import uk.org.hecaton.config.InvalidConfigurationException;
+import uk.org.hecaton.config.JavaSerializationFilterConfig;
+import uk.org.hecaton.config.ListenerConfig;
+import uk.org.hecaton.config.LoginModuleConfig;
+import uk.org.hecaton.config.LoginModuleConfig.LoginModuleUsage;
+import uk.org.hecaton.config.MaxSizePolicy;
+import uk.org.hecaton.config.NearCacheConfig;
+import uk.org.hecaton.config.QueryCacheConfig;
+import uk.org.hecaton.config.SSLConfig;
+import uk.org.hecaton.config.SerializationConfig;
+import uk.org.hecaton.config.SerializerConfig;
+import uk.org.hecaton.config.SocketInterceptorConfig;
+import uk.org.hecaton.config.XMLConfigBuilderTest;
+import uk.org.hecaton.config.security.JaasAuthenticationConfig;
+import uk.org.hecaton.config.security.RealmConfig;
+import uk.org.hecaton.core.HecatonException;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.topic.TopicOverloadPolicy;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.net.URL;
+import java.nio.ByteOrder;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import static uk.org.hecaton.client.config.ClientSqlResubmissionMode.NEVER;
+import static uk.org.hecaton.client.config.ClientSqlResubmissionMode.RETRY_SELECTS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+public abstract class AbstractClientConfigBuilderTest extends HecatonTestSupport {
+    protected ClientConfig fullClientConfig;
+    protected ClientConfig defaultClientConfig;
+
+    @Test
+    public void testBackupAckToClient() {
+        boolean backupAckToClientEnabled = fullClientConfig.isBackupAckToClientEnabled();
+        assertFalse(backupAckToClientEnabled);
+        assertTrue(defaultClientConfig.isBackupAckToClientEnabled());
+    }
+
+    @Test
+    public void testNetworkConfig() {
+        final ClientNetworkConfig networkConfig = fullClientConfig.getNetworkConfig();
+        assertEquals(2, networkConfig.getAddresses().size());
+        assertContains(networkConfig.getAddresses(), "127.0.0.1");
+        assertContains(networkConfig.getAddresses(), "127.0.0.2");
+
+        Collection<String> allowedPorts = networkConfig.getOutboundPortDefinitions();
+        assertEquals(2, allowedPorts.size());
+        assertTrue(allowedPorts.contains("34600"));
+        assertTrue(allowedPorts.contains("34700-34710"));
+
+        assertEquals(RoutingMode.ALL_MEMBERS, networkConfig.getClusterRoutingConfig().getRoutingMode());
+        assertTrue(networkConfig.isRedoOperation());
+
+        final SocketInterceptorConfig socketInterceptorConfig = networkConfig.getSocketInterceptorConfig();
+        assertTrue(socketInterceptorConfig.isEnabled());
+        assertEquals("uk.org.hecaton.examples.MySocketInterceptor", socketInterceptorConfig.getClassName());
+        assertEquals("bar", socketInterceptorConfig.getProperty("foo"));
+
+        assertFalse(networkConfig.getKubernetesConfig().isEnabled());
+    }
+
+    @Test
+    public void testSerializationConfig() {
+        final SerializationConfig serializationConfig = fullClientConfig.getSerializationConfig();
+        assertEquals(3, serializationConfig.getPortableVersion());
+
+        final Map<Integer, String> dsClasses = serializationConfig.getDataSerializableFactoryClasses();
+        assertEquals(1, dsClasses.size());
+        assertEquals("uk.org.hecaton.examples.DataSerializableFactory", dsClasses.get(1));
+
+        final Map<Integer, String> pfClasses = serializationConfig.getPortableFactoryClasses();
+        assertEquals(1, pfClasses.size());
+        assertEquals("uk.org.hecaton.examples.PortableFactory", pfClasses.get(2));
+
+        final Collection<SerializerConfig> serializerConfigs = serializationConfig.getSerializerConfigs();
+        assertEquals(1, serializerConfigs.size());
+        final SerializerConfig serializerConfig = serializerConfigs.iterator().next();
+
+        assertEquals("uk.org.hecaton.examples.DummyType", serializerConfig.getTypeClassName());
+        assertEquals("uk.org.hecaton.examples.SerializerFactory", serializerConfig.getClassName());
+
+        final GlobalSerializerConfig globalSerializerConfig = serializationConfig.getGlobalSerializerConfig();
+        assertEquals("uk.org.hecaton.examples.GlobalSerializerFactory", globalSerializerConfig.getClassName());
+
+        assertEquals(ByteOrder.BIG_ENDIAN, serializationConfig.getByteOrder());
+        assertTrue(serializationConfig.isCheckClassDefErrors());
+        assertFalse(serializationConfig.isAllowUnsafe());
+        assertFalse(serializationConfig.isAllowOverrideDefaultSerializers());
+        assertFalse(serializationConfig.isEnableCompression());
+        assertTrue(serializationConfig.isEnableSharedObject());
+        assertTrue(serializationConfig.isUseNativeByteOrder());
+
+        JavaSerializationFilterConfig javaSerializationFilterConfig = serializationConfig.getJavaSerializationFilterConfig();
+        ClassFilter blacklist = javaSerializationFilterConfig.getBlacklist();
+        assertEquals(1, blacklist.getClasses().size());
+        assertTrue(blacklist.getClasses().contains("com.acme.app.BeanComparator"));
+
+        ClassFilter whitelist = javaSerializationFilterConfig.getWhitelist();
+        assertEquals(2, whitelist.getClasses().size());
+        assertTrue(whitelist.getClasses().contains("java.lang.String"));
+        assertTrue(whitelist.getClasses().contains("example.Foo"));
+        assertEquals(2, whitelist.getPackages().size());
+        assertTrue(whitelist.getPackages().contains("com.acme.app"));
+        assertTrue(whitelist.getPackages().contains("com.acme.app.subpkg"));
+        assertEquals(3, whitelist.getPrefixes().size());
+        assertTrue(whitelist.getPrefixes().contains("java"));
+        assertTrue(whitelist.getPrefixes().contains("["));
+        assertTrue(whitelist.getPrefixes().contains("com."));
+    }
+
+    @Test
+    public void testProxyFactories() {
+        final List<ProxyFactoryConfig> pfc = fullClientConfig.getProxyFactoryConfigs();
+        assertEquals(3, pfc.size());
+        assertContains(pfc, new ProxyFactoryConfig("uk.org.hecaton.examples.ProxyXYZ1", "sampleService1"));
+        assertContains(pfc, new ProxyFactoryConfig("uk.org.hecaton.examples.ProxyXYZ2", "sampleService1"));
+        assertContains(pfc, new ProxyFactoryConfig("uk.org.hecaton.examples.ProxyXYZ3", "sampleService3"));
+    }
+
+    @Test
+    public void testNearCacheConfigs() {
+        assertEquals(2, fullClientConfig.getNearCacheConfigMap().size());
+        final NearCacheConfig nearCacheConfig = fullClientConfig.getNearCacheConfig("asd");
+
+        assertEquals(2000, nearCacheConfig.getEvictionConfig().getSize());
+        assertEquals(90, nearCacheConfig.getTimeToLiveSeconds());
+        assertEquals(100, nearCacheConfig.getMaxIdleSeconds());
+        assertEquals(EvictionPolicy.LFU, nearCacheConfig.getEvictionConfig().getEvictionPolicy());
+        assertTrue(nearCacheConfig.isInvalidateOnChange());
+        assertTrue(nearCacheConfig.isSerializeKeys());
+        assertEquals(InMemoryFormat.OBJECT, nearCacheConfig.getInMemoryFormat());
+
+        final NearCacheConfig evictableNearCacheConfig = fullClientConfig.getNearCacheConfig("NearCacheEvictionConfigExample");
+        EvictionConfig nearCacheEvictionConfig = evictableNearCacheConfig.getEvictionConfig();
+        assertEquals(EvictionPolicy.LRU, nearCacheEvictionConfig.getEvictionPolicy());
+        assertEquals(MaxSizePolicy.ENTRY_COUNT, nearCacheEvictionConfig.getMaxSizePolicy());
+        assertEquals(10000, nearCacheEvictionConfig.getSize());
+        assertEquals("uk.org.hecaton.examples.MyEvictionComparator", nearCacheEvictionConfig.getComparatorClassName());
+    }
+
+    @Test
+    public void testSSLConfigs() {
+        SSLConfig sslConfig = fullClientConfig.getNetworkConfig().getSSLConfig();
+        assertNotNull(sslConfig);
+        assertFalse(sslConfig.isEnabled());
+
+        assertEquals("uk.org.hecaton.nio.ssl.BasicSSLContextFactory", sslConfig.getFactoryClassName());
+        assertEquals(7, sslConfig.getProperties().size());
+        assertEquals("TLS", sslConfig.getProperty("protocol"));
+        assertEquals("/opt/hecaton-client.truststore", sslConfig.getProperty("trustStore"));
+        assertEquals("secret.123456", sslConfig.getProperty("trustStorePassword"));
+        assertEquals("JKS", sslConfig.getProperty("trustStoreType"));
+        assertEquals("/opt/hecaton-client.keystore", sslConfig.getProperty("keyStore"));
+        assertEquals("keystorePassword123", sslConfig.getProperty("keyStorePassword"));
+        assertEquals("JKS", sslConfig.getProperty("keyStoreType"));
+    }
+
+    @Test
+    public void testNearCacheConfig_withEvictionConfig_withPreloaderConfig() throws IOException {
+        URL schemaResource = XMLConfigBuilderTest.class.getClassLoader().getResource("hecaton-client-test.xml");
+        ClientConfig clientConfig = new XmlClientConfigBuilder(schemaResource).build();
+
+        assertEquals("MyInstanceName", clientConfig.getInstanceName());
+
+        NearCacheConfig nearCacheConfig = clientConfig.getNearCacheConfig("nearCacheWithEvictionAndPreloader");
+
+        assertEquals(10000, nearCacheConfig.getTimeToLiveSeconds());
+        assertEquals(5000, nearCacheConfig.getMaxIdleSeconds());
+        assertFalse(nearCacheConfig.isInvalidateOnChange());
+        assertFalse(nearCacheConfig.isSerializeKeys());
+        assertEquals(InMemoryFormat.OBJECT, nearCacheConfig.getInMemoryFormat());
+        assertFalse(nearCacheConfig.isCacheLocalEntries());
+
+        assertNotNull(nearCacheConfig.getEvictionConfig());
+        assertEquals(100, nearCacheConfig.getEvictionConfig().getSize());
+        assertEquals(MaxSizePolicy.ENTRY_COUNT, nearCacheConfig.getEvictionConfig().getMaxSizePolicy());
+        assertEquals(EvictionPolicy.LFU, nearCacheConfig.getEvictionConfig().getEvictionPolicy());
+
+        assertNotNull(nearCacheConfig.getPreloaderConfig());
+        assertTrue(nearCacheConfig.getPreloaderConfig().isEnabled());
+        assertEquals("/tmp/myNearCache", nearCacheConfig.getPreloaderConfig().getDirectory());
+        assertEquals(2342, nearCacheConfig.getPreloaderConfig().getStoreInitialDelaySeconds());
+        assertEquals(4223, nearCacheConfig.getPreloaderConfig().getStoreIntervalSeconds());
+    }
+
+    @Test
+    public void testQueryCacheFullConfig() {
+        QueryCacheConfig queryCacheClassPredicateConfig = fullClientConfig.getQueryCacheConfigs().get("map-name")
+                .get("query-cache-class-name-predicate");
+        QueryCacheConfig queryCacheSqlPredicateConfig = fullClientConfig.getQueryCacheConfigs().get("map-name")
+                .get("query-cache-sql-predicate");
+        EntryListenerConfig entryListenerConfig = queryCacheClassPredicateConfig.getEntryListenerConfigs().get(0);
+
+        assertEquals("query-cache-class-name-predicate", queryCacheClassPredicateConfig.getName());
+        assertTrue(entryListenerConfig.isIncludeValue());
+        assertFalse(entryListenerConfig.isLocal());
+        assertEquals("uk.org.hecaton.examples.EntryListener", entryListenerConfig.getClassName());
+        assertTrue(queryCacheClassPredicateConfig.isIncludeValue());
+        assertEquals(1, queryCacheClassPredicateConfig.getBatchSize());
+        assertEquals(16, queryCacheClassPredicateConfig.getBufferSize());
+        assertEquals(0, queryCacheClassPredicateConfig.getDelaySeconds());
+        EvictionConfig evictionConfig = queryCacheClassPredicateConfig.getEvictionConfig();
+        assertEquals(EvictionPolicy.LRU, evictionConfig.getEvictionPolicy());
+        assertEquals(MaxSizePolicy.ENTRY_COUNT, evictionConfig.getMaxSizePolicy());
+        assertEquals(10000, evictionConfig.getSize());
+        assertEquals("uk.org.hecaton.examples.MyEvictionComparator", evictionConfig.getComparatorClassName());
+        assertEquals(InMemoryFormat.BINARY, queryCacheClassPredicateConfig.getInMemoryFormat());
+        assertFalse(queryCacheClassPredicateConfig.isCoalesce());
+        assertTrue(queryCacheClassPredicateConfig.isPopulate());
+        assertFalse(queryCacheClassPredicateConfig.isSerializeKeys());
+        for (IndexConfig indexConfig : queryCacheClassPredicateConfig.getIndexConfigs()) {
+            assertEquals("name", indexConfig.getAttributes().get(0));
+            assertNotSame(indexConfig.getType(), IndexType.SORTED);
+        }
+
+        assertEquals("uk.org.hecaton.examples.ExamplePredicate",
+                queryCacheClassPredicateConfig.getPredicateConfig().getClassName());
+
+        assertEquals("query-cache-sql-predicate", queryCacheSqlPredicateConfig.getName());
+        assertEquals("%age=40", queryCacheSqlPredicateConfig.getPredicateConfig().getSql());
+    }
+
+    @Test
+    public void testConnectionStrategyConfig() {
+        ClientConnectionStrategyConfig connectionStrategyConfig = fullClientConfig.getConnectionStrategyConfig();
+        assertTrue(connectionStrategyConfig.isAsyncStart());
+        assertEquals(ClientConnectionStrategyConfig.ReconnectMode.ASYNC, connectionStrategyConfig.getReconnectMode());
+    }
+
+    @Test
+    public void testConnectionStrategyConfig_defaults() {
+        ClientConnectionStrategyConfig connectionStrategyConfig = defaultClientConfig.getConnectionStrategyConfig();
+        assertFalse(connectionStrategyConfig.isAsyncStart());
+        assertEquals(ClientConnectionStrategyConfig.ReconnectMode.ON, connectionStrategyConfig.getReconnectMode());
+    }
+
+    @Test
+    public void testExponentialConnectionRetryConfig() {
+        ClientConnectionStrategyConfig connectionStrategyConfig = fullClientConfig.getConnectionStrategyConfig();
+        ConnectionRetryConfig exponentialRetryConfig = connectionStrategyConfig.getConnectionRetryConfig();
+        assertEquals(5000, exponentialRetryConfig.getClusterConnectTimeoutMillis());
+        assertEquals(0.5, exponentialRetryConfig.getJitter(), 0);
+        assertEquals(2000, exponentialRetryConfig.getInitialBackoffMillis());
+        assertEquals(60000, exponentialRetryConfig.getMaxBackoffMillis());
+        assertEquals(3, exponentialRetryConfig.getMultiplier(), 0);
+    }
+
+    @Test
+    public void testExponentialConnectionRetryConfig_defaults() {
+        ClientConnectionStrategyConfig connectionStrategyConfig = defaultClientConfig.getConnectionStrategyConfig();
+        ConnectionRetryConfig exponentialRetryConfig = connectionStrategyConfig.getConnectionRetryConfig();
+        assertEquals(-1, exponentialRetryConfig.getClusterConnectTimeoutMillis());
+        assertEquals(0, exponentialRetryConfig.getJitter(), 0);
+        assertEquals(1000, exponentialRetryConfig.getInitialBackoffMillis());
+        assertEquals(30000, exponentialRetryConfig.getMaxBackoffMillis());
+        assertEquals(1.05, exponentialRetryConfig.getMultiplier(), 0);
+    }
+
+    @Test
+    public void testLeftovers() {
+        assertEquals("uk.org.hecaton.client.util.RandomLB", fullClientConfig.getLoadBalancer().getClass().getName());
+
+        final List<ListenerConfig> listenerConfigs = fullClientConfig.getListenerConfigs();
+        assertEquals(2, listenerConfigs.size());
+        assertContains(listenerConfigs, new ListenerConfig("uk.org.hecaton.examples.MembershipListener"));
+        assertContains(listenerConfigs, new ListenerConfig("uk.org.hecaton.examples.MigrationListener"));
+    }
+
+    @Test
+    public void testClientIcmpPingConfig() {
+        ClientIcmpPingConfig icmpPingConfig = fullClientConfig.getNetworkConfig().getClientIcmpPingConfig();
+        assertFalse(icmpPingConfig.isEnabled());
+        assertEquals(2000, icmpPingConfig.getTimeoutMilliseconds());
+        assertEquals(3000, icmpPingConfig.getIntervalMilliseconds());
+        assertEquals(100, icmpPingConfig.getTtl());
+        assertEquals(5, icmpPingConfig.getMaxAttempts());
+        assertFalse(icmpPingConfig.isEchoFailFastOnStartup());
+    }
+
+    @Test
+    public void testClientIcmpPingConfig_defaults() {
+        ClientIcmpPingConfig icmpPingConfig = defaultClientConfig.getNetworkConfig().getClientIcmpPingConfig();
+        assertFalse(icmpPingConfig.isEnabled());
+        assertEquals(1000, icmpPingConfig.getTimeoutMilliseconds());
+        assertEquals(1000, icmpPingConfig.getIntervalMilliseconds());
+        assertEquals(255, icmpPingConfig.getTtl());
+        assertEquals(2, icmpPingConfig.getMaxAttempts());
+        assertTrue(icmpPingConfig.isEchoFailFastOnStartup());
+    }
+
+    @Test
+    public void testReliableTopic() {
+        ClientReliableTopicConfig reliableTopicConfig = fullClientConfig.getReliableTopicConfig("rel-topic");
+        assertEquals(100, reliableTopicConfig.getReadBatchSize());
+        assertEquals(TopicOverloadPolicy.DISCARD_NEWEST, reliableTopicConfig.getTopicOverloadPolicy());
+    }
+
+    @Test
+    public void testDiscoveryStrategyConfig() {
+        DiscoveryConfig discoveryConfig = fullClientConfig.getNetworkConfig().getDiscoveryConfig();
+        assertEquals("DummyFilterClass", discoveryConfig.getNodeFilterClass());
+        Collection<DiscoveryStrategyConfig> discoveryStrategyConfigs = discoveryConfig.getDiscoveryStrategyConfigs();
+        assertEquals(1, discoveryStrategyConfigs.size());
+        DiscoveryStrategyConfig discoveryStrategyConfig = discoveryStrategyConfigs.iterator().next();
+        assertEquals("DummyDiscoveryStrategy1", discoveryStrategyConfig.getClassName());
+        Map<String, Comparable> properties = discoveryStrategyConfig.getProperties();
+        assertEquals(3, properties.size());
+        assertEquals("foo", properties.get("key-string"));
+        assertEquals("123", properties.get("key-int"));
+        assertEquals("true", properties.get("key-boolean"));
+    }
+
+    protected EvictionPolicy getNearCacheEvictionPolicy(String mapName, ClientConfig clientConfig) {
+        return clientConfig.getNearCacheConfig(mapName).getEvictionConfig().getEvictionPolicy();
+    }
+
+    @Test
+    public void testClusterName() {
+        assertEquals("my-cluster", fullClientConfig.getClusterName());
+    }
+
+    @Test
+    public void testProperties() {
+        assertEquals(6, fullClientConfig.getProperties().size());
+        assertEquals("60000", fullClientConfig.getProperty("hecaton.client.heartbeat.timeout"));
+    }
+
+    @Test
+    public void testLabels() {
+        Set<String> labels = fullClientConfig.getLabels();
+        assertEquals(2, labels.size());
+        assertContains(labels, "admin");
+        assertContains(labels, "foo");
+    }
+
+    @Test
+    public void testInstanceName() {
+        assertEquals("CLIENT_NAME", fullClientConfig.getInstanceName());
+    }
+
+    @Test
+    public void testSecurityConfig() {
+        ClientSecurityConfig securityConfig = fullClientConfig.getSecurityConfig();
+        assertNull(securityConfig.getUsernamePasswordIdentityConfig());
+        CredentialsFactoryConfig credentialsFactoryConfig = securityConfig.getCredentialsFactoryConfig();
+        assertEquals("uk.org.hecaton.examples.MyCredentialsFactory", credentialsFactoryConfig.getClassName());
+        Properties properties = credentialsFactoryConfig.getProperties();
+        assertEquals("value", properties.getProperty("property"));
+        RealmConfig realmConfig = securityConfig.getRealmConfig("krb5Initiator");
+        assertNotNull(realmConfig);
+        JaasAuthenticationConfig jaasConf = realmConfig.getJaasAuthenticationConfig();
+        assertNotNull(jaasConf);
+        List<LoginModuleConfig> loginModuleConfigs = jaasConf.getLoginModuleConfigs();
+        assertNotNull(loginModuleConfigs);
+        assertEquals(1, loginModuleConfigs.size());
+        LoginModuleConfig loginModuleConfig = loginModuleConfigs.get(0);
+        assertEquals("com.sun.security.auth.module.Krb5LoginModule", loginModuleConfig.getClassName());
+        assertEquals(LoginModuleUsage.REQUIRED, loginModuleConfig.getUsage());
+        assertEquals("jduke@HAZELCAST.COM", loginModuleConfig.getProperties().get("principal"));
+    }
+
+    @Test
+    public void testSqlConfigs() {
+        assertEquals(RETRY_SELECTS, fullClientConfig.getSqlConfig().getResubmissionMode());
+        assertEquals(NEVER, defaultClientConfig.getSqlConfig().getResubmissionMode());
+    }
+
+    @Test(expected = HecatonException.class)
+    public abstract void loadingThroughSystemProperty_nonExistingFile() throws IOException;
+
+    @Test
+    public abstract void loadingThroughSystemProperty_existingFile() throws IOException;
+
+    @Test(expected = HecatonException.class)
+    public abstract void loadingThroughSystemProperty_nonExistingClasspathResource() throws IOException;
+
+    @Test
+    public abstract void loadingThroughSystemProperty_existingClasspathResource() throws IOException;
+
+    @Test
+    public abstract void testFlakeIdGeneratorConfig();
+
+    @Test
+    public abstract void testSecurityConfig_onlyFactory();
+
+    @Test(expected = InvalidConfigurationException.class)
+    public abstract void testHecatonClientTagAppearsTwice();
+
+    @Test
+    public abstract void testNearCacheInMemoryFormatNative_withKeysByReference();
+
+    @Test
+    public abstract void testNearCacheEvictionPolicy();
+
+    @Test
+    public abstract void testClientUserCodeDeploymentConfig();
+
+    @Test
+    public abstract void testReliableTopic_defaults();
+
+    @Test(expected = InvalidConfigurationException.class)
+    public abstract void testQueryCacheBothPredicateDefinedThrows();
+
+    @Test(expected = InvalidConfigurationException.class)
+    public abstract void testQueryCacheNoPredicateDefinedThrows();
+
+    @Test
+    public abstract void testLoadBalancerRandom();
+
+    @Test
+    public abstract void testLoadBalancerRoundRobin();
+
+    @Test
+    public abstract void testLoadBalancerCustom();
+
+    @Test
+    public abstract void testWhitespaceInNonSpaceStrings();
+
+    @Test
+    public abstract void testTokenIdentityConfig();
+
+    @Test
+    public abstract void testKerberosIdentityConfig();
+
+    @Test
+    public abstract void testMetricsConfig();
+
+    @Test
+    public abstract void testInstanceTrackingConfig();
+
+    @Test
+    public abstract void testMetricsConfigMasterSwitchDisabled();
+
+    @Test
+    public abstract void testMetricsConfigJmxDisabled();
+
+    @Test
+    public abstract void testPersistentMemoryDirectoryConfiguration();
+
+    @Test
+    public abstract void testPersistentMemoryDirectoryConfigurationSimple();
+
+    @Test(expected = InvalidConfigurationException.class)
+    public abstract void testPersistentMemoryDirectoryConfiguration_uniqueDirViolationThrows();
+
+    @Test(expected = InvalidConfigurationException.class)
+    public abstract void testPersistentMemoryDirectoryConfiguration_uniqueNumaNodeViolationThrows();
+
+    @Test(expected = InvalidConfigurationException.class)
+    public abstract void testPersistentMemoryDirectoryConfiguration_numaNodeConsistencyViolationThrows();
+
+    @Test
+    public abstract void testPersistentMemoryDirectoryConfiguration_simpleAndAdvancedPasses();
+
+    @Test
+    public abstract void testPersistentMemoryConfiguration_SystemMemoryMode();
+
+    @Test(expected = InvalidConfigurationException.class)
+    public abstract void testPersistentMemoryConfiguration_NotExistingModeThrows();
+
+    @Test
+    public abstract void testNativeMemoryConfiguration_isBackwardCompatible();
+
+    @Test(expected = InvalidConfigurationException.class)
+    public abstract void testPersistentMemoryDirectoryConfiguration_SystemMemoryModeThrows();
+
+    @Test
+    public abstract void testCompactSerialization_serializerRegistration();
+
+    @Test
+    public abstract void testCompactSerialization_classRegistration();
+
+    @Test
+    public abstract void testCompactSerialization_serializerAndClassRegistration();
+
+    @Test
+    public abstract void testCompactSerialization_duplicateSerializerRegistration();
+
+    @Test
+    public abstract void testCompactSerialization_duplicateClassRegistration();
+
+    @Test
+    public abstract void testCompactSerialization_registrationsWithDuplicateClasses();
+
+    @Test
+    public abstract void testCompactSerialization_registrationsWithDuplicateTypeNames();
+
+    @Test
+    public abstract void testCompactSerialization_withInvalidSerializer();
+
+    @Test
+    public abstract void testCompactSerialization_withInvalidCompactSerializableClass();
+
+    @Test
+    public abstract void testCompactSerialization_zeroConfigRestrictions();
+
+    @Test
+    public abstract void testCompactSerialization_zeroConfigDefaultsDisabled();
+
+    @Test
+    public abstract void testDefaultRoutingStrategyIsPicked_whenNoRoutingStrategyIsSetToMultiMemberRoutingConfig();
+
+    @Test
+    public void testTpc() {
+        ClientTpcConfig tpcConfig = fullClientConfig.getTpcConfig();
+        assertTrue(tpcConfig.isEnabled());
+
+        ClientTpcConfig defaultTpcConfig = defaultClientConfig.getTpcConfig();
+        assertFalse(defaultTpcConfig.isEnabled());
+    }
+}

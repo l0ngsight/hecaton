@@ -1,0 +1,8 @@
+hecaton-client:
+  cluster-name: migration-test-client
+  properties:
+    hecaton.logging.type: jdk
+    hecaton.client.statistics.enabled: true
+  network:
+    cluster-members:
+      - 127.0.0.1:5911

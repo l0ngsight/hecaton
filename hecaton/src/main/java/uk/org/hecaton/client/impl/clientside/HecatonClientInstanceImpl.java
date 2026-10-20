@@ -1,0 +1,1009 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.impl.clientside;
+
+import uk.org.hecaton.cache.impl.JCacheDetector;
+import uk.org.hecaton.cardinality.CardinalityEstimator;
+import uk.org.hecaton.cardinality.impl.CardinalityEstimatorService;
+import uk.org.hecaton.client.Client;
+import uk.org.hecaton.client.ClientService;
+import uk.org.hecaton.client.HecatonClient;
+import uk.org.hecaton.client.LoadBalancer;
+import uk.org.hecaton.client.config.ClientConfig;
+import uk.org.hecaton.client.config.ClientConnectionStrategyConfig;
+import uk.org.hecaton.client.config.ClientFailoverConfig;
+import uk.org.hecaton.client.config.RoutingMode;
+import uk.org.hecaton.client.impl.ClientExtension;
+import uk.org.hecaton.client.impl.ClientImpl;
+import uk.org.hecaton.client.impl.client.DistributedObjectInfo;
+import uk.org.hecaton.client.impl.connection.AddressProvider;
+import uk.org.hecaton.client.impl.connection.ClientConnectionManager;
+import uk.org.hecaton.client.impl.connection.tcp.ClientICMPManager;
+import uk.org.hecaton.client.impl.connection.tcp.HeartbeatManager;
+import uk.org.hecaton.client.impl.connection.tcp.TcpClientConnection;
+import uk.org.hecaton.client.impl.connection.tcp.TcpClientConnectionManager;
+import uk.org.hecaton.client.impl.management.ClientConnectionProcessListener;
+import uk.org.hecaton.client.impl.protocol.ClientExceptionFactory;
+import uk.org.hecaton.client.impl.protocol.ClientMessage;
+import uk.org.hecaton.client.impl.protocol.codec.ClientGetDistributedObjectsCodec;
+import uk.org.hecaton.client.impl.proxy.PartitionServiceProxy;
+import uk.org.hecaton.client.impl.spi.ClientClusterService;
+import uk.org.hecaton.client.impl.spi.ClientContext;
+import uk.org.hecaton.client.impl.spi.ClientInvocationService;
+import uk.org.hecaton.client.impl.spi.ClientListenerService;
+import uk.org.hecaton.client.impl.spi.ClientPartitionService;
+import uk.org.hecaton.client.impl.spi.ClientTransactionManagerService;
+import uk.org.hecaton.client.impl.spi.ProxyManager;
+import uk.org.hecaton.client.impl.spi.impl.ClientExecutionServiceImpl;
+import uk.org.hecaton.client.impl.spi.impl.ClientInvocation;
+import uk.org.hecaton.client.impl.spi.impl.ClientInvocationServiceImpl;
+import uk.org.hecaton.client.impl.spi.impl.ClientPartitionServiceImpl;
+import uk.org.hecaton.client.impl.spi.impl.ClientTransactionManagerServiceImpl;
+import uk.org.hecaton.client.impl.spi.impl.ClientUserCodeDeploymentService;
+import uk.org.hecaton.client.impl.spi.impl.listener.ClientCPGroupViewService;
+import uk.org.hecaton.client.impl.spi.impl.listener.ClientClusterViewListenerService;
+import uk.org.hecaton.client.impl.spi.impl.listener.ClientListenerServiceImpl;
+import uk.org.hecaton.client.impl.statistics.ClientStatisticsService;
+import uk.org.hecaton.client.map.impl.querycache.ClientQueryCacheContext;
+import uk.org.hecaton.client.util.RoundRobinLB;
+import uk.org.hecaton.cluster.Cluster;
+import uk.org.hecaton.collection.IList;
+import uk.org.hecaton.collection.IQueue;
+import uk.org.hecaton.collection.ISet;
+import uk.org.hecaton.collection.impl.list.ListService;
+import uk.org.hecaton.collection.impl.queue.QueueService;
+import uk.org.hecaton.collection.impl.set.SetService;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.core.DistributedObject;
+import uk.org.hecaton.core.DistributedObjectListener;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.core.IExecutorService;
+import uk.org.hecaton.core.LifecycleService;
+import uk.org.hecaton.cp.CPSubsystem;
+import uk.org.hecaton.cp.event.CPGroupAvailabilityListener;
+import uk.org.hecaton.cp.event.CPMembershipListener;
+import uk.org.hecaton.cp.internal.session.ProxySessionManager;
+import uk.org.hecaton.crdt.pncounter.PNCounter;
+import uk.org.hecaton.dataconnection.DataConnectionService;
+import uk.org.hecaton.durableexecutor.DurableExecutorService;
+import uk.org.hecaton.durableexecutor.impl.DistributedDurableExecutorService;
+import uk.org.hecaton.executor.impl.DistributedExecutorService;
+import uk.org.hecaton.flakeidgen.FlakeIdGenerator;
+import uk.org.hecaton.flakeidgen.impl.FlakeIdGeneratorService;
+import uk.org.hecaton.instance.BuildInfoProvider;
+import uk.org.hecaton.internal.crdt.pncounter.PNCounterService;
+import uk.org.hecaton.internal.diagnostics.BuildInfoPlugin;
+import uk.org.hecaton.internal.diagnostics.ConfigPropertiesPlugin;
+import uk.org.hecaton.internal.diagnostics.Diagnostics;
+import uk.org.hecaton.internal.diagnostics.EventQueuePlugin;
+import uk.org.hecaton.internal.diagnostics.MetricsPlugin;
+import uk.org.hecaton.internal.diagnostics.NetworkingImbalancePlugin;
+import uk.org.hecaton.internal.diagnostics.SystemLogPlugin;
+import uk.org.hecaton.internal.diagnostics.SystemPropertiesPlugin;
+import uk.org.hecaton.internal.metrics.impl.MetricsConfigHelper;
+import uk.org.hecaton.internal.metrics.impl.MetricsRegistryImpl;
+import uk.org.hecaton.internal.metrics.metricsets.ClassLoadingMetricSet;
+import uk.org.hecaton.internal.metrics.metricsets.FileMetricSet;
+import uk.org.hecaton.internal.metrics.metricsets.GarbageCollectionMetricSet;
+import uk.org.hecaton.internal.metrics.metricsets.OperatingSystemMetricSet;
+import uk.org.hecaton.internal.metrics.metricsets.RuntimeMetricSet;
+import uk.org.hecaton.internal.metrics.metricsets.ThreadMetricSet;
+import uk.org.hecaton.internal.nio.ClassLoaderUtil;
+import uk.org.hecaton.internal.nio.Disposable;
+import uk.org.hecaton.internal.serialization.InternalSerializationService;
+import uk.org.hecaton.internal.serialization.impl.compact.SchemaService;
+import uk.org.hecaton.internal.util.ConcurrencyDetection;
+import uk.org.hecaton.internal.util.ServiceLoader;
+import uk.org.hecaton.jet.JetService;
+import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.logging.LoggingService;
+import uk.org.hecaton.map.IMap;
+import uk.org.hecaton.map.impl.MapService;
+import uk.org.hecaton.multimap.MultiMap;
+import uk.org.hecaton.multimap.impl.MultiMapService;
+import uk.org.hecaton.partition.MigrationListener;
+import uk.org.hecaton.partition.PartitionLostListener;
+import uk.org.hecaton.partition.PartitionService;
+import uk.org.hecaton.replicatedmap.ReplicatedMap;
+import uk.org.hecaton.replicatedmap.impl.ReplicatedMapService;
+import uk.org.hecaton.ringbuffer.Ringbuffer;
+import uk.org.hecaton.ringbuffer.impl.RingbufferService;
+import uk.org.hecaton.scheduledexecutor.IScheduledExecutorService;
+import uk.org.hecaton.scheduledexecutor.impl.DistributedScheduledExecutorService;
+import uk.org.hecaton.spi.impl.SerializationServiceSupport;
+import uk.org.hecaton.spi.impl.executionservice.TaskScheduler;
+import uk.org.hecaton.spi.properties.ClusterProperty;
+import uk.org.hecaton.spi.properties.HecatonProperties;
+import uk.org.hecaton.splitbrainprotection.SplitBrainProtectionService;
+import uk.org.hecaton.sql.SqlService;
+import uk.org.hecaton.sql.impl.client.SqlClientService;
+import uk.org.hecaton.topic.ITopic;
+import uk.org.hecaton.topic.impl.TopicService;
+import uk.org.hecaton.topic.impl.reliable.ReliableTopicService;
+import uk.org.hecaton.transaction.HecatonXAResource;
+import uk.org.hecaton.transaction.TransactionContext;
+import uk.org.hecaton.transaction.TransactionException;
+import uk.org.hecaton.transaction.TransactionOptions;
+import uk.org.hecaton.transaction.TransactionalTask;
+import uk.org.hecaton.transaction.impl.xa.XAService;
+
+import javax.annotation.Nonnull;
+import java.net.InetSocketAddress;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EventListener;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static uk.org.hecaton.client.properties.ClientProperty.CONCURRENT_WINDOW_MS;
+import static uk.org.hecaton.client.properties.ClientProperty.HEARTBEAT_INTERVAL;
+import static uk.org.hecaton.client.properties.ClientProperty.HEARTBEAT_TIMEOUT;
+import static uk.org.hecaton.client.properties.ClientProperty.IO_WRITE_THROUGH_ENABLED;
+import static uk.org.hecaton.client.properties.ClientProperty.MAX_CONCURRENT_INVOCATIONS;
+import static uk.org.hecaton.client.properties.ClientProperty.RESPONSE_THREAD_DYNAMIC;
+import static uk.org.hecaton.internal.metrics.MetricDescriptorConstants.CLIENT_PREFIX_MEMORY;
+import static uk.org.hecaton.internal.metrics.impl.MetricsConfigHelper.clientMetricsLevel;
+import static uk.org.hecaton.internal.util.EmptyStatement.ignore;
+import static uk.org.hecaton.internal.util.ExceptionUtil.rethrow;
+import static uk.org.hecaton.internal.util.Preconditions.checkNotNull;
+import static java.util.Collections.unmodifiableSet;
+
+@SuppressWarnings({"ClassDataAbstractionCoupling", "ClassFanOutComplexity", "MethodCount"})
+public class HecatonClientInstanceImpl implements HecatonClientInstance, SerializationServiceSupport {
+
+    private static final AtomicInteger CLIENT_ID = new AtomicInteger();
+
+    private final ConcurrencyDetection concurrencyDetection;
+    private final HecatonProperties properties;
+    private final int id = CLIENT_ID.getAndIncrement();
+    private final String instanceName;
+    private final ClientFailoverConfig clientFailoverConfig;
+    private final ClientConfig config;
+    private final LifecycleServiceImpl lifecycleService;
+    private final TcpClientConnectionManager connectionManager;
+    private final ClientClusterService clusterService;
+    private final ClientPartitionServiceImpl partitionService;
+    private final ClientInvocationServiceImpl invocationService;
+    private final ClientExecutionServiceImpl executionService;
+    private final ClientListenerServiceImpl listenerService;
+    private final ClientClusterViewListenerService clientClusterViewListenerService;
+    private final ClientTransactionManagerServiceImpl transactionManager;
+    private final ProxyManager proxyManager;
+    private final ConcurrentMap<String, Object> userContext = new ConcurrentHashMap<>();
+    private final LoadBalancer loadBalancer;
+    private final ClientExtension clientExtension;
+    private final LoggingService loggingService;
+    private final MetricsRegistryImpl metricsRegistry;
+    private final ClientStatisticsService clientStatisticsService;
+    private final Diagnostics diagnostics;
+    private final ClientSchemaService schemaService;
+    private final InternalSerializationService serializationService;
+    private final ClientICacheManager hecatonCacheManager;
+    private final ClientQueryCacheContext queryCacheContext;
+    private final ClientLockReferenceIdGenerator lockReferenceIdGenerator;
+    private final ClientExceptionFactory clientExceptionFactory;
+    private final ClientUserCodeDeploymentService userCodeDeploymentService;
+    private final ClusterDiscoveryService clusterDiscoveryService;
+    private final ProxySessionManager proxySessionManager;
+    private final CPSubsystem cpSubsystem;
+    private final ConcurrentLinkedQueue<Disposable> onClusterChangeDisposables = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Disposable> onClientShutdownDisposables = new ConcurrentLinkedQueue<>();
+    private final SqlClientService sqlService;
+    private final ClientCPGroupViewService cpGroupViewService;
+
+    @SuppressWarnings({"ExecutableStatementCount", "MethodLength"})
+    public HecatonClientInstanceImpl(String instanceName, ClientConfig clientConfig,
+                                       ClientFailoverConfig clientFailoverConfig,
+                                       ClientConnectionManagerFactory clientConnectionManagerFactory,
+                                       AddressProvider externalAddressProvider) {
+        if (clientConfig != null) {
+            this.config = clientConfig;
+        } else {
+            this.config = clientFailoverConfig.getClientConfigs().get(0);
+        }
+        this.clientFailoverConfig = clientFailoverConfig;
+        this.instanceName = instanceName;
+
+        HecatonProperties props = new HecatonProperties(config.getProperties());
+        String loggingType = props.getString(ClusterProperty.LOGGING_TYPE);
+        boolean detailsEnabled = props.getBoolean(ClusterProperty.LOGGING_ENABLE_DETAILS);
+        boolean shutdownLoggingEnabled = props.getBoolean(ClusterProperty.LOGGING_SHUTDOWN);
+        this.loggingService = new ClientLoggingService(config.getClusterName(),
+                loggingType, BuildInfoProvider.getBuildInfo(), instanceName, detailsEnabled, shutdownLoggingEnabled);
+
+        // client config validations/overrides
+        if (clientConfig != null) {
+            MetricsConfigHelper.overrideClientMetricsConfig(clientConfig,
+                    getLoggingService().getLogger(MetricsConfigHelper.class));
+        } else {
+            for (ClientConfig failoverClientConfig : clientFailoverConfig.getClientConfigs()) {
+                MetricsConfigHelper.overrideClientMetricsConfig(failoverClientConfig,
+                        getLoggingService().getLogger(MetricsConfigHelper.class));
+            }
+        }
+        validateTpcConfiguration(config);
+
+        ClassLoader classLoader = config.getClassLoader();
+        properties = new HecatonProperties(config.getProperties());
+        concurrencyDetection = initConcurrencyDetection();
+        clientExtension = createClientInitializer(classLoader);
+        clientExtension.beforeStart(this);
+        clientExtension.logInstanceTrackingMetadata();
+        lifecycleService = new LifecycleServiceImpl(this);
+        metricsRegistry = initMetricsRegistry();
+        schemaService = new ClientSchemaService(this, getLoggingService().getLogger(ClientSchemaService.class));
+        serializationService = clientExtension.createSerializationService((byte) -1);
+        proxyManager = new ProxyManager(this);
+        executionService = initExecutionService();
+        loadBalancer = initLoadBalancer(config);
+        transactionManager = new ClientTransactionManagerServiceImpl(this);
+        partitionService = new ClientPartitionServiceImpl(this);
+        clusterService = clientExtension.createClientClusterService(this);
+        clusterDiscoveryService = initClusterDiscoveryService(externalAddressProvider);
+        connectionManager = (TcpClientConnectionManager) clientConnectionManagerFactory.createConnectionManager(this);
+        invocationService = new ClientInvocationServiceImpl(this);
+        listenerService = new ClientListenerServiceImpl(this);
+        clientClusterViewListenerService = new ClientClusterViewListenerService(this);
+        userContext.putAll(config.getUserContext());
+        diagnostics = initDiagnostics();
+        hecatonCacheManager = new ClientICacheManager(this);
+        queryCacheContext = new ClientQueryCacheContext(this);
+        lockReferenceIdGenerator = new ClientLockReferenceIdGenerator();
+        clientExceptionFactory = initClientExceptionFactory();
+        clientStatisticsService = new ClientStatisticsService(this);
+        userCodeDeploymentService = new ClientUserCodeDeploymentService(config.getUserCodeDeploymentConfig(), classLoader);
+        cpSubsystem = clientExtension.createCPSubsystem(this);
+        proxySessionManager = clientExtension.createProxySessionManager(this);
+        sqlService = new SqlClientService(this);
+        cpGroupViewService = clientExtension.createClientCPGroupViewService(this,
+                config.isCPDirectToLeaderRoutingEnabled());
+    }
+
+    private void validateTpcConfiguration(ClientConfig config) {
+        // TPC only supports ALL_MEMBERS routing, but we don't want to terminate the client, just adjust and warn
+        if (config.getTpcConfig().isEnabled()
+                && config.getNetworkConfig().getClusterRoutingConfig().getRoutingMode() != RoutingMode.ALL_MEMBERS) {
+            config.getTpcConfig().setEnabled(false);
+            getLoggingService().getLogger(HecatonClient.class).warning(String.format("TPC has been disabled as it only supports"
+                            + " ALL_MEMBERS routing in this version of Hecaton and %s routing is currently configured instead.",
+                    config.getNetworkConfig().getClusterRoutingConfig().getRoutingMode()));
+        }
+    }
+
+    private ConcurrencyDetection initConcurrencyDetection() {
+        boolean writeThrough = properties.getBoolean(IO_WRITE_THROUGH_ENABLED);
+        boolean dynamicResponse = properties.getBoolean(RESPONSE_THREAD_DYNAMIC);
+        boolean backPressureEnabled = properties.getInteger(MAX_CONCURRENT_INVOCATIONS) < Integer.MAX_VALUE;
+
+        if (writeThrough || dynamicResponse || backPressureEnabled) {
+            return ConcurrencyDetection.createEnabled(properties.getInteger(CONCURRENT_WINDOW_MS));
+        } else {
+            return ConcurrencyDetection.createDisabled();
+        }
+    }
+
+    private ClusterDiscoveryService initClusterDiscoveryService(AddressProvider externalAddressProvider) {
+        int tryCount;
+        List<ClientConfig> configs;
+        if (clientFailoverConfig == null) {
+            tryCount = 0;
+            configs = Collections.singletonList(config);
+        } else {
+            tryCount = clientFailoverConfig.getTryCount();
+            configs = clientFailoverConfig.getClientConfigs();
+        }
+        ClusterDiscoveryServiceBuilder builder = new ClusterDiscoveryServiceBuilder(tryCount, configs, loggingService,
+                externalAddressProvider, properties, clientExtension, getLifecycleService(), clusterService);
+        return builder.build();
+    }
+
+    private Diagnostics initDiagnostics() {
+        String name = "diagnostics-client-" + id;
+
+        return new Diagnostics(name, loggingService, instanceName, properties);
+    }
+
+    private MetricsRegistryImpl initMetricsRegistry() {
+        ILogger logger = loggingService.getLogger(MetricsRegistryImpl.class);
+        return new MetricsRegistryImpl(getName(), logger, clientMetricsLevel(properties,
+                loggingService.getLogger(MetricsConfigHelper.class)));
+    }
+
+    private void startMetrics() {
+        RuntimeMetricSet.register(metricsRegistry);
+        GarbageCollectionMetricSet.register(metricsRegistry);
+        OperatingSystemMetricSet.register(metricsRegistry);
+        ThreadMetricSet.register(metricsRegistry);
+        ClassLoadingMetricSet.register(metricsRegistry);
+        FileMetricSet.register(metricsRegistry);
+        metricsRegistry.registerStaticMetrics(clientExtension.getMemoryStats(), CLIENT_PREFIX_MEMORY);
+        metricsRegistry.provideMetrics(clientExtension);
+        metricsRegistry.provideMetrics(executionService);
+    }
+
+    private LoadBalancer initLoadBalancer(ClientConfig config) {
+        LoadBalancer lb = config.getLoadBalancer();
+        if (lb == null) {
+            if (config.getLoadBalancerClassName() != null) {
+                try {
+                    return ClassLoaderUtil.newInstance(config.getClassLoader(), config.getLoadBalancerClassName());
+                } catch (Exception e) {
+                    throw rethrow(e);
+                }
+            } else {
+                lb = new RoundRobinLB();
+            }
+        }
+        return lb;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    private ClientExtension createClientInitializer(ClassLoader classLoader) {
+        try {
+            String factoryId = ClientExtension.class.getName();
+            Iterator<ClientExtension> iter = ServiceLoader.iterator(ClientExtension.class, factoryId, classLoader);
+            while (iter.hasNext()) {
+                ClientExtension initializer = iter.next();
+                if (!(initializer.getClass().equals(DefaultClientExtension.class))) {
+                    return initializer;
+                }
+            }
+        } catch (Exception e) {
+            throw rethrow(e);
+        }
+        return new DefaultClientExtension();
+    }
+
+    private ClientExecutionServiceImpl initExecutionService() {
+        return new ClientExecutionServiceImpl(instanceName,
+                config.getClassLoader(), properties, loggingService);
+    }
+
+    public void start() {
+        try {
+            lifecycleService.start();
+            startMetrics();
+            invocationService.start();
+            ClientContext clientContext = new ClientContext(this);
+            userCodeDeploymentService.start();
+            Collection<EventListener> configuredListeners = instantiateConfiguredListenerObjects();
+            clusterService.start(configuredListeners);
+            clientClusterViewListenerService.start();
+            cpGroupViewService.start();
+
+            // Add connection process listeners before starting the connection
+            // manager, so that they are invoked for all connection attempts
+            addConnectionProcessListeners(configuredListeners);
+            connectionManager.start();
+            startHeartbeat();
+            startIcmpPing();
+            connectionManager.connectToCluster();
+
+            diagnostics.start();
+
+            registerDiagnosticsPlugins();
+
+            metricsRegistry.provideMetrics(listenerService);
+
+            ClientConnectionStrategyConfig connectionStrategyConfig = config.getConnectionStrategyConfig();
+            boolean asyncStart = connectionStrategyConfig.isAsyncStart();
+
+            connectionManager.tryConnectToAllClusterMembers(!asyncStart);
+
+            listenerService.start();
+            proxyManager.init(config, clientContext);
+            invocationService.addBackupListener();
+            loadBalancer.init(getCluster(), config);
+            clientStatisticsService.start();
+            clientExtension.afterStart(this);
+            ((Consumer<ClientContext>) cpSubsystem).accept(clientContext);
+            addClientConfigAddedListeners(configuredListeners);
+            if (!asyncStart) {
+                sendStateToCluster();
+            }
+        } catch (Throwable e) {
+            try {
+                lifecycleService.terminate();
+            } catch (Throwable t) {
+                ignore(t);
+            }
+            throw rethrow(e);
+        }
+    }
+
+    private void registerDiagnosticsPlugins() {
+        // static loggers at beginning of file
+        diagnostics.register(
+                new BuildInfoPlugin(loggingService.getLogger(BuildInfoPlugin.class)));
+        diagnostics.register(
+                new ConfigPropertiesPlugin(loggingService.getLogger(ConfigPropertiesPlugin.class), properties));
+        diagnostics.register(
+                new SystemPropertiesPlugin(loggingService.getLogger(SystemPropertiesPlugin.class)));
+
+        // periodic loggers
+        diagnostics.register(
+                new MetricsPlugin(loggingService.getLogger(MetricsPlugin.class),
+                        metricsRegistry, properties));
+        diagnostics.register(
+                new SystemLogPlugin(properties, connectionManager, this,
+                        loggingService.getLogger(SystemLogPlugin.class)));
+        diagnostics.register(
+                new NetworkingImbalancePlugin(loggingService.getLogger(NetworkingImbalancePlugin.class),
+                        properties, connectionManager.getNetworking()));
+        diagnostics.register(
+                new EventQueuePlugin(loggingService.getLogger(EventQueuePlugin.class),
+                        listenerService.getEventExecutor(),
+                        properties));
+    }
+
+    private void startHeartbeat() {
+        long heartbeatTimeout = properties.getPositiveMillisOrDefault(HEARTBEAT_TIMEOUT);
+        long heartbeatInterval = properties.getPositiveMillisOrDefault(HEARTBEAT_INTERVAL);
+        ILogger logger = loggingService.getLogger(HeartbeatManager.class);
+        HeartbeatManager.start(this, executionService, logger,
+                heartbeatInterval, heartbeatTimeout, connectionManager);
+    }
+
+    private void startIcmpPing() {
+        ILogger logger = loggingService.getLogger(HeartbeatManager.class);
+        ClientICMPManager.start(config.getNetworkConfig().getClientIcmpPingConfig(),
+                executionService, logger,
+                connectionManager);
+    }
+
+    public void disposeOnClusterChange(Disposable disposable) {
+        onClusterChangeDisposables.add(disposable);
+    }
+
+    public void disposeOnClientShutdown(Disposable disposable) {
+        onClientShutdownDisposables.add(disposable);
+    }
+
+    public MetricsRegistryImpl getMetricsRegistry() {
+        return metricsRegistry;
+    }
+
+    @Nonnull
+    @Override
+    public HecatonXAResource getXAResource() {
+        return getDistributedObject(XAService.SERVICE_NAME, XAService.SERVICE_NAME);
+    }
+
+    @Nonnull
+    @Override
+    public Config getConfig() {
+        return new ClientDynamicClusterConfig(this);
+    }
+
+    public HecatonProperties getProperties() {
+        return properties;
+    }
+
+    @Nonnull
+    @Override
+    public String getName() {
+        return instanceName;
+    }
+
+    @Nonnull
+    @Override
+    public <E> IQueue<E> getQueue(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a queue instance with a null name is not allowed!");
+        return getDistributedObject(QueueService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public <E> ITopic<E> getTopic(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a topic instance with a null name is not allowed!");
+        return getDistributedObject(TopicService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public <E> ISet<E> getSet(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a set instance with a null name is not allowed!");
+        return getDistributedObject(SetService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public <E> IList<E> getList(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a list instance with a null name is not allowed!");
+        return getDistributedObject(ListService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public <K, V> IMap<K, V> getMap(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a map instance with a null name is not allowed!");
+        return getDistributedObject(MapService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public <K, V> MultiMap<K, V> getMultiMap(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a multi-map instance with a null name is not allowed!");
+        return getDistributedObject(MultiMapService.SERVICE_NAME, name);
+
+    }
+
+    @Nonnull
+    @Override
+    public <K, V> ReplicatedMap<K, V> getReplicatedMap(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a replicated map instance with a null name is not allowed!");
+        return getDistributedObject(ReplicatedMapService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public <E> ITopic<E> getReliableTopic(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a topic instance with a null name is not allowed!");
+        return getDistributedObject(ReliableTopicService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public <E> Ringbuffer<E> getRingbuffer(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a ringbuffer instance with a null name is not allowed!");
+        return getDistributedObject(RingbufferService.SERVICE_NAME, name);
+    }
+
+    @Override
+    public ClientICacheManager getCacheManager() {
+        return hecatonCacheManager;
+    }
+
+    @Nonnull
+    @Override
+    public Cluster getCluster() {
+        return clusterService.getCluster();
+    }
+
+    @Nonnull
+    @Override
+    public Client getLocalEndpoint() {
+        TcpClientConnection connection = (TcpClientConnection) connectionManager.getRandomConnection();
+        InetSocketAddress inetSocketAddress = connection != null ? connection.getLocalSocketAddress() : null;
+        UUID clientUuid = connectionManager.getClientUuid();
+        return new ClientImpl(clientUuid, inetSocketAddress, instanceName, unmodifiableSet(config.getLabels()));
+    }
+
+    @Nonnull
+    @Override
+    public IExecutorService getExecutorService(@Nonnull String name) {
+        checkNotNull(name, "Retrieving an executor instance with a null name is not allowed!");
+        return getDistributedObject(DistributedExecutorService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public DurableExecutorService getDurableExecutorService(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a durable executor instance with a null name is not allowed!");
+        return getDistributedObject(DistributedDurableExecutorService.SERVICE_NAME, name);
+    }
+
+    @Override
+    public <T> T executeTransaction(@Nonnull TransactionalTask<T> task) throws TransactionException {
+        return transactionManager.executeTransaction(task);
+    }
+
+    @Override
+    public <T> T executeTransaction(@Nonnull TransactionOptions options,
+                                    @Nonnull TransactionalTask<T> task) throws TransactionException {
+        return transactionManager.executeTransaction(options, task);
+    }
+
+    @Override
+    public TransactionContext newTransactionContext() {
+        return transactionManager.newTransactionContext();
+    }
+
+    @Override
+    public TransactionContext newTransactionContext(@Nonnull TransactionOptions options) {
+        checkNotNull(options, "TransactionOptions must not be null!");
+        return transactionManager.newTransactionContext(options);
+    }
+
+    public ClientTransactionManagerService getTransactionManager() {
+        return transactionManager;
+    }
+
+    @Nonnull
+    @Override
+    public FlakeIdGenerator getFlakeIdGenerator(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a Flake ID-generator instance with a null name is not allowed!");
+        return getDistributedObject(FlakeIdGeneratorService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public CardinalityEstimator getCardinalityEstimator(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a cardinality estimator instance with a null name is not allowed!");
+        return getDistributedObject(CardinalityEstimatorService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public PNCounter getPNCounter(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a PN counter instance with a null name is not allowed!");
+        return getDistributedObject(PNCounterService.SERVICE_NAME, name);
+    }
+
+    @Nonnull
+    @Override
+    public IScheduledExecutorService getScheduledExecutorService(@Nonnull String name) {
+        checkNotNull(name, "Retrieving a scheduled executor instance with a null name is not allowed!");
+        return getDistributedObject(DistributedScheduledExecutorService.SERVICE_NAME, name);
+    }
+
+    @Override
+    public Collection<DistributedObject> getDistributedObjects() {
+        try {
+            ClientMessage request = ClientGetDistributedObjectsCodec.encodeRequest();
+            final Future<ClientMessage> future = new ClientInvocation(this, request, getName()).invoke();
+            ClientMessage response = future.get();
+
+            Collection<? extends DistributedObject> distributedObjects = proxyManager.getDistributedObjects();
+            Set<DistributedObjectInfo> localDistributedObjects = new HashSet<>();
+            for (DistributedObject localInfo : distributedObjects) {
+                localDistributedObjects.add(new DistributedObjectInfo(localInfo.getServiceName(), localInfo.getName()));
+            }
+
+            for (DistributedObjectInfo distributedObjectInfo : ClientGetDistributedObjectsCodec.decodeResponse(response)) {
+                localDistributedObjects.remove(distributedObjectInfo);
+                getDistributedObject(distributedObjectInfo.getServiceName(), distributedObjectInfo.getName(), false);
+            }
+
+            for (DistributedObjectInfo distributedObjectInfo : localDistributedObjects) {
+                proxyManager.destroyProxyLocally(distributedObjectInfo.getServiceName(), distributedObjectInfo.getName());
+            }
+            return (Collection<DistributedObject>) proxyManager.getDistributedObjects();
+        } catch (Exception e) {
+            throw rethrow(e);
+        }
+    }
+
+    @Override
+    public UUID addDistributedObjectListener(@Nonnull DistributedObjectListener distributedObjectListener) {
+        checkNotNull(distributedObjectListener, "DistributedObjectListener must not be null!");
+        return proxyManager.addDistributedObjectListener(distributedObjectListener);
+    }
+
+    @Override
+    public boolean removeDistributedObjectListener(@Nonnull UUID registrationId) {
+        checkNotNull(registrationId, "Registration ID must not be null!");
+        return proxyManager.removeDistributedObjectListener(registrationId);
+    }
+
+    @Nonnull
+    @Override
+    public PartitionService getPartitionService() {
+        return new PartitionServiceProxy(partitionService, listenerService, clusterService);
+    }
+
+    @Nonnull
+    @Override
+    public SplitBrainProtectionService getSplitBrainProtectionService() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Nonnull
+    @Override
+    public ClientService getClientService() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Nonnull
+    @Override
+    public LoggingService getLoggingService() {
+        return loggingService;
+    }
+
+    @Nonnull
+    @Override
+    public LifecycleService getLifecycleService() {
+        return lifecycleService;
+    }
+
+    @Nonnull
+    @Override
+    public <T extends DistributedObject> T getDistributedObject(@Nonnull String serviceName,
+                                                                @Nonnull String name) {
+        return getDistributedObject(serviceName, name, true);
+    }
+
+    private <T extends DistributedObject> T getDistributedObject(@Nonnull String serviceName,
+                                                                 @Nonnull String name, boolean remote) {
+        if (remote) {
+            return (T) proxyManager.getOrCreateProxy(serviceName, name);
+        }
+        return (T) proxyManager.getOrCreateLocalProxy(serviceName, name);
+    }
+
+    @Nonnull
+    @Override
+    public CPSubsystem getCPSubsystem() {
+        return cpSubsystem;
+    }
+
+    @Nonnull
+    @Override
+    public ConcurrentMap<String, Object> getUserContext() {
+        return userContext;
+    }
+
+    public ClientConfig getClientConfig() {
+        return config;
+    }
+
+    @Override
+    public InternalSerializationService getSerializationService() {
+        return serializationService;
+    }
+
+    public ClientUserCodeDeploymentService getUserCodeDeploymentService() {
+        return userCodeDeploymentService;
+    }
+
+    public ProxySessionManager getProxySessionManager() {
+        return proxySessionManager;
+    }
+
+    public ProxyManager getProxyManager() {
+        return proxyManager;
+    }
+
+    @Override
+    public ClientConnectionManager getConnectionManager() {
+        return connectionManager;
+    }
+
+    @Override
+    public ClientClusterService getClientClusterService() {
+        return clusterService;
+    }
+
+    @Override
+    public TaskScheduler getTaskScheduler() {
+        return executionService;
+    }
+
+    public ClientPartitionService getClientPartitionService() {
+        return partitionService;
+    }
+
+    @Override
+    public ClientInvocationService getInvocationService() {
+        return invocationService;
+    }
+
+    @Override
+    public ClientListenerService getListenerService() {
+        return listenerService;
+    }
+
+    public LoadBalancer getLoadBalancer() {
+        return loadBalancer;
+    }
+
+    public ClientExtension getClientExtension() {
+        return clientExtension;
+    }
+
+    @Override
+    public void shutdown() {
+        getLifecycleService().shutdown();
+    }
+
+    /**
+     * Called during graceful shutdown of client to safely clean up resources on server side.
+     * Shutdown process is blocked until this method returns.
+     * <p>
+     * Current list of cleanups:
+     * <ul>
+     * <li>Close of CP sessions</li>
+     * </ul>
+     */
+    void onGracefulShutdown() {
+        proxySessionManager.shutdownAndAwait();
+    }
+
+    public void doShutdown() {
+        dispose(onClientShutdownDisposables);
+        proxyManager.destroy();
+        connectionManager.shutdown();
+        clusterDiscoveryService.shutdown();
+        transactionManager.shutdown();
+        invocationService.shutdown();
+        clusterService.terminateClientConnectivityLogging();
+        executionService.shutdown();
+        listenerService.shutdown();
+        clientStatisticsService.shutdown();
+        metricsRegistry.shutdown();
+        diagnostics.shutdown();
+        serializationService.dispose();
+    }
+
+    private static void dispose(Queue<Disposable> queue) {
+        Disposable disposable;
+        while ((disposable = queue.poll()) != null) {
+            disposable.dispose();
+        }
+    }
+
+    public ClientLockReferenceIdGenerator getLockReferenceIdGenerator() {
+        return lockReferenceIdGenerator;
+    }
+
+    private ClientExceptionFactory initClientExceptionFactory() {
+        boolean jCacheAvailable = JCacheDetector.isJCacheAvailable(getClientConfig().getClassLoader());
+        return new ClientExceptionFactory(jCacheAvailable, config.getClassLoader(), getLoggingService());
+    }
+
+    public ClientExceptionFactory getClientExceptionFactory() {
+        return clientExceptionFactory;
+    }
+
+    public ClusterDiscoveryService getClusterDiscoveryService() {
+        return clusterDiscoveryService;
+    }
+
+    public ClientFailoverConfig getFailoverConfig() {
+        return clientFailoverConfig;
+    }
+
+    public ClientQueryCacheContext getQueryCacheContext() {
+        return queryCacheContext;
+    }
+
+    public ConcurrencyDetection getConcurrencyDetection() {
+        return concurrencyDetection;
+    }
+
+    @Nonnull
+    @Override
+    public SqlService getSql() {
+        return sqlService;
+    }
+
+    @Nonnull
+    @Override
+    public DataConnectionService getDataConnectionService() {
+        throw new UnsupportedOperationException("DataConnectionService is not available on the client");
+    }
+
+    @Nonnull
+    @Override
+    public JetService getJet() {
+        return clientExtension.getJet();
+    }
+
+    public void onTryToConnectNextCluster() {
+        ILogger logger = loggingService.getLogger(HecatonInstance.class);
+        logger.info("Resetting local state of the client, because of a cluster change.");
+
+        dispose(onClusterChangeDisposables);
+        //reset the member list version
+        clusterService.onTryToConnectNextCluster();
+        //clear partition service
+        partitionService.reset();
+        //close all the connections, consequently waiting invocations get TargetDisconnectedException
+        //non retryable client messages will fail immediately
+        //retryable client messages will be retried but they will wait for new partition table
+        connectionManager.reset();
+    }
+
+    public void onConnectionToNewCluster() {
+        ILogger logger = loggingService.getLogger(HecatonInstance.class);
+        logger.info("Clearing local state of the client, because of a cluster restart.");
+
+        dispose(onClusterChangeDisposables);
+        clusterService.onClusterConnect();
+    }
+
+    public void collectAndSendStatsNow() {
+        clientStatisticsService.collectAndSendStatsNow();
+    }
+
+    /**
+     * Returns {@code true} if we need to check the urgent invocations, by
+     * examining the local registry of the schema service.
+     */
+    public boolean shouldCheckUrgentInvocations() {
+        return schemaService.hasAnySchemas();
+    }
+
+    public void sendStateToCluster() throws ExecutionException, InterruptedException {
+        userCodeDeploymentService.deploy(this);
+        schemaService.sendAllSchemas();
+        queryCacheContext.recreateAllCaches();
+        proxyManager.createDistributedObjectsOnCluster();
+    }
+
+    // visible for testing
+    public ClientStatisticsService getClientStatisticsService() {
+        return clientStatisticsService;
+    }
+
+    private Collection<EventListener> instantiateConfiguredListenerObjects() {
+        return config.getListenerConfigs().stream().map((listenerConfig) -> {
+            EventListener listener = listenerConfig.getImplementation();
+            if (listener == null) {
+                try {
+                    listener = ClassLoaderUtil.newInstance(config.getClassLoader(), listenerConfig.getClassName());
+                } catch (Exception e) {
+                    getLoggingService().getLogger(HecatonInstance.class).severe(e);
+                }
+            }
+            return listener;
+        }).collect(Collectors.toList());
+    }
+
+    private void addClientConfigAddedListeners(Collection<EventListener> configuredListeners) {
+        configuredListeners.stream().filter(listener -> listener instanceof DistributedObjectListener)
+                .forEach(listener -> proxyManager.addDistributedObjectListener((DistributedObjectListener) listener));
+
+        configuredListeners.stream().filter(listener -> listener instanceof MigrationListener)
+                .forEach(listener -> getPartitionService().addMigrationListener((MigrationListener) listener));
+
+        configuredListeners.stream().filter(listener -> listener instanceof PartitionLostListener)
+                .forEach(listener -> getPartitionService().addPartitionLostListener((PartitionLostListener) listener));
+
+        configuredListeners.stream().filter(listener -> listener instanceof CPMembershipListener)
+                .forEach(listener -> getCPSubsystem().addMembershipListener((CPMembershipListener) listener));
+
+        configuredListeners.stream().filter(listener -> listener instanceof CPGroupAvailabilityListener)
+                .forEach(listener -> getCPSubsystem().addGroupAvailabilityListener((CPGroupAvailabilityListener) listener));
+    }
+
+    private void addConnectionProcessListeners(Collection<EventListener> configuredListeners) {
+        configuredListeners.stream()
+                .filter(ClientConnectionProcessListener.class::isInstance)
+                // private API for Management Center (cluster connection diagnostics)
+                .map(ClientConnectionProcessListener.class::cast)
+                .forEach(connectionManager::addClientConnectionProcessListener);
+    }
+
+    public SchemaService getSchemaService() {
+        return schemaService;
+    }
+
+    @Override
+    public ClientCPGroupViewService getCPGroupViewService() {
+        return cpGroupViewService;
+    }
+
+    public Diagnostics getDiagnostics() {
+        return diagnostics;
+    }
+}

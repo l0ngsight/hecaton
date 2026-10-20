@@ -1,0 +1,31 @@
+{
+  "instance": {
+    "hecaton-client-failover": {
+      "clients": {
+        "file": "/path"
+      },
+      "try-count": -1
+    }
+  },
+  "error": {
+    "schemaLocation": "#/properties/hecaton-client-failover",
+    "pointerToViolation": "#/hecaton-client-failover",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/properties/hecaton-client-failover/properties/clients",
+        "pointerToViolation": "#/hecaton-client-failover/clients",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: JSONArray, found: JSONObject"
+      },
+      {
+        "schemaLocation": "#/properties/hecaton-client-failover/properties/try-count",
+        "pointerToViolation": "#/hecaton-client-failover/try-count",
+        "causingExceptions": [],
+        "keyword": "minimum",
+        "message": "-1 is not greater or equal to 0"
+      }
+    ],
+    "message": "2 schema violations found"
+  }
+}

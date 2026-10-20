@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<hecaton-client xmlns="https://hecaton.org.uk/schema/client-config"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="https://hecaton.org.uk/schema/client-config https://hecaton.org.uk/schema/client-config/hecaton-client-config-5.7.xsd">
+    <cluster-name>$CLUSTER_NAME$</cluster-name>
+    <network>
+        <cluster-members>
+            <address>127.0.0.1:$PORT_NUMBER$</address>
+        </cluster-members>
+    </network>
+</hecaton-client>

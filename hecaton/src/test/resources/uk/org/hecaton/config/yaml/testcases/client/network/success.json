@@ -1,0 +1,84 @@
+{
+  "instance": {
+    "hecaton-client": {
+      "network": {
+        "kubernetes": {
+          "service-name": "MY-SERVICE-NAME",
+          "service-label-name": "MY-SERVICE-LABEL-NAME",
+          "namespace": "MY-KUBERNETES-NAMESPACE",
+          "service-label-value": "MY-SERVICE-LABEL-VALUE",
+          "enabled": false
+        },
+        "auto-detection": {
+          "enabled": false
+        },
+        "discovery-strategies": {
+          "node-filter": {
+            "class": "DummyFilterClass"
+          },
+          "discovery-strategies": [
+            {
+              "class": "DummyDiscoveryStrategy1",
+              "enabled": true,
+              "properties": {
+                "key-string": "foo",
+                "key-int": 123,
+                "key-boolean": true
+              }
+            }
+          ]
+        },
+        "cluster-routing": {
+          "mode": "ALL_MEMBERS",
+          "routing-strategy": "PARTITION_GROUPS"
+        },
+        "ssl": {
+          "factory-class-name": "uk.org.hecaton.nio.ssl.BasicSSLContextFactory",
+          "enabled": false,
+          "properties": {
+            "keyStoreType": "JKS",
+            "trustStorePassword": "secret.123456",
+            "protocol": "TLS",
+            "keyStorePassword": "keystorePassword123",
+            "keyStore": "/opt/hecaton-client.keystore",
+            "trustStore": "/opt/hecaton-client.truststore",
+            "trustStoreType": "JKS"
+          }
+        },
+        "connection-timeout": 60000,
+        "cluster-members": [
+          "127.0.0.1",
+          "127.0.0.2"
+        ],
+        "socket-options": {
+          "keep-alive": true,
+          "reuse-address": true,
+          "linger-seconds": 3,
+          "buffer-size": 128,
+          "tcp-no-delay": false
+        },
+        "icmp-ping": {
+          "interval-milliseconds": 3000,
+          "timeout-milliseconds": 2000,
+          "max-attempts": 5,
+          "echo-fail-fast-on-startup": false,
+          "ttl": 100,
+          "enabled": false
+        },
+        "outbound-ports": [
+          34600,
+          "34700-34710"
+        ],
+        "socket-interceptor": {
+          "enabled": true,
+          "properties": {
+            "foo": "bar"
+          },
+          "class-name": "uk.org.hecaton.examples.MySocketInterceptor"
+        },
+        "redo-operation": true
+      }
+    }
+  },
+  "error": null
+}

@@ -1,0 +1,231 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.internal.nearcache.impl.invalidation;
+
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.core.LifecycleService;
+import uk.org.hecaton.internal.serialization.Data;
+import uk.org.hecaton.internal.util.ConstructorFunction;
+import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.eventservice.EventRegistration;
+import uk.org.hecaton.spi.impl.executionservice.ExecutionService;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
+
+import static uk.org.hecaton.core.LifecycleEvent.LifecycleState.SHUTTING_DOWN;
+import static uk.org.hecaton.internal.util.ConcurrencyUtil.getOrPutIfAbsent;
+import static java.lang.Thread.currentThread;
+import static java.util.concurrent.TimeUnit.SECONDS;
+
+/**
+ * Sends invalidations to Near Cache in batches.
+ */
+public class BatchInvalidator extends Invalidator {
+
+    private final String invalidationExecutorName;
+
+    /**
+     * Creates an invalidation-queue per data-structure-name.
+     */
+    private final ConstructorFunction<String, InvalidationQueue<Invalidation>> invalidationQueueConstructor
+            = dataStructureName -> new InvalidationQueue<>();
+
+    /**
+     * data-structure-name to invalidation-queue mappings.
+     */
+    private final ConcurrentMap<String, InvalidationQueue<Invalidation>> invalidationQueues = new ConcurrentHashMap<>();
+
+    private final int batchSize;
+    private final int batchFrequencySeconds;
+    private final UUID nodeShutdownListenerId;
+    private final AtomicBoolean runningBackgroundTask = new AtomicBoolean();
+
+    public BatchInvalidator(String serviceName, int batchSize, int batchFrequencySeconds,
+                            Predicate<EventRegistration> eventFilter, NodeEngine nodeEngine) {
+        super(serviceName, eventFilter, nodeEngine);
+
+        this.batchSize = batchSize;
+        this.batchFrequencySeconds = batchFrequencySeconds;
+        this.nodeShutdownListenerId = registerNodeShutdownListener();
+        this.invalidationExecutorName = serviceName + getClass();
+    }
+
+    @Override
+    protected Invalidation newInvalidation(Data key, String dataStructureName, UUID sourceUuid, int partitionId) {
+        if (key != null) {
+            // when key is null invalidations are sent
+            // immediately hence no need to check background task.
+            checkBackgroundTaskIsRunning();
+        }
+        return super.newInvalidation(key, dataStructureName, sourceUuid, partitionId);
+    }
+
+    @Override
+    protected void invalidateInternal(Invalidation invalidation, int orderKey) {
+        String dataStructureName = invalidation.getName();
+        InvalidationQueue<Invalidation> invalidationQueue = invalidationQueueOf(dataStructureName);
+        invalidationQueue.offer(invalidation);
+
+        if (invalidationQueue.size() >= batchSize) {
+            pollAndSendInvalidations(dataStructureName, invalidationQueue);
+        }
+    }
+
+    private InvalidationQueue<Invalidation> invalidationQueueOf(String dataStructureName) {
+        return getOrPutIfAbsent(invalidationQueues, dataStructureName, invalidationQueueConstructor);
+    }
+
+    private void pollAndSendInvalidations(String dataStructureName, InvalidationQueue<Invalidation> invalidationQueue) {
+        assert invalidationQueue != null;
+
+        if (!invalidationQueue.tryAcquire()) {
+            return;
+        }
+
+        List<Invalidation> invalidations;
+        try {
+            invalidations = pollInvalidations(invalidationQueue);
+        } finally {
+            invalidationQueue.release();
+        }
+
+        // Sending the invalidations after releasing the lock is a trade-off between queue inflation
+        // and delivery ordering. We accept a higher likelihood that invalidations will arrive out of
+        // order to the listener in exchange for lower latency on draining the queue when it exceeds
+        // the batch size.
+        sendInvalidations(dataStructureName, invalidations);
+    }
+
+    private List<Invalidation> pollInvalidations(InvalidationQueue<Invalidation> invalidationQueue) {
+        final int size = invalidationQueue.size();
+
+        List<Invalidation> invalidations = new ArrayList<>(size);
+
+        for (int i = 0; i < size; i++) {
+            Invalidation invalidation = invalidationQueue.poll();
+            if (invalidation == null) {
+                break;
+            }
+
+            invalidations.add(invalidation);
+        }
+
+        return invalidations;
+    }
+
+    private void sendInvalidations(String dataStructureName, List<Invalidation> invalidations) {
+        // There will always be at least one listener which listens invalidations. This is the reason behind eager creation
+        // of BatchNearCacheInvalidation instance here. There is a causality between listener and invalidation. Only if we have
+        // a listener, we can have an invalidation, otherwise invalidations are not generated.
+        Invalidation invalidation = new BatchNearCacheInvalidation(dataStructureName, invalidations);
+
+        Collection<EventRegistration> registrations = eventService.getRegistrations(serviceName, dataStructureName);
+        for (EventRegistration registration : registrations) {
+            if (eventFilter.test(registration)) {
+                // Find worker queue of striped executor by using the registration id so all batch invalidations for the same
+                // registration will go into the same worker queue.
+                int orderKey = registration.getId().hashCode();
+                eventService.publishEvent(serviceName, registration, invalidation, orderKey);
+            }
+        }
+    }
+
+    /**
+     * Sends remaining invalidation events in this invalidator's queues to the recipients.
+     */
+    private UUID registerNodeShutdownListener() {
+        HecatonInstance node = nodeEngine.getHecatonInstance();
+        LifecycleService lifecycleService = node.getLifecycleService();
+        return lifecycleService.addLifecycleListener(event -> {
+            if (event.getState() == SHUTTING_DOWN) {
+                Set<Map.Entry<String, InvalidationQueue<Invalidation>>> entries = invalidationQueues.entrySet();
+                for (Map.Entry<String, InvalidationQueue<Invalidation>> entry : entries) {
+                    pollAndSendInvalidations(entry.getKey(), entry.getValue());
+                }
+            }
+        });
+    }
+
+    private void checkBackgroundTaskIsRunning() {
+        if (runningBackgroundTask.get()) {
+            // return if already started
+            return;
+        }
+
+        if (runningBackgroundTask.compareAndSet(false, true)) {
+            ExecutionService executionService = nodeEngine.getExecutionService();
+            executionService.scheduleWithRepetition(invalidationExecutorName,
+                    new BatchInvalidationEventSender(), batchFrequencySeconds, batchFrequencySeconds, SECONDS);
+        }
+    }
+
+    /**
+     * A background runner which runs periodically and consumes invalidation queues.
+     */
+    private class BatchInvalidationEventSender implements Runnable {
+
+        @Override
+        public void run() {
+            for (Map.Entry<String, InvalidationQueue<Invalidation>> entry : invalidationQueues.entrySet()) {
+                if (currentThread().isInterrupted()) {
+                    break;
+                }
+                String name = entry.getKey();
+                InvalidationQueue<Invalidation> invalidationQueue = entry.getValue();
+                if (!invalidationQueue.isEmpty()) {
+                    pollAndSendInvalidations(name, invalidationQueue);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void destroy(String dataStructureName, UUID sourceUuid) {
+        invalidationQueues.remove(dataStructureName);
+        super.destroy(dataStructureName, sourceUuid);
+    }
+
+    @Override
+    public void shutdown() {
+        ExecutionService executionService = nodeEngine.getExecutionService();
+        executionService.shutdownExecutor(invalidationExecutorName);
+
+        HecatonInstance node = nodeEngine.getHecatonInstance();
+        LifecycleService lifecycleService = node.getLifecycleService();
+        lifecycleService.removeLifecycleListener(nodeShutdownListenerId);
+
+        invalidationQueues.clear();
+
+        super.shutdown();
+    }
+
+    @Override
+    public void reset() {
+        invalidationQueues.clear();
+
+        super.reset();
+    }
+}

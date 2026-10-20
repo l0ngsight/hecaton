@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 #
-# Client test suite, run on JDK 17, 21 and 25.
+# Client checks on the JDK selected by the CI matrix (17, 21, 25). Uses the jar built on
+# JDK 25 by the build job (bytecode level 17).
+#
+# Usage: tools/ci/client-tests.sh [path/to/hecaton-VERSION.jar]
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 java -version
 
-if [ ! -f pom.xml ]; then
-    echo "No Maven project yet (the client library arrives in milestone M1). Skipping client tests."
-    exit 0
-fi
-
-# The build itself needs JDK 25 (toolchain); tests run on the JDK selected by the matrix.
-./mvnw -B -ntp -Pclient-tests verify
+jar="${1:-$(ls hecaton/target/hecaton-*.jar | grep -vE -- '-(sources|tests|javadoc)\.jar$' | head -n 1)}"
+java -cp "$jar" tools/ci/ClientSmoke.java

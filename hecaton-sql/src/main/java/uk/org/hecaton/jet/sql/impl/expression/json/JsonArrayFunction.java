@@ -1,0 +1,94 @@
+/*
+ * Copyright 2026 Hazelcast Inc.
+ *
+ * Licensed under the Hazelcast Community License (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://hazelcast.com/hazelcast-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.sql.impl.expression.json;
+
+import uk.org.hecaton.core.HecatonJsonValue;
+import uk.org.hecaton.jet.sql.impl.JetSqlSerializerHook;
+import uk.org.hecaton.nio.ObjectDataInput;
+import uk.org.hecaton.nio.ObjectDataOutput;
+import uk.org.hecaton.sql.impl.expression.Expression;
+import uk.org.hecaton.sql.impl.expression.ExpressionEvalContext;
+import uk.org.hecaton.sql.impl.expression.VariExpression;
+import uk.org.hecaton.sql.impl.row.Row;
+import uk.org.hecaton.sql.impl.type.QueryDataType;
+import org.apache.calcite.sql.SqlJsonConstructorNullClause;
+
+import java.io.IOException;
+
+public class JsonArrayFunction extends VariExpression<HecatonJsonValue> {
+    private SqlJsonConstructorNullClause nullClause;
+
+    public JsonArrayFunction() { }
+
+    private JsonArrayFunction(final Expression<?>[] operands, final SqlJsonConstructorNullClause nullClause) {
+        super(operands);
+        this.nullClause = nullClause;
+    }
+
+    public static Expression<?> create(final Expression<?>[] operands, final SqlJsonConstructorNullClause nullClause) {
+        return new JsonArrayFunction(operands, nullClause);
+    }
+
+    @Override
+    public int getClassId() {
+        return JetSqlSerializerHook.JSON_ARRAY;
+    }
+
+    @Override
+    public HecatonJsonValue eval(final Row row, final ExpressionEvalContext context) {
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        boolean isFirst = true;
+        for (Expression<?> operand : operands) {
+            Object result = operand.eval(row, context);
+            if (result == null && !keepNulls()) {
+                continue;
+            }
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                sb.append(',');
+            }
+
+            sb.append(JsonCreationUtil.serializeValue(result));
+        }
+        sb.append(']');
+
+        return new HecatonJsonValue(sb.toString());
+    }
+
+    private boolean keepNulls() {
+        return nullClause != SqlJsonConstructorNullClause.ABSENT_ON_NULL;
+    }
+
+    @Override
+    public QueryDataType getType() {
+        return QueryDataType.JSON;
+    }
+
+    @Override
+    public void writeData(final ObjectDataOutput out) throws IOException {
+        super.writeData(out);
+        out.writeString(nullClause.name());
+    }
+
+    @Override
+    public void readData(final ObjectDataInput in) throws IOException {
+        super.readData(in);
+        this.nullClause = SqlJsonConstructorNullClause.valueOf(in.readString());
+    }
+}

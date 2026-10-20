@@ -1,0 +1,53 @@
+# Three Hecaton members discovering each other through Kubernetes (plan §1.4). The test script
+# substitutes IMAGE and the discovery settings (DISCOVERY_NAME / DISCOVERY_VALUE): DNS lookup
+# of the headless service, or the Kubernetes API (needs kubernetes-rbac.yaml).
+apiVersion: v1
+kind: Service
+metadata:
+  name: hecaton
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: hecaton
+  ports:
+    - name: hecaton
+      port: 5701
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hecaton
+spec:
+  serviceName: hecaton
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hecaton
+  template:
+    metadata:
+      labels:
+        app: hecaton
+    spec:
+      containers:
+        - name: hecaton
+          image: IMAGE
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5701
+          env:
+            - name: HC_NETWORK_JOIN_AUTODETECTION_ENABLED
+              value: "false"
+            - name: HC_NETWORK_JOIN_MULTICAST_ENABLED
+              value: "false"
+            - name: HC_NETWORK_JOIN_KUBERNETES_ENABLED
+              value: "true"
+            - name: DISCOVERY_NAME
+              value: "DISCOVERY_VALUE"
+            - name: JAVA_OPTS
+              value: "-Xmx256m"
+          readinessProbe:
+            tcpSocket:
+              port: 5701
+            initialDelaySeconds: 5
+            periodSeconds: 5

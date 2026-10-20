@@ -1,0 +1,31 @@
+{
+  "instance": {
+    "hecaton": {
+      "crdt-replication": {
+        "max-concurrent-replication-targets": "SomeString",
+        "replication-period-millis": null
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/CrdtReplication",
+    "pointerToViolation": "#/hecaton/crdt-replication",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/definitions/CrdtReplication/properties/max-concurrent-replication-targets",
+        "pointerToViolation": "#/hecaton/crdt-replication/max-concurrent-replication-targets",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Integer, found: String"
+      },
+      {
+        "schemaLocation": "#/definitions/CrdtReplication/properties/replication-period-millis",
+        "pointerToViolation": "#/hecaton/crdt-replication/replication-period-millis",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Integer, found: Null"
+      }
+    ],
+    "message": "2 schema violations found"
+  }
+}

@@ -1,0 +1,270 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.json;
+
+import uk.org.hecaton.core.HecatonJsonValue;
+import uk.org.hecaton.function.FunctionEx;
+import uk.org.hecaton.jet.json.impl.JsonUtilImpl;
+import uk.org.hecaton.jet.pipeline.Sources;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.core.json.JsonReadFeature;
+import tools.jackson.jr.annotationsupport.JacksonAnnotationExtension;
+import tools.jackson.jr.ob.JSON;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+/**
+ * Util class to parse JSON formatted input to various object types or
+ * convert objects to JSON strings.
+ * <p>
+ * We use the lightweight JSON library `jackson-jr` to parse the given
+ * input or to convert the given objects to JSON string. If
+ * `jackson-annotations` library present on the classpath, we register
+ * {@link JacksonAnnotationExtension} to so that the JSON conversion can
+ * make use of <a href="https://github.com/FasterXML/jackson-annotations/wiki/Jackson-Annotations">
+ * Jackson Annotations</a>.
+ *
+ * @since Jet 4.2
+ */
+public final class JsonUtil {
+
+    private static final JSON JSON_JR;
+
+    static {
+        JsonFactory jf = JsonFactory.builder()
+                                    .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
+                                    .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS)
+                                    .build();
+        JSON.Builder builder = JSON.builder(jf).enable(JSON.Feature.ACCEPT_CASE_INSENSITIVE_PROPERTIES);
+        try {
+            Class.forName("com.fasterxml.jackson.annotation.JacksonAnnotation", false, JsonUtil.class.getClassLoader());
+            builder.register(JacksonAnnotationExtension.std);
+        } catch (ClassNotFoundException ignored) {
+        }
+        JSON_JR = builder.build();
+    }
+
+    private JsonUtil() {
+    }
+
+    /**
+     * Creates a {@link HecatonJsonValue} by converting given the object to
+     * string using {@link Object#toString()}.
+     */
+    @Nonnull
+    public static HecatonJsonValue hecatonJsonValue(@Nonnull Object object) {
+        return new HecatonJsonValue(object.toString());
+    }
+
+    /**
+     * Converts a JSON string to an object of the given type.
+     * {@link #toBean(Class)} is a more secure alternative.
+     *
+     * @see #toBean(Class)
+     */
+    @Nullable
+    public static <T> T beanFrom(@Nonnull String jsonString, @Nonnull Class<T> type) throws IOException {
+        try {
+            return JSON_JR.beanFrom(type, jsonString);
+        } catch (JacksonException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Secure parser of JSON string to given type that rejects dangerous types.
+     * This method should be used in
+     * {@link uk.org.hecaton.jet.pipeline.GeneralStage#map(FunctionEx)} and other
+     * similar cases instead of plain inline {@link #beanFrom(String, Class)}
+     * lambda or method reference.
+     *
+     * <p>
+     * Example usage:
+     * <pre>{@code
+     * stage.map(JsonUtil.toBean(MyDto.class))
+     * }</pre>
+     *
+     * @param type target type
+     * @param <T> target type
+     * @return JSON parsing serializable function
+     *
+     * @implNote This method is optimized and checks the type only once after creation
+     *
+     * @since 5.7
+     */
+    @Nonnull
+    public static <T> FunctionEx<String, T> toBean(@Nonnull Class<T> type) {
+        return JsonUtilImpl.toBean(type);
+    }
+
+    /**
+     * Converts a JSON string to a {@link Map}.
+     */
+    @Nullable
+    public static Map<String, Object> mapFrom(@Nonnull Object object) throws IOException {
+        try {
+            return JSON_JR.mapFrom(object);
+        } catch (JacksonException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Converts a JSON string to a {@link List} of given type.
+     */
+    @Nullable
+    public static <T> List<T> listFrom(@Nonnull String jsonString, @Nonnull Class<T> type) throws IOException {
+        try {
+            return JSON_JR.listOfFrom(type, jsonString);
+        } catch (JacksonException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Converts a JSON string to a {@link List}.
+     */
+    @Nullable
+    public static List<Object> listFrom(@Nonnull String jsonString) throws IOException {
+        try {
+            return JSON_JR.listFrom(jsonString);
+        } catch (JacksonException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Converts a JSON string to an Object. The returned object will differ
+     * according to the content of the string:
+     * <ul>
+     *     <li>content is a JSON object, returns a {@link Map}. See
+     *     {@link #mapFrom(Object)}.</li>
+     *     <li>content is a JSON array, returns a {@link List}. See
+     *     {@link #listFrom(String)}.</li>
+     *     <li>content is a String, null or primitive, returns String, null or
+     *     primitive.</li>
+     * </ul>
+     */
+    @Nullable
+    public static Object anyFrom(@Nonnull String jsonString) throws IOException {
+        try {
+            return JSON_JR.anyFrom(jsonString);
+        } catch (JacksonException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Returns an {@link Iterator} over the sequence of JSON objects parsed
+     * from given {@code reader}. Each object is converted to the given
+     * {@code type}.
+     */
+    @Nonnull
+    public static <T> Iterator<T> beanSequenceFrom(@Nonnull Reader reader, @Nonnull Class<T> type) throws IOException {
+        try {
+            return JSON_JR.beanSequenceFrom(type, reader);
+        } catch (JacksonException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Returns an {@link Iterator} over the sequence of JSON objects parsed
+     * from given {@code reader}. Each object is converted to a {@link Map}.
+     * It will throw {@link ClassCastException} if JSON objects are just
+     * primitives ({@link String}, {@link Number}, {@link Boolean}) or JSON
+     * arrays ({@link List}).
+     */
+    @Nonnull
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static Iterator<Map<String, Object>> mapSequenceFrom(@Nonnull Reader reader)  throws IOException {
+        try {
+            return (Iterator) JSON_JR.anySequenceFrom(reader);
+        } catch (JacksonException e) {
+            throw new IOException(e);
+        }
+    }
+
+    /**
+     * Parses the file and returns a stream of objects with the given type.
+     * The file is considered to have a
+     * <a href="https://en.wikipedia.org/wiki/JSON_streaming">streaming JSON</a>
+     * content, where each JSON string is separated by a new-line. The JSON
+     * string itself can span on multiple lines.
+     * <p>
+     * See {@link Sources#json(String, Class)}.
+     */
+    @Nonnull
+    public static <T> Stream<T> beanSequenceFrom(Path path, @Nonnull Class<T> type) throws IOException {
+        Reader reader = new InputStreamReader(Files.newInputStream(path), UTF_8);
+        Spliterator<T> spliterator = Spliterators.spliteratorUnknownSize(JsonUtil.beanSequenceFrom(reader, type),
+                Spliterator.ORDERED | Spliterator.NONNULL);
+        return StreamSupport.stream(spliterator, false);
+    }
+
+    /**
+     * Parses the file and returns a stream of {@link Map}. The file is
+     * considered to have a
+     * <a href="https://en.wikipedia.org/wiki/JSON_streaming">streaming JSON</a>
+     * content, where each JSON string is separated by a new-line. The JSON
+     * string itself can span on multiple lines.
+     * <p>
+     * See {@link Sources#json(String, Class)}.
+     */
+    @Nonnull
+    public static Stream<Map<String, Object>> mapSequenceFrom(Path path) throws IOException {
+        Reader reader = new InputStreamReader(Files.newInputStream(path), UTF_8);
+        Spliterator<Map<String, Object>> spliterator =
+                Spliterators.spliteratorUnknownSize(JsonUtil.mapSequenceFrom(reader),
+                Spliterator.ORDERED | Spliterator.NONNULL);
+        return StreamSupport.stream(spliterator, false);
+    }
+
+    /**
+     * Creates a JSON string for the given object.
+     */
+    @Nonnull
+    public static String toJson(@Nonnull Object object) throws IOException {
+        if (object instanceof DataSource) {
+            // these classes should not be serialized using toJson
+            throw new IllegalArgumentException(String.format("Class %s cannot be serialized using JSON.",
+                    object.getClass().getName()));
+        }
+        try {
+            return JSON_JR.asString(object);
+        } catch (JacksonException e) {
+            throw new IOException(e);
+        }
+    }
+}

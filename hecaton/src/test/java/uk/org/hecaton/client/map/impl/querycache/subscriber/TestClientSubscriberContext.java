@@ -1,0 +1,121 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.map.impl.querycache.subscriber;
+
+import uk.org.hecaton.map.impl.querycache.QueryCacheContext;
+import uk.org.hecaton.map.impl.querycache.accumulator.Accumulator;
+import uk.org.hecaton.map.impl.querycache.accumulator.AccumulatorInfo;
+import uk.org.hecaton.map.impl.querycache.event.DefaultQueryCacheEventData;
+import uk.org.hecaton.map.impl.querycache.event.sequence.Sequenced;
+import uk.org.hecaton.map.impl.querycache.subscriber.MapSubscriberRegistry;
+import uk.org.hecaton.map.impl.querycache.subscriber.SubscriberAccumulator;
+import uk.org.hecaton.map.impl.querycache.subscriber.SubscriberAccumulatorFactory;
+import uk.org.hecaton.map.impl.querycache.subscriber.SubscriberRegistry;
+
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class TestClientSubscriberContext extends ClientSubscriberContext {
+
+    private final MapSubscriberRegistry mapSubscriberRegistry;
+    private final int eventCount;
+    private final boolean allowEventLoss;
+
+    public TestClientSubscriberContext(QueryCacheContext context, int eventCount, boolean allowEventLoss) {
+        super(context);
+        this.eventCount = eventCount;
+        this.allowEventLoss = allowEventLoss;
+        this.mapSubscriberRegistry = new TestMapSubscriberRegistry(context);
+    }
+
+    @Override
+    public MapSubscriberRegistry getMapSubscriberRegistry() {
+        return mapSubscriberRegistry;
+    }
+
+    private class TestMapSubscriberRegistry extends MapSubscriberRegistry {
+
+        TestMapSubscriberRegistry(QueryCacheContext context) {
+            super(context);
+        }
+
+        @Override
+        protected SubscriberRegistry createSubscriberRegistry(String mapName) {
+            return new TestSubscriberRegistry(getContext(), mapName);
+        }
+    }
+
+    private class TestSubscriberRegistry extends SubscriberRegistry {
+
+        TestSubscriberRegistry(QueryCacheContext context, String mapName) {
+            super(context, mapName);
+        }
+
+        @Override
+        protected SubscriberAccumulatorFactory createSubscriberAccumulatorFactory() {
+            return new TestSubscriberAccumulatorFactory(getContext());
+        }
+    }
+
+    private class TestSubscriberAccumulatorFactory extends SubscriberAccumulatorFactory {
+
+        TestSubscriberAccumulatorFactory(QueryCacheContext context) {
+            super(context);
+        }
+
+        @Override
+        public Accumulator createAccumulator(AccumulatorInfo info) {
+            return new TestSubscriberAccumulator(getContext(), info);
+        }
+    }
+
+    private class TestSubscriberAccumulator extends SubscriberAccumulator {
+
+        private final Set<Long> lostSequenceNumber = ConcurrentHashMap.newKeySet();
+
+        TestSubscriberAccumulator(QueryCacheContext context, AccumulatorInfo info) {
+            super(context, info);
+
+            if (allowEventLoss) {
+                // just pick a sequence number to mimic out of order events
+                lostSequenceNumber.add(new Random().nextInt(eventCount) + 1L);
+            }
+        }
+
+        @Override
+        protected boolean isNextEvent(Sequenced event) {
+            DefaultQueryCacheEventData eventData = (DefaultQueryCacheEventData) event;
+            if (lostSequenceNumber.remove(event.getSequence())) {
+
+                // create an out of order event by changing actual sequence
+                DefaultQueryCacheEventData copy = new DefaultQueryCacheEventData(eventData);
+                copy.setSequence(eventData.getSequence() * 2);
+
+                eventData = copy;
+
+            }
+            return super.isNextEvent(eventData);
+        }
+
+        @Override
+        public void reset() {
+            lostSequenceNumber.clear();
+            super.reset();
+        }
+    }
+}

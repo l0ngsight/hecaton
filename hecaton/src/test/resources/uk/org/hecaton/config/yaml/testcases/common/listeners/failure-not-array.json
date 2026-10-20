@@ -1,0 +1,14 @@
+{
+  "instance": {
+    "hecaton": {
+      "listeners": {}
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/Listeners",
+    "pointerToViolation": "#/hecaton/listeners",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: JSONArray, found: JSONObject"
+  }
+}

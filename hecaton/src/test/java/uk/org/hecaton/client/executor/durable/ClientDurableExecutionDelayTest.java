@@ -1,0 +1,132 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.client.executor.durable;
+
+import uk.org.hecaton.client.config.ClientConfig;
+import uk.org.hecaton.client.test.TestHecatonFactory;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.durableexecutor.DurableExecutorService;
+import uk.org.hecaton.test.HecatonParallelClassRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.annotation.NightlyTest;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertTrue;
+
+@RunWith(HecatonParallelClassRunner.class)
+@Category(NightlyTest.class)
+public class ClientDurableExecutionDelayTest extends HecatonTestSupport {
+
+    private static final int CLUSTER_SIZE = 3;
+    private static final AtomicInteger COUNTER = new AtomicInteger();
+
+    private final List<HecatonInstance> instances = new ArrayList<>(CLUSTER_SIZE);
+
+    private TestHecatonFactory hecatonFactory;
+
+    @Before
+    public void setup() {
+        hecatonFactory = new TestHecatonFactory();
+        for (int i = 0; i < CLUSTER_SIZE; i++) {
+            instances.add(hecatonFactory.newHecatonInstance());
+        }
+    }
+
+    @After
+    public void tearDown() {
+        hecatonFactory.shutdownAll();
+    }
+
+    @Test
+    public void testExecutorRetriesTask_whenOneNodeTerminates() throws Exception {
+        final int taskCount = 20;
+        ScheduledExecutorService ex = Executors.newSingleThreadScheduledExecutor();
+        try {
+            ex.schedule(() -> instances.get(1).getLifecycleService().terminate(), 1000, TimeUnit.MILLISECONDS);
+
+            Task task = new Task();
+            runClient(task, taskCount);
+
+            assertTrueEventually(() -> {
+                final int taskExecutions = COUNTER.get();
+                assertTrue(taskExecutions >= taskCount);
+            });
+        } finally {
+            ex.shutdown();
+        }
+    }
+
+    @Test
+    public void testExecutorRetriesTask_whenOneNodeShutdowns() throws Exception {
+        final int taskCount = 20;
+        ScheduledExecutorService ex = Executors.newSingleThreadScheduledExecutor();
+        try {
+            ex.schedule(() -> instances.get(1).shutdown(), 1000, TimeUnit.MILLISECONDS);
+
+            Task task = new Task();
+            runClient(task, taskCount);
+
+            assertTrueEventually(() -> {
+                final int taskExecutions = COUNTER.get();
+                assertTrue(taskExecutions >= taskCount);
+            });
+        } finally {
+            ex.shutdown();
+        }
+    }
+
+    private void runClient(Task task, int executions) throws Exception {
+        ClientConfig clientConfig = new ClientConfig();
+        clientConfig.getNetworkConfig().setRedoOperation(true);
+        HecatonInstance client = hecatonFactory.newHecatonClient(clientConfig);
+        DurableExecutorService executor = client.getDurableExecutorService("executor");
+        for (int i = 0; i < executions; i++) {
+            Future<Object> future = executor.submitToKeyOwner(task, i);
+            future.get();
+            Thread.sleep(100);
+        }
+    }
+
+    private static class Task implements Callable<Object>, Serializable {
+
+
+        @Override
+        public Object call() {
+            COUNTER.incrementAndGet();
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return "Task{}";
+        }
+    }
+}

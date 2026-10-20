@@ -1,0 +1,92 @@
+/*
+ * Copyright 2026 Hazelcast Inc.
+ *
+ * Licensed under the Hazelcast Community License (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://hazelcast.com/hazelcast-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.mongodb;
+
+import uk.org.hecaton.collection.IList;
+import uk.org.hecaton.jet.Job;
+import uk.org.hecaton.jet.datamodel.KeyedWindowResult;
+import uk.org.hecaton.jet.datamodel.WindowResult;
+import uk.org.hecaton.jet.pipeline.Pipeline;
+import uk.org.hecaton.jet.pipeline.StreamSource;
+import uk.org.hecaton.test.annotation.QuickTest;
+import com.mongodb.client.MongoCollection;
+import org.bson.Document;
+import org.bson.types.ObjectId;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static uk.org.hecaton.jet.aggregate.AggregateOperations.counting;
+import static uk.org.hecaton.jet.core.JobAssertions.assertThat;
+import static uk.org.hecaton.jet.core.JobStatus.RUNNING;
+import static uk.org.hecaton.jet.pipeline.Sinks.list;
+import static uk.org.hecaton.jet.pipeline.WindowDefinition.tumbling;
+import static org.assertj.core.api.Assertions.assertThat;
+
+@Category({QuickTest.class})
+public class MongoSourcesWindowedTest extends AbstractMongoTest {
+
+    @Test
+    public void testWindows() {
+        StreamSource<? extends Document> streamSource = MongoSources
+                .stream(mongoContainer.getConnectionString(), defaultDatabase(), testName.getMethodName(),
+                        null, null)
+                .setPartitionIdleTimeout(1000);
+
+        IList<WindowResult<Long>> result = instance().getList("result");
+
+        Pipeline pipeline = Pipeline.create();
+        pipeline.readFrom(streamSource)
+                .withNativeTimestamps(0).setLocalParallelism(2)
+                .peek()
+                .groupingKey(d -> d.getString("test"))
+                .window(tumbling(5))
+                .aggregate(counting())
+                .peek()
+                .writeTo(list(result));
+
+        MongoCollection<Document> collection =
+                mongo.getDatabase(defaultDatabase()).getCollection(testName.getMethodName());
+        AtomicInteger counter = new AtomicInteger();
+        spawn(() -> {
+            while (counter.get() < 20) {
+                ObjectId key = ObjectId.get();
+                collection.insertOne(new Document("test", "testowe").append("_id", key));
+                counter.incrementAndGet();
+            }
+            for (int i = 0; i < 5; i++) {
+                ObjectId key = ObjectId.get();
+                collection.insertOne(new Document("test", "other").append("_id", key));
+            }
+        });
+        Job job = instance().getJet().newJob(pipeline);
+        assertThat(job).eventuallyHasStatus(RUNNING);
+
+        assertTrueEventually(() -> {
+            assertThat(result).isNotEmpty();
+            long currentSum = result
+                    .stream()
+                    .filter(w -> ((KeyedWindowResult<String, Long>) w).getKey().equalsIgnoreCase("testowe"))
+                    .mapToLong(WindowResult::result)
+                    .sum();
+            assertThat(currentSum)
+                    .as("Sum of windows is equal to input element count")
+                    .isEqualTo(counter.get());
+        }, 20);
+    }
+}

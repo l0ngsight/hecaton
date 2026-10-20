@@ -1,0 +1,208 @@
+{
+  "instance": {
+    "hecaton-client": {
+      "network": {
+        "cluster-members": "127.0.0.1,127.0.1.*",
+        "cluster-routing": {
+          "mode": "FAKE_MEMBERS",
+          "routing-strategy": "UNKNOWN"
+        },
+        "redo-operation": "Off",
+        "connection-timeout": -1,
+        "icmp-ping": {
+          "enabled": "yes",
+          "interval-milliseconds": 100,
+          "timeout-milliseconds": 0.5,
+          "max-attempts": false,
+          "ttl": -1,
+          "echo-fail-fast-on-startup": "Off",
+          "unknown": true
+        },
+        "socket-options": {
+          "tcp-no-delay": "Yes",
+          "keep-alive": "Off",
+          "reuse-address": null,
+          "linger-seconds": -2,
+          "buffer-size": -3,
+          "unknown": true
+        },
+        "unknown": true
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/ClientNetwork",
+    "pointerToViolation": "#/hecaton-client/network",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/definitions/ClientNetwork",
+        "pointerToViolation": "#/hecaton-client/network",
+        "causingExceptions": [],
+        "keyword": "additionalProperties",
+        "message": "extraneous key [unknown] is not permitted"
+      },
+      {
+        "schemaLocation": "#/definitions/ClientNetwork/properties/cluster-routing",
+        "pointerToViolation": "#/hecaton-client/network/cluster-routing",
+        "causingExceptions": [
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/cluster-routing/properties/mode",
+            "pointerToViolation": "#/hecaton-client/network/cluster-routing/mode",
+            "causingExceptions": [
+              {
+                "pointerToViolation": "#/hecaton-client/network/cluster-routing/mode",
+                "causingExceptions": [],
+                "keyword": "enum",
+                "message": "FAKE_MEMBERS is not a valid enum value"
+              }
+            ],
+            "keyword": "allOf",
+            "message": "#: only 1 subschema matches out of 2"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/cluster-routing/properties/routing-strategy",
+            "pointerToViolation": "#/hecaton-client/network/cluster-routing/routing-strategy",
+            "causingExceptions": [
+              {
+                "pointerToViolation": "#/hecaton-client/network/cluster-routing/routing-strategy",
+                "causingExceptions": [],
+                "keyword": "enum",
+                "message": "UNKNOWN is not a valid enum value"
+              }
+            ],
+            "keyword": "allOf",
+            "message": "#: only 1 subschema matches out of 2"
+          }
+        ],
+        "message": "2 schema violations found"
+      },
+      {
+        "schemaLocation": "#/definitions/ClientNetwork/properties/connection-timeout",
+        "pointerToViolation": "#/hecaton-client/network/connection-timeout",
+        "causingExceptions": [],
+        "keyword": "minimum",
+        "message": "-1 is not greater or equal to 0"
+      },
+      {
+        "schemaLocation": "#/definitions/ClientNetwork/properties/cluster-members",
+        "pointerToViolation": "#/hecaton-client/network/cluster-members",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: JSONArray, found: String"
+      },
+      {
+        "schemaLocation": "#/definitions/ClientSocketOptions",
+        "pointerToViolation": "#/hecaton-client/network/socket-options",
+        "causingExceptions": [
+          {
+            "schemaLocation": "#/definitions/ClientSocketOptions",
+            "pointerToViolation": "#/hecaton-client/network/socket-options",
+            "causingExceptions": [],
+            "keyword": "additionalProperties",
+            "message": "extraneous key [unknown] is not permitted"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientSocketOptions/properties/keep-alive",
+            "pointerToViolation": "#/hecaton-client/network/socket-options/keep-alive",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Boolean, found: String"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientSocketOptions/properties/reuse-address",
+            "pointerToViolation": "#/hecaton-client/network/socket-options/reuse-address",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Boolean, found: Null"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientSocketOptions/properties/linger-seconds",
+            "pointerToViolation": "#/hecaton-client/network/socket-options/linger-seconds",
+            "causingExceptions": [],
+            "keyword": "minimum",
+            "message": "-2 is not greater or equal to 0"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientSocketOptions/properties/buffer-size",
+            "pointerToViolation": "#/hecaton-client/network/socket-options/buffer-size",
+            "causingExceptions": [],
+            "keyword": "minimum",
+            "message": "-3 is not greater or equal to 0"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientSocketOptions/properties/tcp-no-delay",
+            "pointerToViolation": "#/hecaton-client/network/socket-options/tcp-no-delay",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Boolean, found: String"
+          }
+        ],
+        "message": "6 schema violations found"
+      },
+      {
+        "schemaLocation": "#/definitions/ClientNetwork/properties/icmp-ping",
+        "pointerToViolation": "#/hecaton-client/network/icmp-ping",
+        "causingExceptions": [
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/icmp-ping",
+            "pointerToViolation": "#/hecaton-client/network/icmp-ping",
+            "causingExceptions": [],
+            "keyword": "additionalProperties",
+            "message": "extraneous key [unknown] is not permitted"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/icmp-ping/properties/interval-milliseconds",
+            "pointerToViolation": "#/hecaton-client/network/icmp-ping/interval-milliseconds",
+            "causingExceptions": [],
+            "keyword": "minimum",
+            "message": "100 is not greater or equal to 1000"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/icmp-ping/properties/timeout-milliseconds",
+            "pointerToViolation": "#/hecaton-client/network/icmp-ping/timeout-milliseconds",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Integer, found: BigDecimal"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/icmp-ping/properties/max-attempts",
+            "pointerToViolation": "#/hecaton-client/network/icmp-ping/max-attempts",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Integer, found: Boolean"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/icmp-ping/properties/echo-fail-fast-on-startup",
+            "pointerToViolation": "#/hecaton-client/network/icmp-ping/echo-fail-fast-on-startup",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Boolean, found: String"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/icmp-ping/properties/ttl",
+            "pointerToViolation": "#/hecaton-client/network/icmp-ping/ttl",
+            "causingExceptions": [],
+            "keyword": "minimum",
+            "message": "-1 is not greater or equal to 0"
+          },
+          {
+            "schemaLocation": "#/definitions/ClientNetwork/properties/icmp-ping/properties/enabled",
+            "pointerToViolation": "#/hecaton-client/network/icmp-ping/enabled",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Boolean, found: String"
+          }
+        ],
+        "message": "7 schema violations found"
+      },
+      {
+        "schemaLocation": "#/definitions/ClientNetwork/properties/redo-operation",
+        "pointerToViolation": "#/hecaton-client/network/redo-operation",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Boolean, found: String"
+      }
+    ],
+    "message": "19 schema violations found"
+  }
+}

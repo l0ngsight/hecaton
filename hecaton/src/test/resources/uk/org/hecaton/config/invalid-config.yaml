@@ -1,0 +1,5 @@
+hecaton:
+  map:
+    my-map:
+      backup-count: -1
+      async-backup-count: "two"

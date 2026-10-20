@@ -1,0 +1,41 @@
+{
+  "instance": {
+    "hecaton": {
+      "network": {
+        "ssl": {
+          "enabled": "Off",
+          "class-name": "FactoryClassName",
+          "properties": null
+        }
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/SSL",
+    "pointerToViolation": "#/hecaton/network/ssl",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/definitions/SSL",
+        "pointerToViolation": "#/hecaton/network/ssl",
+        "causingExceptions": [],
+        "keyword": "additionalProperties",
+        "message": "extraneous key [class-name] is not permitted"
+      },
+      {
+        "schemaLocation": "#/definitions/SSL/properties/enabled",
+        "pointerToViolation": "#/hecaton/network/ssl/enabled",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Boolean, found: String"
+      },
+      {
+        "schemaLocation": "#/definitions/SSL/properties/properties",
+        "pointerToViolation": "#/hecaton/network/ssl/properties",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: JSONObject, found: Null"
+      }
+    ],
+    "message": "3 schema violations found"
+  }
+}

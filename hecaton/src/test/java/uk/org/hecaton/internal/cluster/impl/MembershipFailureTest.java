@@ -1,0 +1,956 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.internal.cluster.impl;
+
+import uk.org.hecaton.cluster.Address;
+import uk.org.hecaton.cluster.ClusterState;
+import uk.org.hecaton.cluster.Member;
+import uk.org.hecaton.cluster.impl.MemberImpl;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.ConfigAccessor;
+import uk.org.hecaton.config.ServiceConfig;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.core.LifecycleEvent.LifecycleState;
+import uk.org.hecaton.internal.cluster.fd.ClusterFailureDetectorType;
+import uk.org.hecaton.spi.impl.operationservice.Operation;
+import uk.org.hecaton.spi.impl.operationservice.OperationService;
+import uk.org.hecaton.spi.impl.operationservice.UrgentSystemOperation;
+import uk.org.hecaton.spi.properties.ClusterProperty;
+import uk.org.hecaton.test.HecatonParallelParametersRunnerFactory;
+import uk.org.hecaton.test.HecatonParametrizedRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.TestHecatonInstanceFactory;
+import uk.org.hecaton.test.annotation.SlowTest;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+
+import static uk.org.hecaton.instance.impl.TestUtil.terminateInstance;
+import static uk.org.hecaton.internal.cluster.impl.AdvancedClusterStateTest.changeClusterStateEventually;
+import static uk.org.hecaton.internal.cluster.impl.ClusterDataSerializerHook.EXPLICIT_SUSPICION;
+import static uk.org.hecaton.internal.cluster.impl.ClusterDataSerializerHook.FETCH_MEMBER_LIST_STATE;
+import static uk.org.hecaton.internal.cluster.impl.ClusterDataSerializerHook.F_ID;
+import static uk.org.hecaton.internal.cluster.impl.ClusterDataSerializerHook.HEARTBEAT;
+import static uk.org.hecaton.internal.cluster.impl.ClusterDataSerializerHook.HEARTBEAT_COMPLAINT;
+import static uk.org.hecaton.internal.cluster.impl.ClusterDataSerializerHook.MEMBER_INFO_UPDATE;
+import static uk.org.hecaton.internal.cluster.impl.ClusterDataSerializerHook.SPLIT_BRAIN_MERGE_VALIDATION;
+import static uk.org.hecaton.internal.cluster.impl.MembershipUpdateTest.assertMemberViewsAreSame;
+import static uk.org.hecaton.internal.cluster.impl.MembershipUpdateTest.getMemberMap;
+import static uk.org.hecaton.spi.properties.ClusterProperty.HEARTBEAT_INTERVAL_SECONDS;
+import static uk.org.hecaton.spi.properties.ClusterProperty.MAX_NO_HEARTBEAT_SECONDS;
+import static uk.org.hecaton.spi.properties.ClusterProperty.MEMBER_LIST_PUBLISH_INTERVAL_SECONDS;
+import static uk.org.hecaton.spi.properties.ClusterProperty.MERGE_FIRST_RUN_DELAY_SECONDS;
+import static uk.org.hecaton.spi.properties.ClusterProperty.MERGE_NEXT_RUN_DELAY_SECONDS;
+import static uk.org.hecaton.spi.properties.ClusterProperty.PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT;
+import static uk.org.hecaton.test.Accessors.getAddress;
+import static uk.org.hecaton.test.Accessors.getNode;
+import static uk.org.hecaton.test.Accessors.getOperationService;
+import static uk.org.hecaton.test.PacketFiltersUtil.dropOperationsBetween;
+import static uk.org.hecaton.test.PacketFiltersUtil.dropOperationsFrom;
+import static uk.org.hecaton.test.PacketFiltersUtil.rejectOperationsBetween;
+import static uk.org.hecaton.test.PacketFiltersUtil.resetPacketFiltersFrom;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.runners.Parameterized.UseParametersRunnerFactory;
+
+@RunWith(HecatonParametrizedRunner.class)
+@UseParametersRunnerFactory(HecatonParallelParametersRunnerFactory.class)
+@Category(SlowTest.class)
+public class MembershipFailureTest extends HecatonTestSupport {
+
+    @Parameters(name = "fd:{0}")
+    public static Collection<ClusterFailureDetectorType> parameters() {
+        return List.of(ClusterFailureDetectorType.values());
+    }
+
+    @Parameter
+    public ClusterFailureDetectorType failureDetectorType;
+
+    protected TestHecatonInstanceFactory factory;
+
+    @Before
+    public void init() {
+        factory = createHecatonInstanceFactory();
+    }
+
+    @Test
+    public void slave_shutdown() {
+        slave_goesDown(false);
+    }
+
+    @Test
+    public void slave_crash() {
+        slave_goesDown(true);
+    }
+
+    private void slave_goesDown(boolean terminate) {
+        HecatonInstance master = newHecatonInstance();
+        HecatonInstance slave1 = newHecatonInstance();
+        HecatonInstance slave2 = newHecatonInstance();
+
+        assertClusterSize(3, master, slave2);
+        assertClusterSizeEventually(3, slave1);
+
+        if (terminate) {
+            terminateInstance(slave1);
+        } else {
+            slave1.shutdown();
+        }
+
+        assertClusterSizeEventually(2, master, slave2);
+
+        assertMasterAddress(getAddress(master), master, slave2);
+        assertMemberViewsAreSame(getMemberMap(master), getMemberMap(slave2));
+    }
+
+    @Test
+    public void master_shutdown() {
+        master_goesDown(false);
+    }
+
+    @Test
+    public void master_crash() {
+        master_goesDown(true);
+    }
+
+    private void master_goesDown(boolean terminate) {
+        HecatonInstance master = newHecatonInstance();
+        HecatonInstance slave1 = newHecatonInstance();
+        HecatonInstance slave2 = newHecatonInstance();
+
+        assertClusterSize(3, master, slave2);
+        assertClusterSizeEventually(3, slave1);
+
+        if (terminate) {
+            terminateInstance(master);
+        } else {
+            master.shutdown();
+        }
+
+        assertClusterSizeEventually(2, slave1, slave2);
+
+        assertMasterAddress(getAddress(slave1), slave1, slave2);
+        assertMemberViewsAreSame(getMemberMap(slave1), getMemberMap(slave2));
+    }
+
+    @Test
+    public void masterAndMasterCandidate_crashSequentially() {
+        masterAndMasterCandidate_crash(false);
+    }
+
+    @Test
+    public void masterAndMasterCandidate_crashSimultaneously() {
+        masterAndMasterCandidate_crash(true);
+    }
+
+    private void masterAndMasterCandidate_crash(boolean simultaneousCrash) {
+        HecatonInstance master = newHecatonInstance();
+        HecatonInstance masterCandidate = newHecatonInstance();
+        HecatonInstance slave1 = newHecatonInstance();
+        HecatonInstance slave2 = newHecatonInstance();
+
+        assertClusterSize(4, master, slave2);
+        assertClusterSizeEventually(4, masterCandidate, slave1);
+
+        if (simultaneousCrash) {
+            terminateInstanceAsync(master);
+            terminateInstanceAsync(masterCandidate);
+        } else {
+            terminateInstance(master);
+            terminateInstance(masterCandidate);
+        }
+
+        assertClusterSizeEventually(2, slave1, slave2);
+
+        assertMasterAddress(getAddress(slave1), slave1, slave2);
+        assertMemberViewsAreSame(getMemberMap(slave1), getMemberMap(slave2));
+    }
+
+    private static void terminateInstanceAsync(final HecatonInstance master) {
+        spawn(() -> terminateInstance(master));
+    }
+
+    @Test
+    public void slaveCrash_duringMastershipClaim() {
+        HecatonInstance master = newHecatonInstance();
+        HecatonInstance masterCandidate = newHecatonInstance();
+        HecatonInstance slave1 = newHecatonInstance();
+        HecatonInstance slave2 = newHecatonInstance();
+
+        assertClusterSize(4, master, slave2);
+        assertClusterSizeEventually(4, masterCandidate, slave1);
+
+        // drop FETCH_MEMBER_LIST_STATE packets to block mastership claim process
+        dropOperationsBetween(masterCandidate, slave1, F_ID, List.of(FETCH_MEMBER_LIST_STATE));
+
+        terminateInstance(master);
+
+        ClusterServiceImpl clusterService = getNode(masterCandidate).getClusterService();
+        assertTrueEventually(() -> assertTrue(clusterService.getClusterJoinManager().isMastershipClaimInProgress()));
+
+        sleepSeconds(3);
+        terminateInstance(slave1);
+
+        assertClusterSizeEventually(2, masterCandidate);
+        assertClusterSizeEventually(2, slave2);
+
+        assertMasterAddress(getAddress(masterCandidate), masterCandidate, slave2);
+        assertMemberViewsAreSame(getMemberMap(masterCandidate), getMemberMap(slave2));
+    }
+
+    @Test
+    public void masterCandidateCrash_duringMastershipClaim() {
+        HecatonInstance master = newHecatonInstance();
+        HecatonInstance masterCandidate = newHecatonInstance();
+        HecatonInstance slave1 = newHecatonInstance();
+        HecatonInstance slave2 = newHecatonInstance();
+
+        assertClusterSize(4, master, slave2);
+        assertClusterSizeEventually(4, masterCandidate, slave1);
+
+        // drop FETCH_MEMBER_LIST_STATE packets to block mastership claim process
+        dropOperationsBetween(masterCandidate, slave1, F_ID, List.of(FETCH_MEMBER_LIST_STATE));
+
+        terminateInstance(master);
+
+        ClusterServiceImpl clusterService = getNode(masterCandidate).getClusterService();
+        assertTrueEventually(() -> assertTrue(clusterService.getClusterJoinManager().isMastershipClaimInProgress()));
+
+        sleepSeconds(3);
+        terminateInstance(masterCandidate);
+
+        assertClusterSizeEventually(2, slave1, slave2);
+
+        assertMasterAddress(getAddress(slave1), slave1, slave2);
+        assertMemberViewsAreSame(getMemberMap(slave1), getMemberMap(slave2));
+    }
+
+    @Test
+    public void slave_heartbeat_timeout() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1");
+        HecatonInstance master = newHecatonInstance(config);
+        HecatonInstance slave1 = newHecatonInstance(config);
+        HecatonInstance slave2 = newHecatonInstance(config);
+
+        assertClusterSize(3, master, slave2);
+        assertClusterSizeEventually(3, slave1);
+
+        dropOperationsFrom(slave2, F_ID, List.of(HEARTBEAT));
+
+        assertClusterSizeEventually(2, master, slave1);
+        assertClusterSizeEventually(1, slave2);
+    }
+
+    @Test
+    public void master_heartbeat_timeout() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "3");
+        HecatonInstance master = newHecatonInstance(config);
+        HecatonInstance slave1 = newHecatonInstance(config);
+        HecatonInstance slave2 = newHecatonInstance(config);
+
+        assertClusterSize(3, master, slave2);
+        assertClusterSizeEventually(3, slave1);
+
+        dropOperationsFrom(master, F_ID, List.of(HEARTBEAT));
+        dropOperationsFrom(slave1, F_ID, List.of(HEARTBEAT_COMPLAINT));
+        dropOperationsFrom(slave2, F_ID, List.of(HEARTBEAT_COMPLAINT));
+
+        assertClusterSizeEventually(1, master);
+        assertClusterSizeEventually(2, slave1, slave2);
+    }
+
+    @Test
+    public void heartbeat_not_sent_to_suspected_member() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1");
+        HecatonInstance master = newHecatonInstance(config);
+        HecatonInstance slave1 = newHecatonInstance(config);
+        HecatonInstance slave2 = newHecatonInstance(config);
+
+        assertClusterSize(3, master, slave2);
+        assertClusterSizeEventually(3, slave1);
+
+        // prevent heartbeat from master to slave to prevent suspect to be removed
+        dropOperationsBetween(master, slave1, F_ID, List.of(HEARTBEAT));
+        suspectMember(slave1, master);
+
+        assertClusterSizeEventually(2, master, slave2);
+        assertClusterSizeEventually(1, slave1);
+    }
+
+    @Test
+    public void slave_heartbeat_removes_suspicion() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1");
+        HecatonInstance master = newHecatonInstance(config);
+        HecatonInstance slave1 = newHecatonInstance(config);
+        HecatonInstance slave2 = newHecatonInstance(config);
+
+        assertClusterSize(3, master, slave2);
+        assertClusterSizeEventually(3, slave1);
+
+        dropOperationsBetween(slave2, slave1, F_ID, List.of(HEARTBEAT));
+
+        MembershipManager membershipManager = getNode(slave1).getClusterService().getMembershipManager();
+        assertTrueEventually(() -> {
+            Member localMember = slave2.getCluster().getLocalMember();
+            assertTrue(membershipManager.isMemberSuspected((MemberImpl) localMember));
+        });
+
+        resetPacketFiltersFrom(slave2);
+
+        assertTrueEventually(() -> {
+            Member localMember = slave2.getCluster().getLocalMember();
+            assertFalse(membershipManager.isMemberSuspected((MemberImpl) localMember));
+        });
+    }
+
+    @Test
+    public void slave_receives_member_list_from_non_master() throws InterruptedException {
+        String infiniteTimeout = Integer.toString(Integer.MAX_VALUE);
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), infiniteTimeout)
+                .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        CountDownLatch latchSlave2 = new CountDownLatch(2);
+        CountDownLatch latchSlave3 = new CountDownLatch(2);
+
+        HecatonInstance master = newHecatonInstance(config);
+        HecatonInstance slave1 = newHecatonInstance(config);
+        HecatonInstance slave2 = newHecatonInstance(getConfigWithLatchService(latchSlave2));
+        HecatonInstance slave3 = newHecatonInstance(getConfigWithLatchService(latchSlave3));
+
+        assertClusterSize(4, master, slave3);
+        assertClusterSizeEventually(4, slave1, slave2);
+
+        dropOperationsFrom(master, F_ID, List.of(HEARTBEAT));
+        dropOperationsFrom(slave1, F_ID, List.of(HEARTBEAT));
+        dropOperationsFrom(slave2, F_ID, List.of(HEARTBEAT));
+        dropOperationsFrom(slave3, F_ID, List.of(HEARTBEAT));
+
+        // Wait until the max possible retries of send task completes:
+        // Properties of packet send task are as follows:
+        // MAX_RETRY_COUNT = 5 and DELAY_FACTOR = 100; so we need to wait
+        // for 1500 ms (100 + 200 + 300 + 400 + 500) to make sure that
+        // there are no unfiltered packets that are trying to be sent
+        // remaining.
+        sleepMillis(1500);
+        // To make sure that there is not pending/remaining heartbeat operations left in slave2
+        // and slave3, we're sending new urgent operations to these members that will be processed
+        // after those remaining heartbeats and then waiting for them to be processed.
+        OperationService masterOperationService = getOperationService(master);
+        masterOperationService.send(new UrgentOperationAwaitOn(), getNode(slave2).address);
+        masterOperationService.send(new UrgentOperationAwaitOn(), getNode(slave3).address);
+        OperationService slave1OperationService = getOperationService(slave1);
+        slave1OperationService.send(new UrgentOperationAwaitOn(), getNode(slave2).address);
+        slave1OperationService.send(new UrgentOperationAwaitOn(), getNode(slave3).address);
+
+        latchSlave2.await();
+        latchSlave3.await();
+
+        suspectMember(slave2, master);
+        suspectMember(slave2, slave1);
+        suspectMember(slave3, master);
+        suspectMember(slave3, slave1);
+
+        assertClusterSizeEventually(2, slave2, slave3);
+
+        assertMemberViewsAreSame(getMemberMap(slave2), getMemberMap(slave3));
+
+        assertClusterSizeEventually(2, master, slave1);
+
+        assertMemberViewsAreSame(getMemberMap(master), getMemberMap(slave1));
+    }
+
+    @Test
+    public void master_candidate_has_stale_member_list() {
+        Config config = smallInstanceConfig().setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance master = newHecatonInstance(config);
+        HecatonInstance slave1 = newHecatonInstance(config);
+
+        assertClusterSize(2, master);
+        assertClusterSize(2, slave1);
+
+        HecatonInstance slave2 = newHecatonInstance(config);
+        assertClusterSize(3, master);
+        assertClusterSizeEventually(3, slave1);
+        assertClusterSize(3, slave2);
+
+        rejectOperationsBetween(master, slave1, F_ID, List.of(MEMBER_INFO_UPDATE));
+
+        HecatonInstance slave3 = newHecatonInstance(config);
+
+        assertClusterSize(4, slave3);
+        assertClusterSizeEventually(4, slave2);
+        assertClusterSize(3, slave1);
+
+        master.getLifecycleService().terminate();
+
+        assertClusterSizeEventually(3, slave1, slave2, slave3);
+
+        Address newMasterAddress = getAddress(slave1);
+        assertMasterAddress(newMasterAddress, slave1, slave2, slave3);
+    }
+
+    @Test
+    public void master_candidate_discovers_member_list_recursively() {
+        Config config = smallInstanceConfig().setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance master = newHecatonInstance(config);
+        HecatonInstance slave1 = newHecatonInstance(config);
+        HecatonInstance slave2 = newHecatonInstance(config);
+
+        assertClusterSize(3, master, slave2);
+        assertClusterSizeEventually(3, slave1);
+        // master, slave1, slave2
+
+        rejectOperationsBetween(master, slave1, F_ID, List.of(MEMBER_INFO_UPDATE));
+
+        HecatonInstance slave3 = newHecatonInstance(config);
+        // master, slave1, slave2, slave3
+
+        assertClusterSizeEventually(4, slave3, slave2);
+        assertClusterSize(3, slave1);
+
+        rejectOperationsBetween(master, List.of(slave1, slave2), F_ID, List.of(MEMBER_INFO_UPDATE));
+
+        HecatonInstance slave4 = newHecatonInstance(config);
+        // master, slave1, slave2, slave3, slave4
+
+        assertClusterSizeEventually(5, slave4, slave3);
+        assertClusterSizeEventually(4, slave2);
+        assertClusterSize(3, slave1);
+
+        rejectOperationsBetween(master, List.of(slave1, slave2, slave3), F_ID, List.of(MEMBER_INFO_UPDATE));
+
+        HecatonInstance slave5 = newHecatonInstance(config);
+        // master, slave1, slave2, slave3, slave4, slave5
+
+        assertClusterSize(6, slave5);
+        assertClusterSizeEventually(6, slave4);
+        assertClusterSizeEventually(5, slave3);
+        assertClusterSizeEventually(4, slave2);
+        assertClusterSize(3, slave1);
+
+        master.getLifecycleService().terminate();
+
+        assertClusterSizeEventually(5, slave1, slave2, slave3);
+
+        Address newMasterAddress = getAddress(slave1);
+        assertMasterAddress(newMasterAddress, slave2, slave3, slave4, slave5);
+    }
+
+    @Test
+    public void master_candidate_and_new_member_splits_on_master_failure() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance master = newHecatonInstance(config);
+        HecatonInstance slave1 = newHecatonInstance(config);
+
+        assertClusterSize(2, master, slave1);
+
+        rejectOperationsBetween(master, slave1, F_ID, List.of(MEMBER_INFO_UPDATE));
+
+        HecatonInstance slave2 = newHecatonInstance(config);
+        assertClusterSize(3, master);
+        assertClusterSize(3, slave2);
+        assertClusterSize(2, slave1);
+
+        master.getLifecycleService().terminate();
+
+        assertClusterSizeEventually(1, slave1);
+        assertClusterSizeEventually(1, slave2);
+
+        assertMasterAddress(getAddress(slave1), slave1);
+        assertMasterAddress(getAddress(slave2), slave2);
+    }
+
+    @Test
+    public void slave_splits_and_eventually_merges_back() {
+        Config config = smallInstanceConfig();
+        config.setProperty(MERGE_FIRST_RUN_DELAY_SECONDS.getName(), "5")
+                .setProperty(MERGE_NEXT_RUN_DELAY_SECONDS.getName(), "5");
+        HecatonInstance member1 = newHecatonInstance(config);
+        HecatonInstance member2 = newHecatonInstance(config);
+        HecatonInstance member3 = newHecatonInstance(config);
+
+        assertClusterSize(3, member1, member3);
+        assertClusterSizeEventually(3, member2);
+
+        CountDownLatch mergeLatch = new CountDownLatch(1);
+        member3.getLifecycleService().addLifecycleListener(event -> {
+            if (event.getState() == LifecycleState.MERGED) {
+                mergeLatch.countDown();
+            }
+        });
+
+        // prevent heartbeats to member3 to prevent suspicion to be removed
+        dropOperationsBetween(member1, member3, F_ID, List.of(HEARTBEAT));
+        dropOperationsBetween(member2, member3, F_ID, List.of(HEARTBEAT));
+        dropOperationsFrom(member3, F_ID, List.of(SPLIT_BRAIN_MERGE_VALIDATION));
+        suspectMember(member3, member1);
+        suspectMember(member3, member2);
+        assertClusterSizeEventually(1, member3);
+
+        resetPacketFiltersFrom(member1);
+        resetPacketFiltersFrom(member2);
+        resetPacketFiltersFrom(member3);
+        assertOpenEventually(mergeLatch);
+
+        assertMemberViewsAreSame(getMemberMap(member1), getMemberMap(member3));
+
+        assertTrueEventually(() -> assertMemberViewsAreSame(getMemberMap(member1), getMemberMap(member2)));
+    }
+
+    @Test
+    public void masterCandidate_canGracefullyShutdown_whenMasterShutdown() throws Exception {
+        masterCandidate_canGracefullyShutdown_whenMasterGoesDown(false);
+    }
+
+    @Test
+    public void masterCandidate_canGracefullyShutdown_whenMasterCrashes() throws Exception {
+        masterCandidate_canGracefullyShutdown_whenMasterGoesDown(true);
+    }
+
+    private void masterCandidate_canGracefullyShutdown_whenMasterGoesDown(boolean terminate) throws Exception {
+        Config config = smallInstanceConfig();
+        // slow down the migrations
+        config.setProperty(ClusterProperty.PARTITION_MIGRATION_INTERVAL.getName(), "1");
+        config.setProperty(ClusterProperty.PARTITION_COUNT.getName(), "12");
+
+        HecatonInstance master = newHecatonInstance(config);
+        final HecatonInstance masterCandidate = newHecatonInstance(config);
+        HecatonInstance slave = newHecatonInstance(config);
+
+        warmUpPartitions(master, masterCandidate, slave);
+
+        Future<?> shutdownF = spawn(masterCandidate::shutdown);
+
+        sleepSeconds(2);
+        if (terminate) {
+            terminateInstance(master);
+        } else {
+            master.shutdown();
+        }
+
+        shutdownF.get();
+        assertClusterSizeEventually(1, slave);
+    }
+
+    @Test
+    public void secondMastershipClaimByYounger_shouldRetry_when_firstMastershipClaimByElder_accepted() {
+        Config config = smallInstanceConfig();
+        config.setProperty(ClusterProperty.MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+
+        HecatonInstance member1 = newHecatonInstance(config);
+        HecatonInstance member2 = newHecatonInstance(config);
+        HecatonInstance member3 = newHecatonInstance(smallInstanceConfig()
+                .setProperty(ClusterProperty.MASTERSHIP_CLAIM_TIMEOUT_SECONDS.getName(), "10"));
+        HecatonInstance member4 = newHecatonInstance(config);
+
+        assertClusterSize(4, member1, member4);
+        assertClusterSizeEventually(4, member2, member3);
+
+        dropOperationsFrom(member1, F_ID, List.of(MEMBER_INFO_UPDATE, HEARTBEAT));
+        dropOperationsFrom(member2, F_ID, List.of(FETCH_MEMBER_LIST_STATE));
+
+        // If we allow explicit suspicions from member3, when member4 sends a heartbeat to member3
+        // after member3 splits from the cluster, member3 will send an explicit suspicion to member4
+        // and member4 will start its own mastership claim.
+        dropOperationsFrom(member3, F_ID, List.of(FETCH_MEMBER_LIST_STATE, EXPLICIT_SUSPICION));
+
+        suspectMember(member2, member3);
+        suspectMember(member3, member2);
+        suspectMember(member3, member1);
+        suspectMember(member2, member1);
+
+        suspectMember(member4, member1);
+        suspectMember(member4, member2);
+
+        // member2 will complete mastership claim, but member4 won't learn new member list
+        dropOperationsFrom(member2, F_ID, List.of(MEMBER_INFO_UPDATE));
+        // member4 should accept member2 as master during mastership claim
+        assertMasterAddressEventually(getAddress(member2), member4);
+        resetPacketFiltersFrom(member3);
+        // member3 will be split when master claim timeouts
+        assertClusterSizeEventually(1, member3);
+
+        // member4 will learn member list
+        resetPacketFiltersFrom(member2);
+        assertClusterSizeEventually(2, member2, member4);
+        assertMemberViewsAreSame(getMemberMap(member2), getMemberMap(member4));
+
+        resetPacketFiltersFrom(member1);
+        assertClusterSizeEventually(1, member1);
+    }
+
+    @Test
+    public void secondMastershipClaimByElder_shouldFail_when_firstMastershipClaimByYounger_accepted() {
+        Config config = smallInstanceConfig();
+        config.setProperty(ClusterProperty.MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+
+        HecatonInstance member1 = newHecatonInstance(config);
+        HecatonInstance member2 = newHecatonInstance(config);
+        HecatonInstance member3 = newHecatonInstance(config);
+        HecatonInstance member4 = newHecatonInstance(config);
+
+        assertClusterSize(4, member1, member4);
+        assertClusterSizeEventually(4, member2, member3);
+
+        dropOperationsFrom(member1, F_ID, List.of(MEMBER_INFO_UPDATE, HEARTBEAT));
+        dropOperationsFrom(member2, F_ID, List.of(FETCH_MEMBER_LIST_STATE, HEARTBEAT));
+        dropOperationsFrom(member3, F_ID, List.of(FETCH_MEMBER_LIST_STATE));
+
+        suspectMember(member2, member3);
+        suspectMember(member3, member2);
+        suspectMember(member3, member1);
+        suspectMember(member2, member1);
+
+        suspectMember(member4, member1);
+        suspectMember(member4, member2);
+
+        // member3 will complete mastership claim, but member4 won't learn new member list
+        dropOperationsFrom(member3, F_ID, List.of(MEMBER_INFO_UPDATE));
+        // member4 should accept member3 as master during mastership claim
+        assertMasterAddressEventually(getAddress(member3), member4);
+        resetPacketFiltersFrom(member2);
+        // member2 will be split when master claim timeouts
+        assertClusterSizeEventually(1, member2);
+
+        // member4 will learn member list
+        resetPacketFiltersFrom(member3);
+        assertClusterSizeEventually(2, member3, member4);
+        assertMemberViewsAreSame(getMemberMap(member3), getMemberMap(member4));
+
+        resetPacketFiltersFrom(member1);
+        assertClusterSizeEventually(1, member1);
+    }
+
+    @Test
+    public void test_whenNodesStartedTerminatedConcurrently() {
+        newHecatonInstance();
+
+        for (int i = 0; i < 3; i++) {
+            startInstancesConcurrently(4);
+            assertClusterSizeEventually(i + 5, getAllHecatonInstances());
+            terminateRandomInstancesConcurrently(3);
+
+            HecatonInstance[] instances = getAllHecatonInstances().toArray(new HecatonInstance[0]);
+            assertEquals(i + 2, instances.length);
+
+            for (HecatonInstance instance : instances) {
+                assertClusterSizeEventually(instances.length, instance);
+                assertMemberViewsAreSame(getMemberMap(instances[0]), getMemberMap(instance));
+            }
+        }
+    }
+
+    @Test
+    public void test_twoSlavesDisconnected() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                                             .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                                             .setProperty(PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT.getName(), "5")
+                                             .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance instance1 = newHecatonInstance(config);
+        HecatonInstance instance2 = newHecatonInstance(config);
+        HecatonInstance instance3 = newHecatonInstance(config);
+
+        assertClusterSizeEventually(3, instance2);
+
+        Member member2 = instance2.getCluster().getLocalMember();
+        Member member3 = instance3.getCluster().getLocalMember();
+
+        dropOperationsBetween(instance2, instance3, F_ID, List.of(HEARTBEAT));
+
+        assertClusterSizeEventually(2, instance1);
+        Set<Member> members = instance1.getCluster().getMembers();
+        assertTrue("cluster members: " + members, members.contains(member2) ^ members.contains(member3));
+    }
+
+    @Test
+    public void test_twoSlavesDisconnectedFromOneSlave() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                                             .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                                             .setProperty(PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT.getName(), "5")
+                                             .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance instance1 = newHecatonInstance(config);
+        HecatonInstance instance2 = newHecatonInstance(config);
+        HecatonInstance instance3 = newHecatonInstance(config);
+        HecatonInstance instance4 = newHecatonInstance(config);
+
+        assertClusterSizeEventually(4, instance2, instance3);
+
+        Member member2 = instance2.getCluster().getLocalMember();
+        Member member3 = instance3.getCluster().getLocalMember();
+        Member member4 = instance4.getCluster().getLocalMember();
+
+        dropOperationsBetween(instance2, instance4, F_ID, List.of(HEARTBEAT));
+        dropOperationsBetween(instance3, instance4, F_ID, List.of(HEARTBEAT));
+
+        assertClusterSizeEventually(3, instance1);
+        Set<Member> members = instance1.getCluster().getMembers();
+        assertTrue("cluster members: " + members, members.contains(member2));
+        assertTrue("cluster members: " + members, members.contains(member3));
+        assertFalse("cluster members: " + members, members.contains(member4));
+    }
+
+    @Test
+    public void test_oneSlaveDisconnectedFromTwoSlaves() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                                             .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                                             .setProperty(PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT.getName(), "5")
+                                             .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance instance1 = newHecatonInstance(config);
+        HecatonInstance instance2 = newHecatonInstance(config);
+        HecatonInstance instance3 = newHecatonInstance(config);
+        HecatonInstance instance4 = newHecatonInstance(config);
+
+        assertClusterSizeEventually(4, instance2, instance3);
+
+        Member member2 = instance2.getCluster().getLocalMember();
+        Member member3 = instance3.getCluster().getLocalMember();
+        Member member4 = instance4.getCluster().getLocalMember();
+
+        dropOperationsBetween(instance4, List.of(instance2, instance3), F_ID, List.of(HEARTBEAT));
+
+        assertClusterSizeEventually(3, instance1);
+        Set<Member> members = instance1.getCluster().getMembers();
+        assertTrue("cluster members: " + members, members.contains(member2));
+        assertTrue("cluster members: " + members, members.contains(member3));
+        assertFalse("cluster members: " + members, members.contains(member4));
+    }
+
+    @Test
+    public void test_threeSlavesDisconnectedFromTwoSlaves() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                                             .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                                             .setProperty(PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT.getName(), "5")
+                                             .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance instance1 = newHecatonInstance(config);
+        HecatonInstance instance2 = newHecatonInstance(config);
+        HecatonInstance instance3 = newHecatonInstance(config);
+        HecatonInstance instance4 = newHecatonInstance(config);
+        HecatonInstance instance5 = newHecatonInstance(config);
+        HecatonInstance instance6 = newHecatonInstance(config);
+        HecatonInstance instance7 = newHecatonInstance(config);
+
+        assertClusterSizeEventually(7, instance2, instance3, instance4, instance5, instance6, instance7);
+
+        Member member5 = instance5.getCluster().getLocalMember();
+        Member member6 = instance6.getCluster().getLocalMember();
+
+        dropOperationsBetween(instance2, List.of(instance5, instance6), F_ID, List.of(HEARTBEAT));
+        dropOperationsBetween(instance3, List.of(instance5, instance6), F_ID, List.of(HEARTBEAT));
+        dropOperationsBetween(instance4, List.of(instance5, instance6), F_ID, List.of(HEARTBEAT));
+
+        assertClusterSizeEventually(5, instance1, instance2, instance3, instance4, instance7);
+        Set<Member> members = instance1.getCluster().getMembers();
+        assertFalse("cluster members: " + members, members.contains(member5));
+        assertFalse("cluster members: " + members, members.contains(member6));
+    }
+
+    @Test
+    public void test_twoSlavesDisconnectedFromThreeSlaves() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                                             .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                                             .setProperty(PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT.getName(), "5")
+                                             .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance instance1 = newHecatonInstance(config);
+        HecatonInstance instance2 = newHecatonInstance(config);
+        HecatonInstance instance3 = newHecatonInstance(config);
+        HecatonInstance instance4 = newHecatonInstance(config);
+        HecatonInstance instance5 = newHecatonInstance(config);
+        HecatonInstance instance6 = newHecatonInstance(config);
+        HecatonInstance instance7 = newHecatonInstance(config);
+
+        assertClusterSizeEventually(7, instance2, instance3, instance4, instance5, instance6, instance7);
+
+        Member member5 = instance5.getCluster().getLocalMember();
+        Member member6 = instance6.getCluster().getLocalMember();
+
+        dropOperationsBetween(instance5, List.of(instance2, instance3, instance4), F_ID, List.of(HEARTBEAT));
+        dropOperationsBetween(instance6, List.of(instance2, instance3, instance4), F_ID, List.of(HEARTBEAT));
+
+        assertClusterSizeEventually(5, instance1, instance2, instance3, instance4, instance7);
+        Set<Member> members = instance1.getCluster().getMembers();
+        assertFalse("cluster members: " + members, members.contains(member5));
+        assertFalse("cluster members: " + members, members.contains(member6));
+    }
+
+    @Test
+    public void test_multipleDisconnections() {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                                             .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                                             .setProperty(PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT.getName(), "5")
+                                             .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance instance1 = newHecatonInstance(config);
+        HecatonInstance instance2 = newHecatonInstance(config);
+        HecatonInstance instance3 = newHecatonInstance(config);
+        HecatonInstance instance4 = newHecatonInstance(config);
+        HecatonInstance instance5 = newHecatonInstance(config);
+
+        assertClusterSizeEventually(5, instance2, instance3, instance4, instance5);
+
+        Member member3 = instance3.getCluster().getLocalMember();
+
+        dropOperationsBetween(instance2, instance3, F_ID, List.of(HEARTBEAT));
+        dropOperationsBetween(instance3, List.of(instance4, instance5), F_ID, List.of(HEARTBEAT));
+
+        assertClusterSizeEventually(4, instance1, instance2, instance4, instance5);
+        Set<Member> members = instance1.getCluster().getMembers();
+        assertFalse("cluster members: " + members, members.contains(member3));
+    }
+
+    @Test
+    public void test_twoSlavesDisconnectedFromOneSlave_when_clusterState_FROZEN() {
+        test_twoSlavesDisconnectedFromOneSlave(ClusterState.FROZEN);
+    }
+
+    @Test
+    public void test_twoSlavesDisconnectedFromOneSlave_when_clusterState_PASSIVE() {
+        test_twoSlavesDisconnectedFromOneSlave(ClusterState.PASSIVE);
+    }
+
+    @Test
+    public void test_twoSlavesDisconnectedFromOneSlave_when_clusterState_NO_MIGRATON() {
+        test_twoSlavesDisconnectedFromOneSlave(ClusterState.NO_MIGRATION);
+    }
+
+    private void test_twoSlavesDisconnectedFromOneSlave(ClusterState clusterState) {
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), "15")
+                                             .setProperty(HEARTBEAT_INTERVAL_SECONDS.getName(), "1")
+                                             .setProperty(PARTIAL_MEMBER_DISCONNECTION_RESOLUTION_HEARTBEAT_COUNT.getName(), "5")
+                                             .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        HecatonInstance instance1 = newHecatonInstance(config);
+        HecatonInstance instance2 = newHecatonInstance(config);
+        HecatonInstance instance3 = newHecatonInstance(config);
+        HecatonInstance instance4 = newHecatonInstance(config);
+
+        assertClusterSizeEventually(4, instance2, instance3, instance4);
+
+        Member member4 = instance4.getCluster().getLocalMember();
+
+        changeClusterStateEventually(instance1, clusterState);
+
+        dropOperationsBetween(instance2, instance4, F_ID, List.of(HEARTBEAT));
+        dropOperationsBetween(instance3, instance4, F_ID, List.of(HEARTBEAT));
+
+        assertClusterSizeEventually(3, instance1);
+        Set<Member> members = instance1.getCluster().getMembers();
+        assertFalse("cluster members: " + members, members.contains(member4));
+    }
+
+    private void startInstancesConcurrently(int count) {
+        final CountDownLatch latch = new CountDownLatch(count);
+        for (int i = 0; i < count; i++) {
+            new Thread(() -> {
+                newHecatonInstance();
+                latch.countDown();
+            }).start();
+        }
+        assertOpenEventually(latch);
+    }
+
+    private void terminateRandomInstancesConcurrently(int count) {
+        List<HecatonInstance> instances = new ArrayList<>(getAllHecatonInstances());
+        assertThat(instances.size()).isGreaterThanOrEqualTo(count);
+
+        Collections.shuffle(instances);
+        instances = instances.subList(0, count);
+
+        final CountDownLatch latch = new CountDownLatch(count);
+        for (final HecatonInstance hz : instances) {
+            new Thread(() -> {
+                terminateInstance(hz);
+                latch.countDown();
+            }).start();
+        }
+        assertOpenEventually(latch);
+    }
+
+    @Override
+    protected Config getConfig() {
+        return smallInstanceConfig();
+    }
+
+    protected Config initConfig(Config config) {
+        config.setProperty(ClusterProperty.HEARTBEAT_FAILURE_DETECTOR_TYPE.getName(), failureDetectorType.toString());
+        return config;
+    }
+
+    private HecatonInstance newHecatonInstance() {
+        return newHecatonInstance(getConfig());
+    }
+
+    private HecatonInstance newHecatonInstance(Config config) {
+        return factory.newHecatonInstance(initConfig(config));
+    }
+
+    private Collection<HecatonInstance> getAllHecatonInstances() {
+        return factory.getAllHecatonInstances();
+    }
+
+    private record LatchService(CountDownLatch latch) {
+        static final String SERVICE_NAME = "latch-service";
+    }
+
+    private static class UrgentOperationAwaitOn extends Operation implements UrgentSystemOperation {
+        @Override
+        public void run() {
+            LatchService service = getService();
+            service.latch.countDown();
+            getLogger().info("Count down on latch");
+        }
+
+        @Override
+        public String getServiceName() {
+            return LatchService.SERVICE_NAME;
+        }
+
+        @Override
+        public boolean returnsResponse() {
+            return false;
+        }
+    }
+
+    private Config getConfigWithLatchService(CountDownLatch latch) {
+        String infiniteTimeout = Integer.toString(Integer.MAX_VALUE);
+        Config config = smallInstanceConfig().setProperty(MAX_NO_HEARTBEAT_SECONDS.getName(), infiniteTimeout)
+                .setProperty(ClusterProperty.GENERIC_OPERATION_THREAD_COUNT.getName(), "1")
+                .setProperty(ClusterProperty.PRIORITY_GENERIC_OPERATION_THREAD_COUNT.getName(), "0")
+                .setProperty(MEMBER_LIST_PUBLISH_INTERVAL_SECONDS.getName(), "5");
+        LatchService latchService = new LatchService(latch);
+        ServiceConfig serviceConfig = new ServiceConfig().setEnabled(true)
+                .setName(LatchService.SERVICE_NAME).setImplementation(latchService);
+        ConfigAccessor.getServicesConfig(config).addServiceConfig(serviceConfig);
+        return config;
+    }
+}

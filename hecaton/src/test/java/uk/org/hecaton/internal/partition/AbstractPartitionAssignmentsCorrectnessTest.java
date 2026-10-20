@@ -1,0 +1,81 @@
+/*
+ * Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.internal.partition;
+
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.cluster.Address;
+import uk.org.hecaton.test.TestHecatonInstanceFactory;
+import org.junit.Test;
+
+import java.util.Collection;
+import java.util.Collections;
+
+public abstract class AbstractPartitionAssignmentsCorrectnessTest extends PartitionCorrectnessTestSupport {
+
+    @Test(timeout = 6000 * 10 * 10)
+    public void testPartitionAssignments_whenNodesStartedTerminated() throws InterruptedException {
+        Config config = getConfig(false, false);
+
+        HecatonInstance hz = factory.newHecatonInstance(config);
+        warmUpPartitions(hz);
+
+        int size = 1;
+        while (size < (nodeCount + 1)) {
+            Collection<HecatonInstance> instances = startNodes(config, backupCount + 1);
+            size += (backupCount + 1);
+
+            assertClusterSizeEventually(size, instances);
+
+            terminateNodes(backupCount);
+            size -= backupCount;
+
+            assertPartitionAssignmentsEventually();
+        }
+    }
+
+    @Test(timeout = 6000 * 10 * 10)
+    public void testPartitionAssignments_whenNodesStartedTerminated_withRestart() throws InterruptedException {
+        Config config = getConfig(false, false);
+
+        HecatonInstance hz = factory.newHecatonInstance(config);
+        warmUpPartitions(hz);
+
+        Collection<Address> addresses = Collections.emptySet();
+
+        int size = 1;
+        while (size < (nodeCount + 1)) {
+            int startCount = (backupCount + 1) - addresses.size();
+            startNodes(config, addresses);
+            startNodes(config, startCount);
+            size += (backupCount + 1);
+
+            assertPartitionAssignmentsEventually();
+
+            addresses = terminateNodes(backupCount);
+            size -= backupCount;
+        }
+    }
+
+    private void assertPartitionAssignmentsEventually() {
+        assertPartitionAssignmentsEventually(factory);
+    }
+
+    static void assertPartitionAssignmentsEventually(final TestHecatonInstanceFactory factory) {
+        assertTrueEventually(() -> assertPartitionAssignments(factory));
+    }
+}

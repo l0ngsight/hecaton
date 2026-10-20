@@ -1,0 +1,71 @@
+#
+# Copyright (c) 2026, The Hecaton Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# The recipe name users run (spec §5).
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: uk.org.hecaton.migrate.FromHazelcast
+displayName: Migrate from Hazelcast to Hecaton
+description: >-
+  Renames the Hazelcast API to the Hecaton API, renames property keys and file names in string
+  literals, and replaces Hazelcast dependencies with Hecaton ones. Run `hecaton-migrate` for
+  configuration and other non-Java files.
+recipeList:
+  - uk.org.hecaton.migrate.rewrite.FromHazelcast
+  - uk.org.hecaton.migrate.AddSpringBootAutoConfiguration
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: uk.org.hecaton.migrate.AddSpringBootAutoConfiguration
+displayName: Add Hecaton's Spring Boot auto-configuration
+description: >-
+  Spring Boot's built-in Hazelcast auto-configuration does not recognise Hecaton. Adds
+  hecaton-spring-boot4 or hecaton-spring-boot3, matching the Spring Boot version, to projects
+  whose code uses Spring Boot.
+recipeList:
+  - uk.org.hecaton.migrate.AddSpringBoot4AutoConfiguration
+  - uk.org.hecaton.migrate.AddSpringBoot3AutoConfiguration
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: uk.org.hecaton.migrate.AddSpringBoot4AutoConfiguration
+displayName: Add hecaton-spring-boot4
+description: Adds hecaton-spring-boot4 to projects on Spring Boot 4.
+preconditions:
+  - org.openrewrite.maven.search.DependencyInsight:
+      groupIdPattern: org.springframework.boot
+      artifactIdPattern: spring-boot
+      version: 4.x
+recipeList:
+  - org.openrewrite.maven.AddDependency:
+      groupId: uk.org.hecaton
+      artifactId: hecaton-spring-boot4
+      version: "${project.version}"
+      onlyIfUsing: org.springframework.boot..*
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: uk.org.hecaton.migrate.AddSpringBoot3AutoConfiguration
+displayName: Add hecaton-spring-boot3
+description: Adds hecaton-spring-boot3 to projects on Spring Boot 3.
+preconditions:
+  - org.openrewrite.maven.search.DependencyInsight:
+      groupIdPattern: org.springframework.boot
+      artifactIdPattern: spring-boot
+      version: 3.x
+recipeList:
+  - org.openrewrite.maven.AddDependency:
+      groupId: uk.org.hecaton
+      artifactId: hecaton-spring-boot3
+      version: "${project.version}"
+      onlyIfUsing: org.springframework.boot..*

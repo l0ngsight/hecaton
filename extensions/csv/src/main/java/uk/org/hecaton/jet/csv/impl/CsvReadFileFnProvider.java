@@ -1,0 +1,105 @@
+/*
+ * Copyright 2026 Hazelcast Inc.
+ *
+ * Licensed under the Hazelcast Community License (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://hazelcast.com/hazelcast-community-license
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.org.hecaton.jet.csv.impl;
+
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MappingIterator;
+import tools.jackson.databind.ObjectReader;
+import tools.jackson.dataformat.csv.CsvMapper;
+import tools.jackson.dataformat.csv.CsvReadFeature;
+import tools.jackson.dataformat.csv.CsvSchema;
+import uk.org.hecaton.function.FunctionEx;
+import uk.org.hecaton.jet.JetException;
+import uk.org.hecaton.jet.pipeline.file.CsvFileFormat;
+import uk.org.hecaton.jet.pipeline.file.FileFormat;
+import uk.org.hecaton.jet.pipeline.file.impl.ReadFileFnProvider;
+
+import javax.annotation.Nonnull;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Spliterators;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import static uk.org.hecaton.jet.impl.util.Util.createFieldProjection;
+import static uk.org.hecaton.jet.impl.util.Util.uncheckRun;
+import static java.util.Spliterator.ORDERED;
+import static java.util.function.Function.identity;
+
+/**
+ * {@link ReadFileFnProvider} for CSV files, reading the given path and
+ * deserializing using Jackson {@link CsvMapper}.
+ */
+//@SuppressFBWarnings(
+//        value = "OBL_UNSATISFIED_OBLIGATION",
+//        justification = "The FileInputStream is closed via Stream$onClose"
+//)
+public class CsvReadFileFnProvider implements ReadFileFnProvider {
+
+    @SuppressWarnings("unchecked")
+    @Nonnull
+    @Override
+    public <T> FunctionEx<Path, Stream<T>> createReadFileFn(@Nonnull FileFormat<T> format) {
+        CsvFileFormat<T> csvFileFormat = (CsvFileFormat<T>) format;
+        Class<?> formatClazz = csvFileFormat.clazz(); // Format is not Serializable
+
+        return path -> {
+            InputStream inputStream = Files.newInputStream(path);
+
+            MappingIterator<T> iterator;
+            Function<T, T> projection = identity();
+            if (formatClazz == String[].class) {
+                ObjectReader reader = CsvMapper.builder()
+                                               .enable(CsvReadFeature.WRAP_AS_ARRAY)
+                                               .enable(CsvReadFeature.SKIP_EMPTY_LINES)
+                                               .build()
+                                               .reader(CsvSchema.emptySchema().withSkipFirstDataRow(false))
+                                               .forType(String[].class);
+
+                iterator = reader.readValues(inputStream);
+                if (!iterator.hasNext()) {
+                    throw new JetException("Header row missing in " + path);
+                }
+                String[] header = (String[]) iterator.next();
+                List<String> fieldNames = csvFileFormat.fieldNames();
+                if (fieldNames != null) {
+                    projection = (Function<T, T>) createFieldProjection(header, fieldNames);
+                }
+            } else {
+                iterator = CsvMapper.builder()
+                                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                                    .enable(CsvReadFeature.SKIP_EMPTY_LINES)
+                                    .build()
+                                    .readerFor(formatClazz)
+                                    .with(CsvSchema.emptySchema().withHeader())
+                                    .readValues(inputStream);
+            }
+            return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, ORDERED), false)
+                    .map(projection)
+                    .onClose(() -> uncheckRun(inputStream::close));
+        };
+    }
+
+    @Nonnull
+    @Override
+    public String format() {
+        return CsvFileFormat.FORMAT_CSV;
+    }
+}

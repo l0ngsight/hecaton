@@ -1,0 +1,15 @@
+{
+  "instance": {
+    "hecaton": {
+      "import": true
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/Import",
+    "pointerToViolation": "#/hecaton/import",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: JSONArray, found: Boolean"
+  }
+
+}

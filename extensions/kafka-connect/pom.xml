@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2026 Hazelcast Inc.
+  ~
+  ~ Licensed under the Hazelcast Community License (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://hazelcast.com/hazelcast-community-license
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>jar</packaging>
+    <name>hecaton-jet-kafka-connect</name>
+    <description>Kafka Connect support for Hecaton Jet</description>
+    <url>http://www.hazelcast.com/</url>
+
+    <artifactId>hecaton-jet-kafka-connect</artifactId>
+
+    <parent>
+        <groupId>uk.org.hecaton.jet</groupId>
+        <artifactId>hecaton-jet-extensions</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <!-- needed for CheckStyle -->
+        <main.basedir>${project.parent.parent.basedir}</main.basedir>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Automatic-Module-Name>uk.org.hecaton.jet.kafka.connect</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <configuration>
+
+                    <!-- Cancel the relocation of jackson-core defined in hecaton-parent pom.
+                    Because Kafka Connect connectors need jackson-core -->
+                    <relocations combine.self="override">
+                    </relocations>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/MANIFEST.MF</exclude>
+                                <exclude>LICENSE</exclude>
+                                <exclude>NOTICE</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>download-datagen-zip-file</id>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>
+                                https://hub-downloads.confluent.io/api/plugins/confluentinc/kafka-connect-datagen/versions/0.6.0/confluentinc-kafka-connect-datagen-0.6.0.zip
+                            </url>
+                            <unpack>false</unpack>
+                            <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-jdbc-zip-file</id>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>
+                                https://hub-downloads.confluent.io/api/plugins/confluentinc/kafka-connect-jdbc/versions/10.8.4/confluentinc-kafka-connect-jdbc-10.8.4.zip
+                            </url>
+                            <unpack>false</unpack>
+                            <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-couchbase-zip-file</id>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>
+                                https://hub-downloads.confluent.io/api/plugins/couchbase/kafka-connect-couchbase/versions/4.1.11/couchbase-kafka-connect-couchbase-4.1.11.zip
+                            </url>
+                            <unpack>false</unpack>
+                            <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-ne4j-zip-file</id>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://hub-downloads.confluent.io/api/plugins/neo4j/kafka-connect-neo4j/versions/2.0.1/neo4j-kafka-connect-neo4j-2.0.1.zip
+                            </url>
+                            <unpack>false</unpack>
+                            <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-redis-zip-file</id>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://hub-downloads.confluent.io/api/plugins/redis/redis-kafka-connect/versions/0.9.0/redis-redis-kafka-connect-0.9.0.zip
+                            </url>
+                            <unpack>true</unpack>
+                            <outputDirectory>${project.build.directory}/</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-mongo-jar-file</id>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://repo1.maven.org/maven2/org/mongodb/kafka/mongo-kafka-connect/1.16.0/mongo-kafka-connect-1.16.0-all.jar
+                            </url>
+                            <unpack>false</unpack>
+                            <outputDirectory>${project.build.directory}/test-classes</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration combine.children="append">
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>
+                            ${project.build.directory}/redis-redis-kafka-connect-0.9.0/lib/redis-kafka-connect-0.9.0-all.jar
+                        </additionalClasspathElement>
+                    </additionalClasspathElements>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>connect-api</artifactId>
+        </dependency>
+        <!-- This jar is often used by connectors; was transitively included in Kafka < 3.9, now it must be explicit -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+        </dependency>
+
+        <!-- Kafka Connect connectors use Jackson Core --> 
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!-- Neo4J connector uses Guava dependency -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>toxiproxy</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mysql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Couchbase-->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>couchbase</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.couchbase.client</groupId>
+            <artifactId>java-client</artifactId>
+            <version>3.11.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Neo4J-->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>neo4j</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.neo4j.driver</groupId>
+            <artifactId>neo4j-java-driver</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Redis-->
+        <dependency>
+            <groupId>com.redis</groupId>
+            <artifactId>testcontainers-redis</artifactId>
+            <version>2.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <!-- When bumping this version check our netty version is compatible -->
+            <version>6.8.2.RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Mongo connector tests -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>${mongodb.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>mongodb</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,3 @@
+---
+ssl: false
+whitelistObjectNames: ["uk.org.hecaton*:type=Metrics,*"]

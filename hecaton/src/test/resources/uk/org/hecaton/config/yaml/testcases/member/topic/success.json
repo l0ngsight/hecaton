@@ -1,0 +1,18 @@
+{
+  "instance": {
+    "hecaton": {
+      "topic": {
+        "my-topic": {
+          "global-ordering-enabled": false,
+          "statistics-enabled": true,
+          "multi-threading-enabled": true,
+          "message-listeners": [
+            "uk.org.hecaton.examples.MessageListener"
+          ],
+          "user-code-namespace": "ns1"
+        }
+      }
+    }
+  },
+  "error": null
+}

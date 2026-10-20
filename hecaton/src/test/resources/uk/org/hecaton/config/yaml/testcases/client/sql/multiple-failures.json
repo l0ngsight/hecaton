@@ -1,0 +1,31 @@
+{
+  "instance": {
+    "hecaton-client": {
+      "sql": {
+        "resubmission-mode": "RETRY_",
+        "other-property": "NOT_EXISTS"
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/ClientSql",
+    "pointerToViolation": "#/hecaton-client/sql",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/definitions/ClientSql",
+        "pointerToViolation": "#/hecaton-client/sql",
+        "causingExceptions": [],
+        "keyword": "additionalProperties",
+        "message": "extraneous key [other-property] is not permitted"
+      },
+      {
+        "schemaLocation": "#/definitions/ClientSql/properties/resubmission-mode",
+        "pointerToViolation": "#/hecaton-client/sql/resubmission-mode",
+        "causingExceptions": [],
+        "keyword": "enum",
+        "message": "RETRY_ is not a valid enum value"
+      }
+    ],
+    "message": "2 schema violations found"
+  }
+}

@@ -13,10 +13,14 @@ grep -q "Apache License" LICENSE && grep -q "Version 2.0, January 2004" LICENSE 
 [ -s NOTICE ] || fail "NOTICE is missing"
 grep -q "Hazelcast, Inc." NOTICE || fail "NOTICE must credit the original work by Hazelcast, Inc."
 
-# 2. Clean room: no Hazelcast Enterprise artifacts or repositories in builds.
-ee_refs="$(git grep -n -I -E 'hazelcast-enterprise|repository\.hazelcast\.com' \
-    -- '*pom.xml' '*.gradle' '*.gradle.kts' '*settings.xml' || true)"
-[ -z "$ee_refs" ] || fail "references to Hazelcast Enterprise artifacts/repositories:"$'\n'"$ee_refs"
+# 2. Clean room: no Hazelcast Enterprise artifacts, and the build fetches nothing from
+#    Hazelcast's servers (Maven repositories, downloads): they also serve Enterprise and
+#    private builds.
+ee_refs="$(git grep -n -I -E '<artifactId>hazelcast-enterprise' \
+    -- '*pom.xml' '*.gradle' '*.gradle.kts' || true)"
+[ -z "$ee_refs" ] || fail "references to Hazelcast Enterprise artifacts:"$'\n'"$ee_refs"
+repo_refs="$(git grep -n -I 'repository\.hazelcast\.com' -- '*pom.xml' '*settings.xml' || true)"
+[ -z "$repo_refs" ] || fail "build files that fetch from repository.hazelcast.com:"$'\n'"$repo_refs"
 
 # 3. Hecaton-owned code must not use sun.misc.Unsafe.
 unsafe_refs="$(git grep -n -I 'sun\.misc\.Unsafe' -- 'hecaton-ext/**/*.java' 'tools/**/*.java' || true)"

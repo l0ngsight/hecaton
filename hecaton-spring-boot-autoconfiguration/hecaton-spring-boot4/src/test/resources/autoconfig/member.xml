@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hecaton xmlns="https://hecaton.org.uk/schema/config"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="https://hecaton.org.uk/schema/config
+         https://hecaton.org.uk/schema/config/hecaton-config-5.7.xsd">
+    <cluster-name>autoconfig-xml</cluster-name>
+    <network>
+        <port auto-increment="true">5981</port>
+        <join>
+            <multicast enabled="false"/>
+        </join>
+    </network>
+</hecaton>

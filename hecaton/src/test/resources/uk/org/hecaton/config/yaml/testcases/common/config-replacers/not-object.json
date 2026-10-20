@@ -1,0 +1,14 @@
+{
+  "instance": {
+    "hecaton": {
+      "config-replacers": []
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/ConfigReplacers",
+    "pointerToViolation": "#/hecaton/config-replacers",
+    "causingExceptions": [],
+    "keyword": "type",
+    "message": "expected type: JSONObject, found: JSONArray"
+  }
+}

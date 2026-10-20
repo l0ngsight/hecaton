@@ -1,0 +1,104 @@
+{
+  "instance": {
+    "hecaton": {
+      "jet": {
+        "unknown": true,
+        "cooperative-thread-count": "2",
+        "flow-control-period": "3",
+        "backup-count": "4",
+        "scale-up-delay-millis": "20",
+        "lossless-restart-enabled": "Yes",
+        "edge-defaults": {
+          "unknown": true,
+          "queue-size": "8",
+          "packet-size-limit": "16384",
+          "receive-window-multiplier": null
+        }
+      }
+    }
+  },
+  "error": {
+    "schemaLocation": "#/definitions/Jet",
+    "pointerToViolation": "#/hecaton/jet",
+    "causingExceptions": [
+      {
+        "schemaLocation": "#/definitions/Jet",
+        "pointerToViolation": "#/hecaton/jet",
+        "causingExceptions": [],
+        "keyword": "additionalProperties",
+        "message": "extraneous key [unknown] is not permitted"
+      },
+      {
+        "schemaLocation": "#/definitions/Jet/properties/lossless-restart-enabled",
+        "pointerToViolation": "#/hecaton/jet/lossless-restart-enabled",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Boolean, found: String"
+      },
+      {
+        "schemaLocation": "#/definitions/Jet/properties/cooperative-thread-count",
+        "pointerToViolation": "#/hecaton/jet/cooperative-thread-count",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Integer, found: String"
+      },
+      {
+        "schemaLocation": "#/definitions/Jet/properties/flow-control-period",
+        "pointerToViolation": "#/hecaton/jet/flow-control-period",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Integer, found: String"
+      },
+      {
+        "schemaLocation": "#/definitions/Jet/properties/backup-count",
+        "pointerToViolation": "#/hecaton/jet/backup-count",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Integer, found: String"
+      },
+      {
+        "schemaLocation": "#/definitions/Jet/properties/scale-up-delay-millis",
+        "pointerToViolation": "#/hecaton/jet/scale-up-delay-millis",
+        "causingExceptions": [],
+        "keyword": "type",
+        "message": "expected type: Integer, found: String"
+      },
+      {
+        "schemaLocation": "#/definitions/Jet/properties/edge-defaults",
+        "pointerToViolation": "#/hecaton/jet/edge-defaults",
+        "causingExceptions": [
+          {
+            "schemaLocation": "#/definitions/Jet/properties/edge-defaults",
+            "pointerToViolation": "#/hecaton/jet/edge-defaults",
+            "causingExceptions": [],
+            "keyword": "additionalProperties",
+            "message": "extraneous key [unknown] is not permitted"
+          },
+          {
+            "schemaLocation": "#/definitions/Jet/properties/edge-defaults/properties/receive-window-multiplier",
+            "pointerToViolation": "#/hecaton/jet/edge-defaults/receive-window-multiplier",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Integer, found: Null"
+          },
+          {
+            "schemaLocation": "#/definitions/Jet/properties/edge-defaults/properties/queue-size",
+            "pointerToViolation": "#/hecaton/jet/edge-defaults/queue-size",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Integer, found: String"
+          },
+          {
+            "schemaLocation": "#/definitions/Jet/properties/edge-defaults/properties/packet-size-limit",
+            "pointerToViolation": "#/hecaton/jet/edge-defaults/packet-size-limit",
+            "causingExceptions": [],
+            "keyword": "type",
+            "message": "expected type: Integer, found: String"
+          }
+        ],
+        "message": "4 schema violations found"
+      }
+    ],
+    "message": "10 schema violations found"
+  }
+}

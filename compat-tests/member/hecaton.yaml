@@ -1,0 +1,15 @@
+hecaton:
+  cluster-name: compat
+  jet:
+    enabled: true
+  network:
+    port:
+      port: 5961
+      auto-increment: false
+    join:
+      multicast:
+        enabled: false
+      tcp-ip:
+        enabled: true
+        member-list:
+          - 127.0.0.1:5961
