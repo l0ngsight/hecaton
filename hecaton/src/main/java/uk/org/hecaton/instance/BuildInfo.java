@@ -27,12 +27,18 @@ public class BuildInfo {
 
     public static final int UNKNOWN_HECATON_VERSION = -1;
 
+    /**
+     * The Hazelcast release Hecaton was forked from (spec §3.2).
+     */
+    public static final String BASED_ON = "Hazelcast 5.7.0";
+
     // major.minor.patch-RC-SNAPSHOT
     private static final int MAJOR_VERSION_MULTIPLIER = 10000;
     private static final int MINOR_VERSION_MULTIPLIER = 100;
     private static final int PATCH_TOKEN_INDEX = 3;
 
     private final String version;
+    private final String productVersion;
     private final String build;
     private final String revision;
     private final int buildNumber;
@@ -58,7 +64,21 @@ public class BuildInfo {
     public BuildInfo(String version, String build, String revision, int buildNumber, boolean enterprise,
                      byte serializationVersion, String commitId, BuildInfo upstreamBuildInfo,
                      MemberVersion lastLtsVersion, MemberVersion previousVersion) {
+        this(version, version, build, revision, buildNumber, enterprise, serializationVersion, commitId, upstreamBuildInfo,
+                lastLtsVersion, previousVersion);
+    }
+
+    /**
+     * @param version        the codebase version: members negotiate the cluster version and
+     *                       clients see the server version from it (5.7.x, spec §3.2)
+     * @param productVersion Hecaton's own version (D11)
+     */
+    @SuppressWarnings("checkstyle:ParameterNumber")
+    public BuildInfo(String version, String productVersion, String build, String revision, int buildNumber,
+                     boolean enterprise, byte serializationVersion, String commitId, BuildInfo upstreamBuildInfo,
+                     MemberVersion lastLtsVersion, MemberVersion previousVersion) {
         this.version = version;
+        this.productVersion = productVersion;
         this.build = build;
         this.revision = revision;
         this.buildNumber = buildNumber;
@@ -76,6 +96,14 @@ public class BuildInfo {
 
     public String getVersion() {
         return version;
+    }
+
+    /**
+     * Hecaton's own version (spec §3.2), which is what users see. {@link #getVersion()} is the
+     * codebase version that members and clients negotiate with.
+     */
+    public String getProductVersion() {
+        return productVersion;
     }
 
     /**
@@ -141,6 +169,7 @@ public class BuildInfo {
     public String toString() {
         return "BuildInfo{"
                 + "version='" + version + '\''
+                + ", productVersion='" + productVersion + '\''
                 + ", build='" + build + '\''
                 + ", buildNumber=" + buildNumber
                 + ", revision=" + revision

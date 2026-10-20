@@ -145,16 +145,19 @@ Est.: 3–4 ew (including edge-case triage on ~5,900 core files plus modules/tes
    `docs/test-baseline/upstream-v5.7.0-jdk25.txt`; Hecaton-only failures are fixed or
    triaged in `tools/ci/known-test-failures.txt`. Inherited failures are fixed over time
    like any other bug.
-5. **Product identity:** `BuildInfo` (Hecaton version, "based on Hazelcast 5.7.0", D11),
-   startup banner, `hecaton-default.xml`, distribution (`hc-*` scripts), Docker image
-   `hecaton/hecaton:0.1.0` (Temurin 25 JRE base).
+5. **Product identity (done):** project version `0.1.0-SNAPSHOT`; `BuildInfo` reports the
+   product version separately from the codebase version `5.7.0` that members and clients
+   negotiate with (spec §3.2); startup line "Hecaton Platform 0.1.0 (…, based on Hazelcast
+   5.7.0, cluster version 5.7)"; distribution scripts fixed (`hc-start`); container image
+   `hecaton/hecaton` (`distribution/src/docker/Dockerfile`, Temurin 25 JRE, slim
+   distribution), built and smoke-tested by the CI build job (`tools/ci/image-test.sh`).
 
 Est.: 3 ew.
 
 ### 1.3 Client library 17/21/25 (phase 1 of §8.3)
 
-- Publish `uk.org.hecaton:hecaton-client`, which at this stage re-publishes the Java 17 core
-  jar under the client coordinate.
+- Publish `uk.org.hecaton:hecaton-client` (done: a POM that depends on the Java 17 core jar;
+  the slim client jar is M9).
 - Add a client-test profile (the upstream `client` test packages plus new smoke tests) to
   `client-matrix.yml` on Temurin 17, 21 and 25.
 

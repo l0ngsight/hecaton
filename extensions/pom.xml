@@ -30,7 +30,7 @@
     <parent>
         <groupId>uk.org.hecaton</groupId>
         <artifactId>hecaton-root</artifactId>
-        <version>5.7.0</version>
+        <version>0.1.0-SNAPSHOT</version>
     </parent>
 
     <modules>

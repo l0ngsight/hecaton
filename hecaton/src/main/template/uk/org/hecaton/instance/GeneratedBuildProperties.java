@@ -35,7 +35,10 @@ import javax.annotation.processing.Generated;
  */
 @Generated("")
 public final class GeneratedBuildProperties {
-    public static final String VERSION = "${project.version}";
+    /** Codebase version: cluster and client-protocol negotiation (spec §3.2). */
+    public static final String VERSION = "${hecaton.codebase.version}";
+    /** Hecaton's own version (D11). */
+    public static final String PRODUCT_VERSION = "${project.version}";
     public static final String LAST_LTS_VERSION = "${hecaton.lts.version}";
     public static final String PREVIOUS_MINOR_VERSION = "${hecaton.previous.version}";
     public static final String BUILD = "${timestamp}";

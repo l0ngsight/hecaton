@@ -1,18 +1,94 @@
+Hecaton
+Copyright 2026 The Hecaton Authors
+
+This product is a fork of Hazelcast Platform Community Edition
+(https://github.com/hazelcast/hazelcast), developed by Hazelcast, Inc.
+and licensed under the Apache License 2.0. The Hecaton project has modified
+the original work: packages, classes, configuration names and product names
+were renamed, and features were added. Original copyright notices in source
+file headers are retained.
+
+Parts of the original work are licensed under the Hazelcast Community License
+(see licenses/hazelcast-community-license.txt). Those files say so in their
+headers and are distributed only in separate, optional artifacts.
+
+"Hazelcast" is a trademark of Hazelcast, Inc. Hecaton is not affiliated with
+or endorsed by Hazelcast, Inc.
+
+The NOTICE of the original work follows.
+
+--------------------------------------------------------------------------------
+
+The packages:
+
+com.hazelcast.internal.util.collection
+com.hazelcast.internal.util.concurrent
+
+and the classes:
+
+com.hazelcast.internal.util.QuickMath
+com.hazelcast.client.impl.protocol.util.UnsafeBuffer
+com.hazelcast.client.impl.protocol.util.BufferBuilder
+
+contain code originating from the Agrona project
+(https://github.com/real-logic/Agrona).
+
+The class com.hazelcast.internal.util.HashUtil contains code originating
+from the Koloboke project (https://github.com/OpenHFT/Koloboke).
+
+The class classloading.ThreadLocalLeakTestUtils contains code originating
+from the Tomcat project (https://github.com/apache/tomcat).
+
+com.hazelcast.internal.cluster.fd.PhiAccrualFailureDetector contains code originating
+from the Akka project (https://github.com/akka/akka/).
+
+The package com.hazelcast.internal.json contains code originating
+from minimal-json project (https://github.com/ralfstx/minimal-json).
+
+The class com.hazelcast.instance.impl.MobyNames contains code originating
+from The Moby Project (https://github.com/moby/moby).
+
+The class com.hazelcast.internal.util.graph.BronKerboschCliqueFinder contains code
+originating from The JGraphT Project (https://github.com/jgrapht/jgrapht).
+
+The packages:
+com.hazelcast.sql
+com.hazelcast.jet.sql
+
+contain code originating from the Apache Calcite (https://github.com/apache/calcite)
+
+The class com.hazelcast.jet.kafka.impl.ResumeTransactionUtil contains
+code derived from the Apache Flink project.
+
+The class com.hazelcast.internal.util.ConcurrentReferenceHashMap contains code written by Doug Lea
+and updated within the WildFly project (https://github.com/wildfly/wildfly).
+
+The classes:
+com.hazelcast.cp.internal.raft.impl.state.FollowerState
+com.hazelcast.cp.internal.raft.impl.state.FollowerStateTest
+com.hazelcast.cp.internal.raft.impl.SlowFollowerBackoffTest
+
+contain code originating from the MicroRaft project (https://github.com/MicroRaft/MicroRaft)
+
+--------------------------------------------------------------------------------
+
+The distribution NOTICE of the original work follows.
+
 **
 **  NOTICE file corresponding to the section 4 (d) of the Apache License,
-**  Version 2.0, in this case for the Hecaton distribution.
+**  Version 2.0, in this case for the Hazelcast distribution.
 **
 
 The end-user documentation included with a redistribution, if any,
 must include the following acknowledgement:
 
- "This product includes software developed by the Hecaton
+ "This product includes software developed by the Hazelcast
   Project (http://www.hazelcast.com)."
 
 Alternately, this acknowledgement may appear in the software itself,
 if and wherever such third-party acknowledgements normally appear.
 
-The name "Hecaton" must not be used to endorse or promote products
+The name "Hazelcast" must not be used to endorse or promote products
 derived from this software without prior written permission. For
 written permission, please contact talip@hazelcast.com or fuad@hazelcast.com
 

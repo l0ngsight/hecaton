@@ -101,6 +101,10 @@ relocate:
 
 keep-paths:
   - 'licenses/hazelcast-community-license.txt'
+  # Third-party license and notice texts must stay verbatim (found after the fork: the rename had
+  # altered the distribution's copies, see docs/changes-from-hazelcast.md #19).
+  - 'distribution/src/root/licenses/**'
+  - 'distribution/src/main/resources/notice.txt'
   - 'docs/upstream/**'
 
 regenerate-codec-hash:

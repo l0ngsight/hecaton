@@ -30,7 +30,7 @@
     <parent>
         <groupId>uk.org.hecaton.jet</groupId>
         <artifactId>hecaton-jet-extensions</artifactId>
-        <version>5.7.0</version>
+        <version>0.1.0-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 

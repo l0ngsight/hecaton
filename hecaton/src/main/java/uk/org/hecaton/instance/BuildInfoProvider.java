@@ -92,6 +92,7 @@ public final class BuildInfoProvider {
     private static BuildInfo readBuildPropertiesClass(Class<?> clazz, BuildInfo upstreamBuildInfo, Overrides overrides,
             boolean enterprise) {
         String version = readStaticField(clazz, "VERSION");
+        String productVersion = readStaticFieldOrNull(clazz, "PRODUCT_VERSION");
         String build = readStaticField(clazz, "BUILD");
         String revision = readStaticField(clazz, "REVISION");
         String commitId = readStaticFieldOrNull(clazz, "COMMIT_ID");
@@ -106,7 +107,8 @@ public final class BuildInfoProvider {
         String serialVersionString = readStaticFieldOrNull(clazz, "SERIALIZATION_VERSION");
         requireNonNull(serialVersionString, "serialization version must not be null");
         byte serialVersion = Byte.parseByte(serialVersionString);
-        return overrides.apply(version, build, revision, buildNumber, enterprise, serialVersion, commitId, upstreamBuildInfo,
+        return overrides.apply(version, productVersion != null ? productVersion : version, build, revision, buildNumber,
+                enterprise, serialVersion, commitId, upstreamBuildInfo,
                 MemberVersion.of(lastLtsVersion), MemberVersion.of(previousVersion));
     }
 
@@ -137,7 +139,7 @@ public final class BuildInfoProvider {
         }
 
         @SuppressWarnings("checkstyle:ParameterNumber")
-        private BuildInfo apply(String version, String build, String revision, int buildNumber,
+        private BuildInfo apply(String version, String productVersion, String build, String revision, int buildNumber,
                                 boolean enterprise, byte serialVersion, String commitId, BuildInfo upstreamBuildInfo,
                                 MemberVersion lastLtsVersion, MemberVersion previousVersion) {
             if (buildNo != -1) {
@@ -160,7 +162,7 @@ public final class BuildInfoProvider {
                 LOGGER.info("Overriding hecaton previous version with system property value " + this.previousVersion);
                 previousVersion = this.previousVersion;
             }
-            return new BuildInfo(version, build, revision, buildNumber, enterprise, serialVersion,
+            return new BuildInfo(version, productVersion, build, revision, buildNumber, enterprise, serialVersion,
                                  commitId, upstreamBuildInfo, lastLtsVersion, previousVersion);
 
         }

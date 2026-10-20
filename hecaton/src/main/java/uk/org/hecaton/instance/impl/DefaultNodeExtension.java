@@ -162,7 +162,8 @@ public class DefaultNodeExtension implements NodeExtension {
       o    o *       o o---o   o--o o----o o---o *       o o----o    o
       """.indent(4);
 
-    private static final String COPYRIGHT_LINE = "Copyright (c) 2008-2026, Hazelcast, Inc. All Rights Reserved.";
+    private static final String COPYRIGHT_LINE = "Copyright (c) 2026, The Hecaton Authors. "
+            + "Based on Hazelcast, Copyright (c) 2008-2026, Hazelcast, Inc. Licensed under the Apache License 2.0.";
 
     protected final Node node;
     protected final ILogger logger;
@@ -312,8 +313,9 @@ public class DefaultNodeExtension implements NodeExtension {
     }
 
     private void printNodeInfoInternal(BuildInfo buildInfo) {
-        systemLogger.info(getEditionString() + " " + buildInfo.getVersion()
-                + " (" + buildInfo.toBuildString() + ") starting at " + node.getThisAddress());
+        systemLogger.info(getEditionString() + " " + buildInfo.getProductVersion()
+                + " (" + buildInfo.toBuildString() + ", based on " + BuildInfo.BASED_ON + ", cluster version "
+                + buildInfo.getCodebaseVersion().asVersion() + ") starting at " + node.getThisAddress());
         systemLogger.info("Cluster name: " + node.getConfig().getClusterName());
         systemLogger.fine("Configured Hecaton Serialization version: %s", buildInfo.getSerializationVersion());
     }

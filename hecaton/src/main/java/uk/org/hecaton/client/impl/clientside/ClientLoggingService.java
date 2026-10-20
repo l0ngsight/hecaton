@@ -60,7 +60,7 @@ public class ClientLoggingService implements LoggingService {
     }
 
     public void updateClusterName(String clusterName) {
-        this.versionMessage = instanceName + " [" + clusterName + "] [" + buildInfo.getVersion() + "] ";
+        this.versionMessage = instanceName + " [" + clusterName + "] [" + buildInfo.getProductVersion() + "] ";
     }
 
     @Override

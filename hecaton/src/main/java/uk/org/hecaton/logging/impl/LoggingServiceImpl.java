@@ -68,7 +68,7 @@ public class LoggingServiceImpl implements LoggingService {
         this.loggerFactory = Logger.newLoggerFactory(loggingType);
         this.detailsEnabled = detailsEnabled;
         this.node = node;
-        versionMessage = "[" + clusterName + "] [" + buildInfo.getVersion() + "] ";
+        versionMessage = "[" + clusterName + "] [" + buildInfo.getProductVersion() + "] ";
         this.shutdownLoggingOnHecatonShutdown = shutdownLoggingOnHecatonShutdown;
     }
 

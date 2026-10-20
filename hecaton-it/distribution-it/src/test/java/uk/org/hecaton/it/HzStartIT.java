@@ -54,7 +54,7 @@ public class HzStartIT extends HecatonTestSupport {
         // Use custom cluster name to isolate concurrently running tests
         clusterName = this.getClass().getSimpleName() + "_" + UUID.randomUUID();
 
-        ProcessBuilder builder = new ProcessBuilder("bin/hz", "start")
+        ProcessBuilder builder = new ProcessBuilder("bin/hc", "start")
                 .directory(new File("./target/hecaton"))
                 .inheritIO();
         builder.environment().put("HC_CLUSTERNAME", clusterName);

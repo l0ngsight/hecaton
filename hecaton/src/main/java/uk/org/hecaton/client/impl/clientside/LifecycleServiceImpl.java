@@ -125,7 +125,7 @@ public final class LifecycleServiceImpl implements LifecycleService {
             }
         }
 
-        getLogger().info("HecatonClient " + buildInfo.getVersion() + " ("
+        getLogger().info("HecatonClient " + buildInfo.getProductVersion() + " ("
                 + buildInfo.getBuild() + revision + ") is "
                 + lifecycleEvent.getState());
 

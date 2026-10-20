@@ -16,7 +16,7 @@
         <dependency>
             <groupId>uk.org.hecaton</groupId>
             <artifactId>hecaton</artifactId>
-            <version>5.7.0</version>
+            <version>@HECATON_VERSION@</version>
         </dependency>
     </dependencies>
 </project>

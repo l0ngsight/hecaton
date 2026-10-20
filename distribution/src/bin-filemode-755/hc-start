@@ -23,6 +23,6 @@ function findScriptDir() {
 
 findScriptDir
 
-echo Warning: "$0" is deprecated. Please use "hz start" instead.
+echo Warning: "$0" is deprecated. Please use "hc start" instead.
 
-exec "$SCRIPT_DIR"/hz start "$@"
+exec "$SCRIPT_DIR"/hc start "$@"

@@ -75,10 +75,15 @@ for sample in "${samples[@]}"; do
     java -jar "$migrate_jar" --apply "$work/migrated"
 
     echo "--- compare with expected/"
+    # expected/ holds @HECATON_VERSION@ where the tools write the Hecaton version
     if $update; then
         rm -rf "$tests/$sample/expected"
         cp -r "$work/migrated" "$tests/$sample/expected"
-    elif ! diff -ru "$tests/$sample/expected" "$work/migrated"; then
+        grep -rlF -- "$version" "$tests/$sample/expected" | xargs -r sed -i "s/$(sed 's/[.]/\\./g' <<<"$version")/@HECATON_VERSION@/g"
+    fi
+    cp -r "$tests/$sample/expected" "$work/expected"
+    grep -rlF "@HECATON_VERSION@" "$work/expected" | xargs -r sed -i "s/@HECATON_VERSION@/$version/g"
+    if ! diff -ru "$work/expected" "$work/migrated"; then
         echo "FAIL $sample: the migrated sources differ from expected/"
         failed+=("$sample")
         continue
