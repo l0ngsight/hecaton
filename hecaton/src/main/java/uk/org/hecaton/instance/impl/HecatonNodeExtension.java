@@ -40,8 +40,9 @@ import uk.org.hecaton.config.security.RealmConfig;
 import uk.org.hecaton.core.HecatonInstanceAware;
 import uk.org.hecaton.core.HecatonInstanceNotActiveException;
 import uk.org.hecaton.cp.CPSubsystem;
-import uk.org.hecaton.cp.CPSubsystemStubImpl;
+import uk.org.hecaton.cp.internal.CPSubsystemImpl;
 import uk.org.hecaton.cp.internal.persistence.CPPersistenceService;
+import uk.org.hecaton.cp.internal.persistence.NopCPPersistenceService;
 import uk.org.hecaton.hotrestart.HotRestartService;
 import uk.org.hecaton.instance.BuildInfo;
 import uk.org.hecaton.instance.BuildInfoProvider;
@@ -149,7 +150,6 @@ import static uk.org.hecaton.config.InstanceTrackingConfig.InstanceTrackingPrope
 import static uk.org.hecaton.config.InstanceTrackingConfig.InstanceTrackingProperties.PRODUCT;
 import static uk.org.hecaton.config.InstanceTrackingConfig.InstanceTrackingProperties.START_TIMESTAMP;
 import static uk.org.hecaton.config.InstanceTrackingConfig.InstanceTrackingProperties.VERSION;
-import static uk.org.hecaton.cp.CPSubsystemStubImpl.CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_MEMBERS;
 import static uk.org.hecaton.internal.util.CollectionUtil.setOf;
 import static uk.org.hecaton.internal.util.ExceptionUtil.rethrow;
 import static uk.org.hecaton.internal.util.InstanceTrackingUtil.writeInstanceTrackingFile;
@@ -208,7 +208,7 @@ public class HecatonNodeExtension implements NodeExtension {
         CPSubsystemConfig cpSubsystemConfig = node.getConfig().getCPSubsystemConfig();
         if (cpSubsystemConfig != null && cpSubsystemConfig.getCPMemberCount() != 0
                 && !HecatonFeature.CP_SUBSYSTEM.isAvailable()) {
-            throw new IllegalStateException(CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_MEMBERS);
+            throw new IllegalStateException(HecatonFeature.CP_SUBSYSTEM.notAvailableMessage());
         }
     }
 
@@ -713,12 +713,13 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public CPPersistenceService getCPPersistenceService() {
-        throw new UnsupportedOperationException();
+        // CP persistence (F9) comes with the persistence module
+        return NopCPPersistenceService.INSTANCE;
     }
 
     @Override
     public CPSubsystem createCPSubsystem(NodeEngine nodeEngine) {
-        return new CPSubsystemStubImpl(false);
+        return new CPSubsystemImpl(nodeEngine);
     }
 
     /** F21: Hecaton has no licenses; a license key set at runtime is ignored. */

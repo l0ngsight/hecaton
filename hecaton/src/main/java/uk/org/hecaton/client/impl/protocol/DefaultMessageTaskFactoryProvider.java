@@ -16,6 +16,30 @@
 
 package uk.org.hecaton.client.impl.protocol;
 
+import uk.org.hecaton.client.impl.protocol.codec.AtomicLongAddAndGetCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicLongAlterCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicLongApplyCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicLongCompareAndSetCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicLongGetAndAddCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicLongGetAndSetCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicLongGetCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicRefApplyCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicRefCompareAndSetCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicRefContainsCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicRefGetCodec;
+import uk.org.hecaton.client.impl.protocol.codec.AtomicRefSetCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPGroupCreateCPGroupCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPGroupDestroyCPObjectCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSessionCloseSessionCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSessionCreateSessionCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSessionGenerateThreadIdCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSessionHeartbeatSessionCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSubsystemAddGroupAvailabilityListenerCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSubsystemAddMembershipListenerCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSubsystemGetCPGroupIdsCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSubsystemGetCPObjectInfosCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSubsystemRemoveGroupAvailabilityListenerCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CPSubsystemRemoveMembershipListenerCodec;
 import uk.org.hecaton.client.impl.protocol.codec.CacheAddEntryListenerCodec;
 import uk.org.hecaton.client.impl.protocol.codec.CacheAddNearCacheInvalidationListenerCodec;
 import uk.org.hecaton.client.impl.protocol.codec.CacheAddPartitionLostListenerCodec;
@@ -79,6 +103,11 @@ import uk.org.hecaton.client.impl.protocol.codec.ContinuousQueryMadePublishableC
 import uk.org.hecaton.client.impl.protocol.codec.ContinuousQueryPublisherCreateCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ContinuousQueryPublisherCreateWithValueCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ContinuousQuerySetReadCursorCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CountDownLatchAwaitCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CountDownLatchCountDownCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CountDownLatchGetCountCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CountDownLatchGetRoundCodec;
+import uk.org.hecaton.client.impl.protocol.codec.CountDownLatchTrySetCountCodec;
 import uk.org.hecaton.client.impl.protocol.codec.DurableExecutorDisposeResultCodec;
 import uk.org.hecaton.client.impl.protocol.codec.DurableExecutorIsShutdownCodec;
 import uk.org.hecaton.client.impl.protocol.codec.DurableExecutorRetrieveAndDisposeResultCodec;
@@ -110,6 +139,10 @@ import uk.org.hecaton.client.impl.protocol.codec.ExecutorServiceIsShutdownCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ExecutorServiceShutdownCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ExecutorServiceSubmitToMemberCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ExecutorServiceSubmitToPartitionCodec;
+import uk.org.hecaton.client.impl.protocol.codec.FencedLockGetLockOwnershipCodec;
+import uk.org.hecaton.client.impl.protocol.codec.FencedLockLockCodec;
+import uk.org.hecaton.client.impl.protocol.codec.FencedLockTryLockCodec;
+import uk.org.hecaton.client.impl.protocol.codec.FencedLockUnlockCodec;
 import uk.org.hecaton.client.impl.protocol.codec.FlakeIdGeneratorNewIdBatchCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ListAddAllCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ListAddAllWithIndexCodec;
@@ -330,6 +363,13 @@ import uk.org.hecaton.client.impl.protocol.codec.ScheduledExecutorIsDoneFromPart
 import uk.org.hecaton.client.impl.protocol.codec.ScheduledExecutorShutdownCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ScheduledExecutorSubmitToMemberCodec;
 import uk.org.hecaton.client.impl.protocol.codec.ScheduledExecutorSubmitToPartitionCodec;
+import uk.org.hecaton.client.impl.protocol.codec.SemaphoreAcquireCodec;
+import uk.org.hecaton.client.impl.protocol.codec.SemaphoreAvailablePermitsCodec;
+import uk.org.hecaton.client.impl.protocol.codec.SemaphoreChangeCodec;
+import uk.org.hecaton.client.impl.protocol.codec.SemaphoreDrainCodec;
+import uk.org.hecaton.client.impl.protocol.codec.SemaphoreGetSemaphoreTypeCodec;
+import uk.org.hecaton.client.impl.protocol.codec.SemaphoreInitCodec;
+import uk.org.hecaton.client.impl.protocol.codec.SemaphoreReleaseCodec;
 import uk.org.hecaton.client.impl.protocol.codec.SetAddAllCodec;
 import uk.org.hecaton.client.impl.protocol.codec.SetAddCodec;
 import uk.org.hecaton.client.impl.protocol.codec.SetAddListenerCodec;
@@ -774,6 +814,43 @@ import uk.org.hecaton.client.impl.protocol.task.transactionalqueue.Transactional
 import uk.org.hecaton.client.impl.protocol.task.transactionalset.TransactionalSetAddMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.transactionalset.TransactionalSetRemoveMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.transactionalset.TransactionalSetSizeMessageTask;
+import uk.org.hecaton.cp.internal.client.AddCPGroupAvailabilityListenerMessageTask;
+import uk.org.hecaton.cp.internal.client.AddCPMembershipListenerMessageTask;
+import uk.org.hecaton.cp.internal.client.CPSubsystemGetCPGroupIdsMessageTask;
+import uk.org.hecaton.cp.internal.client.CPSubsystemGetCPObjectInfosMessageTask;
+import uk.org.hecaton.cp.internal.client.RemoveCPGroupAvailabilityListenerMessageTask;
+import uk.org.hecaton.cp.internal.client.RemoveCPMembershipListenerMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomiclong.client.AddAndGetMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomiclong.client.AlterMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomiclong.client.ApplyMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomiclong.client.CompareAndSetMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomiclong.client.GetAndAddMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomiclong.client.GetAndSetMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomiclong.client.GetMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomicref.client.ContainsMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.atomicref.client.SetMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.countdownlatch.client.AwaitMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.countdownlatch.client.CountDownMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.countdownlatch.client.GetCountMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.countdownlatch.client.GetRoundMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.countdownlatch.client.TrySetCountMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.lock.client.GetLockOwnershipStateMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.lock.client.LockMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.lock.client.TryLockMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.lock.client.UnlockMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.semaphore.client.AcquirePermitsMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.semaphore.client.AvailablePermitsMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.semaphore.client.ChangePermitsMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.semaphore.client.DrainPermitsMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.semaphore.client.GetSemaphoreTypeMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.semaphore.client.InitSemaphoreMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.semaphore.client.ReleasePermitsMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.spi.client.CreateRaftGroupMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.spi.client.DestroyRaftObjectMessageTask;
+import uk.org.hecaton.cp.internal.session.client.CloseSessionMessageTask;
+import uk.org.hecaton.cp.internal.session.client.CreateSessionMessageTask;
+import uk.org.hecaton.cp.internal.session.client.GenerateThreadIdMessageTask;
+import uk.org.hecaton.cp.internal.session.client.HeartbeatSessionMessageTask;
 import uk.org.hecaton.flakeidgen.impl.client.NewIdBatchMessageTask;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.longregister.client.codec.LongRegisterAddAndGetCodec;
@@ -841,6 +918,13 @@ public class DefaultMessageTaskFactoryProvider implements MessageTaskFactoryProv
         initializeDynamicConfigTaskFactories();
         initializeFlakeIdGeneratorTaskFactories();
         initializePnCounterTaskFactories();
+        initializeCPGroupTaskFactories();
+        initializeCPSubsystemMessageTaskFactories();
+        initializeAtomicLongTaskFactories();
+        initializeAtomicReferenceTaskFactories();
+        initializeCountDownLatchTaskFactories();
+        initializeFencedLockTaskFactories();
+        initializeSemaphoreTaskFactories();
         initializeManagementCenterTaskFactories();
         initializeSqlTaskFactories();
         initializeSchemaFactories();
@@ -1623,6 +1707,108 @@ public class DefaultMessageTaskFactoryProvider implements MessageTaskFactoryProv
                 (cm, con) -> new PNCounterAddMessageTask(cm, node, con));
         factories.put(PNCounterGetConfiguredReplicaCountCodec.REQUEST_MESSAGE_TYPE,
                 (cm, con) -> new PNCounterGetConfiguredReplicaCountMessageTask(cm, node, con));
+    }
+
+    private void initializeCPGroupTaskFactories() {
+        factories.put(CPGroupCreateCPGroupCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new CreateRaftGroupMessageTask(cm, node, con));
+        factories.put(CPGroupDestroyCPObjectCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new DestroyRaftObjectMessageTask(cm, node, con));
+
+        factories.put(CPSessionCreateSessionCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new CreateSessionMessageTask(cm, node, con));
+        factories.put(CPSessionHeartbeatSessionCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new HeartbeatSessionMessageTask(cm, node, con));
+        factories.put(CPSessionCloseSessionCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new CloseSessionMessageTask(cm, node, con));
+        factories.put(CPSessionGenerateThreadIdCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new GenerateThreadIdMessageTask(cm, node, con));
+    }
+
+    private void initializeCPSubsystemMessageTaskFactories() {
+        factories.put(CPSubsystemAddMembershipListenerCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new AddCPMembershipListenerMessageTask(cm, node, con));
+        factories.put(CPSubsystemRemoveMembershipListenerCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new RemoveCPMembershipListenerMessageTask(cm, node, con));
+        factories.put(CPSubsystemAddGroupAvailabilityListenerCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new AddCPGroupAvailabilityListenerMessageTask(cm, node, con));
+        factories.put(CPSubsystemRemoveGroupAvailabilityListenerCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new RemoveCPGroupAvailabilityListenerMessageTask(cm, node, con));
+        factories.put(CPSubsystemGetCPGroupIdsCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new CPSubsystemGetCPGroupIdsMessageTask(cm, node, con));
+        factories.put(CPSubsystemGetCPObjectInfosCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new CPSubsystemGetCPObjectInfosMessageTask(cm, node, con));
+    }
+
+    private void initializeAtomicLongTaskFactories() {
+        factories.put(AtomicLongAddAndGetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new AddAndGetMessageTask(cm, node, con));
+        factories.put(AtomicLongCompareAndSetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new CompareAndSetMessageTask(cm, node, con));
+        factories.put(AtomicLongGetAndAddCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new GetAndAddMessageTask(cm, node, con));
+        factories.put(AtomicLongGetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new GetMessageTask(cm, node, con));
+        factories.put(AtomicLongGetAndSetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new GetAndSetMessageTask(cm, node, con));
+        factories.put(AtomicLongApplyCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new ApplyMessageTask(cm, node, con));
+        factories.put(AtomicLongAlterCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new AlterMessageTask(cm, node, con));
+    }
+
+    private void initializeAtomicReferenceTaskFactories() {
+        factories.put(AtomicRefApplyCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.atomicref.client.ApplyMessageTask(cm, node, con));
+        factories.put(AtomicRefSetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new SetMessageTask(cm, node, con));
+        factories.put(AtomicRefContainsCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new ContainsMessageTask(cm, node, con));
+        factories.put(AtomicRefGetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.atomicref.client.GetMessageTask(cm, node, con));
+        factories.put(AtomicRefCompareAndSetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.atomicref.client.CompareAndSetMessageTask(cm, node, con));
+    }
+
+    private void initializeCountDownLatchTaskFactories() {
+        factories.put(CountDownLatchAwaitCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new AwaitMessageTask(cm, node, con));
+        factories.put(CountDownLatchCountDownCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new CountDownMessageTask(cm, node, con));
+        factories.put(CountDownLatchGetCountCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new GetCountMessageTask(cm, node, con));
+        factories.put(CountDownLatchGetRoundCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new GetRoundMessageTask(cm, node, con));
+        factories.put(CountDownLatchTrySetCountCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new TrySetCountMessageTask(cm, node, con));
+    }
+
+    private void initializeFencedLockTaskFactories() {
+        factories.put(FencedLockLockCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new LockMessageTask(cm, node, con));
+        factories.put(FencedLockTryLockCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new TryLockMessageTask(cm, node, con));
+        factories.put(FencedLockUnlockCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new UnlockMessageTask(cm, node, con));
+        factories.put(FencedLockGetLockOwnershipCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new GetLockOwnershipStateMessageTask(cm, node, con));
+    }
+
+    private void initializeSemaphoreTaskFactories() {
+        factories.put(SemaphoreAcquireCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new AcquirePermitsMessageTask(cm, node, con));
+        factories.put(SemaphoreAvailablePermitsCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new AvailablePermitsMessageTask(cm, node, con));
+        factories.put(SemaphoreChangeCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new ChangePermitsMessageTask(cm, node, con));
+        factories.put(SemaphoreDrainCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new DrainPermitsMessageTask(cm, node, con));
+        factories.put(SemaphoreGetSemaphoreTypeCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new GetSemaphoreTypeMessageTask(cm, node, con));
+        factories.put(SemaphoreInitCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new InitSemaphoreMessageTask(cm, node, con));
+        factories.put(SemaphoreReleaseCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new ReleasePermitsMessageTask(cm, node, con));
     }
 
     private void initializeManagementCenterTaskFactories() {

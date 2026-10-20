@@ -78,6 +78,9 @@
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="[\\/]impl[\\/]"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="[\\/]template[\\/]"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="uk[\\/]org[\\/]hecaton[\\/]cp[\\/]internal[\\/]"/>
+    <!-- CP engine imported from Hazelcast 5.4.0 (M4): its serializer hooks are one switch over all types -->
+    <suppress checks="ReturnCount|CyclomaticComplexity|MethodLength|ClassFanOutComplexity|ClassDataAbstractionCoupling"
+              files="uk[\\/]org[\\/]hecaton[\\/]cp[\\/]internal[\\/].*DataSerializerHook"/>
     <suppress checks="Javadoc(Package|Method|Type|Variable)" files="org[\\/]apache[\\/]calcite[\\/]"/>
 
     <!-- Exclude copied Calcite files from FileLength checks -->

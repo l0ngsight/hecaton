@@ -39,7 +39,7 @@ public enum HecatonFeature {
     /** F6: not planned, TLS replaces it. */
     SYMMETRIC_ENCRYPTION("F6", "Symmetric encryption", null, "use TLS/SSL (F1) instead"),
     /** F7. */
-    CP_SUBSYSTEM("F7", "CP Subsystem", "M4"),
+    CP_SUBSYSTEM("F7", "CP Subsystem", "M4", null, true),
     /** F8. */
     CP_MAP("F8", "CPMap", "M4"),
     /** F10. */
