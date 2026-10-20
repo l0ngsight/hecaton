@@ -169,7 +169,7 @@ Est.: 0.5 ew.
 |---|---|
 | Official **Hazelcast** clients against a Hecaton member: Java 5.5/5.6/5.7, Python, Node.js, Go and .NET, each with IMap + entry listener, queue, topic, SQL and Compact (`compat-tests/`, CI job `compat`). The member runs as a plain JVM process rather than a container image: the protocol coverage is the same, and the image comes with the distribution work (M8). | Done |
 | Negative test: a Hazelcast 5.7 member trying to join a Hecaton cluster is refused with the documented message. It used to join: the member protocol now opens with `HCC` instead of `HZC` (spec §5.4). | Done |
-| Kubernetes job (nightly, kind): 3 Hecaton members form a cluster through Kubernetes discovery in DNS and API modes using the renamed `kubernetes-rbac.yaml`, survive a rolling restart of the StatefulSet, and a client pod connects. Needs a Hecaton container image. | Open |
+| Kubernetes job (nightly, kind): 3 Hecaton members form a cluster through Kubernetes discovery in DNS and API modes using the renamed `kubernetes-rbac.yaml`, survive a rolling restart of the StatefulSet, and a client pod connects (`kubernetes-tests/`, workflow `kubernetes.yml`). | Done |
 
 Est.: 2 ew.
 

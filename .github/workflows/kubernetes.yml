@@ -1,0 +1,53 @@
+name: Kubernetes
+
+# Plan §1.4: three Hecaton members form a cluster through Kubernetes discovery (DNS and API
+# modes) on kind, survive a rolling restart, and a client pod connects.
+
+on:
+  schedule:
+    - cron: '43 2 * * *'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch of this repository to test'
+        default: feature/m1-rebranded-ce
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kubernetes-${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+  cancel-in-progress: false
+
+jobs:
+  kind:
+    name: kind (${{ matrix.mode }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [dns, api]
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || 'feature/m1-rebranded-ce' }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - name: Build the distribution and the image
+        run: |
+          ./mvnw -B -ntp -T 1C install -DskipTests -pl distribution -am
+          slim="$(ls distribution/target/hecaton-*-slim.tar.gz | head -n 1)"
+          version="$(basename "$slim" -slim.tar.gz)"
+          version="${version#hecaton-}"
+          docker build --build-arg HECATON_VERSION="$version" -t "hecaton/hecaton:$version" \
+              -f distribution/src/docker/Dockerfile distribution/target
+          echo "IMAGE=hecaton/hecaton:$version" >> "$GITHUB_ENV"
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: hecaton
+      - run: kind load docker-image "$IMAGE" --name hecaton
+      - run: kubernetes-tests/run.sh "$IMAGE" ${{ matrix.mode }}

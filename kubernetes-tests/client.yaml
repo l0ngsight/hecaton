@@ -1,0 +1,19 @@
+# A client pod: runs tools/ci/ImageSmoke.java (mounted from a ConfigMap) with the image's jars.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hecaton-client
+spec:
+  restartPolicy: Never
+  containers:
+    - name: client
+      image: IMAGE
+      imagePullPolicy: Never
+      command: ["java", "-cp", "/opt/hecaton/lib/*", "/smoke/ImageSmoke.java", "hecaton.default.svc.cluster.local:5701"]
+      volumeMounts:
+        - name: smoke
+          mountPath: /smoke
+  volumes:
+    - name: smoke
+      configMap:
+        name: image-smoke
