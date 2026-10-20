@@ -27,6 +27,8 @@ import java.nio.charset.StandardCharsets;
 
 import static uk.org.hecaton.internal.networking.HandlerStatus.CLEAN;
 import static uk.org.hecaton.internal.nio.IOUtil.compactOrClear;
+import static uk.org.hecaton.internal.nio.Protocols.HAZELCAST_CLUSTER;
+import static uk.org.hecaton.internal.nio.Protocols.HAZELCAST_MEMBER_REJECTED;
 import static uk.org.hecaton.internal.nio.Protocols.PROTOCOL_LENGTH;
 import static uk.org.hecaton.internal.nio.Protocols.UNEXPECTED_PROTOCOL;
 
@@ -131,8 +133,12 @@ public class SingleProtocolDecoder
         verifyProtocolCalled = true;
         if (!incomingProtocol.equals(supportedProtocol.getDescriptor())) {
             handleUnexpectedProtocol(incomingProtocol);
-            encoder.signalWrongProtocol("Unsupported protocol exchange detected, expected protocol: "
-                    + supportedProtocol.name() + ", actual protocol or first three bytes are: " + incomingProtocol);
+            if (incomingProtocol.equals(HAZELCAST_CLUSTER)) {
+                encoder.signalWrongProtocol(HAZELCAST_MEMBER_REJECTED);
+            } else {
+                encoder.signalWrongProtocol("Unsupported protocol exchange detected, expected protocol: "
+                        + supportedProtocol.name() + ", actual protocol or first three bytes are: " + incomingProtocol);
+            }
             return false;
         }
         return true;

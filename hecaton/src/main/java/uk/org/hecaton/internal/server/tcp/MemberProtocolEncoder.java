@@ -32,7 +32,7 @@ import static uk.org.hecaton.internal.nio.Protocols.PROTOCOL_LENGTH;
 import static uk.org.hecaton.internal.util.StringUtil.stringToBytes;
 
 /**
- * Writes the member protocol header bytes (HZC) to dst buffer and replaces itself by the next {@link OutboundHandler
+ * Writes the member protocol header bytes (HCC) to dst buffer and replaces itself by the next {@link OutboundHandler
  * OutboundHandlers}.
  */
 public class MemberProtocolEncoder extends OutboundHandler<Void, ByteBuffer> {

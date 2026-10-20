@@ -241,7 +241,7 @@ These carry no brand and appear in user data.
 | Surface | Compatible with Hazelcast 5.7? | Notes |
 |---|---|---|
 | Client protocol (binary codecs, auth, error codes) | **Yes** (G3) | Codec IDs and layouts stay as upstream. The server-side error class names sent in `ErrorHolder` are renamed. Clients map by error code, so this is harmless. |
-| Member protocol | No (NG1) | Join validation rejects non-Hecaton members with a clear message. |
+| Member protocol | No (NG1) | Members open connections with `HCC` instead of Hazelcast's `HZC`. A Hecaton member closes a connection from a Hazelcast member and logs why, so the two cannot form one cluster. |
 | Serialized user data (IDS, Portable, Compact, Java serialization of user classes) | Yes | Factory/class IDs and Compact schemas are unchanged. |
 | Java-serialized **`com.hazelcast.*` classes** in user data (rare: e.g. a stored `HazelcastJsonValue`) | No | Documented. The migration CLI can rewrite such stores offline. |
 | Persistence / Hot Restart files | No (NG2) | |
@@ -507,7 +507,7 @@ from then on:
 | D8 | Upstream import as a snapshot without history | Decided (done; one import, `v5.7.0`) |
 | D9 | Drop cloud-provider support (AWS, Azure, GCP, Eureka, Hazelcast Cloud); keep Kubernetes discovery (NG6). The config classes are deleted from the API. | Decided |
 | D10 | One-time fork of 5.7.0; no later upstream releases are merged; Hecaton is maintained as its own project (§9) | Decided |
-| D11 | Own semantic versioning (`0.x` before 1.0, `1.0.0` at M8); cluster version starts at 5.7 (§3.2) | Proposed |
+| D11 | Own semantic versioning (`0.x` before 1.0, `1.0.0` at M8); cluster version starts at 5.7 (§3.2) | Decided |
 
 ### 13.1 Domain and Maven namespace (D7)
 

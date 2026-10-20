@@ -25,6 +25,7 @@ import uk.org.hecaton.internal.cluster.impl.ClusterServiceImpl;
 import uk.org.hecaton.internal.cluster.impl.ClusterStateManager;
 import uk.org.hecaton.internal.nio.Packet;
 import uk.org.hecaton.internal.nio.PacketIOHelper;
+import uk.org.hecaton.internal.nio.Protocols;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.spi.impl.operationservice.OperationAccessor;
@@ -176,7 +177,7 @@ public class JoinShutdownTest {
 
         //packet -> bytebuffer
         ByteBuffer buffer = ByteBuffer.allocate(packet.getFrameLength() + 3);
-        buffer.put("HZC".getBytes());
+        buffer.put(Protocols.CLUSTER.getBytes());
         PacketIOHelper packetIOHelper = new PacketIOHelper();
         packetIOHelper.writeTo(packet, buffer);
         return buffer;

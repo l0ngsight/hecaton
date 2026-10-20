@@ -51,8 +51,8 @@ import uk.org.hecaton.test.TestAwareInstanceFactory;
 import uk.org.hecaton.test.annotation.QuickTest;
 
 /**
- * Verify that after sending member protocol header bytes (HZC) no more bytes are sent from the connection initiating member.
- * (Next bytes should only follow if the protocol is confirmed by the HZC reply - not tested by this test).
+ * Verify that after sending member protocol header bytes (HCC) no more bytes are sent from the connection initiating member.
+ * (Next bytes should only follow if the protocol is confirmed by the HCC reply - not tested by this test).
  */
 @RunWith(HecatonParametrizedRunner.class)
 @UseParametersRunnerFactory(HecatonParallelParametersRunnerFactory.class)

@@ -69,7 +69,7 @@ public class AdvancedNetworkIntegrationTest extends AbstractAdvancedNetworkInteg
         assertLocalPortsOpen(MEMBER_PORT, CLIENT_PORT, WAN1_PORT, WAN2_PORT, REST_PORT, MEMCACHE_PORT);
 
         // Test if invalid protocol given then instance replies with HZX(UNEXPECTED_PROTOCOL)
-        assertWrongProtocolAlert(MEMBER_PORT, Protocols.CLIENT_BINARY, "AAA");
+        assertWrongProtocolAlert(MEMBER_PORT, Protocols.CLIENT_BINARY, Protocols.HAZELCAST_CLUSTER, "AAA");
         assertWrongProtocolAlert(CLIENT_PORT, Protocols.CLUSTER, "AAA");
         assertWrongProtocolAlert(WAN1_PORT, Protocols.CLIENT_BINARY, "AAA");
         assertWrongProtocolAlert(WAN2_PORT, Protocols.CLIENT_BINARY, "AAA");

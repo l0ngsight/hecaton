@@ -27,9 +27,23 @@ public final class Protocols {
     public static final int PROTOCOL_LENGTH = 3;
 
     /**
-     * Protocol that is used among nodes
+     * Protocol that is used among nodes. It differs from Hazelcast's ({@link #HAZELCAST_CLUSTER})
+     * so that Hazelcast members cannot join a Hecaton cluster (spec NG1).
      */
-    public static final String CLUSTER = "HZC";
+    public static final String CLUSTER = "HCC";
+
+    /**
+     * Hazelcast's member protocol. Connections that start with it are refused with
+     * {@link #HAZELCAST_MEMBER_REJECTED}.
+     */
+    public static final String HAZELCAST_CLUSTER = "HZC";
+
+    /**
+     * Why a connection from a Hazelcast member is refused.
+     */
+    public static final String HAZELCAST_MEMBER_REJECTED = "A Hazelcast member tried to connect. Hecaton members "
+            + "cannot form a cluster with Hazelcast members: run a separate Hecaton cluster and copy the data to it. "
+            + "Hazelcast clients can connect to Hecaton.";
 
     /**
      * New Client Protocol that is used for clients (Java, c++, c# client)

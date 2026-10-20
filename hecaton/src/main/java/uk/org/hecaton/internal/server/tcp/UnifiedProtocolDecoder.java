@@ -46,6 +46,8 @@ import static uk.org.hecaton.internal.nio.IOUtil.compactOrClear;
 import static uk.org.hecaton.internal.nio.IOUtil.newByteBuffer;
 import static uk.org.hecaton.internal.nio.Protocols.CLIENT_BINARY;
 import static uk.org.hecaton.internal.nio.Protocols.CLUSTER;
+import static uk.org.hecaton.internal.nio.Protocols.HAZELCAST_CLUSTER;
+import static uk.org.hecaton.internal.nio.Protocols.HAZELCAST_MEMBER_REJECTED;
 import static uk.org.hecaton.internal.nio.Protocols.PROTOCOL_LENGTH;
 import static uk.org.hecaton.internal.server.ServerContext.KILO_BYTE;
 import static uk.org.hecaton.internal.util.StringUtil.stringToBytes;
@@ -102,6 +104,9 @@ public class UnifiedProtocolDecoder
                 initChannelForCluster();
             } else if (CLIENT_BINARY.equals(protocol)) {
                 initChannelForClient();
+            } else if (HAZELCAST_CLUSTER.equals(protocol)) {
+                throw new IllegalStateException(HAZELCAST_MEMBER_REJECTED + " Remote address: "
+                        + channel.remoteSocketAddress());
             } else if (RestApiTextDecoder.TEXT_PARSERS.isCommandPrefix(protocol)) {
                 RestApiConfig restApiConfig = serverContext.getRestApiConfig();
                 if (!restApiConfig.isEnabledAndNotEmpty()) {
