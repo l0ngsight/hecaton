@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.cache.impl;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cache.CacheNotExistsException;
 import uk.org.hecaton.cache.HecatonCacheManager;
 import uk.org.hecaton.cache.impl.event.CachePartitionLostEventFilter;
@@ -705,8 +706,7 @@ public abstract class AbstractCacheService implements ICacheService,
     @Override
     public CacheOperationProvider getCacheOperationProvider(String cacheNameWithPrefix, InMemoryFormat inMemoryFormat) {
         if (InMemoryFormat.NATIVE == inMemoryFormat) {
-            throw new IllegalArgumentException("Native memory is available only in Hecaton Enterprise."
-                    + "Make sure you have Hecaton Enterprise JARs on your classpath!");
+            throw new IllegalArgumentException(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage());
         }
         CacheOperationProvider cacheOperationProvider = operationProviderCache.get(cacheNameWithPrefix);
         if (cacheOperationProvider != null) {

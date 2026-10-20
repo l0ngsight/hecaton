@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.internal.ascii.rest;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.cp.CPSubsystem;
@@ -645,7 +646,7 @@ public class HttpPostCommandProcessor extends HttpCommandProcessor<HttpPostComma
         prepareResponse(
                 SC_500,
                 command,
-                response(FAIL, "message", "Configuration Reload requires Hecaton Enterprise Edition")
+                response(FAIL, "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage())
         );
     }
 
@@ -653,7 +654,7 @@ public class HttpPostCommandProcessor extends HttpCommandProcessor<HttpPostComma
         prepareResponse(
                 SC_500,
                 command,
-                response(FAIL, "message", "Configuration Update requires Hecaton Enterprise Edition")
+                response(FAIL, "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage())
         );
     }
 

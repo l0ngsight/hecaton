@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.cp;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.impl.spi.ClientContext;
 import uk.org.hecaton.cp.event.CPGroupAvailabilityListener;
 import uk.org.hecaton.cp.event.CPMembershipListener;
@@ -33,13 +34,12 @@ public class CPSubsystemStubImpl implements CPSubsystem, Consumer<ClientContext>
      * Server-side message to inform that CP subsystem is not available in Hecaton OS members
      */
     public static final String CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_MEMBERS =
-            "CP subsystem is a licensed feature. Please ensure you have an Enterprise license that enables CP.";
+            HecatonFeature.CP_SUBSYSTEM.notAvailableMessage();
     /**
      * Client-side message to inform that CP subsystem is not available in Hecaton OS clients
      */
     public static final String CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_CLIENTS =
-            "CP subsystem is an Enterprise feature. Please use the latest applicable Hecaton Enterprise client to interact "
-                    + "with Enterprise clusters using CP.";
+            HecatonFeature.CP_SUBSYSTEM.notAvailableMessage();
 
     private final String cpSubsystemNotAvailableMessage;
 

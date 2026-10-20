@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.client;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.RoutingStrategy;
 import uk.org.hecaton.client.impl.ClientExtension;
@@ -66,8 +67,7 @@ public class ClientExtensionTest extends HecatonTestSupport {
 
     @Test
     public void test_createClientClusterServiceWithMultiMemberRouting_throwsInvalidConfigurationException() throws IOException {
-        String expectedMsg = "MULTI_MEMBER routing is an enterprise feature since 5.5. "
-                + "You must use Hecaton enterprise to enable this feature.";
+        String expectedMsg = HecatonFeature.MULTI_MEMBER_ROUTING.notAvailableMessage();
         try (var classLoader = new URLClassLoader(new URL[0])) {
             ClientConfig clientConfig = new ClientConfig();
             // avoid loading anything but DefaultClientExtension

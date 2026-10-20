@@ -65,6 +65,8 @@ import static org.junit.Assume.assumeTrue;
 @Category({QuickTest.class, ParallelJVMTest.class})
 public class DefaultNodeExtensionTest extends HecatonTestSupport {
 
+    private static final String ROLLING_UPGRADES_MESSAGE = "rolling member upgrades, F14, are planned for milestone M9";
+
     private static final String ENTERPRISE_PROPERTY = "hecaton.internal.override.enterprise";
 
     private int buildNumber;
@@ -168,7 +170,7 @@ public class DefaultNodeExtensionTest extends HecatonTestSupport {
 
         assertThatThrownBy(() -> nodeExtension.validateJoinRequest(joinRequest))
                 .isInstanceOf(VersionMismatchException.class)
-                .hasMessageContaining("Rolling Member Upgrades are only supported in Hecaton Enterprise");
+                .hasMessageContaining(ROLLING_UPGRADES_MESSAGE);
     }
 
     @Test
@@ -177,8 +179,7 @@ public class DefaultNodeExtensionTest extends HecatonTestSupport {
         MemberVersion minorMinusOne = BuildInfoProvider.getBuildInfo().getPreviousVersion();
         JoinRequest joinRequest = new JoinRequest(buildNumber, minorMinusOne, joinAddress, node.getLocalMember(), emptySet());
 
-        String message = isEnterprise ?  "Rolling Member Upgrades is not licensed"
-                : "Rolling Member Upgrades are only supported in Hecaton Enterprise";
+        String message = ROLLING_UPGRADES_MESSAGE;
         assertThatThrownBy(() -> nodeExtension.validateJoinRequest(joinRequest))
                 .isInstanceOf(VersionMismatchException.class)
                 .hasMessageContaining(message);
@@ -190,7 +191,7 @@ public class DefaultNodeExtensionTest extends HecatonTestSupport {
                 nodeVersion.getPatch());
         JoinRequest joinRequest = new JoinRequest(buildNumber, nextMajorVersion, joinAddress, node.getLocalMember(), emptySet());
 
-        String message = isEnterprise ? "Rolling Member Upgrades is not licensed" : "Rolling Member Upgrades are only supported in Hecaton Enterprise";
+        String message = ROLLING_UPGRADES_MESSAGE;
         assertThatThrownBy(() -> nodeExtension.validateJoinRequest(joinRequest))
                 .isInstanceOf(VersionMismatchException.class)
                 .hasMessageContaining(message);
@@ -202,7 +203,7 @@ public class DefaultNodeExtensionTest extends HecatonTestSupport {
                 nodeVersion.getPatch());
         JoinRequest joinRequest = new JoinRequest(buildNumber, prevMajorVersion, joinAddress, node.getLocalMember(), emptySet());
 
-        String message = isEnterprise ? "Rolling Member Upgrades is not licensed" : "Rolling Member Upgrades are only supported in Hecaton Enterprise";
+        String message = ROLLING_UPGRADES_MESSAGE;
         assertThatThrownBy(() -> nodeExtension.validateJoinRequest(joinRequest))
                 .isInstanceOf(VersionMismatchException.class)
                 .hasMessageContaining(message);

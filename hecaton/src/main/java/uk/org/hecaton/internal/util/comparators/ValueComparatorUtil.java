@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.internal.util.comparators;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.InMemoryFormat;
 
 /**
@@ -33,9 +34,7 @@ public final class ValueComparatorUtil {
             case OBJECT:
                 return ObjectValueComparator.INSTANCE;
             case NATIVE:
-                throw new IllegalArgumentException("Native storage format is supported "
-                        + "in Hecaton Enterprise only. Make sure you have Hecaton "
-                        + "Enterprise JARs on your classpath !");
+                throw new IllegalArgumentException(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage());
             default:
                 throw new IllegalArgumentException("Invalid storage format: " + inMemoryFormat);
 

@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.cache.impl.record;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.serialization.SerializationService;
@@ -48,8 +49,7 @@ public class CacheRecordFactory<R extends CacheRecord> {
                 record = (R) createCacheObjectRecord(objectValue, creationTime, expiryTime);
                 break;
             case NATIVE:
-                throw new IllegalArgumentException("Native storage format is supported in Hecaton Enterprise only. "
-                        + "Make sure you have Hecaton Enterprise JARs on your classpath!");
+                throw new IllegalArgumentException(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage());
             default:
                 throw new IllegalArgumentException("Invalid storage format: " + inMemoryFormat);
         }

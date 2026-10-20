@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.jet.impl;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.impl.ClientEngine;
 import uk.org.hecaton.client.impl.ClientEngineImpl;
 import uk.org.hecaton.client.impl.protocol.ClientExceptionFactory;
@@ -317,7 +318,7 @@ public class JetServiceBackend implements ManagedService, MembershipAwareService
 
     @SuppressWarnings("unused") // parameters are used from jet-enterprise
     public Operation createExportSnapshotOperation(long jobId, String name, boolean cancelJob) {
-        throw new UnsupportedOperationException("You need Hecaton Enterprise to use this feature");
+        throw new UnsupportedOperationException(HecatonFeature.JET_JOB_UPGRADE.notAvailableMessage());
     }
 
     public JetService getJet() {

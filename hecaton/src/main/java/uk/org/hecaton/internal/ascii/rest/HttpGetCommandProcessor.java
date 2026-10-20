@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.internal.ascii.rest;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.config.Config;
@@ -445,7 +446,7 @@ public class HttpGetCommandProcessor extends HttpCommandProcessor<HttpGetCommand
         prepareResponse(
                 SC_500,
                 command,
-                response(FAIL, "message", "Wan Sync requires Hecaton Enterprise Edition.")
+                response(FAIL, "message", HecatonFeature.WAN_SYNC.notAvailableMessage())
         );
     }
 }

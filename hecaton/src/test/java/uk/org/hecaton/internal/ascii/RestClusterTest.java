@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.internal.ascii;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.JoinConfig;
@@ -427,7 +428,7 @@ public class RestClusterTest {
 
         // Reload is enterprise feature. Should fail here.
         assertJsonContains(response.response, "status", "fail",
-                "message", "Configuration Reload requires Hecaton Enterprise Edition");
+                "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
     }
 
     @Test
@@ -441,7 +442,7 @@ public class RestClusterTest {
 
         // Reload is enterprise feature. Should fail here.
         assertJsonContains(response.response, "status", "fail",
-                "message", "Configuration Update requires Hecaton Enterprise Edition");
+                "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
     }
 
     @Test

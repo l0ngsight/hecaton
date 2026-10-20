@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.map.impl;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.WanAcknowledgeType;
 import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.internal.services.WanSupportingService;
@@ -61,7 +62,7 @@ class WanMapSupportingService implements WanSupportingService {
     @Override
     public CompletionStage<Void> onSyncBatch(Collection<InternalWanEvent> batch, WanAcknowledgeType acknowledgeType) {
         // code should never reach here
-        throw new UnsupportedOperationException("WAN Synchronization requires Hecaton Enterprise Edition");
+        throw new UnsupportedOperationException(HecatonFeature.WAN_SYNC.notAvailableMessage());
     }
 
     @Override

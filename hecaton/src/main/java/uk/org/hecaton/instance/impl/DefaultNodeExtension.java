@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.instance.impl;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.auditlog.AuditlogService;
 import uk.org.hecaton.auditlog.impl.NoOpAuditlogService;
 import uk.org.hecaton.cache.impl.CacheService;
@@ -200,47 +201,47 @@ public class DefaultNodeExtension implements NodeExtension {
     private void checkCPSubsystemAllowed() {
         CPSubsystemConfig cpSubsystemConfig = node.getConfig().getCPSubsystemConfig();
         if (cpSubsystemConfig != null && cpSubsystemConfig.getCPMemberCount() != 0
-                && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
+                && !HecatonFeature.CP_SUBSYSTEM.isAvailable()) {
             throw new IllegalStateException(CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_MEMBERS);
         }
     }
 
     private void checkPersistenceAllowed() {
         PersistenceConfig persistenceConfig = node.getConfig().getPersistenceConfig();
-        if (persistenceConfig != null && persistenceConfig.isEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Hot Restart requires Hecaton Enterprise Edition");
+        if (persistenceConfig != null && persistenceConfig.isEnabled() && !HecatonFeature.PERSISTENCE.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.PERSISTENCE.notAvailableMessage());
         }
     }
 
     private void checkSecurityAllowed() {
         SecurityConfig securityConfig = node.getConfig().getSecurityConfig();
-        if (securityConfig != null && securityConfig.isEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Security requires Hecaton Enterprise Edition");
+        if (securityConfig != null && securityConfig.isEnabled() && !HecatonFeature.SECURITY.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.SECURITY.notAvailableMessage());
         }
         SymmetricEncryptionConfig symmetricEncryptionConfig =
                 getActiveMemberNetworkConfig(node.getConfig()).getSymmetricEncryptionConfig();
         if (symmetricEncryptionConfig != null && symmetricEncryptionConfig.isEnabled()
-                && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Symmetric Encryption requires Hecaton Enterprise Edition");
+                && !HecatonFeature.SYMMETRIC_ENCRYPTION.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.SYMMETRIC_ENCRYPTION.notAvailableMessage());
         }
         AuditlogConfig auditlogConfig = node.getConfig().getAuditlogConfig();
-        if (auditlogConfig.isEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Auditlog requires Hecaton Enterprise Edition");
+        if (auditlogConfig.isEnabled() && !HecatonFeature.AUDIT_LOG.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.AUDIT_LOG.notAvailableMessage());
         }
     }
 
     private void checkLosslessRestartAllowed() {
         JetConfig jetConfig = node.getConfig().getJetConfig();
-        if (jetConfig.isLosslessRestartEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("Lossless Restart requires Hecaton Enterprise Edition");
+        if (jetConfig.isLosslessRestartEnabled() && !HecatonFeature.JET_LOSSLESS_RESTART.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.JET_LOSSLESS_RESTART.notAvailableMessage());
         }
     }
 
     protected void checkDynamicConfigurationPersistenceAllowed() {
         Config config = node.getConfig();
         if (config.getDynamicConfigurationConfig().isPersistenceEnabled()) {
-            if (!BuildInfoProvider.getBuildInfo().isEnterprise()) {
-                throw new IllegalStateException("Dynamic Configuration Persistence requires Hecaton Enterprise Edition");
+            if (!HecatonFeature.DYNAMIC_CONFIGURATION_PERSISTENCE.isAvailable()) {
+                throw new IllegalStateException(HecatonFeature.DYNAMIC_CONFIGURATION_PERSISTENCE.notAvailableMessage());
             }
 
             if (config.getConfigurationFile() == null || !config.getConfigurationFile().exists()) {
@@ -254,8 +255,8 @@ public class DefaultNodeExtension implements NodeExtension {
 
     protected void checkSqlCatalogPersistenceAllowed() {
         Config config = node.getConfig();
-        if (config.getSqlConfig().isCatalogPersistenceEnabled() && !BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            throw new IllegalStateException("SQL Catalog Persistence requires Hecaton Enterprise Edition");
+        if (config.getSqlConfig().isCatalogPersistenceEnabled() && !HecatonFeature.SQL_CATALOG_PERSISTENCE.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.SQL_CATALOG_PERSISTENCE.notAvailableMessage());
         }
     }
 
@@ -343,7 +344,7 @@ public class DefaultNodeExtension implements NodeExtension {
 
     @Override
     public InternalSecurityContext getSecurityContext() {
-        logger.warning("Security features are only available on Hecaton Enterprise!");
+        logger.warning(HecatonFeature.SECURITY.notAvailableMessage());
         return null;
     }
 
@@ -469,7 +470,7 @@ public class DefaultNodeExtension implements NodeExtension {
 
     @Override
     public MemberSocketInterceptor getSocketInterceptor(EndpointQualifier endpointQualifier) {
-        logger.warning("SocketInterceptor feature is only available on Hecaton Enterprise!");
+        logger.warning(HecatonFeature.SOCKET_INTERCEPTOR.notAvailableMessage());
         return null;
     }
 
@@ -535,11 +536,7 @@ public class DefaultNodeExtension implements NodeExtension {
 
     private static String constructVersionMismatchMessage(MemberVersion memberVersion, Version clusterVersion) {
         String msg = "Joining node's version " + memberVersion + " is not compatible with cluster version " + clusterVersion;
-        if (!BuildInfoProvider.getBuildInfo().isEnterprise()) {
-            msg += " (Rolling Member Upgrades are only supported in Hecaton Enterprise)";
-        } else {
-            msg += " (Rolling Member Upgrades is not licensed)";
-        }
+        msg += " (rolling member upgrades, F14, are planned for milestone M9)";
         return msg;
     }
 
@@ -719,7 +716,7 @@ public class DefaultNodeExtension implements NodeExtension {
 
     @Override
     public SSLEngineFactory createSslEngineFactory(SSLConfig sslConfig) {
-        throw new IllegalStateException("SSL/TLS requires Hecaton Enterprise Edition");
+        throw new IllegalStateException(HecatonFeature.TLS.notAvailableMessage());
     }
 
     @Override

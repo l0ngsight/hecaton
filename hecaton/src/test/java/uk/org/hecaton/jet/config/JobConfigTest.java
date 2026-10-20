@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.jet.config;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.jet.core.DAG;
@@ -110,7 +111,7 @@ public class JobConfigTest extends JetTestSupport {
         config.getJetConfig().setEnabled(true).setLosslessRestartEnabled(true);
 
         // Then
-        Assert.assertThrows("Lossless Restart requires Hecaton Enterprise Edition", IllegalStateException.class,
+        Assert.assertThrows(HecatonFeature.JET_LOSSLESS_RESTART.notAvailableMessage(), IllegalStateException.class,
                 () -> createHecatonInstance(config));
     }
 

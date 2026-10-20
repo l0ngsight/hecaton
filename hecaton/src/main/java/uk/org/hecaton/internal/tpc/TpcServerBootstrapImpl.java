@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.internal.tpc;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.tpc.TpcSocketConfig;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.tpcengine.TpcEngine;
@@ -47,7 +48,7 @@ public class TpcServerBootstrapImpl implements TpcServerBootstrap {
         }
 
         if (TpcServerBootstrap.loadTpcEnabled(node.getConfig())) {
-            throw new IllegalStateException("Hecaton Enterprise is required for TPC.");
+            throw new IllegalStateException(HecatonFeature.THREAD_PER_CORE.notAvailableMessage());
         }
     }
 

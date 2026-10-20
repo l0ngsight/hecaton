@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.client.cluster;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.RoutingMode;
 import uk.org.hecaton.client.test.ClientTestSupport;
@@ -37,8 +38,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class MultiMemberClientInvalidConfigurationExceptionTest extends ClientTestSupport {
 
     private TestHecatonFactory factory;
-    private static final String EXPECTED_MSG = "MULTI_MEMBER routing is an enterprise feature since 5.5. "
-            +  "You must use Hecaton enterprise to enable this feature.";
+    private static final String EXPECTED_MSG = HecatonFeature.MULTI_MEMBER_ROUTING.notAvailableMessage();
 
     @Before
     public void before() {

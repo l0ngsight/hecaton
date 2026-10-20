@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.internal.dynamicconfig;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.config.CacheSimpleConfig;
 import uk.org.hecaton.config.CardinalityEstimatorConfig;
 import uk.org.hecaton.config.Config;
@@ -235,22 +236,24 @@ public class ClusterWideConfigurationService implements
 
     @Override
     public void updateLicense(String licenseKey) {
-        throw new UnsupportedOperationException("Updating the license requires Hecaton Enterprise");
+        // F21: Hecaton has no licenses
+        logger.info(HecatonFeature.LICENSE.notAvailableMessage());
     }
 
     @Override
     public CompletableFuture<Void> updateLicenseAsync(String licenseKey) {
-        throw new UnsupportedOperationException("Updating the license requires Hecaton Enterprise");
+        updateLicense(licenseKey);
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
     public ConfigUpdateResult update(@Nullable Config newConfig) {
-        throw new UnsupportedOperationException("Configuration Update requires Hecaton Enterprise Edition");
+        throw new UnsupportedOperationException(HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
     }
 
     @Override
     public UUID updateAsync(String configPatch) {
-        throw new UnsupportedOperationException("Configuration Update requires Hecaton Enterprise Edition");
+        throw new UnsupportedOperationException(HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
     }
 
     public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config) {
@@ -443,7 +446,7 @@ public class ClusterWideConfigurationService implements
         if (nodeEngine.getConfig().getDynamicConfigurationConfig().isPersistenceEnabled()) {
             // Code should never come here. We should fast fail in
             // DefaultNodeExtension#checkDynamicConfigurationPersistenceAllowed()
-            throw new UnsupportedOperationException("Dynamic Configuration Persistence requires Hecaton Enterprise Edition");
+            throw new UnsupportedOperationException(HecatonFeature.DYNAMIC_CONFIGURATION_PERSISTENCE.notAvailableMessage());
         }
     }
 

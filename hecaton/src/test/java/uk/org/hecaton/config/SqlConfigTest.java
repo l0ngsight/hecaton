@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.config;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
 import uk.org.hecaton.test.annotation.ParallelJVMTest;
@@ -77,6 +78,6 @@ public class SqlConfigTest extends HecatonTestSupport {
 
         assertThatThrownBy(() -> createHecatonInstance(config))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("SQL Catalog Persistence requires Hecaton Enterprise Edition");
+                .hasMessageContaining(HecatonFeature.SQL_CATALOG_PERSISTENCE.notAvailableMessage());
     }
 }

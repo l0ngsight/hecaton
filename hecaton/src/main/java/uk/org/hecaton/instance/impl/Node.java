@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.instance.impl;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.client.ClientListener;
 import uk.org.hecaton.client.impl.ClientEngine;
 import uk.org.hecaton.client.impl.ClientEngineImpl;
@@ -332,8 +333,8 @@ public class Node {
     private ClassLoader generateConfigClassloader(Config config) {
         ClassLoader parent = getLegacyUCDClassLoader(config);
         if (config.getNamespacesConfig().isEnabled()) {
-            if (!BuildInfoProvider.getBuildInfo().isEnterprise()) {
-                throw new IllegalStateException("User Code Namespaces requires Hecaton Enterprise Edition");
+            if (!HecatonFeature.USER_CODE_NAMESPACES.isAvailable()) {
+                throw new IllegalStateException(HecatonFeature.USER_CODE_NAMESPACES.notAvailableMessage());
             }
             return new NamespaceAwareClassLoader(parent);
         }

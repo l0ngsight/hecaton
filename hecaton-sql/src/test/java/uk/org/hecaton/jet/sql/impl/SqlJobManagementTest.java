@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.jet.sql.impl;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.jet.Job;
 import uk.org.hecaton.jet.config.JobConfig;
@@ -424,7 +425,7 @@ public class SqlJobManagementTest extends SqlTestSupport {
         sqlService.execute("CREATE JOB testJob AS SINK INTO dest SELECT v, v FROM TABLE(GENERATE_STREAM(100))");
 
         assertThatThrownBy(() -> sqlService.execute("CREATE OR REPLACE SNAPSHOT mySnapshot FOR JOB testJob"))
-                .hasMessageContaining("You need Hecaton Enterprise to use this feature");
+                .hasMessageContaining(HecatonFeature.JET_JOB_UPGRADE.notAvailableMessage());
     }
 
     @Test
@@ -447,7 +448,7 @@ public class SqlJobManagementTest extends SqlTestSupport {
         sqlService.execute("CREATE JOB testJob AS SINK INTO dest SELECT v, v FROM TABLE(GENERATE_STREAM(100))");
 
         assertThatThrownBy(() -> sqlService.execute("DROP JOB testJob WITH SNAPSHOT mySnapshot"))
-                .hasMessageContaining("You need Hecaton Enterprise to use this feature");
+                .hasMessageContaining(HecatonFeature.JET_JOB_UPGRADE.notAvailableMessage());
     }
 
     @Test

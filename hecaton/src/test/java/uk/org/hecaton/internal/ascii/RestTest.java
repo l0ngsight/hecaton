@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.internal.ascii;
 
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.collection.IQueue;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.RestApiConfig;
@@ -270,7 +271,7 @@ public class RestTest {
         assertEquals(500, responseCode);
         assertJsonContains(result,
                 "status", "fail",
-                "message", "Wan Sync requires Hecaton Enterprise Edition.");
+                "message", HecatonFeature.WAN_SYNC.notAvailableMessage());
     }
 
     @Test
