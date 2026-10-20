@@ -220,10 +220,10 @@ Upstream's `README.md`, `LICENSE`, `NOTICE`, `CONTRIBUTING.md`, `SECURITY.md` an
 | Item | Notes |
 |---|---|
 | Spring Boot auto-configuration — done | `HecatonAutoConfiguration` in `hecaton-spring-boot3`/`-boot4` (logic shared in `hecaton-spring`, `uk.org.hecaton.spring.autoconfigure`): a member from a `Config` bean or member configuration (`spring.hecaton.config`, `hecaton.config`, default `hecaton.xml`/`.yaml`), else a client from a `ClientConfig` bean or client configuration. `BootHecatonApplicationTest` moved into the Boot modules and passes. Next: the Spring Boot migration sample (1.5). |
-| Spring Hibernate XML support | `RegionFactoryBeanDefinitionParser` serves the removed Hibernate integration; delete it. |
-| Python 3.14 | The pinned protobuf 4.25.8 / grpcio 1.73.0 fail on Python 3.14; bump them (the nightly pins Python 3.12 meanwhile). |
-| Deep JSON nesting | `JsonParser` can overflow the stack before its 1,000-level limit on JDK 25 (known nightly failure); bound the recursion depth. |
-| Priority queue failover duplicate | `QueueMigrationTest#testPromotion` with a priority comparator once saw 101 items instead of 100 after the owner was terminated (nightly 2026-10-19; did not reproduce in 60 local runs). Find out how the promoted backup gets a duplicate item and fix it (known nightly failure meanwhile). |
+| Spring Hibernate XML support — done | `RegionFactoryBeanDefinitionParser` deleted; `<hz:hibernate-region-factory>` now fails with a message. |
+| Python 3.14 — moved to M8 | The pinned protobuf 4.25.8 / grpcio 1.73.0 fail on Python 3.14. `grpc.version` and the protobuf version are shared with the Java gRPC extension, so this is the Java protobuf 4.x / gRPC upgrade with regenerated code; part of the M8 dependency refresh. The nightly pins Python 3.12 meanwhile. |
+| Deep JSON nesting — done | `JsonParser` reads arrays and objects with an explicit stack instead of recursion; the known failure is gone. |
+| Priority queue failover duplicate — moved to M2 | `QueueMigrationTest#testPromotion` with a priority comparator once saw 101 items instead of 100 after the owner was terminated (nightly 2026-10-19; did not reproduce in 60 local runs). Find out how the promoted backup gets a duplicate item and fix it (known nightly failure meanwhile). |
 | Schema hosting | `XmlConfigSchemaLocationTest` needs the XSDs at `https://hecaton.org.uk/schema/...` (M8, D7). |
 
 **M1 exit:** tag `v0.1.0` (CE 5.7.0 parity minus cloud-provider support, renamed, Java 25 build).

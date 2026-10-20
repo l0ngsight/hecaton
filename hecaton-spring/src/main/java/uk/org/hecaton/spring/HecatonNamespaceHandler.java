@@ -16,7 +16,6 @@
 
 package uk.org.hecaton.spring;
 
-import uk.org.hecaton.spring.hibernate.RegionFactoryBeanDefinitionParser;
 import uk.org.hecaton.spring.jet.JetBeanDefinitionParser;
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
@@ -67,7 +66,12 @@ public class HecatonNamespaceHandler extends NamespaceHandlerSupport {
         registerBeanDefinitionParser("client", new HecatonClientBeanDefinitionParser());
         registerBeanDefinitionParser("client-failover",
                 new HecatonFailoverClientBeanDefinitionParser());
-        registerBeanDefinitionParser("hibernate-region-factory", new RegionFactoryBeanDefinitionParser());
+        // Hecaton has no Hibernate second-level cache integration (hazelcast-hibernate53 is built against com.hazelcast)
+        registerBeanDefinitionParser("hibernate-region-factory", (element, parserContext) -> {
+            parserContext.getReaderContext().error("<hibernate-region-factory> is not supported: Hecaton has no "
+                    + "Hibernate second-level cache integration", element);
+            return null;
+        });
         registerBeanDefinitionParser("cache-manager", new CacheManagerBeanDefinitionParser());
         registerBeanDefinitionParser("jet", new JetBeanDefinitionParser());
         String[] types =

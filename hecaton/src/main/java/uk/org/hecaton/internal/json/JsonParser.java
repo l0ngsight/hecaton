@@ -24,6 +24,8 @@ package uk.org.hecaton.internal.json;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 
 /**
@@ -156,7 +158,110 @@ public class JsonParser {
     }
   }
 
+  /**
+   * Reads one value. Arrays and objects are read with an explicit stack rather than by
+   * recursion, so deep nesting cannot overflow the thread's stack before
+   * {@link #MAX_NESTING_LEVEL} is reached; the handler sees the same calls in the same order.
+   */
   private void readValue() throws IOException {
+    Deque<Container> stack = new ArrayDeque<>();
+    while (true) {
+      if (current == '[') {
+        Object array = handler.startArray();
+        read();
+        if (++nestingLevel > MAX_NESTING_LEVEL) {
+          throw error("Nesting too deep");
+        }
+        skipWhiteSpace();
+        if (readChar(']')) {
+          nestingLevel--;
+          handler.endArray(array);
+        } else {
+          stack.push(new Container(array, true));
+          skipWhiteSpace();
+          handler.startArrayValue(array);
+          continue;
+        }
+      } else if (current == '{') {
+        Object object = handler.startObject();
+        read();
+        if (++nestingLevel > MAX_NESTING_LEVEL) {
+          throw error("Nesting too deep");
+        }
+        skipWhiteSpace();
+        if (readChar('}')) {
+          nestingLevel--;
+          handler.endObject(object);
+        } else {
+          Container container = new Container(object, false);
+          stack.push(container);
+          readMemberName(container);
+          continue;
+        }
+      } else {
+        readScalar();
+      }
+      // a value is complete: close the containers it completes, up to the next value to read
+      if (!finishValue(stack)) {
+        return;
+      }
+    }
+  }
+
+  /**
+   * Called when a value inside the innermost container is complete. Returns {@code true} when
+   * another value of some container follows, {@code false} when the outermost value is complete.
+   */
+  private boolean finishValue(Deque<Container> stack) throws IOException {
+    while (!stack.isEmpty()) {
+      Container container = stack.peek();
+      if (container.isArray) {
+        handler.endArrayValue(container.value);
+        skipWhiteSpace();
+        if (readChar(',')) {
+          skipWhiteSpace();
+          handler.startArrayValue(container.value);
+          return true;
+        }
+        if (!readChar(']')) {
+          throw expected("',' or ']'");
+        }
+        stack.pop();
+        nestingLevel--;
+        handler.endArray(container.value);
+      } else {
+        handler.endObjectValue(container.value, container.name);
+        skipWhiteSpace();
+        if (readChar(',')) {
+          readMemberName(container);
+          return true;
+        }
+        if (!readChar('}')) {
+          throw expected("',' or '}'");
+        }
+        stack.pop();
+        nestingLevel--;
+        handler.endObject(container.value);
+      }
+    }
+    return false;
+  }
+
+  private void readMemberName(Container object) throws IOException {
+    skipWhiteSpace();
+    handler.startObjectName(object.value);
+    String name = readName();
+    handler.endObjectName(object.value, name);
+    skipWhiteSpace();
+    if (!readChar(':')) {
+      throw expected("':'");
+    }
+    skipWhiteSpace();
+    object.name = name;
+    handler.startObjectValue(object.value, name);
+  }
+
+  private void readScalar() throws IOException {
     switch (current) {
       case 'n':
         readNull();
@@ -169,12 +274,6 @@ public class JsonParser {
         break;
       case '"':
         readString();
-        break;
-      case '[':
-        readArray();
-        break;
-      case '{':
-        readObject();
         break;
       case '-':
       case '0':
@@ -194,64 +293,16 @@ public class JsonParser {
     }
   }
 
-  private void readArray() throws IOException {
-    Object array = handler.startArray();
-    read();
-    if (++nestingLevel > MAX_NESTING_LEVEL) {
-      throw error("Nesting too deep");
-    }
-    skipWhiteSpace();
-    if (readChar(']')) {
-      nestingLevel--;
-      handler.endArray(array);
-      return;
-    }
-    do {
-      skipWhiteSpace();
-      handler.startArrayValue(array);
-      readValue();
-      handler.endArrayValue(array);
-      skipWhiteSpace();
-    } while (readChar(','));
-    if (!readChar(']')) {
-      throw expected("',' or ']'");
-    }
-    nestingLevel--;
-    handler.endArray(array);
-  }
+  /** An array or object being read, with the name of the object member being read. */
+  private static final class Container {
+    final Object value;
+    final boolean isArray;
+    String name;
 
-  private void readObject() throws IOException {
-    Object object = handler.startObject();
-    read();
-    if (++nestingLevel > MAX_NESTING_LEVEL) {
-      throw error("Nesting too deep");
+    Container(Object value, boolean isArray) {
+      this.value = value;
+      this.isArray = isArray;
     }
-    skipWhiteSpace();
-    if (readChar('}')) {
-      nestingLevel--;
-      handler.endObject(object);
-      return;
-    }
-    do {
-      skipWhiteSpace();
-      handler.startObjectName(object);
-      String name = readName();
-      handler.endObjectName(object, name);
-      skipWhiteSpace();
-      if (!readChar(':')) {
-        throw expected("':'");
-      }
-      skipWhiteSpace();
-      handler.startObjectValue(object, name);
-      readValue();
-      handler.endObjectValue(object, name);
-      skipWhiteSpace();
-    } while (readChar(','));
-    if (!readChar('}')) {
-      throw expected("',' or '}'");
-    }
-    nestingLevel--;
-    handler.endObject(object);
   }
 
   private String readName() throws IOException {
