@@ -68,6 +68,8 @@ public enum HecatonFeature {
     JET_JOB_UPGRADE("F18", "Jet job upgrade and exported snapshots", "M10", null, true),
     /** F19. */
     SQL_CATALOG_PERSISTENCE("F19", "SQL catalog persistence", "M10", null, false, "persistence"),
+    /** F20. */
+    VECTOR_COLLECTION("F20", "Vector collections", "M10", null, false, "vector"),
     /** F21: Hecaton has no licenses. */
     LICENSE("F21", "License management", null, "Hecaton needs no license; license keys are ignored"),
     /** Not in the spec's scope (yet). */

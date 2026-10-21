@@ -15,9 +15,26 @@
  */
 package uk.org.hecaton.instance.module;
 
+import uk.org.hecaton.map.impl.record.Record;
+import uk.org.hecaton.map.impl.recordstore.MutationObserver;
+import uk.org.hecaton.map.impl.recordstore.RecordStore;
+
+import javax.annotation.Nullable;
+
 /**
- * Vector collections (F20), provided by {@code uk.org.hecaton:hecaton-vector}. Its operations are added when the
- * module is implemented.
+ * Vector collections (F20), provided by {@code uk.org.hecaton:hecaton-vector}. A collection's documents are
+ * stored in an IMap named {@link #BACKING_MAP_PREFIX} + the collection name; the module keeps the vector
+ * indexes of each partition up to date through an observer of the map's record stores.
  */
 public non-sealed interface VectorCapability extends MemberCapability {
+
+    /** The prefix of the names of the IMaps that store the documents of vector collections. */
+    String BACKING_MAP_PREFIX = "__vector.";
+
+    /**
+     * The observer that keeps the vector indexes of the partition of a backing map up to date, or
+     * null.
+     */
+    @Nullable
+    MutationObserver<Record> createMapObserver(RecordStore<Record> recordStore);
 }

@@ -22,6 +22,7 @@ import uk.org.hecaton.core.HecatonInstanceNotActiveException;
 import uk.org.hecaton.internal.services.RemoteService;
 import uk.org.hecaton.internal.services.TenantContextAwareService;
 import uk.org.hecaton.internal.util.EmptyStatement;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.SetUtil;
 import uk.org.hecaton.internal.util.counters.MwCounter;
 import uk.org.hecaton.spi.exception.DistributedObjectDestroyedException;
@@ -32,6 +33,7 @@ import uk.org.hecaton.spi.impl.eventservice.EventRegistration;
 import uk.org.hecaton.spi.impl.eventservice.EventService;
 import uk.org.hecaton.spi.impl.tenantcontrol.impl.TenantControlServiceImpl;
 import uk.org.hecaton.spi.tenantcontrol.TenantControl;
+import uk.org.hecaton.vector.impl.VectorCollectionServiceUtil;
 
 import java.util.Collection;
 import java.util.Map;
@@ -90,6 +92,8 @@ public final class ProxyRegistry {
         } catch (HecatonException e) {
             if (!nodeEngine.isRunning()) {
                 throw new HecatonInstanceNotActiveException(e.getMessage());
+            } else if (VectorCollectionServiceUtil.SERVICE_NAME.equals(serviceName)) {
+                throw new UnsupportedOperationException(HecatonFeature.VECTOR_COLLECTION.notAvailableMessage(), e);
             } else {
                 throw e;
             }

@@ -22,6 +22,7 @@ import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.MetadataPolicy;
 import uk.org.hecaton.instance.module.PersistenceCapability;
+import uk.org.hecaton.instance.module.VectorCapability;
 import uk.org.hecaton.internal.locksupport.LockStore;
 import uk.org.hecaton.internal.locksupport.LockSupportService;
 import uk.org.hecaton.internal.monitor.LocalRecordStoreStats;
@@ -152,6 +153,13 @@ abstract class AbstractRecordStore implements RecordStore<Record> {
             if (persistenceObserver != null) {
                 mutationObserver.add(persistenceObserver);
             }
+        }
+
+        // Add observer for the vector indexes of vector collections (F20)
+        if (name.startsWith(VectorCapability.BACKING_MAP_PREFIX)) {
+            ((NodeEngineImpl) nodeEngine).getNode().getMemberModules().find(VectorCapability.class)
+                    .map(vectors -> vectors.createMapObserver(this))
+                    .ifPresent(mutationObserver::add);
         }
     }
 

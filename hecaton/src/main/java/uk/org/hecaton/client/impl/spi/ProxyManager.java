@@ -43,6 +43,7 @@ import uk.org.hecaton.client.impl.proxy.ClientRingbufferProxy;
 import uk.org.hecaton.client.impl.proxy.ClientScheduledExecutorProxy;
 import uk.org.hecaton.client.impl.proxy.ClientSetProxy;
 import uk.org.hecaton.client.impl.proxy.ClientTopicProxy;
+import uk.org.hecaton.client.impl.proxy.ClientVectorCollectionProxy;
 import uk.org.hecaton.client.impl.proxy.txn.xa.XAResourceProxy;
 import uk.org.hecaton.client.impl.spi.impl.ClientInvocation;
 import uk.org.hecaton.client.impl.spi.impl.ClientServiceNotFoundException;
@@ -73,6 +74,7 @@ import uk.org.hecaton.scheduledexecutor.impl.DistributedScheduledExecutorService
 import uk.org.hecaton.topic.impl.TopicService;
 import uk.org.hecaton.topic.impl.reliable.ReliableTopicService;
 import uk.org.hecaton.transaction.impl.xa.XAService;
+import uk.org.hecaton.vector.impl.VectorCollectionServiceUtil;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Constructor;
@@ -138,6 +140,7 @@ public final class ProxyManager {
         register(DistributedScheduledExecutorService.SERVICE_NAME, ClientScheduledExecutorProxy.class);
         register(PNCounterService.SERVICE_NAME, ClientPNCounterProxy.class);
         register(LongRegisterService.SERVICE_NAME, ClientLongRegisterProxy.class);
+        register(VectorCollectionServiceUtil.SERVICE_NAME, ClientVectorCollectionProxy.class);
 
         ClassLoader classLoader = config.getClassLoader();
         for (ProxyFactoryConfig proxyFactoryConfig : config.getProxyFactoryConfigs()) {

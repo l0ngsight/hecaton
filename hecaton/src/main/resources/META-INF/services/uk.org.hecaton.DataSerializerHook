@@ -71,3 +71,4 @@ uk.org.hecaton.cp.internal.datastructures.lock.LockDataSerializerHook
 uk.org.hecaton.cp.internal.datastructures.semaphore.SemaphoreDataSerializerHook
 uk.org.hecaton.cp.internal.raft.impl.RaftDataSerializerHook
 uk.org.hecaton.cp.internal.session.RaftSessionServiceDataSerializerHook
+uk.org.hecaton.vector.impl.VectorCollectionDataSerializerHook

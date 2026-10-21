@@ -108,7 +108,8 @@ that delivers them, rather than being ignored.
 | Dynamic configuration persistence and reload | Yes (F16) | [dynamic-configuration.md](dynamic-configuration.md) |
 | User Code Namespaces | Yes (F17) | [user-code-namespaces.md](user-code-namespaces.md) |
 | Jet lossless restart, isolated jobs, job upgrades and exported snapshots; SQL catalog persistence | Yes (F18, F19) | Lossless restart and the SQL catalog need persistence. [jet.md](jet.md) |
-| Tiered Storage, vector collections | 2.x (F12, F20) | |
+| Vector collections | Yes (F20) | With `hecaton-vector` on the members. [vector.md](vector.md) |
+| Tiered Storage | 2.x (F12) | |
 | Management Center | No | Out of scope; the operations are available through the API, REST and `hc-cluster-admin` |
 
 [changes-from-hazelcast.md](changes-from-hazelcast.md) lists every difference applications
