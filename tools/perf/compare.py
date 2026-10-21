@@ -39,7 +39,9 @@ def main():
         product = params.pop("product")
         key = (result["benchmark"].rsplit(".", 1)[-1], tuple(sorted(params.items())))
         metric = result["primaryMetric"]
-        scores.setdefault(key, {})[product] = (metric["score"], metric["scoreError"], metric["scoreUnit"])
+        # the error is "NaN" (a string) when there were too few iterations to compute it
+        scores.setdefault(key, {})[product] = (float(metric["score"]), float(metric["scoreError"]),
+                                               metric["scoreUnit"])
 
     print("| Benchmark | Parameters | Hazelcast CE | Hecaton | Hecaton / Hazelcast |")
     print("|---|---|---|---|---|")

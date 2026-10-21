@@ -43,7 +43,10 @@ final class HecatonGrid implements Grid {
             JoinConfig join = config.getNetworkConfig().getJoin();
             join.getMulticastConfig().setEnabled(false);
             join.getAutoDetectionConfig().setEnabled(false);
-            join.getTcpIpConfig().setEnabled(true).addMember("127.0.0.1:" + PORT + "-" + (PORT + members - 1));
+            join.getTcpIpConfig().setEnabled(true);
+            for (int port = PORT; port < PORT + members; port++) {
+                join.getTcpIpConfig().addMember("127.0.0.1:" + port);
+            }
             config.getJetConfig().setEnabled(false);
             instances.add(Hecaton.newHecatonInstance(config));
         }
