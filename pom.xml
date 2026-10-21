@@ -751,6 +751,27 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <!-- one CycloneDX SBOM for the whole release: target/hecaton-<version>-sbom.json/.xml -->
+                        <groupId>org.cyclonedx</groupId>
+                        <artifactId>cyclonedx-maven-plugin</artifactId>
+                        <version>2.9.1</version>
+                        <executions>
+                            <execution>
+                                <id>aggregate-sbom</id>
+                                <phase>package</phase>
+                                <inherited>false</inherited>
+                                <goals>
+                                    <goal>makeAggregateBom</goal>
+                                </goals>
+                                <configuration>
+                                    <outputName>hecaton-${project.version}-sbom</outputName>
+                                    <outputFormat>all</outputFormat>
+                                    <includeTestScope>false</includeTestScope>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
                 </plugins>
             </build>
         </profile>

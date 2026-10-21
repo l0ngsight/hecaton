@@ -1493,6 +1493,8 @@
             <id>enable-maven-central</id>
             <properties>
                 <maven.central.autoReleaseAfterClose>false</maven.central.autoReleaseAfterClose>
+                <!-- without auto-publishing, the deployment is validated and then published in the Central portal -->
+                <maven.central.waitUntil>validated</maven.central.waitUntil>
                 <deploy.name>Hecaton ${project.version}</deploy.name>
             </properties>
             <build>
@@ -1510,7 +1512,7 @@
                                 wait until the artifacts are actually published automatically using 'autoPublish'.
                                 the default is `validated` which would then require manual publishing
                                 -->
-                                <waitUntil>published</waitUntil>
+                                <waitUntil>${maven.central.waitUntil}</waitUntil>
                                 <autoPublish>${maven.central.autoReleaseAfterClose}</autoPublish>
                                 <checksums>required</checksums>
                                 <deploymentName>Deployment ${deploy.name}</deploymentName>
@@ -1532,6 +1534,7 @@
             <id>auto-release-maven-central</id>
             <properties>
                 <maven.central.autoReleaseAfterClose>true</maven.central.autoReleaseAfterClose>
+                <maven.central.waitUntil>published</maven.central.waitUntil>
             </properties>
         </profile>
 
