@@ -16,8 +16,13 @@
 
 package uk.org.hecaton.map.impl.nearcache;
 
+import uk.org.hecaton.config.InMemoryFormat;
+import uk.org.hecaton.config.NearCacheConfig;
+import uk.org.hecaton.instance.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.cluster.ClusterService;
 import uk.org.hecaton.internal.nearcache.NearCache;
+import uk.org.hecaton.internal.nearcache.NearCacheRecordStore;
+import uk.org.hecaton.internal.nearcache.impl.DefaultNearCache;
 import uk.org.hecaton.internal.nearcache.impl.DefaultNearCacheManager;
 import uk.org.hecaton.internal.nearcache.impl.invalidation.BatchInvalidator;
 import uk.org.hecaton.internal.nearcache.impl.invalidation.InvalidationMetaDataFetcher;
@@ -33,6 +38,7 @@ import uk.org.hecaton.map.impl.MapManagedService;
 import uk.org.hecaton.map.impl.MapServiceContext;
 import uk.org.hecaton.map.impl.nearcache.invalidation.MemberMapInvalidationMetaDataFetcher;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.eventservice.EventFilter;
 import uk.org.hecaton.spi.impl.eventservice.EventRegistration;
 import uk.org.hecaton.spi.impl.executionservice.ExecutionService;
@@ -72,6 +78,18 @@ public class MapNearCacheManager extends DefaultNearCacheManager {
         this.partitionCount = partitionService.getPartitionCount();
         this.invalidator = createInvalidator();
         this.repairingTask = createRepairingInvalidationTask();
+    }
+
+    @Override
+    protected <K, V> NearCache<K, V> createNearCache(String name, NearCacheConfig nearCacheConfig) {
+        if (nearCacheConfig.getInMemoryFormat() != InMemoryFormat.NATIVE) {
+            return super.createNearCache(name, nearCacheConfig);
+        }
+        NearCacheRecordStore<K, V> recordStore = ((NodeEngineImpl) nodeEngine).getNode().getMemberModules()
+                .require(NativeMemoryCapability.class, "NATIVE in-memory format")
+                .createNearCacheRecordStore(name, nearCacheConfig, serializationService, classLoader, properties);
+        return new DefaultNearCache<>(name, nearCacheConfig, recordStore, serializationService, scheduler, classLoader,
+                properties);
     }
 
     private Invalidator createInvalidator() {

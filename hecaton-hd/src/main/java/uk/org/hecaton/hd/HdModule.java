@@ -18,20 +18,25 @@ package uk.org.hecaton.hd;
 import uk.org.hecaton.cache.impl.AbstractCacheService;
 import uk.org.hecaton.cache.impl.ICacheRecordStore;
 import uk.org.hecaton.config.NativeMemoryConfig;
+import uk.org.hecaton.config.NearCacheConfig;
 import uk.org.hecaton.hd.cache.HdCacheRecordStore;
 import uk.org.hecaton.hd.map.HdRecordStore;
 import uk.org.hecaton.hd.memory.HdMemoryManager;
 import uk.org.hecaton.hd.memory.HdMemoryStats;
+import uk.org.hecaton.hd.nearcache.HdNearCacheRecordStore;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.instance.module.MemberModule;
 import uk.org.hecaton.instance.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.memory.DefaultMemoryStats;
 import uk.org.hecaton.internal.memory.MemoryStats;
+import uk.org.hecaton.internal.nearcache.NearCacheRecordStore;
+import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.map.impl.MapContainer;
 import uk.org.hecaton.map.impl.MapKeyLoader;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.properties.HecatonProperties;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -90,6 +95,15 @@ public class HdModule implements MemberModule, NativeMemoryCapability {
     public ICacheRecordStore createCacheRecordStore(String cacheNameWithPrefix, int partitionId, NodeEngine nodeEngine,
                                                     AbstractCacheService cacheService) {
         return new HdCacheRecordStore(cacheNameWithPrefix, partitionId, nodeEngine, cacheService);
+    }
+
+    @Override
+    public <K, V> NearCacheRecordStore<K, V> createNearCacheRecordStore(String name, NearCacheConfig nearCacheConfig,
+                                                                        SerializationService serializationService,
+                                                                        ClassLoader classLoader,
+                                                                        HecatonProperties properties) {
+        return new HdNearCacheRecordStore<>(name, nearCacheConfig, serializationService, classLoader, properties,
+                memoryManager(), memoryStats, new LongAdder());
     }
 
     @Override

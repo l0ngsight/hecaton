@@ -17,12 +17,16 @@ package uk.org.hecaton.instance.module;
 
 import uk.org.hecaton.cache.impl.AbstractCacheService;
 import uk.org.hecaton.cache.impl.ICacheRecordStore;
+import uk.org.hecaton.config.NearCacheConfig;
 import uk.org.hecaton.internal.memory.MemoryStats;
+import uk.org.hecaton.internal.nearcache.NearCacheRecordStore;
+import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.map.impl.MapContainer;
 import uk.org.hecaton.map.impl.MapKeyLoader;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.properties.HecatonProperties;
 
 /**
  * High-Density memory (F11), provided by {@code uk.org.hecaton:hecaton-hd}: data of structures
@@ -46,4 +50,11 @@ public non-sealed interface NativeMemoryCapability extends MemberCapability {
      */
     ICacheRecordStore createCacheRecordStore(String cacheNameWithPrefix, int partitionId, NodeEngine nodeEngine,
                                              AbstractCacheService cacheService);
+
+    /**
+     * Creates the record store of a member's Near Cache with the {@code NATIVE} in-memory format.
+     */
+    <K, V> NearCacheRecordStore<K, V> createNearCacheRecordStore(String name, NearCacheConfig nearCacheConfig,
+                                                                 SerializationService serializationService,
+                                                                 ClassLoader classLoader, HecatonProperties properties);
 }
