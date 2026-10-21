@@ -23,9 +23,12 @@ import uk.org.hecaton.internal.serialization.DataSerializerHook;
 import uk.org.hecaton.internal.serialization.impl.FactoryIdHelper;
 import uk.org.hecaton.map.impl.wan.WanMapRemoveEvent;
 import uk.org.hecaton.map.impl.wan.WanMapAddOrUpdateEvent;
+import uk.org.hecaton.wan.impl.batch.MerkleTreeLeavesOperation;
 import uk.org.hecaton.wan.impl.batch.WanBatchOperation;
+import uk.org.hecaton.wan.impl.batch.WanMerkleTreeQueryOperation;
 import uk.org.hecaton.wan.impl.batch.WanPartitionEvents;
 import uk.org.hecaton.wan.impl.batch.WanQueueRemoveOperation;
+import uk.org.hecaton.wan.impl.batch.WanSyncOperation;
 import uk.org.hecaton.map.impl.wan.WanMapEntryView;
 import uk.org.hecaton.nio.serialization.DataSerializableFactory;
 
@@ -50,6 +53,9 @@ public class WanDataSerializerHook implements DataSerializerHook {
     public static final int CACHE_REPLICATION_UPDATE = 8;
     public static final int CACHE_REPLICATION_REMOVE = 9;
     public static final int ADD_WAN_CONFIG_OPERATION = 10;
+    public static final int MERKLE_TREE_LEAVES_OPERATION = 11;
+    public static final int WAN_MERKLE_TREE_QUERY_OPERATION = 12;
+    public static final int WAN_SYNC_OPERATION = 13;
 
     @Override
     public int getFactoryId() {
@@ -70,6 +76,9 @@ public class WanDataSerializerHook implements DataSerializerHook {
             case CACHE_REPLICATION_UPDATE -> new WanCacheUpdateEvent();
             case CACHE_REPLICATION_REMOVE -> new WanCacheRemoveEvent();
             case ADD_WAN_CONFIG_OPERATION -> new AddWanConfigOperation();
+            case MERKLE_TREE_LEAVES_OPERATION -> new MerkleTreeLeavesOperation();
+            case WAN_MERKLE_TREE_QUERY_OPERATION -> new WanMerkleTreeQueryOperation();
+            case WAN_SYNC_OPERATION -> new WanSyncOperation();
             default -> throw new IllegalArgumentException("Unknown type-id: " + typeId);
         };
     }

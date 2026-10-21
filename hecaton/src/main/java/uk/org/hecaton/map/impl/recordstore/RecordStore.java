@@ -44,6 +44,7 @@ import uk.org.hecaton.spi.exception.RetryableHecatonException;
 import uk.org.hecaton.spi.merge.SplitBrainMergePolicy;
 import uk.org.hecaton.spi.merge.SplitBrainMergeTypes.MapMergeTypes;
 import uk.org.hecaton.wan.impl.CallerProvenance;
+import uk.org.hecaton.wan.impl.merkletree.MerkleTreeView;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -695,4 +696,13 @@ public interface RecordStore<R extends Record> {
     default void disposeOnSplitBrainHeal() {
         getMapContainer().onDestroy();
     }
+
+    /**
+     * @return the Merkle tree of the entries of this record store (F13), or {@code null} if the
+     * map does not keep one
+     */
+    default MerkleTreeView getMerkleTree() {
+        return null;
+    }
+
 }

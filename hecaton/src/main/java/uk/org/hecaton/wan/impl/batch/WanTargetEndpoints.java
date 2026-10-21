@@ -119,4 +119,10 @@ final class WanTargetEndpoints {
         }
         return parsed;
     }
+
+    /** The number of known endpoints. */
+    int count() {
+        return endpoints.size();
+    }
+
 }

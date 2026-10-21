@@ -181,7 +181,7 @@ public final class MerkleTreeUtil {
      *              calculated
      * @return the order of the leftmost node on the given level
      */
-    static int getLeftMostNodeOrderOnLevel(int level) {
+    public static int getLeftMostNodeOrderOnLevel(int level) {
         return (1 << level) - 1;
     }
 

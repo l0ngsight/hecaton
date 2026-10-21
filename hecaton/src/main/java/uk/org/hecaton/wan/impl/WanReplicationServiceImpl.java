@@ -23,11 +23,11 @@ import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
 import uk.org.hecaton.config.WanConsumerConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
+import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.core.ManagedContext;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.management.events.WanConsistencyCheckIgnoredEvent;
-import uk.org.hecaton.internal.management.events.WanSyncIgnoredEvent;
 import uk.org.hecaton.internal.monitor.LocalWanStats;
 import uk.org.hecaton.internal.monitor.WanSyncState;
 import uk.org.hecaton.internal.monitor.impl.LocalWanStatsImpl;
@@ -39,6 +39,7 @@ import uk.org.hecaton.internal.services.ObjectNamespace;
 import uk.org.hecaton.internal.services.ServiceNamespace;
 import uk.org.hecaton.internal.services.WanSupportingService;
 import uk.org.hecaton.internal.util.ConstructorFunction;
+import uk.org.hecaton.internal.util.UuidUtil;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.spi.impl.InternalCompletableFuture;
 import uk.org.hecaton.spi.impl.NodeEngine;
@@ -50,6 +51,7 @@ import uk.org.hecaton.wan.WanEventCounters;
 import uk.org.hecaton.wan.WanMigrationAwarePublisher;
 import uk.org.hecaton.wan.WanPublisher;
 import uk.org.hecaton.wan.impl.batch.WanBatchPublisher;
+import uk.org.hecaton.wan.impl.batch.WanSyncOperation;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -290,29 +292,59 @@ public class WanReplicationServiceImpl implements WanReplicationService,
 
     @Override
     public UUID syncMap(String wanReplicationName, String wanPublisherId, String mapName) {
-        node.getManagementCenterService().log(
-                WanSyncIgnoredEvent.enterpriseOnly(wanReplicationName, wanPublisherId, mapName));
-        throw new UnsupportedOperationException("WAN sync for map is not supported.");
+        return startSync(wanReplicationName, wanPublisherId, List.of(mapName), false);
     }
 
     @Override
     public UUID syncAllMaps(String wanReplicationName, String wanPublisherId) {
-        node.getManagementCenterService().log(
-                WanSyncIgnoredEvent.enterpriseOnly(wanReplicationName, wanPublisherId, null));
-        throw new UnsupportedOperationException("WAN sync is not supported.");
+        return startSync(wanReplicationName, wanPublisherId, mapsReplicatedBy(wanReplicationName), false);
     }
 
     @Override
     public WanSyncStateResult getSyncResult(UUID syncUUID) {
-        throw new UnsupportedOperationException("WAN sync is not supported.");
+        // results are kept per member, in the publishers' statistics
+        return null;
     }
 
     @Override
     public UUID consistencyCheck(String wanReplicationName, String wanPublisherId, String mapName) {
-        node.getManagementCenterService().log(
-                WanConsistencyCheckIgnoredEvent.enterpriseOnly(wanReplicationName, wanPublisherId, mapName));
+        if (!Boolean.TRUE.equals(node.getConfig().findMapConfig(mapName).getMerkleTreeConfig().getEnabled())) {
+            node.getManagementCenterService().log(new WanConsistencyCheckIgnoredEvent(wanReplicationName, wanPublisherId,
+                    mapName, "Map " + mapName + " keeps no Merkle tree"));
+            return null;
+        }
+        return startSync(wanReplicationName, wanPublisherId, List.of(mapName), true);
+    }
 
-        throw new UnsupportedOperationException("Consistency check is not supported.");
+    /** Starts a WAN sync or consistency check on every member, each for the partitions it owns. */
+    private UUID startSync(String wanReplicationName, String wanPublisherId, List<String> mapNames, boolean check) {
+        if (!(getPublisherOrFail(wanReplicationName, wanPublisherId) instanceof WanBatchPublisher)) {
+            throw new UnsupportedOperationException("WAN publisher " + wanPublisherId + " of " + wanReplicationName
+                    + " is a custom publisher, which does not support WAN sync");
+        }
+        UUID syncId = UuidUtil.newUnsecureUUID();
+        NodeEngineImpl nodeEngine = node.getNodeEngine();
+        List<InternalCompletableFuture<Object>> futures = new ArrayList<>();
+        for (Member member : nodeEngine.getClusterService().getMembers()) {
+            futures.add(nodeEngine.getOperationService().invokeOnTarget(SERVICE_NAME,
+                    new WanSyncOperation(wanReplicationName, wanPublisherId, syncId, mapNames, check),
+                    member.getAddress()));
+        }
+        futures.forEach(InternalCompletableFuture::joinInternal);
+        return syncId;
+    }
+
+    /** The maps (with a container on this member) that refer to the WAN replication scheme. */
+    private List<String> mapsReplicatedBy(String wanReplicationName) {
+        MapService mapService = node.getNodeEngine().getService(MapService.SERVICE_NAME);
+        List<String> maps = new ArrayList<>();
+        mapService.getMapServiceContext().getMapContainers().forEach((name, container) -> {
+            WanReplicationRef ref = container.getMapConfig().getWanReplicationRef();
+            if (ref != null && wanReplicationName.equals(ref.getName())) {
+                maps.add(name);
+            }
+        });
+        return maps;
     }
 
     @Override
@@ -404,7 +436,15 @@ public class WanReplicationServiceImpl implements WanReplicationService,
 
     @Override
     public WanSyncState getWanSyncState() {
-        return null;
+        for (Entry<String, DelegatingWanScheme> scheme : wanReplications.entrySet()) {
+            for (WanPublisher publisher : scheme.getValue().getPublishers()) {
+                if (publisher instanceof WanBatchPublisher batch && (batch.isSyncing() || batch.hasSyncFailed())) {
+                    WanSyncStatus status = batch.isSyncing() ? WanSyncStatus.IN_PROGRESS : WanSyncStatus.FAILED;
+                    return new WanSyncStateImpl(status, scheme.getKey(), batch.getPublisherId());
+                }
+            }
+        }
+        return new WanSyncStateImpl(WanSyncStatus.READY, null, null);
     }
 
     @Override

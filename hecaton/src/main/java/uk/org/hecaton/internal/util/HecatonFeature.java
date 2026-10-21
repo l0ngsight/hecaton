@@ -53,7 +53,7 @@ public enum HecatonFeature {
     /** F13. */
     WAN_REPLICATION("F13", "WAN replication", "M7", null, true),
     /** F13: synchronization and consistency checks. */
-    WAN_SYNC("F13", "WAN synchronization", "M9"),
+    WAN_SYNC("F13", "WAN synchronization", "M9", null, true),
     /** F16. */
     DYNAMIC_CONFIGURATION_PERSISTENCE("F16", "Dynamic configuration persistence", "M9"),
     /** F16. */
