@@ -109,7 +109,7 @@ that delivers them, rather than being ignored.
 | User Code Namespaces | Yes (F17) | [user-code-namespaces.md](user-code-namespaces.md) |
 | Jet lossless restart, isolated jobs, job upgrades and exported snapshots; SQL catalog persistence | Yes (F18, F19) | Lossless restart and the SQL catalog need persistence. [jet.md](jet.md) |
 | Vector collections | Yes (F20) | With `hecaton-vector` on the members. [vector.md](vector.md) |
-| Tiered Storage | 2.x (F12) | |
+| Tiered Storage | Yes (F12) | With `hecaton-tiered` on the members. [tiered.md](tiered.md) |
 | Management Center | No | Out of scope; the operations are available through the API, REST and `hc-cluster-admin` |
 
 [changes-from-hazelcast.md](changes-from-hazelcast.md) lists every difference applications

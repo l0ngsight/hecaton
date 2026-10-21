@@ -69,7 +69,7 @@ jobs:
           java-version: '25'
           cache: maven
       - run: ./mvnw -B -ntp -T 1C -DskipTests install
-      - run: ./mvnw -B -ntp -Psecurity -DskipTests -pl hecaton,hecaton-hd,hecaton-persistence,hecaton-vector verify
+      - run: ./mvnw -B -ntp -Psecurity -DskipTests -pl hecaton,hecaton-hd,hecaton-persistence,hecaton-vector,hecaton-tiered verify
       - uses: actions/upload-artifact@v4
         if: always()
         with:

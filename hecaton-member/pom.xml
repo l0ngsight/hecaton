@@ -65,6 +65,11 @@
             <artifactId>hecaton-vector</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-tiered</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -77,7 +82,7 @@
                         <configuration>
                             <rules>
                                 <enforceBytecodeVersion>
-                                    <!-- the member modules (hecaton-hd, hecaton-persistence, hecaton-vector) are Java 25; the client side stays on 17 -->
+                                    <!-- the member modules (hecaton-hd, hecaton-persistence, hecaton-vector, hecaton-tiered) are Java 25; the client side stays on 17 -->
                                     <maxJdkVersion>25</maxJdkVersion>
                                 </enforceBytecodeVersion>
                             </rules>

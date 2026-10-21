@@ -10,5 +10,5 @@ java -version
 ./mvnw -B -ntp -T 1C -DskipTests install
 
 # hecaton-hd's own tests are quick, and native memory bugs can crash a JVM: run them on every build;
-# so are hecaton-persistence's and hecaton-vector's
-./mvnw -B -ntp -pl hecaton-hd,hecaton-persistence,hecaton-vector surefire:test
+# so are those of the other member modules
+./mvnw -B -ntp -pl hecaton-hd,hecaton-persistence,hecaton-vector,hecaton-tiered surefire:test

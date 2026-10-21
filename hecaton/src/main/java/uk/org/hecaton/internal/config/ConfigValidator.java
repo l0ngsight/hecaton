@@ -135,9 +135,10 @@ public final class ConfigValidator {
     public static void checkMapConfig(Config config, MapConfig mapConfig,
                                       SplitBrainMergePolicyProvider mergePolicyProvider) {
 
+        // the tiered store needs NATIVE: name the tiered store's module first
+        checkTSEnabledOnEnterpriseJar(mapConfig.getTieredStoreConfig());
         checkNotNativeWhenOpenSource(mapConfig.getInMemoryFormat());
         checkNotBitmapIndexWhenNativeMemory(mapConfig.getInMemoryFormat(), mapConfig.getIndexConfigs());
-        checkTSEnabledOnEnterpriseJar(mapConfig.getTieredStoreConfig());
 
         if (HecatonFeature.TIERED_STORE.isAvailable()) {
             checkTieredStoreMapConfig(config, mapConfig);

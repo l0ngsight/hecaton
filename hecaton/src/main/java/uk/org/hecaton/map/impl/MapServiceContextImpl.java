@@ -22,6 +22,7 @@ import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.PartitioningAttributeConfig;
 import uk.org.hecaton.config.PartitioningStrategyConfig;
 import uk.org.hecaton.instance.module.NativeMemoryCapability;
+import uk.org.hecaton.instance.module.TieredStoreCapability;
 import uk.org.hecaton.internal.eviction.ExpirationManager;
 import uk.org.hecaton.internal.nio.Disposable;
 import uk.org.hecaton.internal.partition.IPartitionService;
@@ -873,6 +874,11 @@ class MapServiceContextImpl implements MapServiceContext {
         assert partitionId != GENERIC_PARTITION_ID : "Cannot be called with GENERIC_PARTITION_ID";
 
         ILogger logger = nodeEngine.getLogger(DefaultRecordStore.class);
+        if (mapContainer.getMapConfig().getTieredStoreConfig().isEnabled()) {
+            return ((NodeEngineImpl) nodeEngine).getNode().getMemberModules()
+                    .require(TieredStoreCapability.class, "Tiered Storage")
+                    .createMapRecordStore(mapContainer, partitionId, keyLoader, logger);
+        }
         if (mapContainer.getMapConfig().getInMemoryFormat() == InMemoryFormat.NATIVE) {
             return ((NodeEngineImpl) nodeEngine).getNode().getMemberModules()
                     .require(NativeMemoryCapability.class, "NATIVE in-memory format")

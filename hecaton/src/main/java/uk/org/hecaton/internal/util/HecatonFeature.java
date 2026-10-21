@@ -47,7 +47,7 @@ public enum HecatonFeature {
     /** F11. */
     HIGH_DENSITY_MEMORY("F11", "High-Density memory (NATIVE in-memory format)", "M5", null, false, "hd"),
     /** F12. */
-    TIERED_STORE("F12", "Tiered Storage", "M10"),
+    TIERED_STORE("F12", "Tiered Storage", "M10", null, false, "tiered"),
     /** F9. */
     CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9", null, true),
     /** F13. */
