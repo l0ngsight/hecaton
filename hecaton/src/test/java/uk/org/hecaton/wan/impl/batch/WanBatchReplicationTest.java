@@ -26,6 +26,7 @@ import uk.org.hecaton.config.WanQueueFullBehavior;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.internal.metrics.impl.CapturingCollector;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.spi.merge.PassThroughMergePolicy;
 import uk.org.hecaton.spi.properties.ClusterProperty;
@@ -91,6 +92,8 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
         });
         assertThat(replicated.get(0)).isNull();
         assertTrueEventually(() -> assertThat(outboundQueueSize(source)).isZero());
+        // the backups' copies of the queues are emptied too
+        assertTrueEventually(() -> assertThat(totalQueueSize(source)).isZero());
     }
 
     @Test
@@ -110,6 +113,7 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
 
         IMap<Integer, String> replicated = target.get(0).getMap(MAP);
         assertTrueEventually(() -> assertThat(replicated.size()).isEqualTo(ENTRIES));
+        assertTrueEventually(() -> assertThat(totalQueueSize(remaining)).isZero());
     }
 
     @Test
@@ -247,6 +251,34 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
     }
 
     @Test
+    public void publisherMetricsAreCollected() {
+        List<HecatonInstance> target = startCluster("b", 1, null);
+        List<HecatonInstance> source = startCluster("a", 1, publisher("b", target));
+        IMap<Integer, String> map = source.get(0).getMap(MAP);
+        for (int i = 0; i < 10; i++) {
+            map.put(i, "value" + i);
+        }
+        assertTrueEventually(() -> assertThat(target.get(0).getMap(MAP).size()).isEqualTo(10));
+        assertTrueEventually(() -> {
+            CapturingCollector collector = new CapturingCollector();
+            getNode(source.get(0)).getNodeEngine().getMetricsRegistry().collect(collector);
+            assertThat(metric(collector, "totalPublishedEventCount", null)).isEqualTo(10);
+            assertThat(metric(collector, "outboundQueueSize", null)).isZero();
+            assertThat(metric(collector, "updateCount", MAP)).isEqualTo(10);
+        });
+    }
+
+    private static long metric(CapturingCollector collector, String name, String map) {
+        return collector.captures().entrySet().stream()
+                .filter(capture -> "wan".equals(capture.getKey().prefix()) && name.equals(capture.getKey().metric())
+                        && WAN.equals(capture.getKey().discriminatorValue())
+                        && "b".equals(capture.getKey().tagValue("publisherId"))
+                        && (map == null || map.equals(capture.getKey().tagValue("map"))))
+                .map(capture -> capture.getValue().singleCapturedValue().longValue())
+                .findFirst().orElseThrow(() -> new AssertionError("metric " + name + " not collected"));
+    }
+
+    @Test
     public void customConsumerIsCreatedOnStartAndShutDown() {
         Config config = smallInstanceConfig().setClusterName("consumer");
         config.addWanReplicationConfig(new WanReplicationConfig().setName("from-a")
@@ -315,6 +347,16 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
                         assertThat(batchPublisher.getState()).isNotNull().isNotEqualTo(WanPublisherState.STOPPED);
                     }
                 }
+            }
+        }
+        return size;
+    }
+
+    private static int totalQueueSize(List<HecatonInstance> members) {
+        int size = 0;
+        for (HecatonInstance member : members) {
+            for (var publisher : wanService(member).getWanReplicationPublishers(WAN).getPublishers()) {
+                size += ((WanBatchPublisher) publisher).totalQueueSize();
             }
         }
         return size;

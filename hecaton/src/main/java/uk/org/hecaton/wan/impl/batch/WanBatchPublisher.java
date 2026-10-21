@@ -305,7 +305,7 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
         for (int replicaIndex = 1; replicaIndex < InternalPartition.MAX_REPLICA_COUNT; replicaIndex++) {
             PartitionReplica replica = partition.getReplica(replicaIndex);
             if (replica != null && !replica.uuid().equals(nodeEngine.getLocalMember().getUuid())) {
-                operationService.invokeOnTarget(WanReplicationService.SERVICE_NAME, new WanQueueRemoveOperation(
+                operationService.send(new WanQueueRemoveOperation(
                         wanReplicationName, publisherId, partition.getPartitionId(), removed), replica.address());
             }
         }
@@ -325,6 +325,15 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
             if (queued > 0 && partitionService.getPartition(partitionId, false).isLocal()) {
                 size += queued;
             }
+        }
+        return size;
+    }
+
+    /** The events in all queues, of owned and backup partitions. */
+    int totalQueueSize() {
+        int size = 0;
+        for (WanPartitionQueue queue : queues) {
+            size += queue.size();
         }
         return size;
     }

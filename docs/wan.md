@@ -104,7 +104,9 @@ it; publishers added to an existing scheme reach the current members only. Maps 
 `wan-replication-ref` names a scheme that does not exist yet start replicating once it is added.
 
 The publishers' state, outbound queue size and sent/dropped event counts are in
-`LocalWanStats` (Management Center's WAN view) and the member's statistics.
+`LocalWanStats` (Management Center's WAN view) and in the metrics: `wan[<scheme>]` tagged with
+`publisherId`, with `outboundQueueSize`, `totalPublishedEventCount` and `totalPublishLatency`,
+and `updateCount`, `removeCount` and `droppedCount` per `map` or `cache` tag.
 
 ## Limitations
 
@@ -117,6 +119,6 @@ The publishers' state, outbound queue size and sent/dropped event counts are in
 ## Testing
 
 `WanBatchReplicationTest` (active/passive and active/active clusters, member failure, pause/stop,
-full queues, caches, configuration added at runtime, custom consumers) and
+full queues, caches, configuration added at runtime, custom consumers, metrics) and
 `WanNetworkReplicationTest` (clusters over TCP, WAN endpoints of the advanced network, failover to
 the next endpoint).

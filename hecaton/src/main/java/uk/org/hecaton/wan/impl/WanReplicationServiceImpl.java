@@ -240,6 +240,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
      */
     public synchronized void afterStart() {
         started = true;
+        node.getNodeEngine().getMetricsRegistry().registerDynamicMetricsProvider(new WanMetricsProvider(wanReplications));
         node.getConfig().getWanReplicationConfigs().values().forEach(this::startConsumer);
         addedConfigs.values().forEach(this::startConsumer);
     }
