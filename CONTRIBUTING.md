@@ -80,4 +80,7 @@ REST, metrics, file names), add it to `docs/changes-from-hazelcast.md` in the sa
 - Keep PRs focused: one task from the implementation plan per PR.
 - Include tests. Features need multi-member and failure tests.
 - CI must be green before review.
-- Write commit messages in the imperative mood ("Add TLS handshake timeout").
+- Write commit messages in the imperative mood ("Add TLS handshake timeout"). Start the subject
+  with the area it changes (`WAN replication: Add the batch publisher`) or a conventional type
+  (`fix(wan): ...`); the release notes are grouped by them (see
+  [docs/releasing.md](docs/releasing.md)).
