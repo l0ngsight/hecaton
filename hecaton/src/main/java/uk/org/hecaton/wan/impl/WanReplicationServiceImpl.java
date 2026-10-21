@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.wan.impl;
 
+import uk.org.hecaton.auditlog.AuditlogTypeIds;
 import uk.org.hecaton.cache.impl.ICacheService;
 import uk.org.hecaton.config.AbstractWanPublisherConfig;
 import uk.org.hecaton.config.InvalidConfigurationException;
@@ -326,6 +327,12 @@ public class WanReplicationServiceImpl implements WanReplicationService,
         boolean known = node.getConfig().getWanReplicationConfigs().containsKey(name)
                 || nodeEngine.getConfigurationService().findWanReplicationConfig(name) != null;
         AddWanConfigResult result = addConfig(wanReplicationConfig);
+        node.getNodeExtension().getAuditlogService()
+                .eventBuilder(AuditlogTypeIds.WAN_ADD_CONFIG)
+                .message("WAN replication configuration added.")
+                .addParameter("wanReplicationName", name)
+                .addParameter("addedPublisherIds", result.getAddedPublisherIds())
+                .log();
         if (!known) {
             // a new scheme is kept in the dynamic configuration, so members that join later get it too;
             // its members add it locally

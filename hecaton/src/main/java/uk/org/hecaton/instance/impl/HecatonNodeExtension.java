@@ -17,6 +17,8 @@
 package uk.org.hecaton.instance.impl;
 
 import uk.org.hecaton.auditlog.AuditlogService;
+import uk.org.hecaton.auditlog.AuditlogServiceFactory;
+import uk.org.hecaton.auditlog.impl.ILoggerAuditlogServiceFactory;
 import uk.org.hecaton.auditlog.impl.NoOpAuditlogService;
 import uk.org.hecaton.cache.impl.CacheService;
 import uk.org.hecaton.cache.impl.ICacheService;
@@ -24,8 +26,10 @@ import uk.org.hecaton.client.impl.ClientEngine;
 import uk.org.hecaton.client.impl.ClientEngineImpl;
 import uk.org.hecaton.client.impl.ClusterViewListenerService;
 import uk.org.hecaton.cluster.ClusterState;
+import uk.org.hecaton.config.AdvancedNetworkConfig;
 import uk.org.hecaton.config.AuditlogConfig;
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.EndpointConfig;
 import uk.org.hecaton.config.InstanceTrackingConfig;
 import uk.org.hecaton.config.InstanceTrackingConfig.InstanceMode;
 import uk.org.hecaton.config.InstanceTrackingConfig.InstanceProductName;
@@ -34,6 +38,7 @@ import uk.org.hecaton.config.PersistenceConfig;
 import uk.org.hecaton.config.SSLConfig;
 import uk.org.hecaton.config.SecurityConfig;
 import uk.org.hecaton.config.SerializationConfig;
+import uk.org.hecaton.config.SocketInterceptorConfig;
 import uk.org.hecaton.config.SymmetricEncryptionConfig;
 import uk.org.hecaton.config.cp.CPSubsystemConfig;
 import uk.org.hecaton.config.security.RealmConfig;
@@ -145,6 +150,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
@@ -189,6 +195,8 @@ public class HecatonNodeExtension implements NodeExtension {
     private final Set<Version> supportedVersions;
     /** Null unless persistence is enabled. */
     private final PersistenceCapability persistence;
+    private volatile AuditlogService auditlogService;
+    private final Map<EndpointQualifier, Optional<MemberSocketInterceptor>> socketInterceptors = new ConcurrentHashMap<>();
     private final HotRestartService noOpHotRestartService = new NoOpHotRestartService();
     private final InternalHotRestartService noOpInternalHotRestartService = new NoopInternalHotRestartService();
 
@@ -246,10 +254,6 @@ public class HecatonNodeExtension implements NodeExtension {
         if (symmetricEncryptionConfig != null && symmetricEncryptionConfig.isEnabled()
                 && !HecatonFeature.SYMMETRIC_ENCRYPTION.isAvailable()) {
             throw new IllegalStateException(HecatonFeature.SYMMETRIC_ENCRYPTION.notAvailableMessage());
-        }
-        AuditlogConfig auditlogConfig = node.getConfig().getAuditlogConfig();
-        if (auditlogConfig.isEnabled() && !HecatonFeature.AUDIT_LOG.isAvailable()) {
-            throw new IllegalStateException(HecatonFeature.AUDIT_LOG.notAvailableMessage());
         }
     }
 
@@ -531,8 +535,33 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public MemberSocketInterceptor getSocketInterceptor(EndpointQualifier endpointQualifier) {
-        logger.warning(HecatonFeature.SOCKET_INTERCEPTOR.notAvailableMessage());
-        return null;
+        // one interceptor per endpoint, created and initialized when the endpoint first needs it
+        return socketInterceptors.computeIfAbsent(endpointQualifier, this::createSocketInterceptor).orElse(null);
+    }
+
+    private Optional<MemberSocketInterceptor> createSocketInterceptor(EndpointQualifier endpointQualifier) {
+        AdvancedNetworkConfig advancedNetwork = node.getConfig().getAdvancedNetworkConfig();
+        EndpointConfig endpoint = advancedNetwork.isEnabled() ? advancedNetwork.getEndpointConfigs().get(endpointQualifier) : null;
+        SocketInterceptorConfig config = advancedNetwork.isEnabled()
+                ? (endpoint == null ? null : endpoint.getSocketInterceptorConfig())
+                : node.getConfig().getNetworkConfig().getSocketInterceptorConfig();
+        if (config == null || !config.isEnabled()) {
+            return Optional.empty();
+        }
+        Object implementation = config.getImplementation();
+        if (implementation == null) {
+            try {
+                implementation = ClassLoaderUtil.newInstance(node.getConfigClassLoader(), config.getClassName());
+            } catch (Exception e) {
+                throw new InvalidConfigurationException("Cannot create the socket interceptor " + config.getClassName(), e);
+            }
+        }
+        if (!(implementation instanceof MemberSocketInterceptor interceptor)) {
+            throw new InvalidConfigurationException("The socket interceptor of a member must implement "
+                    + MemberSocketInterceptor.class.getName() + ": " + implementation.getClass().getName());
+        }
+        interceptor.init(config.getProperties());
+        return Optional.of(interceptor);
     }
 
     @Override
@@ -790,7 +819,32 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public AuditlogService getAuditlogService() {
-        return NoOpAuditlogService.INSTANCE;
+        AuditlogService service = auditlogService;
+        if (service == null) {
+            synchronized (this) {
+                service = auditlogService;
+                if (service == null) {
+                    service = createAuditlogService(node.getConfig().getAuditlogConfig());
+                    auditlogService = service;
+                }
+            }
+        }
+        return service;
+    }
+
+    private AuditlogService createAuditlogService(AuditlogConfig config) {
+        if (!config.isEnabled()) {
+            return NoOpAuditlogService.INSTANCE;
+        }
+        try {
+            AuditlogServiceFactory factory = config.getFactoryClassName() == null
+                    ? new ILoggerAuditlogServiceFactory()
+                    : ClassLoaderUtil.newInstance(node.getConfigClassLoader(), config.getFactoryClassName());
+            factory.init(null, config.getProperties());
+            return factory.createAuditlog();
+        } catch (Exception e) {
+            throw new InvalidConfigurationException("Cannot create the audit log " + config.getFactoryClassName(), e);
+        }
     }
 
     @Override

@@ -16,6 +16,7 @@
 
 package uk.org.hecaton.security;
 
+import uk.org.hecaton.auditlog.impl.NoOpAuditlogService;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.SecurityConfig;
 import uk.org.hecaton.config.SymmetricEncryptionConfig;
@@ -33,6 +34,7 @@ import static uk.org.hecaton.test.Accessors.getNode;
 import static uk.org.hecaton.test.Accessors.getSerializationService;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 @RunWith(HecatonParallelClassRunner.class)
@@ -61,10 +63,11 @@ public class SecurityWithoutEnterpriseTest extends HecatonTestSupport {
     }
 
     @Test
-    public void testAuditlog() {
-        Config config = new Config();
+    public void auditlogIsAvailable() {
+        Config config = smallInstanceConfig();
         config.getAuditlogConfig().setEnabled(true);
-        assertThrows(IllegalStateException.class, () -> createHecatonInstance(config));
+        HecatonInstance hz = createHecatonInstance(config);
+        assertFalse(getNode(hz).getNodeExtension().getAuditlogService() instanceof NoOpAuditlogService);
     }
 
     @Test

@@ -180,16 +180,30 @@ public class HecatonClientExtension implements ClientExtension {
 
     @Override
     public SocketInterceptor createSocketInterceptor() {
-        LOGGER.warning(HecatonFeature.SOCKET_INTERCEPTOR.notAvailableMessage());
-        return null;
+        return createSocketInterceptor(client.getClientConfig().getNetworkConfig().getSocketInterceptorConfig());
     }
 
     @Override
     public SocketInterceptor createSocketInterceptor(SocketInterceptorConfig socketInterceptorConfig) {
-        if (socketInterceptorConfig != null && socketInterceptorConfig.isEnabled()) {
-            LOGGER.warning(HecatonFeature.SOCKET_INTERCEPTOR.notAvailableMessage());
+        if (socketInterceptorConfig == null || !socketInterceptorConfig.isEnabled()) {
+            return null;
         }
-        return null;
+        Object implementation = socketInterceptorConfig.getImplementation();
+        if (implementation == null) {
+            try {
+                implementation = ClassLoaderUtil.newInstance(client.getClientConfig().getClassLoader(),
+                        socketInterceptorConfig.getClassName());
+            } catch (Exception e) {
+                throw new InvalidConfigurationException("Cannot create the socket interceptor "
+                        + socketInterceptorConfig.getClassName(), e);
+            }
+        }
+        if (!(implementation instanceof SocketInterceptor interceptor)) {
+            throw new InvalidConfigurationException("The socket interceptor must implement "
+                    + SocketInterceptor.class.getName() + ": " + implementation.getClass().getName());
+        }
+        interceptor.init(socketInterceptorConfig.getProperties());
+        return interceptor;
     }
 
     @Override

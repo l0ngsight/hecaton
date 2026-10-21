@@ -33,9 +33,9 @@ public enum HecatonFeature {
     /** F2 (P1): LDAP and Kerberos realms. */
     LDAP_KERBEROS_AUTHENTICATION("F2", "LDAP and Kerberos authentication", "M9"),
     /** F4. */
-    AUDIT_LOG("F4", "Audit log", "M9"),
+    AUDIT_LOG("F4", "Audit log", "M9", null, true),
     /** F5. */
-    SOCKET_INTERCEPTOR("F5", "Socket interceptor", "M9"),
+    SOCKET_INTERCEPTOR("F5", "Socket interceptor", "M9", null, true),
     /** F6: not planned, TLS replaces it. */
     SYMMETRIC_ENCRYPTION("F6", "Symmetric encryption", null, "use TLS/SSL (F1) instead"),
     /** F7. */
