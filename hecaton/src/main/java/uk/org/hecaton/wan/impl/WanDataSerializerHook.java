@@ -21,6 +21,9 @@ import uk.org.hecaton.internal.serialization.DataSerializerHook;
 import uk.org.hecaton.internal.serialization.impl.FactoryIdHelper;
 import uk.org.hecaton.map.impl.wan.WanMapRemoveEvent;
 import uk.org.hecaton.map.impl.wan.WanMapAddOrUpdateEvent;
+import uk.org.hecaton.wan.impl.batch.WanBatchOperation;
+import uk.org.hecaton.wan.impl.batch.WanPartitionEvents;
+import uk.org.hecaton.wan.impl.batch.WanQueueRemoveOperation;
 import uk.org.hecaton.map.impl.wan.WanMapEntryView;
 import uk.org.hecaton.nio.serialization.DataSerializableFactory;
 
@@ -39,6 +42,9 @@ public class WanDataSerializerHook implements DataSerializerHook {
     public static final int WAN_MAP_ENTRY_VIEW = 2;
     public static final int WAN_CACHE_ENTRY_VIEW = 3;
     public static final int WAN_EVENT_CONTAINER_REPLICATION_OPERATION = 4;
+    public static final int WAN_BATCH_OPERATION = 5;
+    public static final int WAN_QUEUE_REMOVE_OPERATION = 6;
+    public static final int WAN_PARTITION_EVENTS = 7;
 
     @Override
     public int getFactoryId() {
@@ -53,6 +59,9 @@ public class WanDataSerializerHook implements DataSerializerHook {
             case WAN_MAP_ENTRY_VIEW -> new WanMapEntryView<>();
             case WAN_CACHE_ENTRY_VIEW -> new WanCacheEntryView<>();
             case WAN_EVENT_CONTAINER_REPLICATION_OPERATION -> new WanEventContainerReplicationOperation();
+            case WAN_BATCH_OPERATION -> new WanBatchOperation();
+            case WAN_QUEUE_REMOVE_OPERATION -> new WanQueueRemoveOperation();
+            case WAN_PARTITION_EVENTS -> new WanPartitionEvents();
             default -> throw new IllegalArgumentException("Unknown type-id: " + typeId);
         };
     }

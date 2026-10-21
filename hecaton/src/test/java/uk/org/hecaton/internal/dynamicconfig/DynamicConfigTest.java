@@ -72,6 +72,7 @@ import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.core.EntryEvent;
 import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.test.Accessors;
 import uk.org.hecaton.map.MapPartitionLostEvent;
 import uk.org.hecaton.map.listener.EntryAddedListener;
 import uk.org.hecaton.map.listener.MapPartitionLostListener;
@@ -88,7 +89,6 @@ import uk.org.hecaton.test.annotation.QuickTest;
 import uk.org.hecaton.topic.Message;
 import uk.org.hecaton.topic.MessageListener;
 import uk.org.hecaton.topic.TopicOverloadPolicy;
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -110,7 +110,7 @@ import static uk.org.hecaton.test.TestConfigUtils.NON_DEFAULT_BACKUP_COUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(HecatonParallelClassRunner.class)
 @Category({QuickTest.class, ParallelJVMTest.class})
@@ -141,15 +141,15 @@ public class DynamicConfigTest extends HecatonTestSupport {
     }
 
     @Test
-    public void testAddWanReplicationConfigIsNotSupported() {
+    public void testAddWanReplicationConfig() {
         WanReplicationConfig wanReplicationConfig = new WanReplicationConfig();
         wanReplicationConfig.setName(name);
 
-        UnsupportedOperationException exception = Assertions.catchThrowableOfType(
-                () -> getDriver().getConfig().addWanReplicationConfig(wanReplicationConfig),
-                UnsupportedOperationException.class);
-        assertNotNull(exception);
-        assertThat(exception).hasMessage("Adding new WAN config is not supported.");
+        getDriver().getConfig().addWanReplicationConfig(wanReplicationConfig);
+
+        for (HecatonInstance member : members) {
+            assertTrue(Accessors.getNode(member).getNodeEngine().getWanReplicationService().hasWanReplicationScheme(name));
+        }
     }
 
     @Test

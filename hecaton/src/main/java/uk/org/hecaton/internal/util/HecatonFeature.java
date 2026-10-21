@@ -51,7 +51,7 @@ public enum HecatonFeature {
     /** F9. */
     CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9"),
     /** F13. */
-    WAN_REPLICATION("F13", "WAN replication", "M7"),
+    WAN_REPLICATION("F13", "WAN replication", "M7", null, true),
     /** F13: synchronization and consistency checks. */
     WAN_SYNC("F13", "WAN synchronization", "M9"),
     /** F16. */

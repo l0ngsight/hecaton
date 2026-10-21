@@ -20,6 +20,7 @@ import uk.org.hecaton.config.WanAcknowledgeType;
 import uk.org.hecaton.wan.impl.InternalWanEvent;
 
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 /**
@@ -37,6 +38,21 @@ public interface WanSupportingService {
      *                        appropriate member
      */
     void onReplicationEvent(InternalWanEvent event, WanAcknowledgeType acknowledgeType);
+
+    /**
+     * Applies a WAN replication event without waiting for it.
+     *
+     * @param event the event
+     * @return completes when the event has been applied
+     */
+    default CompletionStage<Void> applyReplicationEvent(InternalWanEvent event) {
+        try {
+            onReplicationEvent(event, WanAcknowledgeType.ACK_ON_OPERATION_COMPLETE);
+            return CompletableFuture.completedFuture(null);
+        } catch (RuntimeException e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
 
     /**
      * Processes a WAN sync batch asynchronously.
