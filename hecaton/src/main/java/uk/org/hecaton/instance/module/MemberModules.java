@@ -48,8 +48,10 @@ public final class MemberModules {
                 }
             }
             this.modules.add(module);
-            for (Class<?> type : module.getClass().getInterfaces()) {
-                addCapabilities(type, module);
+            for (Class<?> c = module.getClass(); c != null; c = c.getSuperclass()) {
+                for (Class<?> type : c.getInterfaces()) {
+                    addCapabilities(type, module);
+                }
             }
         }
     }

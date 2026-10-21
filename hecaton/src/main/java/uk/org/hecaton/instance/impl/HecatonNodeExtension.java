@@ -47,6 +47,8 @@ import uk.org.hecaton.hotrestart.HotRestartService;
 import uk.org.hecaton.instance.BuildInfo;
 import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.instance.EndpointQualifier;
+import uk.org.hecaton.instance.module.MemberModules;
+import uk.org.hecaton.instance.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.ascii.TextCommandService;
 import uk.org.hecaton.internal.ascii.TextCommandServiceImpl;
 import uk.org.hecaton.internal.cluster.ClusterStateListener;
@@ -139,6 +141,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -523,6 +526,13 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public MemoryStats getMemoryStats() {
+        MemberModules modules = node.getMemberModules();
+        if (modules != null) {
+            Optional<NativeMemoryCapability> nativeMemory = modules.find(NativeMemoryCapability.class);
+            if (nativeMemory.isPresent()) {
+                return nativeMemory.get().memoryStats();
+            }
+        }
         return memoryStats;
     }
 

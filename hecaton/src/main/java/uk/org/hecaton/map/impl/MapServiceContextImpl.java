@@ -21,6 +21,7 @@ import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.PartitioningAttributeConfig;
 import uk.org.hecaton.config.PartitioningStrategyConfig;
+import uk.org.hecaton.instance.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.eviction.ExpirationManager;
 import uk.org.hecaton.internal.nio.Disposable;
 import uk.org.hecaton.internal.partition.IPartitionService;
@@ -75,6 +76,7 @@ import uk.org.hecaton.query.impl.IndexProvider;
 import uk.org.hecaton.query.impl.getters.Extractors;
 import uk.org.hecaton.query.impl.predicates.QueryOptimizer;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.eventservice.EventFilter;
 import uk.org.hecaton.spi.impl.eventservice.EventRegistration;
 import uk.org.hecaton.spi.impl.eventservice.EventService;
@@ -871,6 +873,11 @@ class MapServiceContextImpl implements MapServiceContext {
         assert partitionId != GENERIC_PARTITION_ID : "Cannot be called with GENERIC_PARTITION_ID";
 
         ILogger logger = nodeEngine.getLogger(DefaultRecordStore.class);
+        if (mapContainer.getMapConfig().getInMemoryFormat() == InMemoryFormat.NATIVE) {
+            return ((NodeEngineImpl) nodeEngine).getNode().getMemberModules()
+                    .require(NativeMemoryCapability.class, "NATIVE in-memory format")
+                    .createMapRecordStore(mapContainer, partitionId, keyLoader, logger);
+        }
         return new DefaultRecordStore(mapContainer, partitionId, keyLoader, logger);
     }
 

@@ -15,9 +15,26 @@
  */
 package uk.org.hecaton.instance.module;
 
+import uk.org.hecaton.internal.memory.MemoryStats;
+import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.map.impl.MapContainer;
+import uk.org.hecaton.map.impl.MapKeyLoader;
+import uk.org.hecaton.map.impl.recordstore.RecordStore;
+
 /**
- * High-Density memory (F11), provided by {@code uk.org.hecaton:hecaton-hd}. Its operations are added when the
- * module is implemented.
+ * High-Density memory (F11), provided by {@code uk.org.hecaton:hecaton-hd}: data of structures
+ * with the {@code NATIVE} in-memory format is kept outside the Java heap.
  */
 public non-sealed interface NativeMemoryCapability extends MemberCapability {
+
+    /**
+     * Memory statistics of the member, including its native memory.
+     */
+    MemoryStats memoryStats();
+
+    /**
+     * Creates the record store of one partition of a map with the {@code NATIVE} in-memory format.
+     */
+    RecordStore createMapRecordStore(MapContainer mapContainer, int partitionId, MapKeyLoader keyLoader,
+                                     ILogger logger);
 }

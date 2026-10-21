@@ -19,6 +19,12 @@ package uk.org.hecaton.instance.module;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.memory.DefaultMemoryStats;
+import uk.org.hecaton.internal.memory.MemoryStats;
+import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.map.impl.MapContainer;
+import uk.org.hecaton.map.impl.MapKeyLoader;
+import uk.org.hecaton.map.impl.recordstore.RecordStore;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
 import uk.org.hecaton.test.annotation.ParallelJVMTest;
@@ -95,7 +101,7 @@ public class MemberModulesTest extends HecatonTestSupport {
         }
     }
 
-    public static class HdModule implements MemberModule, NativeMemoryCapability {
+    public static class HdModule extends FakeNativeMemory implements MemberModule {
 
         volatile Node initializedWith;
 
@@ -110,11 +116,28 @@ public class MemberModulesTest extends HecatonTestSupport {
         }
     }
 
-    public static class OtherHdModule implements MemberModule, NativeMemoryCapability {
+    public static class OtherHdModule extends FakeNativeMemory implements MemberModule {
 
         @Override
         public String name() {
             return "other-hd";
+        }
+    }
+
+    /** A {@link NativeMemoryCapability} that only reports heap statistics. */
+    abstract static class FakeNativeMemory implements NativeMemoryCapability {
+
+        private final MemoryStats memoryStats = new DefaultMemoryStats();
+
+        @Override
+        public MemoryStats memoryStats() {
+            return memoryStats;
+        }
+
+        @Override
+        public RecordStore createMapRecordStore(MapContainer mapContainer, int partitionId, MapKeyLoader keyLoader,
+                                                ILogger logger) {
+            throw new UnsupportedOperationException();
         }
     }
 }

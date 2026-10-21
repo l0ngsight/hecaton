@@ -84,8 +84,7 @@ abstract class AbstractRecordStore implements RecordStore<Record> {
         this.mutationObserver = new CompositeMutationObserver<>();
     }
 
-    // overridden in different context
-    RecordFactory createRecordFactory() {
+    protected RecordFactory createRecordFactory() {
         MapConfig mapConfig = mapContainer.getMapConfig();
         switch (mapConfig.getInMemoryFormat()) {
             case BINARY:
