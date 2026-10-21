@@ -34,6 +34,7 @@ import uk.org.hecaton.persistence.internal.cluster.RecoveryService;
 import uk.org.hecaton.persistence.internal.map.MapPersistenceObserver;
 import uk.org.hecaton.persistence.internal.store.LogSettings;
 import uk.org.hecaton.spi.properties.ClusterProperty;
+import uk.org.hecaton.spi.properties.HecatonProperty;
 import uk.org.hecaton.version.Version;
 
 import java.nio.file.Path;
@@ -44,6 +45,10 @@ import java.util.UUID;
  * cluster (see {@code docs/design/persistence.md}).
  */
 public class PersistenceModule implements MemberModule, PersistenceCapability {
+
+    /** Size at which a partition's active chunk file is closed and a new one started. */
+    public static final HecatonProperty MAX_CHUNK_SIZE =
+            new HecatonProperty("hecaton.persistence.max.chunk.size", LogSettings.DEFAULT.maxChunkSize());
 
     static final String DATA = "data";
     static final String CLUSTER = "cluster";
@@ -72,7 +77,9 @@ public class PersistenceModule implements MemberModule, PersistenceCapability {
         }
         Path dir = directory.path();
         int partitionCount = node.getProperties().getInteger(ClusterProperty.PARTITION_COUNT);
-        dataStore = new DataStore(dir.resolve(DATA), partitionCount, LogSettings.DEFAULT);
+        LogSettings settings = new LogSettings(node.getProperties().getLong(MAX_CHUNK_SIZE),
+                LogSettings.DEFAULT.compactionGarbageRatio());
+        dataStore = new DataStore(dir.resolve(DATA), partitionCount, settings);
         recovery = new RecoveryService(node, new ClusterMetadata(dir.resolve(CLUSTER)),
                 new LocalPartitionData(dataStore, node::getNodeEngine), uuid);
         backup = new BackupService(node, dataStore, dir, partitionCount);
