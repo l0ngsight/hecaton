@@ -34,7 +34,11 @@ public final class ValueComparatorUtil {
             case OBJECT:
                 return ObjectValueComparator.INSTANCE;
             case NATIVE:
-                throw new IllegalArgumentException(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage());
+                // High-Density records hand out values as heap Data
+                if (!HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable()) {
+                    throw new IllegalArgumentException(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage());
+                }
+                return BinaryValueComparator.INSTANCE;
             default:
                 throw new IllegalArgumentException("Invalid storage format: " + inMemoryFormat);
 

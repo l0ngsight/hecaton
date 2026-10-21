@@ -45,7 +45,7 @@ public enum HecatonFeature {
     /** F10. */
     PERSISTENCE("F10", "Persistence (Hot Restart)", "M6"),
     /** F11. */
-    HIGH_DENSITY_MEMORY("F11", "High-Density memory (NATIVE in-memory format)", "M5"),
+    HIGH_DENSITY_MEMORY("F11", "High-Density memory (NATIVE in-memory format)", "M5", null, false, "hd"),
     /** F12. */
     TIERED_STORE("F12", "Tiered Storage", "M10"),
     /** F9. */
@@ -80,6 +80,7 @@ public enum HecatonFeature {
     private final String milestone;
     private final String alternative;
     private final boolean available;
+    private final String module;
 
     HecatonFeature(String id, String displayName, String milestone) {
         this(id, displayName, milestone, null, false);
@@ -90,16 +91,29 @@ public enum HecatonFeature {
     }
 
     HecatonFeature(String id, String displayName, String milestone, String alternative, boolean available) {
+        this(id, displayName, milestone, alternative, available, null);
+    }
+
+    /**
+     * @param module the member module that provides the feature ({@code uk.org.hecaton:hecaton-<module>}),
+     *               or null if core does
+     */
+    HecatonFeature(String id, String displayName, String milestone, String alternative, boolean available,
+                   String module) {
         this.id = id;
         this.displayName = displayName;
         this.milestone = milestone;
         this.alternative = alternative;
         this.available = available;
+        this.module = module;
     }
 
-    /** Whether Hecaton implements the feature. */
+    /**
+     * Whether Hecaton implements the feature. A feature provided by a member module is available
+     * when the module is on the classpath.
+     */
     public boolean isAvailable() {
-        return available;
+        return available || (module != null && InstalledMemberModules.contains(module));
     }
 
     /** The spec ID, such as {@code F1}. */
@@ -110,6 +124,9 @@ public enum HecatonFeature {
     /** Why the feature cannot be used: not implemented yet (and when it is planned), or not supported. */
     public String notAvailableMessage() {
         String name = "-".equals(id) ? displayName : displayName + " (" + id + ")";
+        if (module != null) {
+            return name + " requires uk.org.hecaton:hecaton-" + module + " on the member's classpath.";
+        }
         if (milestone == null) {
             return name + " is not supported by Hecaton" + (alternative == null ? "." : "; " + alternative + ".");
         }

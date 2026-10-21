@@ -303,13 +303,13 @@ Est.: 2–3 ew.
 
 | Step | Work | Est. |
 |---|---|---|
-| F11.1 | **FFM memory layer** (Java 25): `MemorySegment`-based `MemoryAllocator` with STANDARD (malloc-like via `Arena`) and POOLED (power-of-two buddy allocator with page/min-block sizes per `NativeMemoryConfig`), metadata space, thread-local allocation caches, native OOM handling, `MemoryStats`. | 4 ew |
-| F11.2 | Off-heap data structures: open-addressing hash map with off-heap keys/values, slab-allocated records, off-heap `Data` (serialized) representation, concurrent iteration for migration/replication. | 4 ew |
-| F11.3 | HD record stores for IMap (`createService(MapService)` → HD-aware `MapServiceContext`): records, expiry, eviction (LRU/LFU/RANDOM sampling on native), backups, migration, entry processors, queries. | 4 ew |
-| F11.4 | HD ICache record store (JCache semantics, eviction). | 2 ew |
-| F11.5 | HD indexes: off-heap sorted (B+tree) and hash indexes; config validation (no BITMAP on NATIVE, matching upstream). | 3 ew |
-| F11.6 | Member-side HD Near Cache. | 1 ew |
-| Tests/perf | Upstream map/cache suites parameterised with `InMemoryFormat.NATIVE`, leak detector (allocator accounting in tests), JMH, a 100 GB GC-pause benchmark. | incl. |
+| F11.1 — done (thread-local pools; free blocks of other pools are used when no page fits) | **FFM memory layer** (Java 25): `MemorySegment`-based `MemoryAllocator` with STANDARD (malloc-like via `Arena`) and POOLED (power-of-two buddy allocator with page/min-block sizes per `NativeMemoryConfig`), metadata space, thread-local allocation caches, native OOM handling, `MemoryStats`. | 4 ew |
+| F11.2 — done (sorted open-addressing table: iteration cursors survive resizes and changes) | Off-heap data structures: open-addressing hash map with off-heap keys/values, slab-allocated records, off-heap `Data` (serialized) representation, concurrent iteration for migration/replication. | 4 ew |
+| F11.3 — done (expiry metadata of entries with a TTL stays on the heap; native max-size policies; forced eviction on native OOM) | HD record stores for IMap (`createService(MapService)` → HD-aware `MapServiceContext`): records, expiry, eviction (LRU/LFU/RANDOM sampling on native), backups, migration, entry processors, queries. | 4 ew |
+| F11.4 — done | HD ICache record store (JCache semantics, eviction). | 2 ew |
+| F11.5 — partial: indexes of `NATIVE` maps are on the heap; BITMAP refused as upstream. Off-heap index stores open | HD indexes: off-heap sorted (B+tree) and hash indexes; config validation (no BITMAP on NATIVE, matching upstream). | 3 ew |
+| F11.6 — done (records on the heap, values native) | Member-side HD Near Cache. | 1 ew |
+| Tests/perf — suites done (nightly `hd-native-suites`: core's map and query tests with `NATIVE`; allocator accounting in `hecaton-hd`'s tests); JMH and the GC-pause benchmark open | Upstream map/cache suites parameterised with `InMemoryFormat.NATIVE`, leak detector (allocator accounting in tests), JMH, a 100 GB GC-pause benchmark. | incl. |
 
 ---
 

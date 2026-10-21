@@ -55,7 +55,7 @@ public abstract class BaseHeapNearCacheRecordStore<K, V, R extends NearCacheReco
     private final BiFunction<? super K, ? super R, ? extends R> invalidatorFunction = createInvalidatorFunction();
     private final BoundedExpirationStrategy<Map.Entry<K, R>> expirationStrategy;
 
-    BaseHeapNearCacheRecordStore(String name, NearCacheConfig nearCacheConfig, SerializationService serializationService,
+    protected BaseHeapNearCacheRecordStore(String name, NearCacheConfig nearCacheConfig, SerializationService serializationService,
                                  ClassLoader classLoader, HecatonProperties properties) {
         super(nearCacheConfig, serializationService, classLoader);
 

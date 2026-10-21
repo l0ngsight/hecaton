@@ -45,6 +45,14 @@ public class HecatonFeatureTest {
     }
 
     @Test
+    public void moduleFeatureNamesItsArtifact() {
+        assertThat(HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable()).isFalse();
+        assertThat(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage())
+                .isEqualTo("High-Density memory (NATIVE in-memory format) (F11) requires uk.org.hecaton:hecaton-hd"
+                        + " on the member's classpath.");
+    }
+
+    @Test
     public void noMessageMentionsAnEnterpriseEdition() {
         for (HecatonFeature feature : HecatonFeature.values()) {
             assertThat(feature.notAvailableMessage()).doesNotContainIgnoringCase("enterprise");

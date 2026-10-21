@@ -17,6 +17,7 @@
 
   nightly.py matrix                         JSON job matrix (stdout)
   nightly.py modules --group G              Maven -pl value for a group
+  nightly.py args --group G                 extra Maven arguments of a group, one per line
   nightly.py shard --root DIR --module M --shard I --shards N
                                             comma-separated test classes for one shard
   nightly.py report --reports DIR [--baseline F] [--known F]
@@ -33,7 +34,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 # Logical test groups. "shards" > 1 splits one module's test classes across jobs;
-# groups with several modules run all their tests in one job.
+# groups with several modules run all their tests in one job. "args" are extra Maven arguments.
 GROUPS = [
     {"group": "core", "shards": 20, "modules": ["hecaton"]},
     {"group": "sql", "shards": 6, "modules": ["hecaton-sql"]},
@@ -46,6 +47,13 @@ GROUPS = [
     {"group": "ext-stores", "shards": 1, "modules": [
         "extensions/mongodb", "extensions/elasticsearch/elasticsearch-7", "extensions/cdc-debezium",
         "extensions/cdc-mysql", "extensions/cdc-postgres", "extensions/hadoop", "extensions/mapstore"]},
+    {"group": "hd", "shards": 1, "modules": ["hecaton-hd"]},
+    # core's map and query tests with NATIVE as the default map in-memory format (hecaton-hd)
+    {"group": "hd-native-suites", "shards": 1, "modules": ["hecaton-hd"], "args": [
+        "-Pnative-suites",
+        # clock tests patch core classes in target/classes, which the jar of core's tests lacks
+        "-Dtest=uk.org.hecaton.map.**.*Test,uk.org.hecaton.query.**.*Test,!**/*ClockTest",
+        "-Dsurefire.failIfNoSpecifiedTests=false"]},
 ]
 
 TEST_ANNOTATION = re.compile(r"@(?:Test|ParameterizedTest|RepeatedTest|TestFactory|TestTemplate)\b")
@@ -69,6 +77,11 @@ def group_by_name(name):
 
 def cmd_modules(args):
     print(",".join(group_by_name(args.group)["modules"]))
+
+
+def cmd_args(args):
+    for arg in group_by_name(args.group).get("args", []):
+        print(arg)
 
 
 def cmd_shard(args):
@@ -169,6 +182,8 @@ def main():
     sub.add_parser("matrix")
     p = sub.add_parser("modules")
     p.add_argument("--group", required=True)
+    p = sub.add_parser("args")
+    p.add_argument("--group", required=True)
     p = sub.add_parser("shard")
     p.add_argument("--root", required=True)
     p.add_argument("--module", required=True)
@@ -181,7 +196,8 @@ def main():
     p.add_argument("--failures-out")
     p.add_argument("--summary-out")
     args = parser.parse_args()
-    {"matrix": cmd_matrix, "modules": cmd_modules, "shard": cmd_shard, "report": cmd_report}[args.cmd](args)
+    {"matrix": cmd_matrix, "modules": cmd_modules, "args": cmd_args, "shard": cmd_shard,
+     "report": cmd_report}[args.cmd](args)
 
 
 if __name__ == "__main__":

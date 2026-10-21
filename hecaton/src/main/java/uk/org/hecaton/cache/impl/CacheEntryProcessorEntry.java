@@ -128,7 +128,8 @@ public class CacheEntryProcessorEntry<K, V, R extends CacheRecord>
     protected V getRecordValue(R record) {
         final Object objValue;
         switch (cacheRecordStore.cacheConfig.getInMemoryFormat()) {
-            case BINARY:
+            // High-Density records hand out their values as heap Data
+            case BINARY, NATIVE:
                 objValue = cacheRecordStore.cacheService.toObject(record.getValue());
                 break;
             case OBJECT:

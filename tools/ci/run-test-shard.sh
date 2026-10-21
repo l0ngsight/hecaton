@@ -21,6 +21,9 @@ java -version
 ./mvnw -B -ntp -T 1C -pl "$modules" -am install -DskipTests "${skip[@]}"
 
 test_args=()
+while IFS= read -r arg; do
+    [ -n "$arg" ] && test_args+=("$arg")
+done < <(python3 "$tools/nightly.py" args --group "$group")
 if [ "$shards" -gt 1 ]; then
     tests="$(python3 "$tools/nightly.py" shard --root . --module "$modules" --shard "$shard" --shards "$shards")"
     echo "Shard $shard/$shards: $(tr ',' '\n' <<<"$tests" | wc -l) test classes"

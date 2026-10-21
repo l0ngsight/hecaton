@@ -21,6 +21,7 @@ import uk.org.hecaton.cache.impl.operation.CacheReplicationOperation;
 import uk.org.hecaton.config.CacheConfig;
 import uk.org.hecaton.config.CacheSimpleConfig;
 import uk.org.hecaton.config.InMemoryFormat;
+import uk.org.hecaton.instance.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.nearcache.impl.invalidation.MetaDataGenerator;
 import uk.org.hecaton.internal.partition.MigrationAwareService;
 import uk.org.hecaton.internal.partition.PartitionMigrationEvent;
@@ -29,6 +30,7 @@ import uk.org.hecaton.internal.services.DistributedObjectNamespace;
 import uk.org.hecaton.internal.services.ObjectNamespace;
 import uk.org.hecaton.internal.services.ServiceNamespace;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 
 import javax.annotation.Nonnull;
@@ -70,6 +72,16 @@ public class CacheService extends AbstractCacheService {
 
     @Override
     protected ICacheRecordStore createNewRecordStore(String cacheNameWithPrefix, int partitionId) {
+        CacheConfig cacheConfig = getCacheConfig(cacheNameWithPrefix);
+        if (cacheConfig != null && cacheConfig.getInMemoryFormat() == InMemoryFormat.NATIVE) {
+            ICacheRecordStore recordStore = ((NodeEngineImpl) nodeEngine).getNode().getMemberModules()
+                    .require(NativeMemoryCapability.class, "NATIVE in-memory format")
+                    .createCacheRecordStore(cacheNameWithPrefix, partitionId, nodeEngine, this);
+            if (recordStore instanceof AbstractCacheRecordStore<?, ?> abstractRecordStore) {
+                abstractRecordStore.instrument(nodeEngine);
+            }
+            return recordStore;
+        }
         CacheRecordStore recordStore = new CacheRecordStore(cacheNameWithPrefix, partitionId, nodeEngine, this);
         recordStore.instrument(nodeEngine);
         return recordStore;

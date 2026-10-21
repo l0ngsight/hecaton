@@ -51,6 +51,7 @@
         <module>hecaton-spring-tests</module>
         <module>hecaton-build-utils</module>
         <module>hecaton-sql</module>
+        <module>hecaton-hd</module>
         <module>hecaton-member</module>
         <module>hecaton-migrate</module>
         <module>hecaton-migrate-rewrite</module>

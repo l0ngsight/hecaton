@@ -48,8 +48,10 @@ public final class MemberModules {
                 }
             }
             this.modules.add(module);
-            for (Class<?> type : module.getClass().getInterfaces()) {
-                addCapabilities(type, module);
+            for (Class<?> c = module.getClass(); c != null; c = c.getSuperclass()) {
+                for (Class<?> type : c.getInterfaces()) {
+                    addCapabilities(type, module);
+                }
             }
         }
     }
@@ -79,6 +81,17 @@ public final class MemberModules {
         for (MemberModule module : modules) {
             logger.info("Member module " + module.name() + " (" + module.getClass().getName() + ")");
             module.init(node);
+        }
+    }
+
+    /** Shuts every module down ({@link MemberModule#shutdown}); a failure is logged, the others still run. */
+    public void shutdown(boolean terminate, ILogger logger) {
+        for (MemberModule module : modules) {
+            try {
+                module.shutdown(terminate);
+            } catch (RuntimeException e) {
+                logger.warning("Member module " + module.name() + " failed to shut down", e);
+            }
         }
     }
 

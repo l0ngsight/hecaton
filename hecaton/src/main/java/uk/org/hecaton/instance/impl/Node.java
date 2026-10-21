@@ -667,6 +667,9 @@ public class Node {
             nodeEngine.shutdown(terminate);
         }
 
+        if (memberModules != null) {
+            memberModules.shutdown(terminate, logger);
+        }
         if (securityContext != null) {
             securityContext.destroy();
         }

@@ -315,7 +315,8 @@ public class IndexCreateTest extends HecatonTestSupport {
         @Override
         public List<HecatonInstanceProxy> initialize(TestHecatonFactory hecatonFactory,
             IndexConfig... indexConfigs) {
-            Config config = new Config();
+            // an explicit map configuration, so BITMAP indexes also work when maps default to NATIVE
+            Config config = new Config().addMapConfig(new MapConfig(MAP_NAME));
 
             HecatonInstanceProxy member = (HecatonInstanceProxy) hecatonFactory.newHecatonInstance(config);
             HecatonInstanceProxy member2 = (HecatonInstanceProxy) hecatonFactory.newHecatonInstance(config);
@@ -358,7 +359,8 @@ public class IndexCreateTest extends HecatonTestSupport {
         @Override
         public List<HecatonInstanceProxy> initialize(TestHecatonFactory hecatonFactory,
             IndexConfig... indexConfigs) {
-            Config config = new Config();
+            // an explicit map configuration, so BITMAP indexes also work when maps default to NATIVE
+            Config config = new Config().addMapConfig(new MapConfig(MAP_NAME));
 
             HecatonInstanceProxy member = (HecatonInstanceProxy) hecatonFactory.newHecatonInstance(config);
             HecatonInstanceProxy member2 = (HecatonInstanceProxy) hecatonFactory.newHecatonInstance(config);
