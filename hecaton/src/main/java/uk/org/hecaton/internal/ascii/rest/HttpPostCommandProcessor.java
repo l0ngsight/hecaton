@@ -22,6 +22,7 @@ import uk.org.hecaton.cp.CPSubsystem;
 import uk.org.hecaton.cp.CPSubsystemManagementService;
 import uk.org.hecaton.internal.ascii.TextCommandService;
 import uk.org.hecaton.internal.cluster.ClusterService;
+import uk.org.hecaton.internal.dynamicconfig.ConfigUpdateResult;
 import uk.org.hecaton.internal.dynamicconfig.ConfigurationService;
 import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonArray;
@@ -642,20 +643,20 @@ public class HttpPostCommandProcessor extends HttpCommandProcessor<HttpPostComma
         prepareResponse(command, response(SUCCESS, "message", "log level is reset"));
     }
 
+    /** Reloads the member's configuration file and adds its new data structure configurations (F16). */
     protected void handleConfigReload(HttpPostCommand command) {
-        prepareResponse(
-                SC_500,
-                command,
-                response(FAIL, "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage())
-        );
+        decodeParamsAndAuthenticate(command, 2);
+        ConfigurationService configurationService = getNode().getNodeEngine().getService(ConfigurationService.SERVICE_NAME);
+        ConfigUpdateResult result = configurationService.update();
+        prepareResponse(command, response(SUCCESS, "message", "Configuration reloaded").merge(result.toJson()));
     }
 
+    /** Adds the data structure configurations of the configuration sent as the third parameter (F16). */
     protected void handleConfigUpdate(HttpPostCommand command) {
-        prepareResponse(
-                SC_500,
-                command,
-                response(FAIL, "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage())
-        );
+        String[] params = decodeParamsAndAuthenticate(command, 3);
+        ConfigurationService configurationService = getNode().getNodeEngine().getService(ConfigurationService.SERVICE_NAME);
+        UUID id = configurationService.updateAsync(params[2]);
+        prepareResponse(command, response(SUCCESS, "message", "Configuration update started", "uuid", id.toString()));
     }
 
     private void handleTcpIpConfigMemberList(HttpPostCommand command) {

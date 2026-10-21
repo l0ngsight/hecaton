@@ -29,7 +29,6 @@ import uk.org.hecaton.internal.ascii.rest.RestValue;
 import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonObject;
 import uk.org.hecaton.internal.management.dto.WanReplicationConfigDTO;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.TestAwareInstanceFactory;
@@ -248,7 +247,7 @@ public class RestTest {
         String result = communicator.syncMapOverWAN(config.getClusterName(), "", "atob", "b", "default");
         assertJsonContains(result,
                 "status", "fail",
-                "message", "WAN sync for map is not supported.");
+                "message", "WAN Replication Config doesn't exist with WAN configuration name atob and publisher ID b");
     }
 
     @Test
@@ -257,7 +256,7 @@ public class RestTest {
         String result = communicator.syncMapsOverWAN(config.getClusterName(), "", "atob", "b");
         assertJsonContains(result,
                 "status", "fail",
-                "message", "WAN sync is not supported.");
+                "message", "WAN Replication Config doesn't exist with WAN configuration name atob and publisher ID b");
     }
 
     @Test
@@ -268,10 +267,10 @@ public class RestTest {
         int responseCode = response.responseCode;
         String result = response.response;
 
-        assertEquals(500, responseCode);
+        assertEquals(200, responseCode);
         assertJsonContains(result,
-                "status", "fail",
-                "message", HecatonFeature.WAN_SYNC.notAvailableMessage());
+                "status", "success",
+                "syncStatus", "READY");
     }
 
     @Test

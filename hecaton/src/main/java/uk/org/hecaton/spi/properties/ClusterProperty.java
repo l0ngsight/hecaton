@@ -785,6 +785,22 @@ public final class ClusterProperty {
     public static final HecatonProperty INIT_CLUSTER_VERSION
             = new HecatonProperty("hecaton.init.cluster.version");
 
+    /**
+     * Rolling upgrades (F14): when enabled, the master changes the cluster version to the lowest
+     * codebase version of the members once all of them run a newer version than the cluster's
+     * (and there are at least {@link #CLUSTER_VERSION_AUTO_UPGRADE_MIN_CLUSTER_SIZE} members).
+     * Otherwise the cluster version is changed with {@code Cluster#changeClusterVersion}.
+     */
+    public static final HecatonProperty CLUSTER_VERSION_AUTO_UPGRADE_ENABLED
+            = new HecatonProperty("hecaton.cluster.version.auto.upgrade.enabled", false);
+
+    /**
+     * The number of members a cluster needs before {@link #CLUSTER_VERSION_AUTO_UPGRADE_ENABLED automatic
+     * upgrades} change its version.
+     */
+    public static final HecatonProperty CLUSTER_VERSION_AUTO_UPGRADE_MIN_CLUSTER_SIZE
+            = new HecatonProperty("hecaton.cluster.version.auto.upgrade.min.cluster.size", 1);
+
 
     /*
      * METRICS / MONITORING PROPERTIES

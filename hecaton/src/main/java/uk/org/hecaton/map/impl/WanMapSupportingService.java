@@ -19,7 +19,6 @@ package uk.org.hecaton.map.impl;
 import uk.org.hecaton.config.WanAcknowledgeType;
 import uk.org.hecaton.internal.serialization.SerializationService;
 import uk.org.hecaton.internal.services.WanSupportingService;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.impl.operation.MapOperation;
 import uk.org.hecaton.map.impl.operation.MapOperationProvider;
 import uk.org.hecaton.map.impl.wan.WanMapAddOrUpdateEvent;
@@ -75,7 +74,7 @@ class WanMapSupportingService implements WanSupportingService {
     @Override
     public CompletionStage<Void> onSyncBatch(Collection<InternalWanEvent> batch, WanAcknowledgeType acknowledgeType) {
         // code should never reach here
-        throw new UnsupportedOperationException(HecatonFeature.WAN_SYNC.notAvailableMessage());
+        throw new UnsupportedOperationException("WAN sync events are applied as replication events");
     }
 
     @Override

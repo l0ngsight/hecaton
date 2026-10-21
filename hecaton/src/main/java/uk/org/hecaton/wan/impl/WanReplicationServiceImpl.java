@@ -16,17 +16,15 @@
 
 package uk.org.hecaton.wan.impl;
 
+import uk.org.hecaton.auditlog.AuditlogTypeIds;
 import uk.org.hecaton.cache.impl.ICacheService;
 import uk.org.hecaton.config.AbstractWanPublisherConfig;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
-import uk.org.hecaton.config.WanConsumerConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.core.ManagedContext;
 import uk.org.hecaton.instance.impl.Node;
-import uk.org.hecaton.internal.management.events.WanConsistencyCheckIgnoredEvent;
-import uk.org.hecaton.internal.management.events.WanSyncIgnoredEvent;
 import uk.org.hecaton.internal.monitor.LocalWanStats;
 import uk.org.hecaton.internal.monitor.WanSyncState;
 import uk.org.hecaton.internal.monitor.impl.LocalWanStatsImpl;
@@ -44,7 +42,6 @@ import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.version.Version;
-import uk.org.hecaton.wan.WanConsumer;
 import uk.org.hecaton.wan.WanEventCounters;
 import uk.org.hecaton.wan.WanMigrationAwarePublisher;
 import uk.org.hecaton.wan.WanPublisher;
@@ -54,7 +51,6 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -102,12 +98,15 @@ public class WanReplicationServiceImpl implements WanReplicationService,
     private final ConstructorFunction<String, DelegatingWanScheme> publisherDelegateConstructor;
     /** WAN replication configs added at runtime. */
     private final ConcurrentMap<String, WanReplicationConfig> addedConfigs = createConcurrentHashMap(1);
-    /** Custom WAN consumers, by WAN replication name; created once the member has started. */
-    private final Map<String, WanConsumer> consumers = new HashMap<>();
+    private final WanSyncCoordinator syncCoordinator;
+    /** Custom WAN consumers; created once the member has started. */
+    private final WanConsumers consumers;
     private boolean started;
 
     public WanReplicationServiceImpl(Node node) {
         this.node = node;
+        this.syncCoordinator = new WanSyncCoordinator(node, this);
+        this.consumers = new WanConsumers(node);
         this.publisherDelegateConstructor = name -> {
             final WanReplicationConfig wanReplicationConfig = wanReplicationConfig(name);
             if (wanReplicationConfig == null) {
@@ -229,8 +228,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
                 }
             }
             wanReplications.clear();
-            consumers.values().forEach(WanConsumer::shutdown);
-            consumers.clear();
+            consumers.shutdown();
         }
     }
 
@@ -246,21 +244,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
     }
 
     private void startConsumer(WanReplicationConfig config) {
-        WanConsumerConfig consumerConfig = config.getConsumerConfig();
-        if (consumerConfig == null || consumers.containsKey(config.getName())
-                || consumerConfig.getImplementation() == null && consumerConfig.getClassName() == null) {
-            return;
-        }
-        WanConsumer consumer;
-        try {
-            consumer = getOrCreate(consumerConfig.getImplementation(), node.getConfigClassLoader(),
-                    consumerConfig.getClassName());
-        } catch (Exception e) {
-            throw new InvalidConfigurationException("Cannot create the WAN consumer " + consumerConfig.getClassName(), e);
-        }
-        consumer = (WanConsumer) node.getSerializationService().getManagedContext().initialize(consumer);
-        consumer.init(config.getName(), consumerConfig);
-        consumers.put(config.getName(), consumer);
+        consumers.start(config);
     }
 
     @Override
@@ -289,29 +273,23 @@ public class WanReplicationServiceImpl implements WanReplicationService,
 
     @Override
     public UUID syncMap(String wanReplicationName, String wanPublisherId, String mapName) {
-        node.getManagementCenterService().log(
-                WanSyncIgnoredEvent.enterpriseOnly(wanReplicationName, wanPublisherId, mapName));
-        throw new UnsupportedOperationException("WAN sync for map is not supported.");
+        return syncCoordinator.syncMap(wanReplicationName, wanPublisherId, mapName);
     }
 
     @Override
     public UUID syncAllMaps(String wanReplicationName, String wanPublisherId) {
-        node.getManagementCenterService().log(
-                WanSyncIgnoredEvent.enterpriseOnly(wanReplicationName, wanPublisherId, null));
-        throw new UnsupportedOperationException("WAN sync is not supported.");
+        return syncCoordinator.syncAllMaps(wanReplicationName, wanPublisherId);
     }
 
     @Override
     public WanSyncStateResult getSyncResult(UUID syncUUID) {
-        throw new UnsupportedOperationException("WAN sync is not supported.");
+        // results are kept per member, in the publishers' statistics
+        return null;
     }
 
     @Override
     public UUID consistencyCheck(String wanReplicationName, String wanPublisherId, String mapName) {
-        node.getManagementCenterService().log(
-                WanConsistencyCheckIgnoredEvent.enterpriseOnly(wanReplicationName, wanPublisherId, mapName));
-
-        throw new UnsupportedOperationException("Consistency check is not supported.");
+        return syncCoordinator.consistencyCheck(wanReplicationName, wanPublisherId, mapName);
     }
 
     @Override
@@ -326,6 +304,12 @@ public class WanReplicationServiceImpl implements WanReplicationService,
         boolean known = node.getConfig().getWanReplicationConfigs().containsKey(name)
                 || nodeEngine.getConfigurationService().findWanReplicationConfig(name) != null;
         AddWanConfigResult result = addConfig(wanReplicationConfig);
+        node.getNodeExtension().getAuditlogService()
+                .eventBuilder(AuditlogTypeIds.WAN_ADD_CONFIG)
+                .message("WAN replication configuration added.")
+                .addParameter("wanReplicationName", name)
+                .addParameter("addedPublisherIds", result.getAddedPublisherIds())
+                .log();
         if (!known) {
             // a new scheme is kept in the dynamic configuration, so members that join later get it too;
             // its members add it locally
@@ -397,7 +381,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
 
     @Override
     public WanSyncState getWanSyncState() {
-        return null;
+        return syncCoordinator.syncState(wanReplications);
     }
 
     @Override

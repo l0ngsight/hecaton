@@ -358,17 +358,17 @@ consistency check are P1, in M9.)
 
 | Feature | Notes | Est. |
 |---|---|---|
-| F2 LDAP & Kerberos realms | JNDI LDAP (virtual threads), GSS-API/Kerberos login module, role mapping | 3 ew |
-| F4 Audit log | `AuditlogService`, event types, log4j/JUL sink | 1 ew |
-| F5 Socket interceptor | member + client | 0.5 ew |
-| F9 CP persistence | Raft log + snapshots on the shared store; restart and recovery of CP members | 4 ew |
-| F10 Encryption at rest | AES-GCM per chunk, Java KeyStore and HashiCorp Vault key sources, key rotation | 3 ew |
-| F11 Client HD Near Cache | FFM allocator has to be usable from the Java 17 client: ship a Java 17 Unsafe-free fallback (on-heap) and enable native near cache on Java 22+ clients only (multi-release jar) | 2 ew |
-| F13 WAN sync & consistency check | Full sync, Merkle-tree delta sync, consistency check | 4 ew |
-| F14 Rolling upgrades | `supportedVersions={N-1,N}`, auto-upgrade; becomes testable with the second Hecaton minor; upgrade test N-1→N in CI | 3 ew |
-| F16 Dynamic config persistence, config reload/update | Persist dynamic config changes back to the declarative file; reload/update diff engine | 3 ew |
-| F17 User Code Namespaces | Namespace service, per-namespace classloaders, resource upload, integration points | 4 ew |
-| Slim client jar (§8.3 phase 2) | Reachability-based packaging + ArchUnit rules | 2 ew |
+| F2 LDAP & Kerberos realms — done (system/acceptor credentials from another realm open) | JNDI LDAP (virtual threads), GSS-API/Kerberos login module, role mapping | 3 ew |
+| F4 Audit log — done | `AuditlogService`, event types, log4j/JUL sink | 1 ew |
+| F5 Socket interceptor — done | member + client | 0.5 ew |
+| F9 CP persistence — done (in core with its own files, not on the shared store) | Raft log + snapshots on the shared store; restart and recovery of CP members | 4 ew |
+| F10 Encryption at rest — done (AES-GCM per record instead of per chunk) | AES-GCM per chunk, Java KeyStore and HashiCorp Vault key sources, key rotation | 3 ew |
+| F11 Client HD Near Cache — done (`hecaton-hd` on Java 25 clients through a `ServiceLoader` SPI, on-heap fallback otherwise; no multi-release jar) | FFM allocator has to be usable from the Java 17 client: ship a Java 17 Unsafe-free fallback (on-heap) and enable native near cache on Java 22+ clients only (multi-release jar) | 2 ew |
+| F13 WAN sync & consistency check — done (maps) | Full sync, Merkle-tree delta sync, consistency check | 4 ew |
+| F14 Rolling upgrades — done (tested with artificial versions until a second cluster version exists) | `supportedVersions={N-1,N}`, auto-upgrade; becomes testable with the second Hecaton minor; upgrade test N-1→N in CI | 3 ew |
+| F16 Dynamic config persistence, config reload/update — done | Persist dynamic config changes back to the declarative file; reload/update diff engine | 3 ew |
+| F17 User Code Namespaces — done | Namespace service, per-namespace classloaders, resource upload, integration points | 4 ew |
+| Slim client jar (§8.3 phase 2) — investigated, not shipped | `tools/client-jar/reachability.py` (jdeps): 74% of core's classes are reachable from the client entry points, 90% with the serializer hooks and other service files the client loads, so a reachability-built jar would be about 5% smaller while risking missing classes on reflective paths. A useful client jar first needs client and member code decoupled (shared serializer hooks, `HecatonInstanceFactory`, CP proxy helpers in `RaftService`); `--gateways` lists where to start. `hecaton-client` stays the core jar | 2 ew |
 
 ---
 

@@ -111,10 +111,106 @@ joining member's; `NONE`). A custom policy can be configured with `client-permis
 
 Security interceptors (`security-interceptors`) see every client call before and after it runs.
 
+## LDAP and Kerberos
+
+An `ldap` realm authenticates clients (or members) against an LDAP server:
+
+```yaml
+hecaton:
+  security:
+    enabled: true
+    realms:
+      - name: ldap
+        authentication:
+          ldap:
+            url: ldaps://ldap.example.com:636
+            system-user-dn: cn=hecaton,ou=services,dc=example,dc=com
+            system-user-password: secret
+            user-context: ou=users,dc=example,dc=com
+            user-filter: (uid={login})
+            role-mapping-mode: reverse
+            role-context: ou=groups,dc=example,dc=com
+            role-filter: (member={memberDN})
+            role-name-attribute: cn
+            role-recursion-max-depth: 2
+    client-authentication:
+      realm: ldap
+```
+
+- Without `system-user-dn`, the client's user name is the DN of its entry and the member binds as
+  that entry with the client's password.
+- With `system-user-dn`, the member binds as that account, finds the entry by `user-filter` under
+  `user-context`, and checks the password by binding as the entry (or by comparing it with
+  `password-attribute`; with `skip-authentication` it is not checked, for use after Kerberos).
+- Roles (`role-mapping-mode`): `attribute` (default) takes the values of `role-mapping-attribute`;
+  `direct` follows the role entries that attribute names and takes their `role-name-attribute`;
+  `reverse` searches `role-context` for role entries matching `role-filter`. Both follow role entries
+  up to `role-recursion-max-depth` (default 1). With `parse-dn`, role names are read from the role
+  DNs without reading the entries. The identity is `user-name-attribute`, or the DN.
+- Empty passwords are refused (an LDAP server would accept them as an anonymous bind).
+
+A `kerberos` realm accepts Kerberos service tickets: the member logs in as the service
+`principal` with its `keytab-file`, and a client's principal (`name@REALM`, or `name` with
+`use-name-without-realm`) becomes its identity and a role. A nested `ldap` section maps roles for
+the authenticated name (set `skip-authentication: true` in it). Clients use a `kerberos` identity:
+
+```yaml
+hecaton-client:
+  security:
+    kerberos:
+      spn: hz/member1.example.com@EXAMPLE.COM   # or realm, and the member's host name is used
+      principal: app@EXAMPLE.COM
+      keytab-file: /etc/app/app.keytab          # without it, the ticket cache
+```
+
+The service principal name defaults to `hz/<host>@<realm>` (`service-name-prefix`), as in
+Hazelcast, so existing keytabs keep working. The Kerberos configuration (`krb5.conf`) is the JVM's
+(`java.security.krb5.conf`). Getting the system or acceptor credentials from another realm
+(`security-realm`) is not supported yet: configure the account or keytab directly.
+
+## Audit log
+
+```yaml
+hecaton:
+  auditlog:
+    enabled: true
+    # factory-class-name: com.example.MyAuditlogServiceFactory
+    # properties:
+    #   logger: hecaton.auditlog
+```
+
+The audit log (F4) records security-relevant events: client, member and REST authentication
+(with the outcome; passwords and tokens are never logged), connections, members joining, leaving,
+promoted or suspected, cluster shutdown and merge, logging-level and diagnostics changes, and WAN
+configuration changes. Each event has a type ID (`HZ-0501` client authentication, ...; see
+`AuditlogTypeIds`), a message, parameters and a timestamp. By default the events are written to the
+logger `hecaton.auditlog` (the `logger` property changes it), so the logging configuration decides
+where they go; a custom `AuditlogServiceFactory` can send them elsewhere.
+
+## Socket interceptor
+
+A socket interceptor (F5) runs custom code on every new connection before the protocol starts,
+for example to exchange a token with the other side. Configure an implementation of
+`MemberSocketInterceptor` on members (`network` or each advanced-network endpoint) and of
+`SocketInterceptor` on clients:
+
+```yaml
+hecaton:
+  network:
+    socket-interceptor:
+      enabled: true
+      class-name: com.example.TokenInterceptor
+      properties:
+        token: secret
+```
+
+`init(properties)` is called once; `onConnect(socket)` when the member or client opens a
+connection, `onAccept(socket)` when a member accepts one; throwing an `IOException` closes the
+connection. Interceptors see the raw socket: with TLS they run before the TLS handshake.
+
 ## Limitations
 
 - Code that runs on members (executor tasks submitted by clients, entry processors) is not
   checked against the submitting client's permissions; `client-block-unmapped-actions` has no
   effect yet.
-- LDAP and Kerberos authentication: planned for M9.
 - No OpenSSL engine factory; TLS uses the JDK.

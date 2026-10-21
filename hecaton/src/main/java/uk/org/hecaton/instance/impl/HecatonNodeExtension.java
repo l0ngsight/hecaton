@@ -17,6 +17,8 @@
 package uk.org.hecaton.instance.impl;
 
 import uk.org.hecaton.auditlog.AuditlogService;
+import uk.org.hecaton.auditlog.AuditlogServiceFactory;
+import uk.org.hecaton.auditlog.impl.ILoggerAuditlogServiceFactory;
 import uk.org.hecaton.auditlog.impl.NoOpAuditlogService;
 import uk.org.hecaton.cache.impl.CacheService;
 import uk.org.hecaton.cache.impl.ICacheService;
@@ -24,24 +26,27 @@ import uk.org.hecaton.client.impl.ClientEngine;
 import uk.org.hecaton.client.impl.ClientEngineImpl;
 import uk.org.hecaton.client.impl.ClusterViewListenerService;
 import uk.org.hecaton.cluster.ClusterState;
+import uk.org.hecaton.cluster.Member;
+import uk.org.hecaton.config.AdvancedNetworkConfig;
 import uk.org.hecaton.config.AuditlogConfig;
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.EndpointConfig;
 import uk.org.hecaton.config.InstanceTrackingConfig;
 import uk.org.hecaton.config.InstanceTrackingConfig.InstanceMode;
 import uk.org.hecaton.config.InstanceTrackingConfig.InstanceProductName;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.PersistenceConfig;
 import uk.org.hecaton.config.SSLConfig;
-import uk.org.hecaton.config.SecurityConfig;
 import uk.org.hecaton.config.SerializationConfig;
+import uk.org.hecaton.config.SocketInterceptorConfig;
 import uk.org.hecaton.config.SymmetricEncryptionConfig;
 import uk.org.hecaton.config.cp.CPSubsystemConfig;
-import uk.org.hecaton.config.security.RealmConfig;
 import uk.org.hecaton.core.HecatonInstanceAware;
 import uk.org.hecaton.core.HecatonInstanceNotActiveException;
 import uk.org.hecaton.cp.CPSubsystem;
 import uk.org.hecaton.cp.internal.CPSubsystemImpl;
 import uk.org.hecaton.cp.internal.persistence.CPPersistenceService;
+import uk.org.hecaton.cp.internal.persistence.CPPersistenceServiceImpl;
 import uk.org.hecaton.cp.internal.persistence.NopCPPersistenceService;
 import uk.org.hecaton.hotrestart.HotRestartService;
 import uk.org.hecaton.instance.BuildInfo;
@@ -54,6 +59,7 @@ import uk.org.hecaton.internal.ascii.TextCommandService;
 import uk.org.hecaton.internal.ascii.TextCommandServiceImpl;
 import uk.org.hecaton.internal.cluster.ClusterStateListener;
 import uk.org.hecaton.internal.cluster.ClusterVersionListener;
+import uk.org.hecaton.internal.cluster.impl.ClusterServiceImpl;
 import uk.org.hecaton.internal.cluster.impl.JoinMessage;
 import uk.org.hecaton.internal.cluster.impl.JoinRequest;
 import uk.org.hecaton.internal.cluster.impl.SplitBrainJoinMessage;
@@ -89,6 +95,7 @@ import uk.org.hecaton.internal.memory.DefaultMemoryStats;
 import uk.org.hecaton.internal.memory.MemoryStats;
 import uk.org.hecaton.internal.namespace.UserCodeNamespaceService;
 import uk.org.hecaton.internal.namespace.impl.NoOpUserCodeNamespaceService;
+import uk.org.hecaton.internal.namespace.impl.UserCodeNamespaceServiceImpl;
 import uk.org.hecaton.internal.namespace.impl.NodeEngineThreadLocalContext;
 import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.networking.InboundHandler;
@@ -139,13 +146,16 @@ import uk.org.hecaton.wan.impl.WanReplicationService;
 import uk.org.hecaton.wan.impl.WanReplicationServiceImpl;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static uk.org.hecaton.config.ConfigAccessor.getActiveMemberNetworkConfig;
@@ -176,6 +186,8 @@ public class HecatonNodeExtension implements NodeExtension {
 
     private static final String COPYRIGHT_LINE = "Copyright (c) 2026, The Hecaton Authors. "
             + "Based on Hazelcast, Copyright (c) 2008-2026, Hazelcast, Inc. Licensed under the Apache License 2.0.";
+    private static final String VERSION_AUTO_UPGRADE_EXECUTOR = "hz:cluster:version:auto:upgrade";
+    private static final int AUTO_UPGRADE_ATTEMPTS = 60;
 
     protected final Node node;
     protected final ILogger logger;
@@ -189,6 +201,11 @@ public class HecatonNodeExtension implements NodeExtension {
     private final Set<Version> supportedVersions;
     /** Null unless persistence is enabled. */
     private final PersistenceCapability persistence;
+    /** Null unless CP Subsystem persistence is enabled; created on first use. */
+    private volatile CPPersistenceServiceImpl cpPersistence;
+    private volatile AuditlogService auditlogService;
+    private final Map<EndpointQualifier, Optional<MemberSocketInterceptor>> socketInterceptors = new ConcurrentHashMap<>();
+
     private final HotRestartService noOpHotRestartService = new NoOpHotRestartService();
     private final InternalHotRestartService noOpInternalHotRestartService = new NoopInternalHotRestartService();
 
@@ -214,7 +231,7 @@ public class HecatonNodeExtension implements NodeExtension {
         }
 
         integrityChecker = new IntegrityChecker(node.getConfig().getIntegrityCheckerConfig(), this.systemLogger);
-        supportedVersions = setOf(BuildInfoProvider.getBuildInfo().getCodebaseVersion().asVersion());
+        supportedVersions = supportedVersions(BuildInfoProvider.getBuildInfo());
     }
 
     private void checkCPSubsystemAllowed() {
@@ -233,23 +250,11 @@ public class HecatonNodeExtension implements NodeExtension {
     }
 
     private void checkSecurityAllowed() {
-        SecurityConfig securityConfig = node.getConfig().getSecurityConfig();
-        if (securityConfig != null && securityConfig.isEnabled()) {
-            for (RealmConfig realm : securityConfig.getRealmConfigs().values()) {
-                if (realm.getLdapAuthenticationConfig() != null || realm.getKerberosAuthenticationConfig() != null) {
-                    throw new IllegalStateException(HecatonFeature.LDAP_KERBEROS_AUTHENTICATION.notAvailableMessage());
-                }
-            }
-        }
         SymmetricEncryptionConfig symmetricEncryptionConfig =
                 getActiveMemberNetworkConfig(node.getConfig()).getSymmetricEncryptionConfig();
         if (symmetricEncryptionConfig != null && symmetricEncryptionConfig.isEnabled()
                 && !HecatonFeature.SYMMETRIC_ENCRYPTION.isAvailable()) {
             throw new IllegalStateException(HecatonFeature.SYMMETRIC_ENCRYPTION.notAvailableMessage());
-        }
-        AuditlogConfig auditlogConfig = node.getConfig().getAuditlogConfig();
-        if (auditlogConfig.isEnabled() && !HecatonFeature.AUDIT_LOG.isAvailable()) {
-            throw new IllegalStateException(HecatonFeature.AUDIT_LOG.notAvailableMessage());
         }
     }
 
@@ -368,12 +373,22 @@ public class HecatonNodeExtension implements NodeExtension {
         if (persistence != null) {
             persistence.beforeJoin();
         }
+        if (cpPersistence() != null) {
+            cpPersistence().beforeJoin();
+        }
     }
 
     @Override
     public void afterStart() {
         if (persistence != null) {
             persistence.afterStart();
+        }
+        if (cpPersistence() != null) {
+            cpPersistence().afterJoin();
+        }
+        UserCodeNamespaceService namespaceService = node.getNamespaceService();
+        if (namespaceService.isEnabled() && node.getProperties().getBoolean(ClusterProperty.METRICS_USER_CODE_NAMESPACES)) {
+            node.getNodeEngine().getMetricsRegistry().registerDynamicMetricsProvider(namespaceService);
         }
         if (jetServiceBackend != null) {
             jetServiceBackend.startScanningForJobs();
@@ -386,7 +401,8 @@ public class HecatonNodeExtension implements NodeExtension {
     @Override
     public boolean isStartCompleted() {
         return node.getClusterService().isJoined()
-                && (persistence == null || persistence.internalHotRestartService().isStartCompleted());
+                && (persistence == null || persistence.internalHotRestartService().isStartCompleted())
+                && (cpPersistence() == null || cpPersistence().isRestoreCompleted());
     }
 
     @Override
@@ -531,8 +547,35 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public MemberSocketInterceptor getSocketInterceptor(EndpointQualifier endpointQualifier) {
-        logger.warning(HecatonFeature.SOCKET_INTERCEPTOR.notAvailableMessage());
-        return null;
+        // one interceptor per endpoint, created and initialized when the endpoint first needs it; without
+        // the advanced network there is one endpoint, which has no qualifier
+        EndpointQualifier key = endpointQualifier == null ? EndpointQualifier.MEMBER : endpointQualifier;
+        return socketInterceptors.computeIfAbsent(key, this::createSocketInterceptor).orElse(null);
+    }
+
+    private Optional<MemberSocketInterceptor> createSocketInterceptor(EndpointQualifier endpointQualifier) {
+        AdvancedNetworkConfig advancedNetwork = node.getConfig().getAdvancedNetworkConfig();
+        EndpointConfig endpoint = advancedNetwork.isEnabled() ? advancedNetwork.getEndpointConfigs().get(endpointQualifier) : null;
+        SocketInterceptorConfig config = advancedNetwork.isEnabled()
+                ? (endpoint == null ? null : endpoint.getSocketInterceptorConfig())
+                : node.getConfig().getNetworkConfig().getSocketInterceptorConfig();
+        if (config == null || !config.isEnabled()) {
+            return Optional.empty();
+        }
+        Object implementation = config.getImplementation();
+        if (implementation == null) {
+            try {
+                implementation = ClassLoaderUtil.newInstance(node.getConfigClassLoader(), config.getClassName());
+            } catch (Exception e) {
+                throw new InvalidConfigurationException("Cannot create the socket interceptor " + config.getClassName(), e);
+            }
+        }
+        if (!(implementation instanceof MemberSocketInterceptor interceptor)) {
+            throw new InvalidConfigurationException("The socket interceptor of a member must implement "
+                    + MemberSocketInterceptor.class.getName() + ": " + implementation.getClass().getName());
+        }
+        interceptor.init(config.getProperties());
+        return Optional.of(interceptor);
     }
 
     @Override
@@ -579,6 +622,9 @@ public class HecatonNodeExtension implements NodeExtension {
     @Override
     public void afterShutdown() {
         logger.info("Destroying node NodeExtension.");
+        if (cpPersistence != null) {
+            cpPersistence.close();
+        }
     }
 
     @Override
@@ -602,9 +648,73 @@ public class HecatonNodeExtension implements NodeExtension {
         return supportedVersions;
     }
 
+    /**
+     * Rolling upgrades (F14): a member runs in a cluster of its own minor version or of the previous
+     * minor version of the same major, so members can be replaced one by one with the next minor
+     * version before the cluster version is raised.
+     */
+    static Set<Version> supportedVersions(BuildInfo buildInfo) {
+        Version current = buildInfo.getCodebaseVersion().asVersion();
+        MemberVersion previous = buildInfo.getPreviousVersion();
+        if (previous != null && previous.getMajor() == current.getMajor()
+                && previous.getMinor() == current.getMinor() - 1) {
+            return setOf(previous.asVersion(), current);
+        }
+        return setOf(current);
+    }
+
+    /** The lowest codebase version of the members, or null if there are too few members for an automatic upgrade. */
+    private Version lowestMemberVersion(Collection<Member> members) {
+        if (members.size() < node.getProperties().getInteger(ClusterProperty.CLUSTER_VERSION_AUTO_UPGRADE_MIN_CLUSTER_SIZE)) {
+            return null;
+        }
+        Version lowest = null;
+        for (Member member : members) {
+            Version version = member.getVersion().asVersion();
+            lowest = lowest == null || version.isLessThan(lowest) ? version : lowest;
+        }
+        return lowest;
+    }
+
+    @Override
+    public void scheduleClusterVersionAutoUpgrade() {
+        if (node.getProperties().getBoolean(ClusterProperty.CLUSTER_VERSION_AUTO_UPGRADE_ENABLED) && node.isMaster()) {
+            node.getNodeEngine().getExecutionService().execute(VERSION_AUTO_UPGRADE_EXECUTOR,
+                    () -> autoUpgradeClusterVersion(AUTO_UPGRADE_ATTEMPTS));
+        }
+    }
+
+    /**
+     * Raises the cluster version to the lowest codebase version of the members, if that is newer;
+     * retried while the cluster state cannot change (migrations, for example).
+     */
+    private void autoUpgradeClusterVersion(int attempts) {
+        ClusterServiceImpl clusterService = node.getClusterService();
+        Version lowest = lowestMemberVersion(clusterService.getMembers());
+        Version clusterVersion = clusterService.getClusterVersion();
+        if (!clusterService.isMaster() || !node.isRunning() || lowest == null || !lowest.isGreaterThan(clusterVersion)
+                || !supportedVersions.contains(lowest)) {
+            return;
+        }
+        try {
+            logger.info("All members run version " + lowest + " or newer: upgrading the cluster version from "
+                    + clusterVersion + " to " + lowest);
+            clusterService.changeClusterVersion(lowest);
+        } catch (RuntimeException e) {
+            if (attempts > 1) {
+                logger.fine("Cannot upgrade the cluster version yet, retrying: " + e);
+                node.getNodeEngine().getExecutionService().schedule(VERSION_AUTO_UPGRADE_EXECUTOR,
+                        () -> autoUpgradeClusterVersion(attempts - 1), 1, TimeUnit.SECONDS);
+            } else {
+                logger.warning("Cannot upgrade the cluster version to " + lowest, e);
+            }
+        }
+    }
+
     private static String constructVersionMismatchMessage(MemberVersion memberVersion, Version clusterVersion) {
         String msg = "Joining node's version " + memberVersion + " is not compatible with cluster version " + clusterVersion;
-        msg += " (rolling member upgrades, F14, are planned for milestone M9)";
+        msg += " (a member can join a cluster of its own minor version or of the previous minor version;"
+                + " see the rolling upgrade procedure in docs/operations.md)";
         return msg;
     }
 
@@ -774,8 +884,26 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public CPPersistenceService getCPPersistenceService() {
-        // CP persistence (F9) comes with the persistence module
-        return NopCPPersistenceService.INSTANCE;
+        CPPersistenceService service = cpPersistence();
+        return service != null ? service : NopCPPersistenceService.INSTANCE;
+    }
+
+    /** The CP Subsystem persistence service (F9), or null if it is not enabled. */
+    private CPPersistenceServiceImpl cpPersistence() {
+        if (!node.getConfig().getCPSubsystemConfig().isPersistenceEnabled()) {
+            return null;
+        }
+        CPPersistenceServiceImpl service = cpPersistence;
+        if (service == null) {
+            synchronized (this) {
+                service = cpPersistence;
+                if (service == null) {
+                    service = new CPPersistenceServiceImpl(node);
+                    cpPersistence = service;
+                }
+            }
+        }
+        return service;
     }
 
     @Override
@@ -790,7 +918,32 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public AuditlogService getAuditlogService() {
-        return NoOpAuditlogService.INSTANCE;
+        AuditlogService service = auditlogService;
+        if (service == null) {
+            synchronized (this) {
+                service = auditlogService;
+                if (service == null) {
+                    service = createAuditlogService(node.getConfig().getAuditlogConfig());
+                    auditlogService = service;
+                }
+            }
+        }
+        return service;
+    }
+
+    private AuditlogService createAuditlogService(AuditlogConfig config) {
+        if (!config.isEnabled()) {
+            return NoOpAuditlogService.INSTANCE;
+        }
+        try {
+            AuditlogServiceFactory factory = config.getFactoryClassName() == null
+                    ? new ILoggerAuditlogServiceFactory()
+                    : ClassLoaderUtil.newInstance(node.getConfigClassLoader(), config.getFactoryClassName());
+            factory.init(null, config.getProperties());
+            return factory.createAuditlog();
+        } catch (Exception e) {
+            throw new InvalidConfigurationException("Cannot create the audit log " + config.getFactoryClassName(), e);
+        }
     }
 
     @Override
@@ -824,6 +977,10 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public UserCodeNamespaceService getNamespaceService() {
+        if (node.getConfig().getNamespacesConfig().isEnabled()) {
+            return new UserCodeNamespaceServiceImpl(node.getConfigClassLoader(), node.getConfig().getNamespacesConfig(),
+                    node.getLogger(UserCodeNamespaceService.class));
+        }
         return new NoOpUserCodeNamespaceService(node.getConfigClassLoader());
     }
 

@@ -426,9 +426,9 @@ public class RestClusterTest {
         HTTPCommunicator communicator = new HTTPCommunicator(instance);
         ConnectionResponse response = communicator.configReload(config.getClusterName(), getPassword());
 
-        // Reload is enterprise feature. Should fail here.
+        // the member was configured programmatically: there is no file to reload
         assertJsonContains(response.response, "status", "fail",
-                "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
+                "message", "The member was not configured from a file, so it cannot reload it");
     }
 
     @Test
@@ -440,9 +440,8 @@ public class RestClusterTest {
                 config.getClusterName(), getPassword(), "hecaton:\n"
         );
 
-        // Reload is enterprise feature. Should fail here.
-        assertJsonContains(response.response, "status", "fail",
-                "message", HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
+        assertJsonContains(response.response, "status", "success",
+                "message", "Configuration update started");
     }
 
     @Test

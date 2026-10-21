@@ -170,7 +170,9 @@ public class MCMessageTasksTest extends HecatonTestSupport {
                 randomString(),
                 randomString()
         );
-        assertFailure(clientMessage, UnsupportedOperationException.class, "Consistency check is not supported.");
+        // the map keeps no Merkle tree: the check is ignored
+        ClientInvocationFuture future = new ClientInvocation(getClientImpl(), clientMessage, null).invoke();
+        assertNull(MCCheckWanConsistencyCodec.decodeResponse(future.get(ASSERT_TRUE_EVENTUALLY_TIMEOUT, SECONDS)));
     }
 
     @Test
@@ -511,7 +513,7 @@ public class MCMessageTasksTest extends HecatonTestSupport {
                 0,
                 randomString()
         );
-        assertFailure(clientMessage, UnsupportedOperationException.class, "WAN sync is not supported.");
+        assertFailure(clientMessage, InvalidConfigurationException.class, "WAN Replication Config doesn't exist");
     }
 
     private void assertFailure(ClientMessage clientMessage,

@@ -96,17 +96,17 @@ that delivers them, rather than being ignored.
 |---|---|---|
 | License key | Not needed | `license-key` is ignored with an INFO message |
 | TLS/SSL (member, client, WAN, REST, Memcache) | Yes (F1) | `BasicSSLContextFactory` and custom factories; OpenSSL factory not yet. [security.md](security.md), [ee-class-map.md](ee-class-map.md) |
-| Security: realms, JAAS, member authentication, client permissions, security interceptors | Yes (F2, F3) | LDAP and Kerberos realms: 1.x (M9). [security.md](security.md) |
-| Audit log, socket interceptor | 1.x (F4, F5) | |
+| Security: realms, JAAS, member authentication, client permissions, security interceptors | Yes (F2, F3) | LDAP and Kerberos realms. [security.md](security.md) |
+| Audit log, socket interceptor | Yes (F4, F5) | [security.md](security.md) |
 | Symmetric encryption | No (F6) | Deprecated in Hazelcast; use TLS |
-| CP Subsystem, CPMap | Yes (F7, F8) | CP persistence: 1.x (F9). [cp.md](cp.md) |
-| High-Density memory (`NATIVE` format) | Yes (F11) | IMap, ICache, member Near Cache; indexes of `NATIVE` maps are on the heap; client HD Near Cache: 1.x. [hd.md](hd.md) |
-| Persistence (Hot Restart) | Yes (F10) | IMap, ICache, cluster metadata, coordinated restart, partial/force start, hot backup; files are not compatible with Hazelcast's; encryption at rest: 1.x. [persistence.md](persistence.md) |
-| WAN replication | Yes (F13) | Batch publisher, consumer, management; replicates to Hecaton clusters only; WAN sync and consistency check: 1.x. [wan.md](wan.md) |
+| CP Subsystem, CPMap | Yes (F7, F8, F9) | Including CP persistence; files are not compatible with Hazelcast's. [cp.md](cp.md) |
+| High-Density memory (`NATIVE` format) | Yes (F11) | IMap, ICache, member and client Near Caches (clients need `hecaton-hd` and Java 25); indexes of `NATIVE` maps are on the heap. [hd.md](hd.md) |
+| Persistence (Hot Restart) | Yes (F10) | IMap, ICache, cluster metadata, coordinated restart, partial/force start, hot backup; encryption at rest (Java KeyStore or Vault master keys, key rotation); files are not compatible with Hazelcast's. [persistence.md](persistence.md) |
+| WAN replication | Yes (F13) | Batch publisher, consumer, management, full and Merkle tree sync, consistency check; replicates to Hecaton clusters only. [wan.md](wan.md) |
 | Client blue/green failover | Yes (F15) | |
-| Rolling upgrades | 1.x (F14) | |
-| Dynamic configuration persistence and reload | 1.x (F16) | |
-| User Code Namespaces | 1.x (F17) | |
+| Rolling upgrades | Yes (F14) | Between consecutive minor cluster versions. [operations.md](operations.md#rolling-upgrades) |
+| Dynamic configuration persistence and reload | Yes (F16) | [dynamic-configuration.md](dynamic-configuration.md) |
+| User Code Namespaces | Yes (F17) | [user-code-namespaces.md](user-code-namespaces.md) |
 | Tiered Storage, Jet lossless restart and job upgrades, SQL catalog persistence, vector collections | 2.x (F12, F18, F19, F20) | |
 | Management Center | No | Out of scope; the operations are available through the API, REST and `hc-cluster-admin` |
 

@@ -80,6 +80,35 @@ With security enabled, clients need a `cpmap` permission: `create`, `destroy`, `
 (`get`), `put` (`put`, `set`, `putIfAbsent`, `compareAndSet`) and `remove` (`remove`,
 `delete`).
 
+## Persistence
+
+With `persistence-enabled`, CP members keep their CP identity and the state of their CP groups
+(the Raft log, snapshots, term and vote) on disk and restore them when they restart (F9), so a
+CP member can restart, and the whole cluster can be restarted, without losing CP data:
+
+```yaml
+hecaton:
+  cp-subsystem:
+    cp-member-count: 3
+    persistence-enabled: true
+    base-dir: /var/lib/hecaton/cp-data
+```
+
+- Every member takes a directory of its own under `base-dir`, locked while it runs; a member
+  that restarts takes the directory of an earlier member. Members sharing a machine can share
+  `base-dir`.
+- A restarting CP member restores its CP identity before it joins the cluster, and the Raft nodes
+  of its CP groups once it has joined; its start completes after that. The groups then elect
+  leaders and catch up as usual, so a group needs a majority of its members back.
+- A CP member may restart with another address: it advertises its CP member UUID, the other
+  members send its Raft traffic to the new address, and the METADATA group updates the active CP
+  members list.
+- With persistence enabled, a CP member that shuts down is not removed from the CP Subsystem
+  (as in Hazelcast): it is expected to come back. Remove it with the management API if it will
+  not. `reset()` of the CP Subsystem deletes the persisted CP state.
+- Entries are written to the log as Raft appends them and forced to disk when Raft flushes; each
+  snapshot starts a new log file and the older one is deleted.
+
 ## Administration
 
 The CP Subsystem management API (`getCPSubsystemManagementService()`), the REST endpoints
@@ -95,6 +124,7 @@ linearizability checker. Set `-Dhecaton.test.linearizability.seconds=...` for lo
 
 ## Limitations
 
-- CP persistence (F9) is not available yet: a restarted CP member starts empty and must be
-  removed and replaced (planned for M9). `persistence-enabled: true` is refused at startup.
+- CP persistence ignores `data-load-timeout-seconds`: a restored CP member does not wait for the
+  other members of its groups, which catch up through Raft when they come back. The persisted
+  files are not compatible with Hazelcast's.
 - `CPMap` has no size, iteration or listener methods, matching the API.

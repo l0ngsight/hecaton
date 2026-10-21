@@ -378,14 +378,17 @@ public final class ConfigValidator {
      */
     public static void checkNearCacheConfig(String mapName, NearCacheConfig nearCacheConfig,
                                             NativeMemoryConfig nativeMemoryConfig, boolean isClient) {
-        checkNotNativeWhenOpenSource(nearCacheConfig.getInMemoryFormat());
+        if (!isClient) {
+            // a client's NATIVE Near Cache uses hecaton-hd when the client has it, the heap otherwise
+            checkNotNativeWhenOpenSource(nearCacheConfig.getInMemoryFormat());
+        }
         checkLocalUpdatePolicy(mapName, nearCacheConfig.getLocalUpdatePolicy());
         EvictionConfig evictionConfig = nearCacheConfig.getEvictionConfig();
         checkNearCacheEvictionConfig(evictionConfig.getEvictionPolicy(),
                 evictionConfig.getComparatorClassName(), evictionConfig.getComparator());
         checkOnHeapNearCacheMaxSizePolicy(nearCacheConfig);
         checkNearCacheNativeMemoryConfig(nearCacheConfig.getInMemoryFormat(),
-                nativeMemoryConfig, HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable());
+                nativeMemoryConfig, isClient || HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable());
 
         if (isClient && nearCacheConfig.isCacheLocalEntries()) {
             throw new InvalidConfigurationException("The Near Cache option `cache-local-entries` is not supported in "

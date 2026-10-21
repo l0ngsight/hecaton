@@ -59,6 +59,7 @@ import uk.org.hecaton.cp.internal.raftop.metadata.InitMetadataRaftGroupOp;
 import uk.org.hecaton.cp.internal.raftop.metadata.PublishActiveCPMembersOp;
 import uk.org.hecaton.cp.internal.raftop.metadata.RaftServicePreJoinOp;
 import uk.org.hecaton.cp.internal.raftop.metadata.RemoveCPMemberOp;
+import uk.org.hecaton.cp.internal.raftop.metadata.RestartCPMemberOp;
 import uk.org.hecaton.cp.internal.raftop.metadata.TriggerDestroyRaftGroupOp;
 import uk.org.hecaton.cp.internal.raftop.snapshot.RestoreSnapshotOp;
 import uk.org.hecaton.internal.serialization.DataSerializerHook;
@@ -126,6 +127,7 @@ public final class RaftServiceDataSerializerHook implements DataSerializerHook {
     public static final int UNSAFE_MODE_PARTITION_STATE = 51;
     public static final int UNSAFE_STATE_REPLICATE_OP = 52;
     public static final int GET_CP_OBJECT_INFOS_OP = 53;
+    public static final int RESTART_CP_MEMBER_OP = 54;
 
     @Override
     public int getFactoryId() {
@@ -242,6 +244,8 @@ public final class RaftServiceDataSerializerHook implements DataSerializerHook {
                     return new UnsafeStateReplicationOp();
                 case GET_CP_OBJECT_INFOS_OP:
                     return new GetCPObjectInfosOp();
+                case RESTART_CP_MEMBER_OP:
+                    return new RestartCPMemberOp();
                 default:
                     throw new IllegalArgumentException("Undefined type: " + typeId);
             }

@@ -15,6 +15,8 @@ hecaton-default.yaml
 hecaton.affinity.lib.disabled
 hecaton.aggregation.accumulation.parallel.evaluation
 hecaton.async.join.strategy.enabled
+hecaton.auditlog
+hecaton.authenticatedName
 hecaton.backpressure.backoff.timeout.millis
 hecaton.backpressure.enabled
 hecaton.backpressure.max.concurrent.invocations.per.partition
@@ -76,6 +78,8 @@ hecaton.clientengine.query.thread.count
 hecaton.clientengine.thread.count
 hecaton.cluster.jarupload.dirpath
 hecaton.cluster.shutdown.timeout.seconds
+hecaton.cluster.version.auto.upgrade.enabled
+hecaton.cluster.version.auto.upgrade.min.cluster.size
 hecaton.compat.classloading.cache.disabled
 hecaton.compat.classloading.urldefinition
 hecaton.compat.serializers.use.default.constructor.only
@@ -89,6 +93,7 @@ hecaton.connect.all.wait.seconds
 hecaton.connection.monitor.interval
 hecaton.connection.monitor.max.faults
 hecaton.cp.auto.step.down.when.leader
+hecaton.cp.member.uuid
 hecaton.data.search.dynamic.config.first.enabled
 hecaton.diagnostics.
 hecaton.diagnostics.directory

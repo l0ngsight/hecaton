@@ -987,4 +987,17 @@ class MapServiceContextImpl implements MapServiceContext {
     public int getExpensiveInvocationReportingThreshold() {
         return expensiveInvocationReportingThreshold;
     }
+
+    @Override
+    public boolean shouldEnableMerkleTree(MapConfig mapConfig) {
+        // Merkle trees (F13) are kept for maps that enable them; WAN publishers with Merkle tree
+        // sync require it (MapWanContext)
+        return Boolean.TRUE.equals(mapConfig.getMerkleTreeConfig().getEnabled());
+    }
+
+    @Override
+    public boolean shouldEnableMerkleTree(MapContainer mapContainer, boolean log) {
+        return shouldEnableMerkleTree(mapContainer.getMapConfig());
+    }
+
 }

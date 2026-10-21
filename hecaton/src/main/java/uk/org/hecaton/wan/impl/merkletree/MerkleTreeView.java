@@ -19,7 +19,7 @@ package uk.org.hecaton.wan.impl.merkletree;
 /**
  * Readonly view of a Merkle tree
  */
-interface MerkleTreeView {
+public interface MerkleTreeView {
     /**
      * Returns the hash for the node with the given {@code nodeOrder}
      *

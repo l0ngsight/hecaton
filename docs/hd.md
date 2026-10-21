@@ -1,6 +1,6 @@
 # High-Density memory
 
-High-Density memory (F11) keeps the data of IMaps, ICaches and member Near Caches with the
+High-Density memory (F11) keeps the data of IMaps, ICaches and member and client Near Caches with the
 `NATIVE` in-memory format outside the Java heap, so large data sets do not lengthen garbage
 collection pauses. It is provided by the `uk.org.hecaton:hecaton-hd` module (Java 25), which
 uses the Foreign Function and Memory API; `hecaton-member` and the distribution include it.
@@ -71,14 +71,40 @@ the storage.
 
 Maps also support `PER_NODE` and `PER_PARTITION`; Near Caches `ENTRY_COUNT`.
 
+## Client Near Caches
+
+A client's Near Caches with the `NATIVE` format keep their values in the client's native memory
+when the client has `native-memory` enabled and `uk.org.hecaton:hecaton-hd` on its classpath,
+which needs Java 25+. The client's `native-memory` section is configured as a member's; the
+Near Caches support the same max-size policies as members' Near Caches.
+
+```yaml
+hecaton-client:
+  native-memory:
+    enabled: true
+    allocator-type: STANDARD
+    capacity:
+      unit: MEGABYTES
+      value: 512
+  near-cache:
+    orders:
+      in-memory-format: NATIVE
+      eviction:
+        max-size-policy: USED_NATIVE_MEMORY_SIZE
+        size: 256
+```
+
+Without the module (or on a client older than Java 25) a `NATIVE` Near Cache keeps its entries
+on the heap in the `BINARY` format, with an entry-count limit of 10,000 instead of a native-memory
+limit, and the client logs a warning.
+
 ## Limitations
 
 - Indexes of `NATIVE` maps are kept on the heap, with the indexed entries' values; off-heap
   index stores are planned. `BITMAP` indexes are not supported on `NATIVE` maps, as in Hazelcast.
 - Member Near Cache records live on the heap and their values are freed when a record is
   replaced or garbage collected, so its native memory use can lag behind evictions.
-- Client Near Caches with the `NATIVE` format (F11, P1) and persistent memory
-  (`native-memory.persistent-memory`) are not available yet.
+- Persistent memory (`native-memory.persistent-memory`) is not available yet.
 
 ## Testing
 

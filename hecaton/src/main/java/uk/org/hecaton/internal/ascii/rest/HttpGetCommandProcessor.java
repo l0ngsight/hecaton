@@ -34,11 +34,11 @@ import uk.org.hecaton.internal.cluster.impl.ClusterServiceImpl;
 import uk.org.hecaton.internal.json.Json;
 import uk.org.hecaton.internal.json.JsonArray;
 import uk.org.hecaton.internal.json.JsonObject;
+import uk.org.hecaton.internal.monitor.WanSyncState;
 import uk.org.hecaton.internal.partition.InternalPartitionService;
 import uk.org.hecaton.internal.server.Server;
 import uk.org.hecaton.internal.server.ServerConnection;
 import uk.org.hecaton.internal.server.ServerConnectionManager;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.StringUtil;
 import uk.org.hecaton.logging.impl.LoggingServiceImpl;
 
@@ -49,7 +49,7 @@ import java.util.logging.Level;
 
 import static uk.org.hecaton.config.ConfigAccessor.getActiveMemberNetworkConfig;
 import static uk.org.hecaton.instance.EndpointQualifier.CLIENT;
-import static uk.org.hecaton.internal.ascii.rest.HttpCommandProcessor.ResponseType.FAIL;
+import static uk.org.hecaton.internal.ascii.rest.HttpCommandProcessor.ResponseType.SUCCESS;
 import static uk.org.hecaton.internal.ascii.rest.HttpStatusCode.SC_500;
 import static uk.org.hecaton.internal.ascii.rest.RestCallExecution.ObjectType.MAP;
 import static uk.org.hecaton.internal.ascii.rest.RestCallExecution.ObjectType.QUEUE;
@@ -443,10 +443,12 @@ public class HttpGetCommandProcessor extends HttpCommandProcessor<HttpGetCommand
     }
 
     protected void handleWanSyncProgress(HttpGetCommand command) {
-        prepareResponse(
-                SC_500,
-                command,
-                response(FAIL, "message", HecatonFeature.WAN_SYNC.notAvailableMessage())
-        );
+        WanSyncState state = getNode().getNodeEngine().getWanReplicationService().getWanSyncState();
+        JsonObject result = response(SUCCESS, "syncStatus", state.getStatus().name());
+        if (state.getActiveWanConfigName() != null) {
+            result.add("wanReplicationName", state.getActiveWanConfigName());
+            result.add("publisherId", state.getActivePublisherName());
+        }
+        prepareResponse(command, result);
     }
 }

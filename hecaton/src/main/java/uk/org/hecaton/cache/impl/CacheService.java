@@ -38,7 +38,6 @@ import uk.org.hecaton.internal.services.DistributedObjectNamespace;
 import uk.org.hecaton.internal.services.ObjectNamespace;
 import uk.org.hecaton.internal.services.ServiceNamespace;
 import uk.org.hecaton.internal.services.WanSupportingService;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.merge.MergingValueFactory;
@@ -249,7 +248,7 @@ public class CacheService extends AbstractCacheService implements WanSupportingS
 
     @Override
     public CompletionStage<Void> onSyncBatch(Collection<InternalWanEvent> batch, WanAcknowledgeType acknowledgeType) {
-        throw new UnsupportedOperationException(HecatonFeature.WAN_SYNC.notAvailableMessage());
+        throw new UnsupportedOperationException("WAN sync events are applied as replication events");
     }
 
     @Override

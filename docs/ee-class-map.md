@@ -14,5 +14,8 @@ public documentation only (clean-room policy, CONTRIBUTING §1); their behaviour
 | `com.hazelcast.security.ClusterLoginModule`, `CredentialsCallback`, `EndpointCallback`, `CertificatesCallback`, `ClusterNameCallback`, `ClusterIdentityPrincipal`, `ClusterRolePrincipal`, `ClusterEndpointPrincipal` | same names in `uk.org.hecaton.security` | M3 | For custom JAAS login modules: extend `ClusterLoginModule`, implement `onLogin()` and `getName()`, add roles with `addRole`. |
 | `com.hazelcast.security.impl.DefaultPermissionPolicy` | `uk.org.hecaton.security.impl.DefaultPermissionPolicy` | M3 | The client permission policy unless `client-permission-policy` names another. |
 
-Not provided yet: `com.hazelcast.nio.ssl.OpenSSLEngineFactory` (optional netty-tcnative), the
-LDAP and Kerberos login modules and credentials factories (F2 P1, M9).
+| `com.hazelcast.security.loginimpl.BasicLdapLoginModule`, `LdapLoginModule` | same names in `uk.org.hecaton.security.loginimpl` | M9 | `ldap` realms without and with a system account; see [security.md](security.md). |
+| `com.hazelcast.security.loginimpl.GssApiLoginModule` | `uk.org.hecaton.security.loginimpl.GssApiLoginModule` | M9 | `kerberos` realms. |
+| `com.hazelcast.security.impl.KerberosCredentialsFactory` | `uk.org.hecaton.security.impl.KerberosCredentialsFactory` | M9 | `kerberos` identities of clients and members. |
+
+Not provided yet: `com.hazelcast.nio.ssl.OpenSSLEngineFactory` (optional netty-tcnative).

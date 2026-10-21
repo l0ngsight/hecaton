@@ -56,10 +56,12 @@ import uk.org.hecaton.internal.services.PreJoinAwareService;
 import uk.org.hecaton.internal.services.SplitBrainHandlerService;
 import uk.org.hecaton.internal.util.FutureUtil;
 import uk.org.hecaton.internal.util.HecatonFeature;
+import uk.org.hecaton.internal.util.UuidUtil;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.nio.serialization.IdentifiedDataSerializable;
 import uk.org.hecaton.spi.impl.InternalCompletableFuture;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.executionservice.ExecutionService;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.version.Version;
 
@@ -131,6 +133,7 @@ public class ClusterWideConfigurationService implements
     private final ConcurrentMap<String, FlakeIdGeneratorConfig> flakeIdGeneratorConfigs = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, DataConnectionConfig> dataConnectionConfigs = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, WanReplicationConfig> wanReplicationConfigs = new ConcurrentHashMap<>();
+    private volatile DynamicConfigPersistence persistence;
     private final ConcurrentMap<String, UserCodeNamespaceConfig> namespaceConfigs = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, VectorCollectionConfig> vectorCollectionConfigs = new ConcurrentHashMap<>();
     private DiagnosticsConfig diagnosticsConfig;
@@ -248,12 +251,22 @@ public class ClusterWideConfigurationService implements
 
     @Override
     public ConfigUpdateResult update(@Nullable Config newConfig) {
-        throw new UnsupportedOperationException(HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
+        return new ConfigUpdater(nodeEngine.getConfig(), logger).update(newConfig);
     }
 
     @Override
     public UUID updateAsync(String configPatch) {
-        throw new UnsupportedOperationException(HecatonFeature.CONFIGURATION_RELOAD.notAvailableMessage());
+        // the patch is a declarative configuration (YAML or XML) with the configurations to add
+        Config patch = configPatch == null ? null : Config.loadFromString(configPatch);
+        UUID id = UuidUtil.newUnsecureUUID();
+        nodeEngine.getExecutionService().execute(ExecutionService.ASYNC_EXECUTOR, () -> {
+            try {
+                update(patch);
+            } catch (RuntimeException e) {
+                logger.warning("Configuration update " + id + " failed", e);
+            }
+        });
+        return id;
     }
 
     public InternalCompletableFuture<Object> broadcastConfigAsync(IdentifiedDataSerializable config) {
@@ -443,11 +456,18 @@ public class ClusterWideConfigurationService implements
 
     @Override
     public void persist(Object subConfig) {
-        if (nodeEngine.getConfig().getDynamicConfigurationConfig().isPersistenceEnabled()) {
-            // Code should never come here. We should fast fail in
-            // HecatonNodeExtension#checkDynamicConfigurationPersistenceAllowed()
-            throw new UnsupportedOperationException(HecatonFeature.DYNAMIC_CONFIGURATION_PERSISTENCE.notAvailableMessage());
+        Config config = nodeEngine.getConfig();
+        if (!config.getDynamicConfigurationConfig().isPersistenceEnabled()) {
+            return;
         }
+        DynamicConfigPersistence current = persistence;
+        if (current == null) {
+            Config staticConfig = config instanceof DynamicConfigurationAwareConfig aware ? aware.getStaticConfig() : config;
+            current = new DynamicConfigPersistence(config.getConfigurationFile(), config.getDynamicConfigurationConfig(),
+                    staticConfig, logger);
+            persistence = current;
+        }
+        current.persist(subConfig);
     }
 
     @Override

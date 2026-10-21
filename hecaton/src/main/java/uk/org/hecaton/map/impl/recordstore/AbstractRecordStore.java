@@ -43,9 +43,13 @@ import uk.org.hecaton.map.impl.record.ObjectRecordFactory;
 import uk.org.hecaton.map.impl.record.Record;
 import uk.org.hecaton.map.impl.record.RecordFactory;
 import uk.org.hecaton.map.impl.record.RecordReaderWriter;
+import uk.org.hecaton.map.impl.wan.MerkleTreeMutationObserver;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.wan.impl.CallerProvenance;
+import uk.org.hecaton.wan.impl.merkletree.ArrayMerkleTree;
+import uk.org.hecaton.wan.impl.merkletree.MerkleTree;
+import uk.org.hecaton.wan.impl.merkletree.MerkleTreeView;
 
 import javax.annotation.Nonnull;
 
@@ -70,6 +74,7 @@ abstract class AbstractRecordStore implements RecordStore<Record> {
     protected RecordFactory recordFactory;
     protected Storage<Data, Record> storage;
     protected IndexingMutationObserver<Record> indexingObserver;
+    protected MerkleTree merkleTree;
 
     protected AbstractRecordStore(MapContainer mapContainer, int partitionId) {
         this.name = mapContainer.getName();
@@ -132,6 +137,12 @@ abstract class AbstractRecordStore implements RecordStore<Record> {
         indexingObserver = new IndexingMutationObserver<>(this, serializationService);
         mutationObserver.add(indexingObserver);
 
+        // Add observer for the Merkle tree of the partition (F13: consistency check, delta WAN sync)
+        if (mapServiceContext.shouldEnableMerkleTree(mapContainer, false)) {
+            merkleTree = new ArrayMerkleTree(mapContainer.getMapConfig().getMerkleTreeConfig().getDepth());
+            mutationObserver.add(new MerkleTreeMutationObserver(merkleTree, serializationService));
+        }
+
         // Add observer for persistence (F10)
         NodeEngine nodeEngine = mapServiceContext.getNodeEngine();
         if (mapContainer.getMapConfig().getDataPersistenceConfig().isEnabled()
@@ -142,6 +153,11 @@ abstract class AbstractRecordStore implements RecordStore<Record> {
                 mutationObserver.add(persistenceObserver);
             }
         }
+    }
+
+    @Override
+    public MerkleTreeView getMerkleTree() {
+        return merkleTree;
     }
 
     public IndexingMutationObserver<Record> getIndexingObserver() {

@@ -31,11 +31,11 @@ public enum HecatonFeature {
     /** F2, F3: authentication and authorization ({@code SecurityConfig}). */
     SECURITY("F2/F3", "Security (authentication and authorization)", "M3", null, true),
     /** F2 (P1): LDAP and Kerberos realms. */
-    LDAP_KERBEROS_AUTHENTICATION("F2", "LDAP and Kerberos authentication", "M9"),
+    LDAP_KERBEROS_AUTHENTICATION("F2", "LDAP and Kerberos authentication", "M9", null, true),
     /** F4. */
-    AUDIT_LOG("F4", "Audit log", "M9"),
+    AUDIT_LOG("F4", "Audit log", "M9", null, true),
     /** F5. */
-    SOCKET_INTERCEPTOR("F5", "Socket interceptor", "M9"),
+    SOCKET_INTERCEPTOR("F5", "Socket interceptor", "M9", null, true),
     /** F6: not planned, TLS replaces it. */
     SYMMETRIC_ENCRYPTION("F6", "Symmetric encryption", null, "use TLS/SSL (F1) instead"),
     /** F7. */
@@ -49,17 +49,17 @@ public enum HecatonFeature {
     /** F12. */
     TIERED_STORE("F12", "Tiered Storage", "M10"),
     /** F9. */
-    CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9"),
+    CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9", null, true),
     /** F13. */
     WAN_REPLICATION("F13", "WAN replication", "M7", null, true),
     /** F13: synchronization and consistency checks. */
-    WAN_SYNC("F13", "WAN synchronization", "M9"),
+    WAN_SYNC("F13", "WAN synchronization", "M9", null, true),
     /** F16. */
-    DYNAMIC_CONFIGURATION_PERSISTENCE("F16", "Dynamic configuration persistence", "M9"),
+    DYNAMIC_CONFIGURATION_PERSISTENCE("F16", "Dynamic configuration persistence", "M9", null, true),
     /** F16. */
-    CONFIGURATION_RELOAD("F16", "Configuration reload and update", "M9"),
+    CONFIGURATION_RELOAD("F16", "Configuration reload and update", "M9", null, true),
     /** F17. */
-    USER_CODE_NAMESPACES("F17", "User Code Namespaces", "M9"),
+    USER_CODE_NAMESPACES("F17", "User Code Namespaces", "M9", null, true),
     /** F18. */
     JET_LOSSLESS_RESTART("F18", "Jet lossless restart", "M10"),
     /** F18. */

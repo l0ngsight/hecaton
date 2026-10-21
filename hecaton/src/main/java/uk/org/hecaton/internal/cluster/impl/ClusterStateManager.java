@@ -279,6 +279,10 @@ public class ClusterStateManager {
     private void validateClusterVersionChange(Version newClusterVersion) {
         NodeExtension nodeExtension = node.getNodeExtension();
 
+        if (!clusterVersion.isUnknown() && newClusterVersion.isLessThan(clusterVersion)) {
+            throw new VersionMismatchException("The cluster version cannot be downgraded from " + clusterVersion
+                    + " to " + newClusterVersion);
+        }
         if (!clusterVersion.isUnknown() && !nodeExtension.getSupportedVersions().contains(newClusterVersion)) {
             throw new IllegalArgumentException("Transition to requested version " + newClusterVersion
                     + " not allowed for current cluster version " + clusterVersion);

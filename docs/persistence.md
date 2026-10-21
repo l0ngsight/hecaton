@@ -96,6 +96,46 @@ reports the progress; `interruptBackupTask()` stops it.
 
 To restore a backup, start the members with `base-dir` set to `<backup-dir>/backup-<seq>`.
 
+## Encryption at rest
+
+With `encryption-at-rest` enabled, the keys and values in the logs are encrypted with AES-GCM
+(each with its own random nonce) under a data key generated on the member's first start. The data
+key is stored in `<member directory>/encryption.key`, itself encrypted with the master key read from
+a secure store: a Java KeyStore or a HashiCorp Vault secret.
+
+```yaml
+hecaton:
+  persistence:
+    enabled: true
+    encryption-at-rest:
+      enabled: true
+      algorithm: AES/GCM/NoPadding   # AES only
+      key-size: 256                  # of the data key
+      secure-store:
+        keystore:
+          path: /etc/hecaton/keys.p12
+          type: PKCS12
+          password: changeit
+          current-key-alias: key-2026  # default: the last alias in alphabetical order
+          polling-interval: 60         # seconds; 0 checks for a new key at startup only
+        # or
+        # vault:
+        #   address: https://vault:8200
+        #   secret-path: secret/data/hecaton   # one entry: the Base64-encoded AES key
+        #   token: ...
+        #   polling-interval: 60
+```
+
+- **Key rotation.** Put a new key in the store (a new keystore alias made current, or a new version
+  of the Vault secret) and keep the old one. The member finds it at its next start or polling
+  check and encrypts the data key again with it; the data are not rewritten. The previous keys are
+  the keystore's other AES secret keys, or the previous versions (up to 10) of a KV version 2
+  Vault secret. Once every member has rotated, the old key can be removed.
+- A member whose secure store has none of the keys its data key was encrypted with refuses to
+  start. Losing the master key loses the data.
+- The data key protects the log files and hot backups; `encryption.key` is copied with a backup and
+  needs the same master key to restore it.
+
 ## On disk
 
 Per partition, a log of chunk files; the active chunk is appended to and closed at 4 MB
@@ -104,9 +144,7 @@ compacted. The design is in [`design/persistence.md`](design/persistence.md).
 
 ## Limitations
 
-- Encryption at rest (F10, P1) is planned for M9; members with it enabled refuse to start.
-- CP Subsystem persistence (F9), dynamic configuration persistence (F16), SQL catalog persistence
-  (F19) and Jet lossless restart (F18) come later; their settings are refused at startup.
+- CP Subsystem persistence (F9), SQL catalog persistence (F19) and Jet lossless restart (F18) come later; their settings are refused at startup.
 - Maps configured at runtime (`Config#addMapConfig` on a running member) are not recreated:
   configure persisted maps statically.
 - Not persisted: TTL changes with `IMap#setTtl`, expiration times extended by access in ICaches,

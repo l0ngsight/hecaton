@@ -47,10 +47,28 @@ long as members are restarted one at a time and the cluster is safe in between
 (`PartitionService#isClusterSafe`, `hc-cluster-admin -o get-state`). Give the pod a termination
 grace period at least as long as `hecaton.graceful.shutdown.max.wait`.
 
-All members of a cluster run the same Hecaton version; upgrading from one minor version to the
-next without stopping the cluster (rolling upgrades, F14) is planned for 1.x. Until then upgrade
-by restarting the cluster (with [persistence](persistence.md) to keep the data) or by moving
-clients to a new cluster ([client failover](changes-from-hazelcast.md), `migrate data`).
+## Rolling upgrades
+
+A cluster runs at a *cluster version*: the codebase version of its members (`major.minor`, shown
+as "cluster version" in the start-up banner). A member joins a cluster whose version is its own
+minor version or the previous minor version of the same major (F14), so a cluster can be upgraded
+to the next minor version without stopping it:
+
+1. Replace the members one at a time, as in a rolling restart, waiting for the cluster to be safe
+   after each one. Until all members are replaced the cluster keeps running at the old version;
+   the new members behave as the old version requires.
+2. Once every member runs the new version, raise the cluster version:
+   `Cluster#changeClusterVersion(version)`, `hc-cluster-admin -o change-cluster-version`, REST
+   or Management Center. With `hecaton.cluster.version.auto.upgrade.enabled=true` the master does
+   it on its own once all members (at least
+   `hecaton.cluster.version.auto.upgrade.min.cluster.size` of them) run the new version.
+
+The cluster version cannot be lowered, and a member of an older minor version cannot join a
+cluster that runs at a newer version. Skipping a minor version or changing the major version
+needs a cluster restart (with [persistence](persistence.md) to keep the data) or moving clients
+to a new cluster ([client failover](changes-from-hazelcast.md), `migrate data`). Hecaton releases
+based on the same Hazelcast version share a cluster version and can run in one cluster; features
+a release adds are available once all members run it.
 
 To stop a whole cluster, `hc-cluster-admin -o shutdown` (or `Cluster#shutdown()`) changes the
 cluster state to `PASSIVE` and stops every member, which persistence needs for a clean restart.

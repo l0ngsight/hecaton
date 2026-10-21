@@ -741,6 +741,20 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <!-- in-memory LDAP server for the LDAP realm tests (Apache 2.0 licence option) -->
+            <groupId>com.unboundid</groupId>
+            <artifactId>unboundid-ldapsdk</artifactId>
+            <version>6.0.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- in-process KDC for the Kerberos realm tests -->
+            <groupId>org.apache.kerby</groupId>
+            <artifactId>kerb-simplekdc</artifactId>
+            <version>2.0.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-core</artifactId>
             <version>3.0</version>

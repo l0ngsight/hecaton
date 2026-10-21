@@ -19,8 +19,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!--
-        The coordinate for applications that only use the client (plan §1.3). For now it pulls in the
-        core jar, which runs on Java 17+; a slim client jar replaces it later (M9).
+        The coordinate for applications that only use the client (plan §1.3). It pulls in the core jar,
+        which runs on Java 17+. A slimmer jar would need client and member code decoupled first: see
+        tools/client-jar/reachability.py and the M9 notes of the implementation plan.
     -->
     <name>hecaton-client</name>
     <description>Hecaton Java client (Java 17+)</description>

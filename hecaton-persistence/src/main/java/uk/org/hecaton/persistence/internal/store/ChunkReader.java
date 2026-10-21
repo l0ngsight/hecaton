@@ -43,19 +43,24 @@ final class ChunkReader implements Closeable {
     byte[] key;
     /** Null unless values are read. */
     byte[] value;
+    /** The key and value as stored: encrypted when the log is (then {@link #key} and {@link #value} are decrypted). */
+    byte[] storedKey;
+    byte[] storedValue;
 
     /** Set when the chunk does not end with a complete, intact record: the offset of the bad bytes. */
     long invalidAt = -1;
 
     private final FileChannel channel;
     private final boolean readValues;
+    private final RecordCipher cipher;
     private ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE).flip();
     /** File position of the end of the buffered bytes. */
     private long filePosition;
 
-    ChunkReader(Path path, boolean readValues) throws IOException {
+    ChunkReader(Path path, boolean readValues, RecordCipher cipher) throws IOException {
         this.channel = FileChannel.open(path, StandardOpenOption.READ);
         this.readValues = readValues;
+        this.cipher = cipher;
     }
 
     /** @return whether the chunk has a valid header (it was read) */
@@ -108,15 +113,17 @@ final class ChunkReader implements Closeable {
         if (keyLength < 0 || keyLength > bodyLength - BODY_FIXED_SIZE) {
             return false;
         }
-        key = new byte[keyLength];
-        buffer.get(key);
+        storedKey = new byte[keyLength];
+        buffer.get(storedKey);
+        key = cipher == null ? storedKey : cipher.decrypt(storedKey);
         int valueLength = buffer.getInt();
         if (valueLength != bodyLength - BODY_FIXED_SIZE - keyLength) {
             return false;
         }
         if (readValues) {
-            value = new byte[valueLength];
-            buffer.get(value);
+            storedValue = new byte[valueLength];
+            buffer.get(storedValue);
+            value = cipher == null ? storedValue : cipher.decrypt(storedValue);
         } else {
             buffer.position(buffer.position() + valueLength);
         }

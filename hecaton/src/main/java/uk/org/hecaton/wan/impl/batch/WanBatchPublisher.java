@@ -18,6 +18,7 @@ package uk.org.hecaton.wan.impl.batch;
 import uk.org.hecaton.cache.impl.ICacheService;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.config.AbstractWanPublisherConfig;
+import uk.org.hecaton.config.ConsistencyCheckStrategy;
 import uk.org.hecaton.config.DiscoveryStrategyConfig;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
@@ -25,6 +26,7 @@ import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.instance.ProtocolType;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.config.AliasedDiscoveryConfigUtils;
+import uk.org.hecaton.internal.management.ManagementCenterService;
 import uk.org.hecaton.internal.monitor.LocalWanPublisherStats;
 import uk.org.hecaton.internal.monitor.impl.LocalWanPublisherStatsImpl;
 import uk.org.hecaton.internal.partition.InternalPartition;
@@ -46,16 +48,21 @@ import uk.org.hecaton.wan.WanEventCounters;
 import uk.org.hecaton.wan.WanMigrationAwarePublisher;
 import uk.org.hecaton.wan.WanPublisherState;
 import uk.org.hecaton.wan.WanQueueFullException;
+import uk.org.hecaton.wan.impl.ConsistencyCheckResult;
 import uk.org.hecaton.wan.impl.InternalWanEvent;
 import uk.org.hecaton.wan.impl.InternalWanPublisher;
 import uk.org.hecaton.wan.impl.WanReplicationService;
 import uk.org.hecaton.wan.impl.WanReplicationServiceImpl;
+import uk.org.hecaton.wan.impl.WanSyncStats;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
@@ -75,6 +82,7 @@ import java.util.function.Supplier;
 public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigrationAwarePublisher<Object> {
 
     private static final long FAILURE_BACKOFF_MILLIS = 1000;
+    private static final String SYNC_EXECUTOR = "hc:wan-sync";
 
     private final Node node;
     private final NodeEngineImpl nodeEngine;
@@ -90,8 +98,12 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
     private volatile WanPublisherState state;
     private volatile boolean running;
     private volatile boolean connected;
+    private volatile boolean syncFailed;
     private Thread sender;
     private int nextPartition;
+    private final Map<UUID, WanSyncTask> syncs = new ConcurrentHashMap<>();
+    private final Map<String, WanSyncStats> lastSyncStats = new ConcurrentHashMap<>();
+    private final Map<String, ConsistencyCheckResult> lastConsistencyCheckResults = new ConcurrentHashMap<>();
 
     public WanBatchPublisher(Node node) {
         this.node = node;
@@ -242,7 +254,7 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
         int partitionCount = queues.length;
         for (int i = 0; i < partitionCount && batch.size() < config.getBatchSize(); i++) {
             int partitionId = (nextPartition + i) % partitionCount;
-            if (partitionService.getPartition(partitionId, false).isLocal() && queues[partitionId].size() > 0) {
+            if (partitionService.getPartition(partitionId, false).isLocal() && !queues[partitionId].isEmpty()) {
                 batch.add(partitionId, queues[partitionId].peek(config.getBatchSize() - batch.size()));
             }
         }
@@ -293,7 +305,7 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
         InternalPartitionService partitionService = nodeEngine.getPartitionService();
         for (int i = 0; i < batch.partitions.size(); i++) {
             int partitionId = batch.partitions.get(i);
-            Map<ServiceNamespace, Integer> removed = queues[partitionId].removeSent(batch.events.get(i));
+            Map<ServiceNamespace, Integer> removed = queues[partitionId].removeSent(batch.events.get(i), this::syncEventSent);
             if (!removed.isEmpty()) {
                 removeFromBackups(partitionService.getPartition(partitionId, false), removed);
             }
@@ -390,6 +402,8 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
         stats.setState(state);
         stats.setSentMapEventCounter(sentCounters(MapService.SERVICE_NAME));
         stats.setSentCacheEventCounter(sentCounters(ICacheService.SERVICE_NAME));
+        stats.setLastSyncStats(new HashMap<>(lastSyncStats));
+        stats.setLastConsistencyCheckResults(new HashMap<>(lastConsistencyCheckResults));
         return stats;
     }
 
@@ -476,4 +490,119 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
             return all;
         }
     }
+
+    // WAN sync and consistency check (WanSyncTask)
+
+    /**
+     * Starts a sync ({@code mode} {@code null}: full or Merkle tree sync, as the publisher's sync
+     * config says) or a consistency check of the maps, for the partitions this member owns.
+     */
+    void startSync(UUID syncId, List<String> mapNames, WanSyncTask.Mode mode) {
+        if (mode == null) {
+            mode = config.getSyncConfig().getConsistencyCheckStrategy() == ConsistencyCheckStrategy.MERKLE_TREES
+                    ? WanSyncTask.Mode.MERKLE : WanSyncTask.Mode.FULL;
+        }
+        WanSyncTask task = new WanSyncTask(this, nodeEngine, syncId, mapNames, mode);
+        if (mode != WanSyncTask.Mode.CHECK) {
+            syncs.put(syncId, task);
+        }
+        nodeEngine.getExecutionService().execute(SYNC_EXECUTOR, () -> {
+            try {
+                task.run();
+            } finally {
+                syncs.remove(syncId);
+            }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    void addSyncEvent(int partitionId, InternalWanEvent<?> event, UUID syncId) {
+        queues[partitionId].addSync((InternalWanEvent<Object>) event, syncId);
+    }
+
+    private void syncEventSent(UUID syncId) {
+        WanSyncTask task = syncs.get(syncId);
+        if (task != null) {
+            task.eventSent();
+        }
+    }
+
+    boolean hasSyncEvents(UUID syncId) {
+        for (WanPartitionQueue queue : queues) {
+            if (queue.hasSyncEvents(syncId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Whether a sync is running on this member. */
+    public boolean isSyncing() {
+        return !syncs.isEmpty();
+    }
+
+    void synced(String mapName, WanSyncStats syncStats) {
+        lastSyncStats.put(mapName, syncStats);
+    }
+
+    void syncFailed() {
+        syncFailed = true;
+    }
+
+    /** Whether the last sync failed on this member. */
+    public boolean hasSyncFailed() {
+        return syncFailed;
+    }
+
+    void consistencyChecked(String mapName, ConsistencyCheckResult result) {
+        lastConsistencyCheckResults.put(mapName, result);
+    }
+
+    /** Asks the target cluster for the Merkle tree leaves of a map in the given partitions; tries each endpoint. */
+    @SuppressWarnings("unchecked")
+    Map<Integer, int[]> queryTargetLeaves(String mapName, int[] partitionIds) throws Exception {
+        Exception failure = null;
+        for (int attempt = 0; attempt < Math.max(1, endpoints.count()); attempt++) {
+            Address target = endpoints.current();
+            if (target == null) {
+                break;
+            }
+            try {
+                return (Map<Integer, int[]>) nodeEngine.getOperationService().createInvocationBuilder(
+                                WanReplicationService.SERVICE_NAME,
+                                new WanMerkleTreeQueryOperation(config.getClusterName(), mapName, partitionIds), target)
+                        .setConnectionManager(node.getServer().getConnectionManager(endpointQualifier))
+                        .setTryCount(1)
+                        .setCallTimeout(config.getResponseTimeoutMillis())
+                        .invoke()
+                        .get(config.getResponseTimeoutMillis(), TimeUnit.MILLISECONDS);
+            } catch (Exception e) {
+                failure = e;
+                endpoints.failed(target);
+            }
+        }
+        throw failure != null ? failure : new IllegalStateException("No endpoint of WAN target cluster "
+                + config.getClusterName());
+    }
+
+    String publisherId() {
+        return publisherId;
+    }
+
+    public String getPublisherId() {
+        return publisherId;
+    }
+
+    String wanReplicationName() {
+        return wanReplicationName;
+    }
+
+    ManagementCenterService managementCenter() {
+        return node.getManagementCenterService();
+    }
+
+    boolean isRunning() {
+        return running;
+    }
+
 }

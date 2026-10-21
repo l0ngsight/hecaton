@@ -16,9 +16,11 @@
 
 package uk.org.hecaton.cluster;
 
+import uk.org.hecaton.config.Config;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.internal.cluster.ClusterService;
 import uk.org.hecaton.internal.cluster.impl.VersionMismatchException;
+import uk.org.hecaton.spi.properties.ClusterProperty;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
 import uk.org.hecaton.test.TestHecatonInstanceFactory;
@@ -34,6 +36,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import static uk.org.hecaton.instance.BuildInfoProvider.HECATON_INTERNAL_OVERRIDE_VERSION;
+import static uk.org.hecaton.test.TestClusterUpgradeUtils.assertClusterVersion;
 import static uk.org.hecaton.test.TestClusterUpgradeUtils.upgradeClusterMembers;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -67,9 +70,31 @@ public class ClusterUpgradeTest extends HecatonTestSupport {
     }
 
     @Test
-    public void test_upgradeMinorVersion_notAllowed() {
-        assertThatThrownBy(() -> upgradeCluster(VERSION_2_2_0, VERSION_2_1_0))
-                .isInstanceOf(IllegalStateException.class);
+    public void test_upgradeMinorVersion_allowed() {
+        // rolling upgrade (F14): members of the next minor version join the cluster one by one
+        upgradeCluster(VERSION_2_2_0, VERSION_2_1_0);
+        assertClusterVersion(clusterMembers, VERSION_2_1_0.asVersion());
+
+        clusterService.changeClusterVersion(VERSION_2_2_0.asVersion());
+        assertClusterVersion(clusterMembers, VERSION_2_2_0.asVersion());
+    }
+
+    @Test
+    public void test_clusterVersionAutoUpgrade() {
+        Config config = smallInstanceConfigWithoutJetAndMetrics()
+                .setProperty(ClusterProperty.CLUSTER_VERSION_AUTO_UPGRADE_ENABLED.getName(), "true");
+        upgradeClusterMembers(factory, clusterMembers, VERSION_2_2_0, VERSION_2_1_0, config);
+
+        assertTrueEventually(() -> assertClusterVersion(clusterMembers, VERSION_2_2_0.asVersion()));
+    }
+
+    @Test
+    public void test_downgradeClusterVersion_notAllowed() {
+        upgradeCluster(VERSION_2_2_0, VERSION_2_1_0);
+        clusterService.changeClusterVersion(VERSION_2_2_0.asVersion());
+
+        assertThatThrownBy(() -> clusterService.changeClusterVersion(VERSION_2_1_0.asVersion()))
+                .isInstanceOf(VersionMismatchException.class);
     }
 
     @Test
