@@ -1489,6 +1489,46 @@
         </profile>
 
         <profile>
+            <!--
+            Static security analysis (spec §10): SpotBugs with the FindSecBugs rules. Reports only, in
+            target/spotbugsXml.xml and target/spotbugs.sarif; run by .github/workflows/security.yml.
+            -->
+            <id>security</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>4.10.4.1</version>
+                        <configuration>
+                            <effort>Max</effort>
+                            <threshold>Medium</threshold>
+                            <failOnError>false</failOnError>
+                            <xmlOutput>true</xmlOutput>
+                            <sarifOutput>true</sarifOutput>
+                            <plugins>
+                                <plugin>
+                                    <groupId>com.h3xstream.findsecbugs</groupId>
+                                    <artifactId>findsecbugs-plugin</artifactId>
+                                    <version>1.14.0</version>
+                                </plugin>
+                            </plugins>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>spotbugs</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
             <!-- USE WITH CAUTION! Switches deployment from JFrog Artifactory to Maven Central for releases -->
             <id>enable-maven-central</id>
             <properties>

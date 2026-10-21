@@ -88,6 +88,15 @@ are not replicated again.
   new events, `THROW_EXCEPTION` fails the change with `WanQueueFullException`, and
   `THROW_EXCEPTION_ONLY_IF_REPLICATION_ACTIVE` does so only while the publisher is replicating.
 
+## Security
+
+A target member accepts WAN batches on any endpoint that speaks the member protocol: on the
+member port, from any peer that can reach it. Unless the network keeps other parties out, give
+the target a dedicated WAN endpoint with TLS and mutual authentication (`ssl` with
+`mutualAuthentication: REQUIRED` on its `wan-server-socket-endpoint-config`), and the source's
+`wan-endpoint-config` a certificate the target trusts. The target cluster name in a batch is a
+safeguard against misconfiguration, not authentication.
+
 ## Managing replication
 
 | Operation | API (`WanReplicationService` on a member) | REST (`WAN` endpoint group) | Management Center |
