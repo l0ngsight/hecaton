@@ -65,7 +65,7 @@ import static org.junit.Assume.assumeTrue;
 @Category({QuickTest.class, ParallelJVMTest.class})
 public class HecatonNodeExtensionTest extends HecatonTestSupport {
 
-    private static final String ROLLING_UPGRADES_MESSAGE = "rolling member upgrades, F14, are planned for milestone M9";
+    private static final String ROLLING_UPGRADES_MESSAGE = "of its own minor version or of the previous minor version";
 
     private static final String ENTERPRISE_PROPERTY = "hecaton.internal.override.enterprise";
 

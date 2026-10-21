@@ -26,6 +26,7 @@ import uk.org.hecaton.client.impl.ClientEngine;
 import uk.org.hecaton.client.impl.ClientEngineImpl;
 import uk.org.hecaton.client.impl.ClusterViewListenerService;
 import uk.org.hecaton.cluster.ClusterState;
+import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.config.AdvancedNetworkConfig;
 import uk.org.hecaton.config.AuditlogConfig;
 import uk.org.hecaton.config.Config;
@@ -58,6 +59,7 @@ import uk.org.hecaton.internal.ascii.TextCommandService;
 import uk.org.hecaton.internal.ascii.TextCommandServiceImpl;
 import uk.org.hecaton.internal.cluster.ClusterStateListener;
 import uk.org.hecaton.internal.cluster.ClusterVersionListener;
+import uk.org.hecaton.internal.cluster.impl.ClusterServiceImpl;
 import uk.org.hecaton.internal.cluster.impl.JoinMessage;
 import uk.org.hecaton.internal.cluster.impl.JoinRequest;
 import uk.org.hecaton.internal.cluster.impl.SplitBrainJoinMessage;
@@ -144,6 +146,7 @@ import uk.org.hecaton.wan.impl.WanReplicationService;
 import uk.org.hecaton.wan.impl.WanReplicationServiceImpl;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -152,6 +155,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static uk.org.hecaton.config.ConfigAccessor.getActiveMemberNetworkConfig;
@@ -182,6 +186,8 @@ public class HecatonNodeExtension implements NodeExtension {
 
     private static final String COPYRIGHT_LINE = "Copyright (c) 2026, The Hecaton Authors. "
             + "Based on Hazelcast, Copyright (c) 2008-2026, Hazelcast, Inc. Licensed under the Apache License 2.0.";
+    private static final String VERSION_AUTO_UPGRADE_EXECUTOR = "hz:cluster:version:auto:upgrade";
+    private static final int AUTO_UPGRADE_ATTEMPTS = 60;
 
     protected final Node node;
     protected final ILogger logger;
@@ -199,6 +205,7 @@ public class HecatonNodeExtension implements NodeExtension {
     private volatile CPPersistenceServiceImpl cpPersistence;
     private volatile AuditlogService auditlogService;
     private final Map<EndpointQualifier, Optional<MemberSocketInterceptor>> socketInterceptors = new ConcurrentHashMap<>();
+
     private final HotRestartService noOpHotRestartService = new NoOpHotRestartService();
     private final InternalHotRestartService noOpInternalHotRestartService = new NoopInternalHotRestartService();
 
@@ -224,7 +231,7 @@ public class HecatonNodeExtension implements NodeExtension {
         }
 
         integrityChecker = new IntegrityChecker(node.getConfig().getIntegrityCheckerConfig(), this.systemLogger);
-        supportedVersions = setOf(BuildInfoProvider.getBuildInfo().getCodebaseVersion().asVersion());
+        supportedVersions = supportedVersions(BuildInfoProvider.getBuildInfo());
     }
 
     private void checkCPSubsystemAllowed() {
@@ -641,9 +648,73 @@ public class HecatonNodeExtension implements NodeExtension {
         return supportedVersions;
     }
 
+    /**
+     * Rolling upgrades (F14): a member runs in a cluster of its own minor version or of the previous
+     * minor version of the same major, so members can be replaced one by one with the next minor
+     * version before the cluster version is raised.
+     */
+    static Set<Version> supportedVersions(BuildInfo buildInfo) {
+        Version current = buildInfo.getCodebaseVersion().asVersion();
+        MemberVersion previous = buildInfo.getPreviousVersion();
+        if (previous != null && previous.getMajor() == current.getMajor()
+                && previous.getMinor() == current.getMinor() - 1) {
+            return setOf(previous.asVersion(), current);
+        }
+        return setOf(current);
+    }
+
+    /** The lowest codebase version of the members, or null if there are too few members for an automatic upgrade. */
+    private Version lowestMemberVersion(Collection<Member> members) {
+        if (members.size() < node.getProperties().getInteger(ClusterProperty.CLUSTER_VERSION_AUTO_UPGRADE_MIN_CLUSTER_SIZE)) {
+            return null;
+        }
+        Version lowest = null;
+        for (Member member : members) {
+            Version version = member.getVersion().asVersion();
+            lowest = lowest == null || version.isLessThan(lowest) ? version : lowest;
+        }
+        return lowest;
+    }
+
+    @Override
+    public void scheduleClusterVersionAutoUpgrade() {
+        if (node.getProperties().getBoolean(ClusterProperty.CLUSTER_VERSION_AUTO_UPGRADE_ENABLED) && node.isMaster()) {
+            node.getNodeEngine().getExecutionService().execute(VERSION_AUTO_UPGRADE_EXECUTOR,
+                    () -> autoUpgradeClusterVersion(AUTO_UPGRADE_ATTEMPTS));
+        }
+    }
+
+    /**
+     * Raises the cluster version to the lowest codebase version of the members, if that is newer;
+     * retried while the cluster state cannot change (migrations, for example).
+     */
+    private void autoUpgradeClusterVersion(int attempts) {
+        ClusterServiceImpl clusterService = node.getClusterService();
+        Version lowest = lowestMemberVersion(clusterService.getMembers());
+        Version clusterVersion = clusterService.getClusterVersion();
+        if (!clusterService.isMaster() || !node.isRunning() || lowest == null || !lowest.isGreaterThan(clusterVersion)
+                || !supportedVersions.contains(lowest)) {
+            return;
+        }
+        try {
+            logger.info("All members run version " + lowest + " or newer: upgrading the cluster version from "
+                    + clusterVersion + " to " + lowest);
+            clusterService.changeClusterVersion(lowest);
+        } catch (RuntimeException e) {
+            if (attempts > 1) {
+                logger.fine("Cannot upgrade the cluster version yet, retrying: " + e);
+                node.getNodeEngine().getExecutionService().schedule(VERSION_AUTO_UPGRADE_EXECUTOR,
+                        () -> autoUpgradeClusterVersion(attempts - 1), 1, TimeUnit.SECONDS);
+            } else {
+                logger.warning("Cannot upgrade the cluster version to " + lowest, e);
+            }
+        }
+    }
+
     private static String constructVersionMismatchMessage(MemberVersion memberVersion, Version clusterVersion) {
         String msg = "Joining node's version " + memberVersion + " is not compatible with cluster version " + clusterVersion;
-        msg += " (rolling member upgrades, F14, are planned for milestone M9)";
+        msg += " (a member can join a cluster of its own minor version or of the previous minor version;"
+                + " see the rolling upgrade procedure in docs/operations.md)";
         return msg;
     }
 

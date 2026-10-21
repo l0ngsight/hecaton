@@ -104,7 +104,7 @@ that delivers them, rather than being ignored.
 | Persistence (Hot Restart) | Yes (F10) | IMap, ICache, cluster metadata, coordinated restart, partial/force start, hot backup; encryption at rest (Java KeyStore or Vault master keys, key rotation); files are not compatible with Hazelcast's. [persistence.md](persistence.md) |
 | WAN replication | Yes (F13) | Batch publisher, consumer, management, full and Merkle tree sync, consistency check; replicates to Hecaton clusters only. [wan.md](wan.md) |
 | Client blue/green failover | Yes (F15) | |
-| Rolling upgrades | 1.x (F14) | |
+| Rolling upgrades | Yes (F14) | Between consecutive minor cluster versions. [operations.md](operations.md#rolling-upgrades) |
 | Dynamic configuration persistence and reload | Yes (F16) | [dynamic-configuration.md](dynamic-configuration.md) |
 | User Code Namespaces | Yes (F17) | [user-code-namespaces.md](user-code-namespaces.md) |
 | Tiered Storage, Jet lossless restart and job upgrades, SQL catalog persistence, vector collections | 2.x (F12, F18, F19, F20) | |
