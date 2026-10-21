@@ -331,11 +331,11 @@ Est.: 2–3 ew.
 
 | Step | Work | Est. |
 |---|---|---|
-| F13.1 | `WanReplicationService` implementation (`createService`), publisher lifecycle per `WanReplicationConfig`. | 1 ew |
-| F13.2 | **Batch publisher:** per-partition event queues (with backup replicas), batching by size/time, ack types (`ACK_ON_RECEIPT`, `ACK_ON_OPERATION_COMPLETE`), queue-full behaviour (DISCARD / THROW_EXCEPTION / THROW_EXCEPTION_ONLY_IF_REPLICATION_ACTIVE), target endpoints via static list or discovery SPI, endpoint health/failover, TLS through the WAN endpoint qualifier. | 3 ew |
-| F13.3 | **Consumer:** WAN endpoint (advanced network `WAN` server socket config), apply with merge policies, `persistWanReplicatedData`, custom consumers. | 1.5 ew |
-| F13.4 | Management ops: pause/stop/resume, clear queues, dynamic add of WAN config, publisher state metrics, REST/CLI. | 1 ew |
-| Tests | Two- and three-cluster topologies (active/passive, active/active with merge policies), endpoint failure, queue-full behaviour. | 1.5 ew |
+| F13.1 — done | `WanReplicationService` implementation (`createService`), publisher lifecycle per `WanReplicationConfig`. | 1 ew |
+| F13.2 — done (one batch in flight per publisher and member) | **Batch publisher:** per-partition event queues (with backup replicas), batching by size/time, ack types (`ACK_ON_RECEIPT`, `ACK_ON_OPERATION_COMPLETE`), queue-full behaviour (DISCARD / THROW_EXCEPTION / THROW_EXCEPTION_ONLY_IF_REPLICATION_ACTIVE), target endpoints via static list or discovery SPI, endpoint health/failover, TLS through the WAN endpoint qualifier. | 3 ew |
+| F13.3 — done (maps and caches) | **Consumer:** WAN endpoint (advanced network `WAN` server socket config), apply with merge policies, `persistWanReplicatedData`, custom consumers. | 1.5 ew |
+| F13.4 — done (the existing API, REST and Management Center operations; adding a config is cluster-wide) | Management ops: pause/stop/resume, clear queues, dynamic add of WAN config, publisher state metrics, REST/CLI. | 1 ew |
+| Tests — done (`WanBatchReplicationTest`, `WanNetworkReplicationTest` over TCP) | Two- and three-cluster topologies (active/passive, active/active with merge policies), endpoint failure, queue-full behaviour. | 1.5 ew |
 
 (WAN sync — full and Merkle-tree delta, building on the existing `merkletree` package — and
 consistency check are P1, in M9.)

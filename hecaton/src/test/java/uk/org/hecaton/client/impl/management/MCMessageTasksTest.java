@@ -55,6 +55,7 @@ import uk.org.hecaton.client.impl.spi.impl.ClientInvocationFuture;
 import uk.org.hecaton.client.test.TestHecatonFactory;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.cluster.Cluster;
+import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.core.HecatonException;
@@ -127,7 +128,8 @@ public class MCMessageTasksTest extends HecatonTestSupport {
                 (byte) random.nextInt(2)
         );
 
-        assertFailure(clientMessage, UnsupportedOperationException.class, "Adding new WAN config is not supported.");
+        // WAN replication (F13) adds the configuration
+        new ClientInvocation(getClientImpl(), clientMessage, null).invoke().get(ASSERT_TRUE_EVENTUALLY_TIMEOUT, SECONDS);
     }
 
     @Test
@@ -174,7 +176,7 @@ public class MCMessageTasksTest extends HecatonTestSupport {
     @Test
     public void testClearWanQueuesMessageTask() throws Exception {
         ClientMessage clientMessage = MCClearWanQueuesCodec.encodeRequest(randomString(), randomString());
-        assertFailure(clientMessage, UnsupportedOperationException.class, "Clearing WAN replication queues is not supported.");
+        assertFailure(clientMessage, InvalidConfigurationException.class, "WAN Replication Config doesn't exist");
     }
 
     @Test

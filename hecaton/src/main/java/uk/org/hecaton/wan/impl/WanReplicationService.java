@@ -223,7 +223,6 @@ public interface WanReplicationService extends CoreService,
      *
      * @param wanReplicationConfig the WAN replication config to add
      * @return a best-effort guess at the result of adding WAN replication config
-     * @throws UnsupportedOperationException if invoked on OS
      * @see #addWanReplicationConfigLocally(WanReplicationConfig)
      */
     AddWanConfigResult addWanReplicationConfig(WanReplicationConfig wanReplicationConfig);

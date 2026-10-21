@@ -378,6 +378,9 @@ public class HecatonNodeExtension implements NodeExtension {
         if (jetServiceBackend != null) {
             jetServiceBackend.startScanningForJobs();
         }
+        if (node.getNodeEngine().getWanReplicationService() instanceof WanReplicationServiceImpl wanReplicationService) {
+            wanReplicationService.afterStart();
+        }
     }
 
     @Override

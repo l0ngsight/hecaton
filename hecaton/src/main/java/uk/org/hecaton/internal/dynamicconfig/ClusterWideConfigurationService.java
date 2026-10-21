@@ -360,7 +360,7 @@ public class ClusterWideConfigurationService implements
         } else if (newConfig instanceof WanReplicationConfig config) {
             currentConfig = wanReplicationConfigs.putIfAbsent(config.getName(), config);
             if (currentConfig == null) {
-                nodeEngine.getWanReplicationService().addWanReplicationConfig(config);
+                nodeEngine.getWanReplicationService().addWanReplicationConfigLocally(config);
             }
         } else if (newConfig instanceof UserCodeNamespaceConfig config) {
             // Deliberately overwrite existing

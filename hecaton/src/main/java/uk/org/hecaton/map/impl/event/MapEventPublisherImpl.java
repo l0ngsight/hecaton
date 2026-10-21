@@ -100,10 +100,7 @@ public class MapEventPublisherImpl implements MapEventPublisher {
     public void publishWanUpdate(@Nonnull String mapName,
                                  @Nonnull WanMapEntryView<Object, Object> entryView,
                                  boolean hasLoadProvenance) {
-        if (!isOwnedPartition(entryView.getDataKey())) {
-            return;
-        }
-
+        // backups keep a copy of the owner's WAN queue, so they publish as backup events
         MapContainer mapContainer = mapServiceContext.getMapContainer(mapName);
         SplitBrainMergePolicy wanMergePolicy = mapContainer.getWanContext().getWanMergePolicy();
         WanMapAddOrUpdateEvent event = new WanMapAddOrUpdateEvent(mapName, wanMergePolicy, entryView);
@@ -112,10 +109,6 @@ public class MapEventPublisherImpl implements MapEventPublisher {
 
     @Override
     public void publishWanRemove(@Nonnull String mapName, @Nonnull Data key) {
-        if (!isOwnedPartition(key)) {
-            return;
-        }
-
         WanMapRemoveEvent event = new WanMapRemoveEvent(mapName, key, serializationService);
         publishWanEvent(mapName, event);
     }

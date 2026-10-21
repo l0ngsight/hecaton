@@ -22,6 +22,7 @@ import uk.org.hecaton.nio.ObjectDataInput;
 import uk.org.hecaton.nio.ObjectDataOutput;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
+import uk.org.hecaton.wan.impl.CallerProvenance;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -36,19 +37,34 @@ public class CacheRemoveOperation extends MutatingCacheOperation {
 
     // if same
     private Data oldValue;
+    /** Whether the removal was received by WAN replication: it is not replicated again. */
+    private boolean wanOriginated;
 
     public CacheRemoveOperation() {
     }
 
     public CacheRemoveOperation(String cacheNameWithPrefix, Data key, Data oldValue, int completionId) {
+        this(cacheNameWithPrefix, key, oldValue, completionId, false);
+    }
+
+    public CacheRemoveOperation(String cacheNameWithPrefix, Data key, Data oldValue, int completionId,
+                                boolean wanOriginated) {
         super(cacheNameWithPrefix, key, completionId);
         this.oldValue = oldValue;
+        this.wanOriginated = wanOriginated;
+    }
+
+    @Override
+    protected boolean isWanOriginated() {
+        return wanOriginated;
     }
 
     @Override
     public void run()
             throws Exception {
-        if (oldValue == null) {
+        if (wanOriginated) {
+            response = recordStore.remove(key, getCallerUuid(), null, completionId, CallerProvenance.WAN);
+        } else if (oldValue == null) {
             response = recordStore.remove(key, getCallerUuid(), null, completionId);
         } else {
             response = recordStore.remove(key, oldValue, getCallerUuid(), null, completionId);
@@ -70,7 +86,7 @@ public class CacheRemoveOperation extends MutatingCacheOperation {
 
     @Override
     public Operation getBackupOperation() {
-        return new CacheRemoveBackupOperation(name, key);
+        return new CacheRemoveBackupOperation(name, key, wanOriginated);
     }
 
     @Override
@@ -83,6 +99,7 @@ public class CacheRemoveOperation extends MutatingCacheOperation {
             throws IOException {
         super.writeInternal(out);
         IOUtil.writeData(out, oldValue);
+        out.writeBoolean(wanOriginated);
     }
 
     @Override
@@ -90,6 +107,7 @@ public class CacheRemoveOperation extends MutatingCacheOperation {
             throws IOException {
         super.readInternal(in);
         oldValue = IOUtil.readData(in);
+        wanOriginated = in.readBoolean();
     }
 
     @Override

@@ -35,6 +35,7 @@ import java.util.BitSet;
 import java.util.List;
 
 import static uk.org.hecaton.wan.impl.CallerProvenance.NOT_WAN;
+import static uk.org.hecaton.wan.impl.CallerProvenance.WAN;
 
 /**
  * Contains multiple merging entries for split-brain healing with a {@link SplitBrainMergePolicy}.
@@ -45,6 +46,8 @@ public class CacheMergeOperation extends CacheOperation implements BackupAwareOp
 
     private List<CacheMergeTypes<Object, Object>> mergingEntries;
     private SplitBrainMergePolicy<Object, CacheMergeTypes<Object, Object>, Object> mergePolicy;
+    /** Whether the entries were received by WAN replication: they are not replicated again. */
+    private boolean wanOriginated;
 
     private transient boolean hasBackups;
     private transient List backupPairs;
@@ -55,9 +58,21 @@ public class CacheMergeOperation extends CacheOperation implements BackupAwareOp
 
     public CacheMergeOperation(String name, List<CacheMergeTypes<Object, Object>> mergingEntries,
                                SplitBrainMergePolicy<Object, CacheMergeTypes<Object, Object>, Object> mergePolicy) {
+        this(name, mergingEntries, mergePolicy, false);
+    }
+
+    public CacheMergeOperation(String name, List<CacheMergeTypes<Object, Object>> mergingEntries,
+                               SplitBrainMergePolicy<Object, CacheMergeTypes<Object, Object>, Object> mergePolicy,
+                               boolean wanOriginated) {
         super(name);
         this.mergingEntries = mergingEntries;
         this.mergePolicy = mergePolicy;
+        this.wanOriginated = wanOriginated;
+    }
+
+    @Override
+    protected boolean isWanOriginated() {
+        return wanOriginated;
     }
 
     @Override
@@ -79,9 +94,9 @@ public class CacheMergeOperation extends CacheOperation implements BackupAwareOp
     private void merge(CacheMergeTypes<Object, Object> mergingEntry) {
         Data dataKey = (Data) mergingEntry.getRawKey();
 
-        CacheMergeResponse response = recordStore.merge(mergingEntry, mergePolicy, NOT_WAN);
+        CacheMergeResponse response = recordStore.merge(mergingEntry, mergePolicy, wanOriginated ? WAN : NOT_WAN);
         if (backupPairs != null && response.getResult().isMergeApplied()) {
-            if (response.getResult() == CacheMergeResponse.MergeResult.RECORDS_ARE_EQUAL) {
+            if (wanOriginated || response.getResult() == CacheMergeResponse.MergeResult.RECORDS_ARE_EQUAL) {
                 backupNonReplicatedKeys.set(backupPairs.size() / 2);
             }
             backupPairs.add(dataKey);
@@ -122,6 +137,7 @@ public class CacheMergeOperation extends CacheOperation implements BackupAwareOp
             out.writeObject(mergingEntry);
         }
         out.writeObject(mergePolicy);
+        out.writeBoolean(wanOriginated);
     }
 
     @Override
@@ -130,6 +146,7 @@ public class CacheMergeOperation extends CacheOperation implements BackupAwareOp
 
         mergingEntries = SerializationUtil.readList(in);
         mergePolicy = NamespaceUtil.callWithNamespace(in::readObject, name, CacheService::lookupNamespace);
+        wanOriginated = in.readBoolean();
     }
 
     @Override

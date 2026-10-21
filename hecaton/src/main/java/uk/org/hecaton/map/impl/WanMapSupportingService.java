@@ -31,8 +31,8 @@ import uk.org.hecaton.wan.WanEventCounters;
 import uk.org.hecaton.wan.impl.InternalWanEvent;
 
 import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Future;
 
 import static uk.org.hecaton.internal.util.ExceptionUtil.rethrow;
 import static uk.org.hecaton.map.impl.MapService.SERVICE_NAME;
@@ -52,11 +52,24 @@ class WanMapSupportingService implements WanSupportingService {
 
     @Override
     public void onReplicationEvent(InternalWanEvent event, WanAcknowledgeType acknowledgeType) {
-        if (event instanceof WanMapAddOrUpdateEvent updateEvent) {
-            handleAddOrUpdate(updateEvent);
-        } else if (event instanceof WanMapRemoveEvent removeEvent) {
-            handleRemove(removeEvent);
+        CompletionStage<Void> applied = applyReplicationEvent(event);
+        if (acknowledgeType != WanAcknowledgeType.ACK_ON_RECEIPT) {
+            try {
+                applied.toCompletableFuture().get();
+            } catch (Throwable t) {
+                throw rethrow(t);
+            }
         }
+    }
+
+    @Override
+    public CompletionStage<Void> applyReplicationEvent(InternalWanEvent event) {
+        if (event instanceof WanMapAddOrUpdateEvent updateEvent) {
+            return handleAddOrUpdate(updateEvent);
+        } else if (event instanceof WanMapRemoveEvent removeEvent) {
+            return handleRemove(removeEvent);
+        }
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override
@@ -67,27 +80,21 @@ class WanMapSupportingService implements WanSupportingService {
 
     @Override
     public void onWanConfigChange() {
-        // no-op
+        // maps that refer to a WAN replication scheme added at runtime start publishing to it
+        mapServiceContext.getMapContainers().values().forEach(container -> container.getWanContext().start());
     }
 
-    private void handleRemove(WanMapRemoveEvent replicationRemove) {
+    private CompletionStage<Void> handleRemove(WanMapRemoveEvent replicationRemove) {
         String mapName = replicationRemove.getObjectName();
         MapOperationProvider operationProvider = mapServiceContext.getMapOperationProvider(mapName);
         MapOperation operation = operationProvider.createDeleteOperation(replicationRemove.getObjectName(),
                 replicationRemove.getKey(), true);
-
-        try {
-            int partitionId = nodeEngine.getPartitionService().getPartitionId(replicationRemove.getKey());
-            Future future = nodeEngine.getOperationService()
-                    .invokeOnPartition(SERVICE_NAME, operation, partitionId);
-            future.get();
-            wanEventTypeCounters.incrementRemove(mapName);
-        } catch (Throwable t) {
-            throw rethrow(t);
-        }
+        int partitionId = nodeEngine.getPartitionService().getPartitionId(replicationRemove.getKey());
+        return nodeEngine.getOperationService().invokeOnPartition(SERVICE_NAME, operation, partitionId)
+                .thenAccept(response -> wanEventTypeCounters.incrementRemove(mapName));
     }
 
-    private void handleAddOrUpdate(WanMapAddOrUpdateEvent replicationUpdate) {
+    private CompletionStage<Void> handleAddOrUpdate(WanMapAddOrUpdateEvent replicationUpdate) {
         SplitBrainMergePolicy mergePolicy = replicationUpdate.getMergePolicy();
         String mapName = replicationUpdate.getObjectName();
         MapOperationProvider operationProvider = mapServiceContext.getMapOperationProvider(mapName);
@@ -97,15 +104,8 @@ class WanMapSupportingService implements WanSupportingService {
         //noinspection unchecked
         MapOperation operation = operationProvider.createMergeOperation(mapName, mergingEntry,
                 (SplitBrainMergePolicy<Object, MapMergeTypes<Object, Object>, Object>) mergePolicy, true);
-
-        try {
-            int partitionId = nodeEngine.getPartitionService().getPartitionId(replicationUpdate.getEntryView().getKey());
-            Future future = nodeEngine.getOperationService()
-                    .invokeOnPartition(SERVICE_NAME, operation, partitionId);
-            future.get();
-            wanEventTypeCounters.incrementUpdate(mapName);
-        } catch (Throwable t) {
-            throw rethrow(t);
-        }
+        int partitionId = nodeEngine.getPartitionService().getPartitionId(replicationUpdate.getEntryView().getKey());
+        return nodeEngine.getOperationService().invokeOnPartition(SERVICE_NAME, operation, partitionId)
+                .thenAccept(response -> wanEventTypeCounters.incrementUpdate(mapName));
     }
 }
