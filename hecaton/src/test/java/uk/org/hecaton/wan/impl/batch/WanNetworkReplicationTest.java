@@ -16,7 +16,9 @@
 
 package uk.org.hecaton.wan.impl.batch;
 
+import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.DiscoveryStrategyConfig;
 import uk.org.hecaton.config.JoinConfig;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.ServerSocketEndpointConfig;
@@ -25,8 +27,15 @@ import uk.org.hecaton.config.EndpointConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.core.Hecaton;
+import uk.org.hecaton.config.properties.PropertyDefinition;
 import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.map.IMap;
+import uk.org.hecaton.spi.discovery.AbstractDiscoveryStrategy;
+import uk.org.hecaton.spi.discovery.DiscoveryNode;
+import uk.org.hecaton.spi.discovery.DiscoveryStrategy;
+import uk.org.hecaton.spi.discovery.DiscoveryStrategyFactory;
+import uk.org.hecaton.spi.discovery.SimpleDiscoveryNode;
 import uk.org.hecaton.spi.merge.PassThroughMergePolicy;
 import uk.org.hecaton.spi.properties.ClusterProperty;
 import uk.org.hecaton.test.HecatonSerialClassRunner;
@@ -41,7 +50,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -124,6 +135,35 @@ public class WanNetworkReplicationTest extends HecatonTestSupport {
         assertTrueEventually(() -> assertThat(target.get(1).getMap(MAP).size()).isEqualTo(2 * ENTRIES));
     }
 
+    @Test
+    public void targetEndpointsAreFoundWithTheDiscoverySpi() throws Exception {
+        int[] targetPorts = {freePort(), freePort()};
+        List<HecatonInstance> target = new ArrayList<>();
+        for (int port : targetPorts) {
+            Config config = config("b");
+            config.getNetworkConfig().setPort(port).setPortAutoIncrement(false);
+            join(config.getNetworkConfig().getJoin(), targetPorts);
+            target.add(start(config));
+        }
+        assertClusterSizeEventually(2, target);
+
+        int sourcePort = freePort();
+        Config sourceConfig = config("a");
+        sourceConfig.getNetworkConfig().setPort(sourcePort).setPortAutoIncrement(false);
+        join(sourceConfig.getNetworkConfig().getJoin(), sourcePort);
+        WanBatchPublisherConfig publisher = replicateTo(sourceConfig, null);
+        List<DiscoveryNode> nodes = List.of(new SimpleDiscoveryNode(new Address("127.0.0.1", targetPorts[0])),
+                new SimpleDiscoveryNode(new Address("127.0.0.1", targetPorts[1])));
+        publisher.getDiscoveryConfig().addDiscoveryStrategyConfig(new DiscoveryStrategyConfig(new StaticDiscovery(nodes)));
+        HecatonInstance source = start(sourceConfig);
+
+        IMap<Integer, String> map = source.getMap(MAP);
+        for (int i = 0; i < ENTRIES; i++) {
+            map.put(i, "value" + i);
+        }
+        assertTrueEventually(() -> assertThat(target.get(1).getMap(MAP).size()).isEqualTo(ENTRIES));
+    }
+
     private static Config config(String clusterName) {
         Config config = smallInstanceConfig().setClusterName(clusterName);
         config.setProperty(ClusterProperty.PARTITION_COUNT.getName(), "31");
@@ -134,8 +174,11 @@ public class WanNetworkReplicationTest extends HecatonTestSupport {
 
     private static WanBatchPublisherConfig replicateTo(Config config, String endpoints) {
         WanBatchPublisherConfig publisher = new WanBatchPublisherConfig().setClusterName("b")
-                .setTargetEndpoints(endpoints).setBatchSize(100).setBatchMaxDelayMillis(50)
+                .setBatchSize(100).setBatchMaxDelayMillis(50)
                 .setResponseTimeoutMillis(5000);
+        if (endpoints != null) {
+            publisher.setTargetEndpoints(endpoints);
+        }
         config.addWanReplicationConfig(new WanReplicationConfig().setName(WAN).addBatchReplicationPublisherConfig(publisher));
         config.addMapConfig(new MapConfig(MAP).setWanReplicationRef(new WanReplicationRef().setName(WAN)
                 .setMergePolicyClassName(PassThroughMergePolicy.class.getName())));
@@ -161,6 +204,31 @@ public class WanNetworkReplicationTest extends HecatonTestSupport {
             return socket.getLocalPort();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    /** Discovers a fixed list of nodes. */
+    private record StaticDiscovery(List<DiscoveryNode> nodes) implements DiscoveryStrategyFactory {
+
+        @Override
+        public Class<? extends DiscoveryStrategy> getDiscoveryStrategyType() {
+            return AbstractDiscoveryStrategy.class;
+        }
+
+        @Override
+        public DiscoveryStrategy newDiscoveryStrategy(DiscoveryNode discoveryNode, ILogger logger,
+                                                      Map<String, Comparable> properties) {
+            return new AbstractDiscoveryStrategy(logger, properties) {
+                @Override
+                public Iterable<DiscoveryNode> discoverNodes() {
+                    return nodes;
+                }
+            };
+        }
+
+        @Override
+        public Collection<PropertyDefinition> getConfigurationProperties() {
+            return List.of();
         }
     }
 }

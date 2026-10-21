@@ -121,4 +121,4 @@ and `updateCount`, `removeCount` and `droppedCount` per `map` or `cache` tag.
 `WanBatchReplicationTest` (active/passive and active/active clusters, member failure, pause/stop,
 full queues, caches, configuration added at runtime, custom consumers, metrics) and
 `WanNetworkReplicationTest` (clusters over TCP, WAN endpoints of the advanced network, failover to
-the next endpoint).
+the next endpoint, endpoints found with the Discovery SPI).
