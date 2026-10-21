@@ -92,6 +92,22 @@ the backups' so anti-entropy sends the backups again. Force start has every memb
 data and metadata and complete its start as a new member. A member that finds the master already
 started gives up its data the same way.
 
+## Encryption at rest (F10, P1)
+
+- `RecordCipher` encrypts each record's key and value separately with AES-GCM and a random 12-byte
+  nonce (stored before the ciphertext, with the 16-byte tag after it). Record headers (lengths,
+  sequence, CRC) stay in clear: the CRC covers the encrypted bytes, so recovery and crash
+  consistency work as without encryption. Compaction copies the encrypted bytes as they are.
+- The data key (AES, `key-size` bits) is created on the member's first start and kept in
+  `<member directory>/encryption.key`, wrapped with AES-GCM under the master key (magic, format,
+  nonce, ciphertext, written with `AtomicFiles`, so with a CRC).
+- `MasterKeySource` reads the master keys, current first: `KeyStoreMasterKeySource` (AES secret key
+  entries of a Java KeyStore) or `VaultMasterKeySource` (a Vault KV secret and its previous
+  versions). At startup the member tries them in order; one other than the current key means the
+  key was rotated, and the data key is wrapped again with the current one. With a
+  `polling-interval`, a thread checks the store for a new current key.
+- Hot backups copy `encryption.key` with the data.
+
 ## Backup (F10.5)
 
 `PersistenceService#backup()` starts a `BackupOperation` on every member, which copies its

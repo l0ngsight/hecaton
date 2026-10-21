@@ -154,7 +154,7 @@ public final class PartitionLog implements Closeable {
     public void replay(LogVisitor visitor) {
         try {
             for (Chunk chunk : List.copyOf(chunks.values())) {
-                try (ChunkReader reader = new ChunkReader(chunk.path, true)) {
+                try (ChunkReader reader = new ChunkReader(chunk.path, true, settings.cipher())) {
                     reader.readHeader();
                     while (reader.next()) {
                         if (reader.type == PUT && isLive(reader)) {
@@ -277,6 +277,11 @@ public final class PartitionLog implements Closeable {
         if (closed) {
             throw new PersistenceStoreException("The log in " + dir + " is closed");
         }
+        RecordCipher cipher = settings.cipher();
+        if (cipher != null) {
+            key = cipher.encrypt(key);
+            value = cipher.encrypt(value);
+        }
         int size = ChunkFormat.recordSize(key.length, value.length);
         if (buffer.capacity() < size) {
             buffer = ByteBuffer.allocate(Math.max(size, buffer.capacity() * 2));
@@ -384,12 +389,14 @@ public final class PartitionLog implements Closeable {
             ChunkFormat.writeHeader(header, targetId, coversFrom);
             long size = writeFully(out, header.flip(), 0);
             for (Chunk chunk : from) {
-                try (ChunkReader reader = new ChunkReader(chunk.path, true)) {
+                try (ChunkReader reader = new ChunkReader(chunk.path, true, settings.cipher())) {
                     reader.readHeader();
                     while (reader.next()) {
                         if (reader.type == PUT && isLive(reader)) {
                             ByteBuffer record = ByteBuffer.allocate(reader.size);
-                            ChunkFormat.writeRecord(record, PUT, reader.seq, reader.structureId, reader.key, reader.value);
+                            // the stored (possibly encrypted) bytes are copied as they are
+                            ChunkFormat.writeRecord(record, PUT, reader.seq, reader.structureId, reader.storedKey,
+                                    reader.storedValue);
                             size = writeFully(out, record.flip(), size);
                             moved.add(new Moved(reader.structureId, new KeyBytes(reader.key),
                                     new Location(targetId, reader.size, reader.seq)));
@@ -426,7 +433,7 @@ public final class PartitionLog implements Closeable {
         // read the headers, dropping the chunks a compacted chunk supersedes
         TreeMap<Long, Long> coversFrom = new TreeMap<>();
         for (Map.Entry<Long, Path> file : files.entrySet()) {
-            try (ChunkReader reader = new ChunkReader(file.getValue(), false)) {
+            try (ChunkReader reader = new ChunkReader(file.getValue(), false, settings.cipher())) {
                 if (!reader.readHeader()) {
                     if (file.getKey().equals(files.lastKey())) {
                         // created, but its header was not written completely
@@ -457,7 +464,7 @@ public final class PartitionLog implements Closeable {
 
     private void readIndex(Chunk chunk, boolean last) throws IOException {
         long end;
-        try (ChunkReader reader = new ChunkReader(chunk.path, false)) {
+        try (ChunkReader reader = new ChunkReader(chunk.path, false, settings.cipher())) {
             reader.readHeader();
             while (reader.next()) {
                 nextSeq = Math.max(nextSeq, reader.seq + 1);

@@ -23,6 +23,7 @@ import uk.org.hecaton.internal.hotrestart.InternalHotRestartService;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.persistence.BackupTaskState;
 import uk.org.hecaton.persistence.BackupTaskStatus;
+import uk.org.hecaton.persistence.internal.encryption.DataKey;
 import uk.org.hecaton.persistence.internal.store.PersistenceStoreException;
 import uk.org.hecaton.spi.impl.PartitionSpecificRunnable;
 import uk.org.hecaton.spi.impl.operationservice.OperationService;
@@ -138,6 +139,10 @@ public final class BackupService implements HotRestartService {
         try {
             Files.createDirectories(target);
             Files.copy(memberDir.resolve(MemberDirectory.MEMBER), target.resolve(MemberDirectory.MEMBER));
+            Path dataKey = memberDir.resolve(DataKey.FILE);
+            if (Files.exists(dataKey)) {
+                Files.copy(dataKey, target.resolve(DataKey.FILE));
+            }
             Path cluster = memberDir.resolve(PersistenceModule.CLUSTER);
             Path clusterTarget = Files.createDirectories(target.resolve(PersistenceModule.CLUSTER));
             try (DirectoryStream<Path> files = Files.newDirectoryStream(cluster, file -> !file.toString().endsWith(".tmp"))) {

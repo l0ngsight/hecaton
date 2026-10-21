@@ -20,11 +20,16 @@ package uk.org.hecaton.persistence.internal.store;
  *
  * @param maxChunkSize           size at which the active chunk is closed and a new one started
  * @param compactionGarbageRatio share of garbage in the closed chunks above which they are compacted
+ * @param cipher                 encrypts the keys and values of the records, or {@code null}
  */
-public record LogSettings(long maxChunkSize, double compactionGarbageRatio) {
+public record LogSettings(long maxChunkSize, double compactionGarbageRatio, RecordCipher cipher) {
 
     /** 4 MB chunks, compacted when half of them is garbage. */
     public static final LogSettings DEFAULT = new LogSettings(1 << 22, 0.5);
+
+    public LogSettings(long maxChunkSize, double compactionGarbageRatio) {
+        this(maxChunkSize, compactionGarbageRatio, null);
+    }
 
     public LogSettings {
         if (maxChunkSize <= ChunkFormat.HEADER_SIZE) {
