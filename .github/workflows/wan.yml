@@ -1,0 +1,42 @@
+name: WAN
+
+# Spec §10: WAN replication between three clusters of the Hecaton container image (wan-tests/):
+# active/passive, active/active, and a member failure while replicating.
+
+on:
+  schedule:
+    - cron: '13 3 * * *'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch of this repository to test'
+        default: main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wan-${{ inputs.ref || 'main' }}
+  cancel-in-progress: false
+
+jobs:
+  wan:
+    name: WAN between clusters
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.ref || 'main' }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - run: ./mvnw -B -ntp -T 1C install -DskipTests -pl distribution -am
+      - run: tools/ci/wan-tests.sh
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: wan-tests-reports
+          path: wan-tests/target/failsafe-reports
