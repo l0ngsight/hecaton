@@ -358,7 +358,7 @@ consistency check are P1, in M9.)
 
 | Feature | Notes | Est. |
 |---|---|---|
-| F2 LDAP & Kerberos realms | JNDI LDAP (virtual threads), GSS-API/Kerberos login module, role mapping | 3 ew |
+| F2 LDAP & Kerberos realms — done (system/acceptor credentials from another realm open) | JNDI LDAP (virtual threads), GSS-API/Kerberos login module, role mapping | 3 ew |
 | F4 Audit log — done | `AuditlogService`, event types, log4j/JUL sink | 1 ew |
 | F5 Socket interceptor — done | member + client | 0.5 ew |
 | F9 CP persistence | Raft log + snapshots on the shared store; restart and recovery of CP members | 4 ew |

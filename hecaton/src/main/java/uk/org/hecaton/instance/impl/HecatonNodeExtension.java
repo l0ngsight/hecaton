@@ -36,12 +36,10 @@ import uk.org.hecaton.config.InstanceTrackingConfig.InstanceProductName;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.PersistenceConfig;
 import uk.org.hecaton.config.SSLConfig;
-import uk.org.hecaton.config.SecurityConfig;
 import uk.org.hecaton.config.SerializationConfig;
 import uk.org.hecaton.config.SocketInterceptorConfig;
 import uk.org.hecaton.config.SymmetricEncryptionConfig;
 import uk.org.hecaton.config.cp.CPSubsystemConfig;
-import uk.org.hecaton.config.security.RealmConfig;
 import uk.org.hecaton.core.HecatonInstanceAware;
 import uk.org.hecaton.core.HecatonInstanceNotActiveException;
 import uk.org.hecaton.cp.CPSubsystem;
@@ -241,14 +239,6 @@ public class HecatonNodeExtension implements NodeExtension {
     }
 
     private void checkSecurityAllowed() {
-        SecurityConfig securityConfig = node.getConfig().getSecurityConfig();
-        if (securityConfig != null && securityConfig.isEnabled()) {
-            for (RealmConfig realm : securityConfig.getRealmConfigs().values()) {
-                if (realm.getKerberosAuthenticationConfig() != null) {
-                    throw new IllegalStateException(HecatonFeature.LDAP_KERBEROS_AUTHENTICATION.notAvailableMessage());
-                }
-            }
-        }
         SymmetricEncryptionConfig symmetricEncryptionConfig =
                 getActiveMemberNetworkConfig(node.getConfig()).getSymmetricEncryptionConfig();
         if (symmetricEncryptionConfig != null && symmetricEncryptionConfig.isEnabled()

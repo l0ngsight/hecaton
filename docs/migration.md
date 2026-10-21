@@ -96,7 +96,7 @@ that delivers them, rather than being ignored.
 |---|---|---|
 | License key | Not needed | `license-key` is ignored with an INFO message |
 | TLS/SSL (member, client, WAN, REST, Memcache) | Yes (F1) | `BasicSSLContextFactory` and custom factories; OpenSSL factory not yet. [security.md](security.md), [ee-class-map.md](ee-class-map.md) |
-| Security: realms, JAAS, member authentication, client permissions, security interceptors | Yes (F2, F3) | LDAP and Kerberos realms: 1.x (M9). [security.md](security.md) |
+| Security: realms, JAAS, member authentication, client permissions, security interceptors | Yes (F2, F3) | LDAP and Kerberos realms. [security.md](security.md) |
 | Audit log, socket interceptor | Yes (F4, F5) | [security.md](security.md) |
 | Symmetric encryption | No (F6) | Deprecated in Hazelcast; use TLS |
 | CP Subsystem, CPMap | Yes (F7, F8) | CP persistence: 1.x (F9). [cp.md](cp.md) |
