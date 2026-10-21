@@ -93,6 +93,23 @@ public final class PartitionTableSnapshot implements DataSerializable {
         return -1;
     }
 
+    /**
+     * The table without the replicas of members not in {@code members}; the remaining replicas of a
+     * partition move up, so a backup takes the place of a missing owner.
+     */
+    public PartitionTableSnapshot retainOnly(Set<UUID> members) {
+        UUID[][] retained = new UUID[replicas.length][MAX_REPLICA_COUNT];
+        for (int p = 0; p < replicas.length; p++) {
+            int next = 0;
+            for (UUID replica : replicas[p]) {
+                if (replica != null && members.contains(replica)) {
+                    retained[p][next++] = replica;
+                }
+            }
+        }
+        return new PartitionTableSnapshot(versions.clone(), retained);
+    }
+
     /** The members holding replicas. */
     public Set<UUID> members() {
         Set<UUID> members = new HashSet<>();

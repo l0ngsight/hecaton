@@ -15,12 +15,18 @@
  */
 package uk.org.hecaton.persistence.internal;
 
+import uk.org.hecaton.internal.partition.InternalPartition;
+import uk.org.hecaton.internal.partition.InternalPartitionService;
+import uk.org.hecaton.internal.partition.PartitionReplicaVersionManager;
+import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.persistence.internal.cluster.LocalData;
 import uk.org.hecaton.persistence.internal.map.MapPartitionLoader;
 import uk.org.hecaton.persistence.internal.store.StructureRegistry.Structure;
 import uk.org.hecaton.spi.impl.NodeEngine;
 
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 /** {@link LocalData} on the member's {@link DataStore}. */
@@ -37,12 +43,17 @@ final class LocalPartitionData implements LocalData {
 
     @Override
     public boolean hasPartition(int partitionId) {
+        return partitionsOnDisk().contains(partitionId);
+    }
+
+    private Set<Integer> partitionsOnDisk() {
         Set<Integer> partitions = partitionsOnDisk;
         if (partitions == null) {
-            partitions = store.partitionsOnDisk();
+            partitions = ConcurrentHashMap.newKeySet();
+            partitions.addAll(store.partitionsOnDisk());
             partitionsOnDisk = partitions;
         }
-        return partitions.contains(partitionId);
+        return partitions;
     }
 
     @Override
@@ -67,5 +78,25 @@ final class LocalPartitionData implements LocalData {
     @Override
     public void delete(int partitionId) {
         store.deletePartition(partitionId);
+        partitionsOnDisk().remove(partitionId);
+    }
+
+    @Override
+    public void markBackupsStale(int partitionId) {
+        NodeEngine engine = nodeEngine.get();
+        MapService mapService = engine.getService(MapService.SERVICE_NAME);
+        PartitionReplicaVersionManager versions =
+                ((InternalPartitionService) engine.getPartitionService()).getPartitionReplicaVersionManager();
+        for (String mapName : mapService.getMapServiceContext().getPartitionContainer(partitionId).getMaps().keySet()) {
+            versions.incrementPartitionReplicaVersions(partitionId, MapService.getObjectNamespace(mapName),
+                    InternalPartition.MAX_BACKUP_COUNT);
+        }
+    }
+
+    @Override
+    public void deleteAll() {
+        for (Integer partitionId : List.copyOf(partitionsOnDisk())) {
+            delete(partitionId);
+        }
     }
 }

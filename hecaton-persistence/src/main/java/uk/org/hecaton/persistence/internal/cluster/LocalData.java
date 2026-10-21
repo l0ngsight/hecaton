@@ -33,4 +33,12 @@ public interface LocalData {
 
     /** Deletes the partition's persisted data. */
     void delete(int partitionId);
+
+    /** Deletes all persisted data; the partitions' logs must not be in use. */
+    void deleteAll();
+
+    /**
+     * Makes the backups of an owned partition out of date, so the owner sends them again (anti-entropy).
+     */
+    void markBackupsStale(int partitionId);
 }

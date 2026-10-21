@@ -40,11 +40,14 @@ public final class RecoveryStatus implements DataSerializable {
     private long tableVersionSum;
     private int loadState;
     private String failure;
+    private boolean startCompleted;
 
     public RecoveryStatus() {
     }
 
-    RecoveryStatus(boolean hasData, long tableStamp, long tableVersionSum, int loadState, String failure) {
+    RecoveryStatus(boolean hasData, long tableStamp, long tableVersionSum, int loadState, String failure,
+                   boolean startCompleted) {
+        this.startCompleted = startCompleted;
         this.hasData = hasData;
         this.tableStamp = tableStamp;
         this.tableVersionSum = tableVersionSum;
@@ -73,6 +76,11 @@ public final class RecoveryStatus implements DataSerializable {
         return failure;
     }
 
+    /** Whether the member completed its start. */
+    public boolean startCompleted() {
+        return startCompleted;
+    }
+
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeBoolean(hasData);
@@ -80,6 +88,7 @@ public final class RecoveryStatus implements DataSerializable {
         out.writeLong(tableVersionSum);
         out.writeInt(loadState);
         out.writeString(failure);
+        out.writeBoolean(startCompleted);
     }
 
     @Override
@@ -89,5 +98,6 @@ public final class RecoveryStatus implements DataSerializable {
         tableVersionSum = in.readLong();
         loadState = in.readInt();
         failure = in.readString();
+        startCompleted = in.readBoolean();
     }
 }

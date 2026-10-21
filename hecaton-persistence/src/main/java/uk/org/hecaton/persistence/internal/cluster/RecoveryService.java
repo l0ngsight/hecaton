@@ -56,6 +56,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static uk.org.hecaton.config.PersistenceClusterDataRecoveryPolicy.FULL_RECOVERY_ONLY;
+import static uk.org.hecaton.config.PersistenceClusterDataRecoveryPolicy.PARTIAL_RECOVERY_MOST_COMPLETE;
 
 /**
  * The member's side of persistence: keeps the cluster metadata on disk and, when the member
@@ -85,7 +87,10 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
     private final PersistenceConfig config;
     private final UUID localUuid;
     /** The table persisted before the restart; null if the member had no data. */
-    private final PartitionTableSnapshot persistedTable;
+    private volatile PartitionTableSnapshot persistedTable;
+    /** The table the master recovers the cluster with. */
+    private volatile PartitionTableSnapshot recoveryTable;
+    private volatile boolean partialStartRequested;
     private final ClusterState persistedState;
     private final List<OnJoinOp> deferredPostJoinOps = new ArrayList<>();
     private final Object writeLock = new Object();
@@ -186,7 +191,7 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
                 if (node.isMaster()) {
                     coordinate();
                 } else {
-                    sleep();
+                    followMaster();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -200,62 +205,165 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
         }
     }
 
+    /**
+     * As a member that is not the master: a member joining a cluster that has already started
+     * (it restarted alone) gives up its data; the cluster's replicas are newer.
+     */
+    private void followMaster() throws Exception {
+        Address master = node.getMasterAddress();
+        if (master != null && !master.equals(node.getThisAddress())) {
+            RecoveryStatus masterStatus = invoke(master, new RecoveryOperation(RecoveryOperation.STATUS, null));
+            if (masterStatus.startCompleted() && !startCompleted) {
+                logger.warning("This member restarted with persisted data and joined a cluster that has already "
+                        + "started; it deletes its data and joins as a new member");
+                reset();
+                return;
+            }
+        }
+        sleep();
+    }
+
     /** Runs the recovery as the master; returns early if the member stops being the master. */
     private void coordinate() throws Exception {
         Set<UUID> expected = persistedTable.members();
-        if (!waitForMembers(expected) || !validate(expected)) {
+        Boolean allPresent = waitForMembers(expected);
+        if (allPresent == null) {
             return;
         }
-        logger.info("Recovery from persistence: all " + expected.size() + " members are present; loading data");
-        invokeOnAll(RecoveryOperation.LOAD);
-        loadDeadline = System.currentTimeMillis() + SECONDS.toMillis(config.getDataLoadTimeoutSeconds());
-        while (!allLoaded(statuses())) {
-            if (System.currentTimeMillis() > loadDeadline) {
-                fail("the members did not load their data within the data load timeout ("
-                        + config.getDataLoadTimeoutSeconds() + " seconds)");
-                return;
-            }
-            if (!node.isMaster() || clusterStatus == ClusterHotRestartStatus.FAILED) {
-                return;
-            }
-            sleep();
+        PartitionTableSnapshot table = chooseTable(expected, allPresent);
+        if (table == null || !node.isMaster() || startCompleted) {
+            return;
         }
-        invokeOnAll(RecoveryOperation.COMPLETE);
+        boolean partial = table != persistedTable;
+        logger.info("Recovery from persistence: " + (partial ? "partial start with members " + table.members()
+                : "all " + expected.size() + " members are present") + "; loading data");
+        recoveryTable = table;
+        invokeOnAll(RecoveryOperation.LOAD);
+        if (!waitForLoading()) {
+            return;
+        }
+        invokeOnAll(partial ? RecoveryOperation.COMPLETE_PARTIAL : RecoveryOperation.COMPLETE);
         restoreClusterState();
+        if (partial) {
+            // replicas of the members left out are missing: let the master assign them again
+            ((InternalPartitionServiceImpl) node.getPartitionService()).getMigrationManager().triggerControlTask();
+        }
     }
 
-    /** @return whether the members are present; false if the time ran out or this member is no longer the master */
-    private boolean waitForMembers(Set<UUID> expected) throws InterruptedException {
+    /** @return the table to recover with, or null if recovery failed */
+    private PartitionTableSnapshot chooseTable(Set<UUID> expected, boolean allPresent) throws Exception {
+        if (persistedTable.partitionCount() != node.getPartitionService().getPartitionCount()) {
+            fail("the partition count changed from " + persistedTable.partitionCount() + " to "
+                    + node.getPartitionService().getPartitionCount());
+            return null;
+        }
+        Map<UUID, RecoveryStatus> statuses = statuses();
+        boolean partial = !allPresent || partialStartRequested || !sameTable(expected, statuses);
+        if (!partial) {
+            return persistedTable;
+        }
+        if (!partialStartRequested && config.getClusterDataRecoveryPolicy() == FULL_RECOVERY_ONLY) {
+            fail(allPresent ? "the members persisted different partition tables"
+                    : "members " + missing(expected) + " did not join within the validation timeout ("
+                    + config.getValidationTimeoutSeconds() + " seconds)");
+            return null;
+        }
+        return partialTable(statuses);
+    }
+
+    /**
+     * @return true when all expected members are present, false when the validation time ran out or a
+     * partial start was asked for, null when this member stopped being the master (or started)
+     */
+    private Boolean waitForMembers(Set<UUID> expected) throws InterruptedException {
         while (!presentMembers().keySet().containsAll(expected)) {
-            if (System.currentTimeMillis() > validationDeadline) {
-                Set<UUID> missing = new HashSet<>(expected);
-                missing.removeAll(presentMembers().keySet());
-                fail("members " + missing + " did not join within the validation timeout ("
-                        + config.getValidationTimeoutSeconds() + " seconds)");
+            if (System.currentTimeMillis() > validationDeadline || partialStartRequested) {
                 return false;
             }
-            if (!node.isMaster()) {
-                return false;
+            if (!node.isMaster() || startCompleted) {
+                return null;
             }
             sleep();
         }
         return true;
     }
 
-    /** @return whether the members persisted the same partition table as this one */
-    private boolean validate(Set<UUID> expected) throws Exception {
-        if (persistedTable.partitionCount() != node.getPartitionService().getPartitionCount()) {
-            fail("the partition count changed from " + persistedTable.partitionCount() + " to "
-                    + node.getPartitionService().getPartitionCount());
-            return false;
-        }
-        Map<UUID, RecoveryStatus> statuses = statuses();
+    private Set<UUID> missing(Set<UUID> expected) {
+        Set<UUID> missing = new HashSet<>(expected);
+        missing.removeAll(presentMembers().keySet());
+        return missing;
+    }
+
+    private boolean sameTable(Set<UUID> expected, Map<UUID, RecoveryStatus> statuses) {
         for (UUID member : expected) {
             RecoveryStatus status = statuses.get(member);
             if (status == null || !status.hasData() || status.tableStamp() != persistedTable.stamp()) {
-                fail("member " + member + " persisted a different partition table");
                 return false;
             }
+        }
+        return true;
+    }
+
+    /**
+     * The table of a partial start: of the present members with data, those holding the most recent
+     * (or, with {@code PARTIAL_RECOVERY_MOST_COMPLETE}, the most common) partition table keep their
+     * data; the replicas of all others are left out of the table, and their data is deleted.
+     */
+    private PartitionTableSnapshot partialTable(Map<UUID, RecoveryStatus> statuses) throws Exception {
+        Map<Long, List<UUID>> byStamp = new HashMap<>();
+        Map<Long, Long> versionSums = new HashMap<>();
+        for (Map.Entry<UUID, RecoveryStatus> entry : statuses.entrySet()) {
+            RecoveryStatus status = entry.getValue();
+            if (status.hasData()) {
+                byStamp.computeIfAbsent(status.tableStamp(), stamp -> new ArrayList<>()).add(entry.getKey());
+                versionSums.put(status.tableStamp(), status.tableVersionSum());
+            }
+        }
+        boolean mostComplete = config.getClusterDataRecoveryPolicy() == PARTIAL_RECOVERY_MOST_COMPLETE;
+        Long chosen = null;
+        for (Long stamp : byStamp.keySet()) {
+            if (chosen == null || isBetter(stamp, chosen, byStamp, versionSums, mostComplete)) {
+                chosen = stamp;
+            }
+        }
+        if (chosen == null) {
+            fail("no member has persisted data");
+            return null;
+        }
+        List<UUID> kept = byStamp.get(chosen);
+        PartitionTableSnapshot table;
+        if (chosen == persistedTable.stamp()) {
+            table = persistedTable;
+        } else {
+            Address holder = presentMembers().get(kept.get(0));
+            table = invoke(holder, new RecoveryOperation(RecoveryOperation.TABLE, null));
+        }
+        return table.retainOnly(new HashSet<>(kept));
+    }
+
+    private static boolean isBetter(long stamp, long than, Map<Long, List<UUID>> byStamp, Map<Long, Long> versionSums,
+                                    boolean mostComplete) {
+        int members = byStamp.get(stamp).size();
+        int thanMembers = byStamp.get(than).size();
+        if (mostComplete && members != thanMembers) {
+            return members > thanMembers;
+        }
+        return versionSums.get(stamp) > versionSums.get(than);
+    }
+
+    /** @return whether all members loaded their data */
+    private boolean waitForLoading() throws Exception {
+        loadDeadline = System.currentTimeMillis() + SECONDS.toMillis(config.getDataLoadTimeoutSeconds());
+        while (!allLoaded(statuses())) {
+            if (System.currentTimeMillis() > loadDeadline) {
+                fail("the members did not load their data within the data load timeout ("
+                        + config.getDataLoadTimeoutSeconds() + " seconds)");
+                return false;
+            }
+            if (!node.isMaster() || startCompleted || clusterStatus == ClusterHotRestartStatus.FAILED) {
+                return false;
+            }
+            sleep();
         }
         return true;
     }
@@ -301,42 +409,79 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
 
     private Map<UUID, RecoveryStatus> statuses() throws Exception {
         Map<UUID, RecoveryStatus> statuses = new HashMap<>();
-        OperationService operationService = node.getNodeEngine().getOperationService();
         for (Member member : node.getClusterService().getMembers()) {
             RecoveryStatus status = member.localMember() ? status()
-                    : operationService.<RecoveryStatus>invokeOnTarget(SERVICE_NAME,
-                            new RecoveryOperation(RecoveryOperation.STATUS, null), member.getAddress()).get();
+                    : invoke(member.getAddress(), new RecoveryOperation(RecoveryOperation.STATUS, null));
             statuses.put(member.getUuid(), status);
         }
         return statuses;
     }
 
-    private void invokeOnAll(int step) throws Exception {
+    private <T> T invoke(Address target, RecoveryOperation operation) throws Exception {
         OperationService operationService = node.getNodeEngine().getOperationService();
-        Member local = null;
+        return operationService.<T>invokeOnTarget(SERVICE_NAME, operation, target).get();
+    }
+
+    /** Runs a step on the other members, then on this one. */
+    private void invokeOnAll(int step) throws Exception {
         for (Member member : node.getClusterService().getMembers()) {
-            if (member.localMember()) {
-                local = member;
-            } else {
-                operationService.invokeOnTarget(SERVICE_NAME, new RecoveryOperation(step, persistedTable),
-                        member.getAddress()).get();
+            if (!member.localMember()) {
+                invoke(member.getAddress(), new RecoveryOperation(step, recoveryTable));
             }
         }
-        if (local != null) {
-            if (step == RecoveryOperation.LOAD) {
-                startLoading(persistedTable);
-            } else {
-                complete(persistedTable);
-            }
+        switch (step) {
+            case RecoveryOperation.LOAD -> startLoading(recoveryTable);
+            case RecoveryOperation.COMPLETE -> complete(recoveryTable, false);
+            case RecoveryOperation.COMPLETE_PARTIAL -> complete(recoveryTable, true);
+            case RecoveryOperation.RESET -> reset();
+            default -> throw new IllegalArgumentException("Step " + step);
         }
     }
 
     // steps run on every member
 
     RecoveryStatus status() {
-        return persistedTable == null
-                ? new RecoveryStatus(false, 0, 0, startCompleted ? RecoveryStatus.LOADED : loadState, loadFailure)
-                : new RecoveryStatus(true, persistedTable.stamp(), persistedTable.versionSum(), loadState, loadFailure);
+        PartitionTableSnapshot table = persistedTable;
+        return table == null
+                ? new RecoveryStatus(false, 0, 0, startCompleted ? RecoveryStatus.LOADED : loadState, loadFailure,
+                startCompleted)
+                : new RecoveryStatus(true, table.stamp(), table.versionSum(), loadState, loadFailure, startCompleted);
+    }
+
+    PartitionTableSnapshot persistedTable() {
+        return persistedTable;
+    }
+
+    /** Asks for a partial start; forwarded to the master. */
+    boolean requestPartialStart() {
+        if (startCompleted) {
+            return false;
+        }
+        if (node.isMaster()) {
+            partialStartRequested = true;
+            return true;
+        }
+        Address master = node.getMasterAddress();
+        if (master == null) {
+            return false;
+        }
+        try {
+            return invoke(master, new RecoveryOperation(RecoveryOperation.PARTIAL, null));
+        } catch (Exception e) {
+            logger.warning("Could not ask the master for a partial start", e);
+            return false;
+        }
+    }
+
+    /** Deletes the member's data and metadata and completes its start as a new member. */
+    synchronized void reset() {
+        if (startCompleted) {
+            return;
+        }
+        data.deleteAll();
+        metadata.delete();
+        persistedTable = null;
+        completeStart();
     }
 
     synchronized void startLoading(PartitionTableSnapshot table) {
@@ -398,7 +543,13 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
         }
     }
 
-    synchronized void complete(PartitionTableSnapshot table) {
+    /**
+     * Installs the table and completes the start.
+     *
+     * @param partial whether some replicas were left out (partial start): replicas moved up hold no data
+     *                for their new index, so the owners send their backups again
+     */
+    synchronized void complete(PartitionTableSnapshot table, boolean partial) {
         if (startCompleted) {
             return;
         }
@@ -406,6 +557,34 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
         if (!partitionService.isPartitionAssignmentDone()) {
             partitionService.setInitialState(table.toView(presentMembers()));
         }
+        completeStart();
+        if (partial) {
+            resendBackups(table);
+        }
+        logger.info("Recovery from persistence completed");
+    }
+
+    private void resendBackups(PartitionTableSnapshot table) {
+        OperationService operationService = node.getNodeEngine().getOperationService();
+        for (int p = 0; p < table.partitionCount(); p++) {
+            if (table.replicaIndexOf(p, localUuid) == 0) {
+                int partitionId = p;
+                operationService.execute(new PartitionSpecificRunnable() {
+                    @Override
+                    public int getPartitionId() {
+                        return partitionId;
+                    }
+
+                    @Override
+                    public void run() {
+                        data.markBackupsStale(partitionId);
+                    }
+                });
+            }
+        }
+    }
+
+    private void completeStart() {
         startCompleted = true;
         clusterStatus = ClusterHotRestartStatus.SUCCEEDED;
         List<OnJoinOp> postJoinOps;
@@ -417,7 +596,6 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
             node.getNodeEngine().getOperationService().run(op);
         }
         writeMetadata();
-        logger.info("Recovery from persistence completed");
     }
 
     private int countReplicas() {
@@ -459,14 +637,28 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
         return startCompleted;
     }
 
+    /**
+     * Force start: every member deletes its data and the cluster starts empty. Coordinated by the
+     * member that receives the request.
+     */
     @Override
     public boolean triggerForceStart() {
-        return false;
+        if (startCompleted && node.getClusterService().getMembers().stream().noneMatch(m -> !m.localMember())) {
+            return false;
+        }
+        logger.warning("Force start: the members delete their persisted data and the cluster starts empty");
+        try {
+            invokeOnAll(RecoveryOperation.RESET);
+            return true;
+        } catch (Exception e) {
+            logger.warning("Force start failed", e);
+            return false;
+        }
     }
 
     @Override
     public boolean triggerPartialStart() {
-        return false;
+        return requestPartialStart();
     }
 
     @Override

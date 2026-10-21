@@ -28,13 +28,18 @@ import java.io.IOException;
  * An operation of the recovery protocol, sent by the master to the members (see
  * {@link RecoveryService}). {@link #STATUS} returns the member's {@link RecoveryStatus};
  * {@link #LOAD} asks it to load its data for the given partition table; {@link #COMPLETE} installs
- * the partition table and ends recovery.
+ * the partition table and ends recovery; {@link #TABLE} returns the member's persisted table;
+ * {@link #RESET} deletes its data (force start); {@link #PARTIAL} asks the master for a partial start.
  */
 public final class RecoveryOperation extends Operation implements AllowedDuringPassiveState, UrgentSystemOperation {
 
     static final int STATUS = 1;
     static final int LOAD = 2;
     static final int COMPLETE = 3;
+    static final int TABLE = 4;
+    static final int RESET = 5;
+    static final int PARTIAL = 6;
+    static final int COMPLETE_PARTIAL = 7;
 
     private int step;
     private PartitionTableSnapshot table;
@@ -59,7 +64,11 @@ public final class RecoveryOperation extends Operation implements AllowedDuringP
         switch (step) {
             case STATUS -> response = service.status();
             case LOAD -> service.startLoading(table);
-            case COMPLETE -> service.complete(table);
+            case COMPLETE -> service.complete(table, false);
+            case COMPLETE_PARTIAL -> service.complete(table, true);
+            case TABLE -> response = service.persistedTable();
+            case RESET -> service.reset();
+            case PARTIAL -> response = service.requestPartialStart();
             default -> throw new IllegalStateException("Unknown recovery step " + step);
         }
     }
