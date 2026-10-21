@@ -183,6 +183,42 @@ public final class PartitionLog implements Closeable {
         return chunks.size();
     }
 
+    /**
+     * Copies the log to {@code target} as it is now: the closed chunks, which do not change, as hard
+     * links where the file system allows; the written part of the active chunk as a copy.
+     */
+    public void backupTo(Path target) {
+        try {
+            Files.createDirectories(target);
+            force();
+            for (Chunk chunk : chunks.values()) {
+                Path copy = target.resolve(chunk.path.getFileName());
+                if (chunk == active) {
+                    try (FileChannel in = FileChannel.open(chunk.path, StandardOpenOption.READ);
+                         FileChannel out = FileChannel.open(copy, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)) {
+                        long copied = 0;
+                        while (copied < chunk.size) {
+                            copied += in.transferTo(copied, chunk.size - copied, out);
+                        }
+                        out.force(true);
+                    }
+                } else {
+                    linkOrCopy(chunk.path, copy);
+                }
+            }
+        } catch (IOException e) {
+            throw new PersistenceStoreException("Cannot back up the log in " + dir + " to " + target, e);
+        }
+    }
+
+    private static void linkOrCopy(Path source, Path target) throws IOException {
+        try {
+            Files.createLink(target, source);
+        } catch (UnsupportedOperationException | IOException e) {
+            Files.copy(source, target);
+        }
+    }
+
     /** Closes the log and deletes its files. */
     public void delete() {
         closeQuietly();

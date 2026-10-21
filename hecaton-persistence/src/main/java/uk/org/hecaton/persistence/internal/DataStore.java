@@ -125,6 +125,36 @@ public final class DataStore implements AutoCloseable {
         log.delete();
     }
 
+    /** Copies the partition's log to {@code target}, if it has one. Runs on the partition's thread. */
+    void backupPartition(int partitionId, Path target) {
+        PartitionLog log = logs.get(partitionId);
+        if (log == null && !Files.exists(dir.resolve(PARTITION_PREFIX + partitionId))) {
+            return;
+        }
+        log(partitionId).backupTo(target.resolve(PARTITION_PREFIX + partitionId));
+    }
+
+    /** Copies the structure ids and configurations to {@code target}. */
+    void backupStructures(Path target) {
+        try {
+            Files.createDirectories(target);
+            synchronized (structures) {
+                Files.copy(dir.resolve("structures"), target.resolve("structures"));
+            }
+            Path configs = dir.resolve("configs");
+            if (Files.exists(configs)) {
+                Path targetConfigs = Files.createDirectories(target.resolve("configs"));
+                try (DirectoryStream<Path> files = Files.newDirectoryStream(configs)) {
+                    for (Path file : files) {
+                        Files.copy(file, targetConfigs.resolve(file.getFileName()));
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new PersistenceStoreException("Cannot back up " + dir + " to " + target, e);
+        }
+    }
+
     /** The partitions that have a log on disk. */
     Set<Integer> partitionsOnDisk() {
         Set<Integer> partitions = new TreeSet<>();

@@ -37,8 +37,8 @@ import java.util.UUID;
  */
 final class MemberDirectory implements AutoCloseable {
 
+    static final String MEMBER = "member";
     private static final String LOCK = "lock";
-    private static final String MEMBER = "member";
 
     private final Path dir;
     private final FileChannel lockChannel;

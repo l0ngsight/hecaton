@@ -24,6 +24,8 @@ import uk.org.hecaton.config.IndexType;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.map.IMap;
+import uk.org.hecaton.persistence.BackupTaskState;
+import uk.org.hecaton.persistence.PersistenceService;
 import uk.org.hecaton.query.Predicates;
 import uk.org.hecaton.spi.properties.ClusterProperty;
 import uk.org.hecaton.test.HecatonSerialClassRunner;
@@ -184,6 +186,44 @@ public class PersistenceRestartTest extends HecatonTestSupport {
         assertThat(recovered.get(0)).isEqualTo("updated0");
         assertThat(recovered.get(1)).isNull();
         assertThat(recovered.get(2)).isEqualTo("value2");
+    }
+
+    @Test
+    public void backupIsRestoredByStartingFromIt() throws IOException {
+        File baseDir = folder.newFolder();
+        File backupDir = folder.newFolder();
+        TestHecatonInstanceFactory factory = createHecatonInstanceFactory(4);
+        List<HecatonInstance> members = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            Config config = config(baseDir);
+            config.getPersistenceConfig().setBackupDir(backupDir);
+            members.add(factory.newHecatonInstance(config));
+        }
+        IMap<Integer, String> map = members.get(0).getMap("persistent");
+        for (int i = 0; i < ENTRIES; i++) {
+            map.put(i, "value" + i);
+        }
+        PersistenceService persistence = members.get(0).getCluster().getPersistenceService();
+        assertThat(persistence.isBackupEnabled()).isTrue();
+        persistence.backup(42);
+        for (HecatonInstance member : members) {
+            assertTrueEventually(() -> assertThat(member.getCluster().getPersistenceService().getBackupTaskStatus().getState())
+                    .isEqualTo(BackupTaskState.SUCCESS));
+        }
+        // changes after the backup are not in it
+        map.put(-1, "after");
+        map.remove(0);
+        members.get(0).getCluster().shutdown();
+
+        File backup = new File(backupDir, "backup-42");
+        List<HecatonInstance> restored = startMembers(factory, backup, 2);
+        for (HecatonInstance member : restored) {
+            waitUntilRecovered(member);
+        }
+        IMap<Integer, String> restoredMap = restored.get(0).getMap("persistent");
+        assertThat(restoredMap.size()).isEqualTo(ENTRIES);
+        assertThat(restoredMap.get(0)).isEqualTo("value0");
+        assertThat(restoredMap.get(-1)).isNull();
     }
 
     private static Config config(File baseDir) {

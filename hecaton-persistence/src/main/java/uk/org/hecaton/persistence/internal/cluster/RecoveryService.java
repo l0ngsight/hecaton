@@ -20,7 +20,6 @@ import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.config.PersistenceConfig;
 import uk.org.hecaton.config.HotRestartClusterDataRecoveryPolicy;
-import uk.org.hecaton.hotrestart.HotRestartService;
 import uk.org.hecaton.instance.impl.ClusterTopologyIntent;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.cluster.ClusterService;
@@ -35,8 +34,6 @@ import uk.org.hecaton.internal.partition.PartitionTableView;
 import uk.org.hecaton.internal.partition.impl.InternalPartitionServiceImpl;
 import uk.org.hecaton.internal.partition.operation.SafeStateCheckOperation;
 import uk.org.hecaton.logging.ILogger;
-import uk.org.hecaton.persistence.BackupTaskState;
-import uk.org.hecaton.persistence.BackupTaskStatus;
 import uk.org.hecaton.spi.impl.PartitionSpecificRunnable;
 import uk.org.hecaton.spi.impl.operationservice.OperationService;
 import uk.org.hecaton.version.Version;
@@ -76,7 +73,7 @@ import static uk.org.hecaton.config.PersistenceClusterDataRecoveryPolicy.PARTIAL
  * master leaves, the next one starts over; every step can be repeated.
  */
 @SuppressWarnings({"checkstyle:ClassFanOutComplexity", "checkstyle:MethodCount"})
-public final class RecoveryService implements InternalHotRestartService, HotRestartService {
+public final class RecoveryService implements InternalHotRestartService {
 
     private static final long POLL_MILLIS = 100;
 
@@ -778,47 +775,5 @@ public final class RecoveryService implements InternalHotRestartService, HotRest
     @Override
     public void onMemberJoined(Member member) {
         // members joining during recovery are seen by the master
-    }
-
-    // HotRestartService (backups come with F10.5)
-
-    @Override
-    public void backup() {
-        throw new UnsupportedOperationException("Persistence backups are not available yet");
-    }
-
-    @Override
-    public void backup(long backupSeq) {
-        backup();
-    }
-
-    @Override
-    public BackupTaskStatus getBackupTaskStatus() {
-        return new BackupTaskStatus(BackupTaskState.NO_TASK, 0, 0);
-    }
-
-    @Override
-    public void interruptLocalBackupTask() {
-        // no backup runs
-    }
-
-    @Override
-    public void interruptBackupTask() {
-        // no backup runs
-    }
-
-    @Override
-    public boolean isHotBackupEnabled() {
-        return false;
-    }
-
-    @Override
-    public boolean isBackupEnabled() {
-        return false;
-    }
-
-    @Override
-    public String getBackupDirectory() {
-        return config.getBackupDir() == null ? null : config.getBackupDir().getAbsolutePath();
     }
 }

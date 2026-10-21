@@ -45,14 +45,15 @@ import java.util.UUID;
  */
 public class PersistenceModule implements MemberModule, PersistenceCapability {
 
-    private static final String DATA = "data";
-    private static final String CLUSTER = "cluster";
+    static final String DATA = "data";
+    static final String CLUSTER = "cluster";
 
     private final InternalHotRestartService notStarted = new NoopInternalHotRestartService();
     private Node node;
     private MemberDirectory directory;
     private DataStore dataStore;
     private RecoveryService recovery;
+    private BackupService backup;
 
     @Override
     public String name() {
@@ -74,6 +75,7 @@ public class PersistenceModule implements MemberModule, PersistenceCapability {
         dataStore = new DataStore(dir.resolve(DATA), partitionCount, LogSettings.DEFAULT);
         recovery = new RecoveryService(node, new ClusterMetadata(dir.resolve(CLUSTER)),
                 new LocalPartitionData(dataStore, node::getNodeEngine), uuid);
+        backup = new BackupService(node, dataStore, dir, partitionCount);
         return uuid;
     }
 
@@ -102,7 +104,7 @@ public class PersistenceModule implements MemberModule, PersistenceCapability {
 
     @Override
     public HotRestartService hotRestartService() {
-        return recovery;
+        return backup;
     }
 
     @Override
