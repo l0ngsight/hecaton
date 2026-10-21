@@ -20,6 +20,7 @@ import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.management.events.WanConsistencyCheckIgnoredEvent;
+import uk.org.hecaton.internal.management.events.WanSyncIgnoredEvent;
 import uk.org.hecaton.internal.monitor.WanSyncState;
 import uk.org.hecaton.internal.util.UuidUtil;
 import uk.org.hecaton.map.impl.MapService;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 import static uk.org.hecaton.wan.impl.WanReplicationService.SERVICE_NAME;
 
@@ -51,11 +53,24 @@ class WanSyncCoordinator {
     }
 
     UUID syncMap(String wanReplicationName, String wanPublisherId, String mapName) {
-        return start(wanReplicationName, wanPublisherId, List.of(mapName), false);
+        return startOrReport(wanReplicationName, wanPublisherId, mapName, () -> List.of(mapName));
     }
 
     UUID syncAllMaps(String wanReplicationName, String wanPublisherId) {
-        return start(wanReplicationName, wanPublisherId, mapsReplicatedBy(wanReplicationName), false);
+        return startOrReport(wanReplicationName, wanPublisherId, null, () -> mapsReplicatedBy(wanReplicationName));
+    }
+
+    /** Starts a sync; a sync that cannot start (unknown scheme or publisher) is reported to Management Center. */
+    private UUID startOrReport(String wanReplicationName, String wanPublisherId, String mapName,
+                               Supplier<List<String>> mapNames) {
+        try {
+            return start(wanReplicationName, wanPublisherId, mapNames.get(), false);
+        } catch (RuntimeException e) {
+            node.getManagementCenterService().log(new WanSyncIgnoredEvent(UuidUtil.newUnsecureUUID(), wanReplicationName,
+                    wanPublisherId, mapName,
+                    e.getMessage()));
+            throw e;
+        }
     }
 
     UUID consistencyCheck(String wanReplicationName, String wanPublisherId, String mapName) {

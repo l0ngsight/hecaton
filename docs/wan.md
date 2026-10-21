@@ -117,10 +117,55 @@ The publishers' state, outbound queue size and sent/dropped event counts are in
 `publisherId`, with `outboundQueueSize`, `totalPublishedEventCount` and `totalPublishLatency`,
 and `updateCount`, `removeCount` and `droppedCount` per `map` or `cache` tag.
 
+## Synchronization and consistency check
+
+Events that never reached the target (a stopped publisher, cleared queues, a new target cluster)
+are recovered by a WAN sync of a map, which sends its entries to the target cluster:
+
+| Operation | API | REST (`WAN` endpoint group) |
+|---|---|---|
+| Sync a map | `syncMap(scheme, publisherId, map)` | `/hecaton/rest/wan/sync/map` |
+| Sync all maps of the scheme | `syncAllMaps(scheme, publisherId)` | `/hecaton/rest/wan/sync/allmaps` |
+| Consistency check of a map | `consistencyCheck(scheme, publisherId, map)` | `/hecaton/rest/wan/consistencyCheck/map` |
+| Sync state of a member | `getWanSyncState()` | `GET /hecaton/rest/wan/sync/progress/<id>` |
+
+The publisher's `sync` section chooses how a sync works:
+
+- **Full sync** (`consistency-check-strategy: NONE`, the default): every entry is sent.
+- **Merkle tree sync** (`consistency-check-strategy: MERKLE_TREES`): each partition of the map
+  keeps a Merkle tree of its entries; the source compares the leaves of its trees with the
+  target cluster's and sends only the entries of the leaves that differ. Both clusters must
+  enable `merkle-tree` on the map with the same `depth`, and have the same partition count.
+
+```yaml
+hecaton:
+  wan-replication:
+    to-london:
+      batch-publisher:
+        london:
+          sync:
+            consistency-check-strategy: MERKLE_TREES
+  map:
+    orders:
+      merkle-tree:
+        enabled: true
+        depth: 10
+```
+
+A consistency check compares the Merkle trees and reports, per member, the partitions and leaves
+that differ and the entries a sync would send, without sending anything; a map without a Merkle
+tree is ignored (the call returns no ID). A sync or check started on any member runs on every
+member for the partitions it owns. Sync events go through the partitions' queues, in order with
+the other events, but do not count against `queue-capacity` and are not copied to backups. The
+results are in the publisher statistics (`LocalWanPublisherStats#getLastSyncStats`,
+`#getLastConsistencyCheckResults`) and Management Center events. Entries that exist only in the
+target cluster are not removed.
+
 ## Limitations
 
-- WAN synchronization (full and Merkle-tree delta sync) and consistency checks (F13, P1) are
-  planned for M9; they fail with a message naming the milestone.
+- WAN sync covers maps; caches are replicated but not synced, as in Hazelcast.
+- A sync whose events are lost (the member owning a partition fails during the sync) is not
+  resumed: run it again.
 - Batches are sent one at a time per publisher and member (`max-concurrent-invocations` is
   ignored), and events are not coalesced per key (`snapshot-enabled` is ignored).
 - Only IMap and ICache are replicated, as in Hazelcast.
@@ -128,6 +173,7 @@ and `updateCount`, `removeCount` and `droppedCount` per `map` or `cache` tag.
 ## Testing
 
 `WanBatchReplicationTest` (active/passive and active/active clusters, member failure, pause/stop,
-full queues, caches, configuration added at runtime, custom consumers, metrics) and
+full queues, caches, configuration added at runtime, custom consumers, metrics), `WanSyncTest`
+(full and Merkle tree sync, consistency check) and
 `WanNetworkReplicationTest` (clusters over TCP, WAN endpoints of the advanced network, failover to
 the next endpoint, endpoints found with the Discovery SPI).

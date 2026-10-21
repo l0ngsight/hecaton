@@ -111,6 +111,46 @@ joining member's; `NONE`). A custom policy can be configured with `client-permis
 
 Security interceptors (`security-interceptors`) see every client call before and after it runs.
 
+## Audit log
+
+```yaml
+hecaton:
+  auditlog:
+    enabled: true
+    # factory-class-name: com.example.MyAuditlogServiceFactory
+    # properties:
+    #   logger: hecaton.auditlog
+```
+
+The audit log (F4) records security-relevant events: client, member and REST authentication
+(with the outcome; passwords and tokens are never logged), connections, members joining, leaving,
+promoted or suspected, cluster shutdown and merge, logging-level and diagnostics changes, and WAN
+configuration changes. Each event has a type ID (`HZ-0501` client authentication, ...; see
+`AuditlogTypeIds`), a message, parameters and a timestamp. By default the events are written to the
+logger `hecaton.auditlog` (the `logger` property changes it), so the logging configuration decides
+where they go; a custom `AuditlogServiceFactory` can send them elsewhere.
+
+## Socket interceptor
+
+A socket interceptor (F5) runs custom code on every new connection before the protocol starts,
+for example to exchange a token with the other side. Configure an implementation of
+`MemberSocketInterceptor` on members (`network` or each advanced-network endpoint) and of
+`SocketInterceptor` on clients:
+
+```yaml
+hecaton:
+  network:
+    socket-interceptor:
+      enabled: true
+      class-name: com.example.TokenInterceptor
+      properties:
+        token: secret
+```
+
+`init(properties)` is called once; `onConnect(socket)` when the member or client opens a
+connection, `onAccept(socket)` when a member accepts one; throwing an `IOException` closes the
+connection. Interceptors see the raw socket: with TLS they run before the TLS handshake.
+
 ## Limitations
 
 - Code that runs on members (executor tasks submitted by clients, entry processors) is not

@@ -21,7 +21,8 @@ as the [migration guide](migration.md) describes.
 | CP Subsystem and CPMap (F7, F8) | [cp.md](cp.md) | 0.4.0 |
 | High-Density memory (F11) | [hd.md](hd.md) | 0.5.0 |
 | Persistence (F10) | [persistence.md](persistence.md) | 0.6.0 |
-| WAN replication (F13) | [wan.md](wan.md) | 0.7.0 |
+| WAN replication (F13) | [wan.md](wan.md) | 0.7.0; sync 0.9.0 |
+| Audit log, socket interceptor (F4, F5) | [security.md](security.md) | 0.9.0 |
 | Client blue/green failover (F15) | [changes-from-hazelcast.md](changes-from-hazelcast.md) | 0.2.0 |
 
 ## The project

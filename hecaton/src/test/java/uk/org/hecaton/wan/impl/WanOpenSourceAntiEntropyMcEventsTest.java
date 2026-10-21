@@ -17,6 +17,7 @@
 package uk.org.hecaton.wan.impl;
 
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.JoinConfig;
 import uk.org.hecaton.config.RestApiConfig;
 import uk.org.hecaton.config.RestEndpointGroup;
@@ -78,8 +79,8 @@ public class WanOpenSourceAntiEntropyMcEventsTest extends HecatonTestSupport {
             latch.countDown();
         });
 
-        assertThrows(UnsupportedOperationException.class,
-                () -> wanService.consistencyCheck(WAN_REPLICATION_NAME, WAN_PUBLISHER_ID, MAP_NAME));
+        // the map keeps no Merkle tree: the check is ignored
+        assertNull(wanService.consistencyCheck(WAN_REPLICATION_NAME, WAN_PUBLISHER_ID, MAP_NAME));
         assertOpenEventually(latch);
 
         Event event = events.get(0);
@@ -135,7 +136,8 @@ public class WanOpenSourceAntiEntropyMcEventsTest extends HecatonTestSupport {
             latch.countDown();
         });
 
-        assertThrows(UnsupportedOperationException.class,
+        // there is no such WAN replication scheme
+        assertThrows(InvalidConfigurationException.class,
                 () -> wanService.syncMap(WAN_REPLICATION_NAME, WAN_PUBLISHER_ID, MAP_NAME));
         assertOpenEventually(latch);
 
@@ -192,7 +194,7 @@ public class WanOpenSourceAntiEntropyMcEventsTest extends HecatonTestSupport {
             latch.countDown();
         });
 
-        assertThrows(UnsupportedOperationException.class,
+        assertThrows(InvalidConfigurationException.class,
                 () -> wanService.syncAllMaps(WAN_REPLICATION_NAME, WAN_PUBLISHER_ID));
         assertOpenEventually(latch);
 
