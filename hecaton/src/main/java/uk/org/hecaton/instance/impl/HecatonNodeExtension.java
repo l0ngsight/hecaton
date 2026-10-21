@@ -535,8 +535,10 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public MemberSocketInterceptor getSocketInterceptor(EndpointQualifier endpointQualifier) {
-        // one interceptor per endpoint, created and initialized when the endpoint first needs it
-        return socketInterceptors.computeIfAbsent(endpointQualifier, this::createSocketInterceptor).orElse(null);
+        // one interceptor per endpoint, created and initialized when the endpoint first needs it; without
+        // the advanced network there is one endpoint, which has no qualifier
+        EndpointQualifier key = endpointQualifier == null ? EndpointQualifier.MEMBER : endpointQualifier;
+        return socketInterceptors.computeIfAbsent(key, this::createSocketInterceptor).orElse(null);
     }
 
     private Optional<MemberSocketInterceptor> createSocketInterceptor(EndpointQualifier endpointQualifier) {

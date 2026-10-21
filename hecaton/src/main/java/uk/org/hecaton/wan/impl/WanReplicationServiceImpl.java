@@ -21,13 +21,10 @@ import uk.org.hecaton.cache.impl.ICacheService;
 import uk.org.hecaton.config.AbstractWanPublisherConfig;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
-import uk.org.hecaton.config.WanConsumerConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
-import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.core.ManagedContext;
 import uk.org.hecaton.instance.impl.Node;
-import uk.org.hecaton.internal.management.events.WanConsistencyCheckIgnoredEvent;
 import uk.org.hecaton.internal.monitor.LocalWanStats;
 import uk.org.hecaton.internal.monitor.WanSyncState;
 import uk.org.hecaton.internal.monitor.impl.LocalWanStatsImpl;
@@ -39,25 +36,21 @@ import uk.org.hecaton.internal.services.ObjectNamespace;
 import uk.org.hecaton.internal.services.ServiceNamespace;
 import uk.org.hecaton.internal.services.WanSupportingService;
 import uk.org.hecaton.internal.util.ConstructorFunction;
-import uk.org.hecaton.internal.util.UuidUtil;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.spi.impl.InternalCompletableFuture;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.version.Version;
-import uk.org.hecaton.wan.WanConsumer;
 import uk.org.hecaton.wan.WanEventCounters;
 import uk.org.hecaton.wan.WanMigrationAwarePublisher;
 import uk.org.hecaton.wan.WanPublisher;
 import uk.org.hecaton.wan.impl.batch.WanBatchPublisher;
-import uk.org.hecaton.wan.impl.batch.WanSyncOperation;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -105,12 +98,15 @@ public class WanReplicationServiceImpl implements WanReplicationService,
     private final ConstructorFunction<String, DelegatingWanScheme> publisherDelegateConstructor;
     /** WAN replication configs added at runtime. */
     private final ConcurrentMap<String, WanReplicationConfig> addedConfigs = createConcurrentHashMap(1);
-    /** Custom WAN consumers, by WAN replication name; created once the member has started. */
-    private final Map<String, WanConsumer> consumers = new HashMap<>();
+    private final WanSyncCoordinator syncCoordinator;
+    /** Custom WAN consumers; created once the member has started. */
+    private final WanConsumers consumers;
     private boolean started;
 
     public WanReplicationServiceImpl(Node node) {
         this.node = node;
+        this.syncCoordinator = new WanSyncCoordinator(node, this);
+        this.consumers = new WanConsumers(node);
         this.publisherDelegateConstructor = name -> {
             final WanReplicationConfig wanReplicationConfig = wanReplicationConfig(name);
             if (wanReplicationConfig == null) {
@@ -232,8 +228,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
                 }
             }
             wanReplications.clear();
-            consumers.values().forEach(WanConsumer::shutdown);
-            consumers.clear();
+            consumers.shutdown();
         }
     }
 
@@ -249,21 +244,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
     }
 
     private void startConsumer(WanReplicationConfig config) {
-        WanConsumerConfig consumerConfig = config.getConsumerConfig();
-        if (consumerConfig == null || consumers.containsKey(config.getName())
-                || consumerConfig.getImplementation() == null && consumerConfig.getClassName() == null) {
-            return;
-        }
-        WanConsumer consumer;
-        try {
-            consumer = getOrCreate(consumerConfig.getImplementation(), node.getConfigClassLoader(),
-                    consumerConfig.getClassName());
-        } catch (Exception e) {
-            throw new InvalidConfigurationException("Cannot create the WAN consumer " + consumerConfig.getClassName(), e);
-        }
-        consumer = (WanConsumer) node.getSerializationService().getManagedContext().initialize(consumer);
-        consumer.init(config.getName(), consumerConfig);
-        consumers.put(config.getName(), consumer);
+        consumers.start(config);
     }
 
     @Override
@@ -292,12 +273,12 @@ public class WanReplicationServiceImpl implements WanReplicationService,
 
     @Override
     public UUID syncMap(String wanReplicationName, String wanPublisherId, String mapName) {
-        return startSync(wanReplicationName, wanPublisherId, List.of(mapName), false);
+        return syncCoordinator.syncMap(wanReplicationName, wanPublisherId, mapName);
     }
 
     @Override
     public UUID syncAllMaps(String wanReplicationName, String wanPublisherId) {
-        return startSync(wanReplicationName, wanPublisherId, mapsReplicatedBy(wanReplicationName), false);
+        return syncCoordinator.syncAllMaps(wanReplicationName, wanPublisherId);
     }
 
     @Override
@@ -308,43 +289,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
 
     @Override
     public UUID consistencyCheck(String wanReplicationName, String wanPublisherId, String mapName) {
-        if (!Boolean.TRUE.equals(node.getConfig().findMapConfig(mapName).getMerkleTreeConfig().getEnabled())) {
-            node.getManagementCenterService().log(new WanConsistencyCheckIgnoredEvent(wanReplicationName, wanPublisherId,
-                    mapName, "Map " + mapName + " keeps no Merkle tree"));
-            return null;
-        }
-        return startSync(wanReplicationName, wanPublisherId, List.of(mapName), true);
-    }
-
-    /** Starts a WAN sync or consistency check on every member, each for the partitions it owns. */
-    private UUID startSync(String wanReplicationName, String wanPublisherId, List<String> mapNames, boolean check) {
-        if (!(getPublisherOrFail(wanReplicationName, wanPublisherId) instanceof WanBatchPublisher)) {
-            throw new UnsupportedOperationException("WAN publisher " + wanPublisherId + " of " + wanReplicationName
-                    + " is a custom publisher, which does not support WAN sync");
-        }
-        UUID syncId = UuidUtil.newUnsecureUUID();
-        NodeEngineImpl nodeEngine = node.getNodeEngine();
-        List<InternalCompletableFuture<Object>> futures = new ArrayList<>();
-        for (Member member : nodeEngine.getClusterService().getMembers()) {
-            futures.add(nodeEngine.getOperationService().invokeOnTarget(SERVICE_NAME,
-                    new WanSyncOperation(wanReplicationName, wanPublisherId, syncId, mapNames, check),
-                    member.getAddress()));
-        }
-        futures.forEach(InternalCompletableFuture::joinInternal);
-        return syncId;
-    }
-
-    /** The maps (with a container on this member) that refer to the WAN replication scheme. */
-    private List<String> mapsReplicatedBy(String wanReplicationName) {
-        MapService mapService = node.getNodeEngine().getService(MapService.SERVICE_NAME);
-        List<String> maps = new ArrayList<>();
-        mapService.getMapServiceContext().getMapContainers().forEach((name, container) -> {
-            WanReplicationRef ref = container.getMapConfig().getWanReplicationRef();
-            if (ref != null && wanReplicationName.equals(ref.getName())) {
-                maps.add(name);
-            }
-        });
-        return maps;
+        return syncCoordinator.consistencyCheck(wanReplicationName, wanPublisherId, mapName);
     }
 
     @Override
@@ -436,15 +381,7 @@ public class WanReplicationServiceImpl implements WanReplicationService,
 
     @Override
     public WanSyncState getWanSyncState() {
-        for (Entry<String, DelegatingWanScheme> scheme : wanReplications.entrySet()) {
-            for (WanPublisher publisher : scheme.getValue().getPublishers()) {
-                if (publisher instanceof WanBatchPublisher batch && (batch.isSyncing() || batch.hasSyncFailed())) {
-                    WanSyncStatus status = batch.isSyncing() ? WanSyncStatus.IN_PROGRESS : WanSyncStatus.FAILED;
-                    return new WanSyncStateImpl(status, scheme.getKey(), batch.getPublisherId());
-                }
-            }
-        }
-        return new WanSyncStateImpl(WanSyncStatus.READY, null, null);
+        return syncCoordinator.syncState(wanReplications);
     }
 
     @Override

@@ -102,50 +102,55 @@ class WanSyncTask implements Runnable {
     }
 
     private void runFor(String mapName) throws Exception {
-        long start = System.nanoTime();
-        long sentBefore = sent.get();
         int[] partitions = ownedPartitions();
-        ManagementCenterService mc = publisher.managementCenter();
         if (mode == Mode.CHECK) {
-            log(mc, new WanConsistencyCheckStartedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(),
+            log(new WanConsistencyCheckStartedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(),
                     mapName));
+            check(mapName, partitions);
         } else {
-            log(mc, new WanSyncStartedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(), mapName));
+            log(new WanSyncStartedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(), mapName));
+            sync(mapName, partitions);
         }
-        Map<Integer, Set<Integer>> leavesByPartition = mode == Mode.FULL ? null : differingLeaves(mapName, partitions);
-        int depth = mode == Mode.FULL ? 0 : depth(mapName);
-        long entries = 0;
-        int partitionsSynced = 0;
-        int checkedLeaves = mode == Mode.FULL ? 0 : partitions.length * MerkleTreeUtil.getNodesOnLevel(depth - 1);
+    }
+
+    private void check(String mapName, int[] partitions) throws Exception {
+        Map<Integer, Set<Integer>> leavesByPartition = differingLeaves(mapName, partitions);
+        int depth = depth(mapName);
         int diffLeaves = 0;
         int diffPartitions = 0;
+        long entries = 0;
         for (int partitionId : partitions) {
-            Set<Integer> leaves = leavesByPartition == null ? null : leavesByPartition.get(partitionId);
-            if (leavesByPartition != null) {
-                if (leaves.isEmpty()) {
-                    continue;
-                }
+            Set<Integer> leaves = leavesByPartition.get(partitionId);
+            if (!leaves.isEmpty()) {
                 diffPartitions++;
                 diffLeaves += leaves.size();
-            }
-            int count = nodeEngine.getOperationService().<Integer>invokeOnPartition(
-                    new WanSyncPartitionOperation(publisher, mapName, syncId, leaves, depth, mode == Mode.CHECK)
-                            .setPartitionId(partitionId)).join();
-            entries += count;
-            if (mode != Mode.CHECK) {
-                queued.addAndGet(count);
-                partitionsSynced++;
-                log(mc, new WanSyncProgressUpdateEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(),
-                        mapName, partitions.length, partitionsSynced, (int) (sent.get() - sentBefore)));
+                entries += runOnPartition(mapName, partitionId, leaves, depth);
             }
         }
-        if (mode == Mode.CHECK) {
-            ConsistencyCheckResult result = new ConsistencyCheckResult(syncId, partitions.length, diffPartitions,
-                    checkedLeaves, diffLeaves, (int) entries);
-            publisher.consistencyChecked(mapName, result);
-            log(mc, new WanConsistencyCheckFinishedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(),
-                    mapName, diffPartitions, partitions.length, (int) entries));
-            return;
+        int checkedLeaves = partitions.length * MerkleTreeUtil.getNodesOnLevel(depth - 1);
+        publisher.consistencyChecked(mapName, new ConsistencyCheckResult(syncId, partitions.length, diffPartitions,
+                checkedLeaves, diffLeaves, (int) entries));
+        log(new WanConsistencyCheckFinishedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(),
+                mapName, diffPartitions, partitions.length, (int) entries));
+    }
+
+    private void sync(String mapName, int[] partitions) throws Exception {
+        long start = System.nanoTime();
+        long sentBefore = sent.get();
+        Map<Integer, Set<Integer>> leavesByPartition = mode == Mode.FULL ? null : differingLeaves(mapName, partitions);
+        int depth = mode == Mode.FULL ? 0 : depth(mapName);
+        int partitionsSynced = 0;
+        int diffLeaves = 0;
+        for (int partitionId : partitions) {
+            Set<Integer> leaves = leavesByPartition == null ? null : leavesByPartition.get(partitionId);
+            if (leaves != null && leaves.isEmpty()) {
+                continue;
+            }
+            diffLeaves += leaves == null ? 0 : leaves.size();
+            queued.addAndGet(runOnPartition(mapName, partitionId, leaves, depth));
+            partitionsSynced++;
+            log(new WanSyncProgressUpdateEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(),
+                    mapName, partitions.length, partitionsSynced, (int) (sent.get() - sentBefore)));
         }
         awaitSent();
         long durationSecs = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - start);
@@ -154,13 +159,20 @@ class WanSyncTask implements Runnable {
         publisher.synced(mapName, new WanSyncStatsImpl(syncId, durationSecs, partitions.length, partitionsSynced,
                 (int) synced));
         if (mode == Mode.FULL) {
-            log(mc, new WanFullSyncFinishedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(), mapName,
+            log(new WanFullSyncFinishedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(), mapName,
                     durationSecs, synced, partitionsSynced));
         } else {
-            double perLeaf = diffLeaves == 0 ? 0 : (double) entries / diffLeaves;
-            log(mc, new WanMerkleSyncFinishedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(),
+            double perLeaf = diffLeaves == 0 ? 0 : (double) synced / diffLeaves;
+            log(new WanMerkleSyncFinishedEvent(syncId, publisher.wanReplicationName(), publisher.publisherId(),
                     mapName, durationSecs, partitionsSynced, diffLeaves, synced, 0, 0, perLeaf, 0));
         }
+    }
+
+    /** Queues (or, for a check, counts) the entries of a partition, of the given leaves if not null. */
+    private int runOnPartition(String mapName, int partitionId, Set<Integer> leaves, int depth) {
+        return nodeEngine.getOperationService().<Integer>invokeOnPartition(
+                new WanSyncPartitionOperation(publisher, mapName, syncId, leaves, depth, mode == Mode.CHECK)
+                        .setPartitionId(partitionId)).join();
     }
 
     /** Per partition, the Merkle tree leaves where this cluster and the target differ. */
@@ -209,7 +221,8 @@ class WanSyncTask implements Runnable {
         }
     }
 
-    private static void log(ManagementCenterService mc, Event event) {
+    private void log(Event event) {
+        ManagementCenterService mc = publisher.managementCenter();
         if (mc != null) {
             mc.log(event);
         }

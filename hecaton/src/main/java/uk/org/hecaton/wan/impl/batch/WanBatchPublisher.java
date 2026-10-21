@@ -515,8 +515,9 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
         });
     }
 
-    void addSyncEvent(int partitionId, InternalWanEvent<Object> event, UUID syncId) {
-        queues[partitionId].addSync(event, syncId);
+    @SuppressWarnings("unchecked")
+    void addSyncEvent(int partitionId, InternalWanEvent<?> event, UUID syncId) {
+        queues[partitionId].addSync((InternalWanEvent<Object>) event, syncId);
     }
 
     private void syncEventSent(UUID syncId) {
@@ -558,6 +559,7 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
     }
 
     /** Asks the target cluster for the Merkle tree leaves of a map in the given partitions; tries each endpoint. */
+    @SuppressWarnings("unchecked")
     Map<Integer, int[]> queryTargetLeaves(String mapName, int[] partitionIds) throws Exception {
         Exception failure = null;
         for (int attempt = 0; attempt < Math.max(1, endpoints.count()); attempt++) {
@@ -566,7 +568,7 @@ public class WanBatchPublisher implements InternalWanPublisher<Object>, WanMigra
                 break;
             }
             try {
-                return nodeEngine.getOperationService().<Map<Integer, int[]>>createInvocationBuilder(
+                return (Map<Integer, int[]>) nodeEngine.getOperationService().createInvocationBuilder(
                                 WanReplicationService.SERVICE_NAME,
                                 new WanMerkleTreeQueryOperation(config.getClusterName(), mapName, partitionIds), target)
                         .setConnectionManager(node.getServer().getConnectionManager(endpointQualifier))
