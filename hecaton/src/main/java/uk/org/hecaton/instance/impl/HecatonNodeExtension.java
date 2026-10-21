@@ -244,7 +244,7 @@ public class HecatonNodeExtension implements NodeExtension {
         SecurityConfig securityConfig = node.getConfig().getSecurityConfig();
         if (securityConfig != null && securityConfig.isEnabled()) {
             for (RealmConfig realm : securityConfig.getRealmConfigs().values()) {
-                if (realm.getLdapAuthenticationConfig() != null || realm.getKerberosAuthenticationConfig() != null) {
+                if (realm.getKerberosAuthenticationConfig() != null) {
                     throw new IllegalStateException(HecatonFeature.LDAP_KERBEROS_AUTHENTICATION.notAvailableMessage());
                 }
             }
