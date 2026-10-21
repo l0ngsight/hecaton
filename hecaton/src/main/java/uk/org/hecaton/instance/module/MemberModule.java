@@ -40,4 +40,11 @@ public interface MemberModule {
      */
     default void init(Node node) {
     }
+
+    /**
+     * Called once while the member shuts down, after its services have shut down. Release the
+     * module's resources here.
+     */
+    default void shutdown(boolean terminate) {
+    }
 }

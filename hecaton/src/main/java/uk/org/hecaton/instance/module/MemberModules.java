@@ -84,6 +84,17 @@ public final class MemberModules {
         }
     }
 
+    /** Shuts every module down ({@link MemberModule#shutdown}); a failure is logged, the others still run. */
+    public void shutdown(boolean terminate, ILogger logger) {
+        for (MemberModule module : modules) {
+            try {
+                module.shutdown(terminate);
+            } catch (RuntimeException e) {
+                logger.warning("Member module " + module.name() + " failed to shut down", e);
+            }
+        }
+    }
+
     public List<MemberModule> modules() {
         return List.copyOf(modules);
     }
