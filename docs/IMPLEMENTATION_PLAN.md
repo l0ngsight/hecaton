@@ -344,15 +344,13 @@ consistency check are P1, in M9.)
 
 ## Phase 8 — Hecaton 1.0 (M8)
 
-- Performance pass against Hazelcast CE 5.7 (§10 targets), HD and persistence tuning.
-- External security review of the TLS and security code.
-- Docs site: getting started, migration guide (Hazelcast CE → Hecaton, Hazelcast EE →
-  Hecaton feature mapping), feature reference, operations guide.
-- Release process (needs `hecaton.org.uk` registered, D7): signed artifacts to Maven Central
-  under `uk.org.hecaton`, Docker image,
-  SBOM (CycloneDX), release notes generated from conventional commits. Kubernetes
-  deployment is documented with plain manifests (StatefulSet, headless service,
-  `kubernetes-rbac.yaml`); a Helm chart is not planned for 1.0.
+| Step | Work | Status |
+|---|---|---|
+| Performance | Pass against Hazelcast CE 5.7 (§10 targets), HD and persistence tuning. | JMH benchmarks against Hazelcast CE 5.7 (`benchmarks/`, `tools/perf/compare.py`, [performance.md](performance.md)); the HD GC-pause benchmark (100 GB) needs a large machine and is open |
+| Security review | External review of the TLS and security code. | Brief for the reviewers in [security-review.md](security-review.md); static analysis (CodeQL, OWASP dependency check, SpotBugs/FindSecBugs) weekly in `security.yml`. The review itself needs an external party |
+| Docs | Getting started, migration guide (Hazelcast CE → Hecaton, Hazelcast EE → Hecaton feature mapping), feature reference, operations guide. | Done, as Markdown in `docs/` ([index](README.md)); a generated site is optional |
+| Release process | Needs `hecaton.org.uk` registered (D7): signed artifacts to Maven Central under `uk.org.hecaton`, Docker image, SBOM (CycloneDX), release notes. Kubernetes deployment is documented with plain manifests (StatefulSet, headless service, `kubernetes-rbac.yaml`); a Helm chart is not planned for 1.0. | Done: `release.yml` on a `v*` tag ([releasing.md](releasing.md)); Maven Central needs the namespace and the repository secrets |
+| WAN suite | Two- and three-cluster topologies of the container image (§10). | Done: `wan-tests/`, nightly `wan.yml` |
 
 ---
 
