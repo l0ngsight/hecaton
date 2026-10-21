@@ -29,6 +29,7 @@ import uk.org.hecaton.nio.ObjectDataOutput;
 import uk.org.hecaton.nio.serialization.IdentifiedDataSerializable;
 import uk.org.hecaton.spi.impl.InternalCompletableFuture;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
+import uk.org.hecaton.spi.impl.operationservice.SelfResponseOperation;
 
 import java.io.IOException;
 import java.util.function.BiConsumer;
@@ -44,7 +45,7 @@ import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
  * so it is not handled via the Raft layer.
  */
 public abstract class RaftReplicateOp extends Operation implements IdentifiedDataSerializable, RaftSystemOperation,
-                                                                   BiConsumer<Object, Throwable> {
+                                                                   BiConsumer<Object, Throwable>, SelfResponseOperation {
 
     private CPGroupId groupId;
 

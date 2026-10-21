@@ -595,7 +595,7 @@ public class TestHecatonInstanceFactory {
         }
     }
 
-    private static Config initOrCreateConfig(Config config) {
+    public static Config initOrCreateConfig(Config config) {
         if (config == null) {
             if (System.getProperty(SYSPROP_MEMBER_CONFIG) != null
                     && isAcceptedSuffixConfigured(System.getProperty(SYSPROP_MEMBER_CONFIG), YAML_ACCEPTED_SUFFIXES)

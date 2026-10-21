@@ -32,6 +32,7 @@ import uk.org.hecaton.nio.ObjectDataInput;
 import uk.org.hecaton.nio.ObjectDataOutput;
 import uk.org.hecaton.nio.serialization.IdentifiedDataSerializable;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
+import uk.org.hecaton.spi.impl.operationservice.SelfResponseOperation;
 
 import java.io.IOException;
 import java.util.function.BiConsumer;
@@ -50,7 +51,7 @@ import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
  */
 public class RaftQueryOp extends Operation implements IndeterminateOperationStateAware, RaftSystemOperation,
                                                       BiConsumer<Object, Throwable>,
-                                                      IdentifiedDataSerializable {
+                                                      IdentifiedDataSerializable, SelfResponseOperation {
 
     private CPGroupId groupId;
     private QueryPolicy queryPolicy;

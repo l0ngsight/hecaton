@@ -59,12 +59,14 @@ uk.org.hecaton.jet.impl.observer.JetObserverDataSerializerHook
 uk.org.hecaton.jet.impl.aggregate.AggregateDataSerializerHook
 uk.org.hecaton.jet.config.JetConfigDataSerializerHook
 uk.org.hecaton.internal.serialization.impl.compact.schema.SchemaDataSerializerHook
-uk.org.hecaton.jet.impl.util.FunctionsSerializerHookuk.org.hecaton.cp.event.impl.CpEventDataSerializerHook
+uk.org.hecaton.jet.impl.util.FunctionsSerializerHook
+uk.org.hecaton.cp.event.impl.CpEventDataSerializerHook
 uk.org.hecaton.cp.internal.RaftServiceDataSerializerHook
 uk.org.hecaton.cp.internal.datastructures.RaftDataServiceDataSerializerHook
 uk.org.hecaton.cp.internal.datastructures.atomiclong.AtomicLongDataSerializerHook
 uk.org.hecaton.cp.internal.datastructures.atomicref.AtomicRefDataSerializerHook
 uk.org.hecaton.cp.internal.datastructures.countdownlatch.CountDownLatchDataSerializerHook
+uk.org.hecaton.cp.internal.datastructures.cpmap.CPMapDataSerializerHook
 uk.org.hecaton.cp.internal.datastructures.lock.LockDataSerializerHook
 uk.org.hecaton.cp.internal.datastructures.semaphore.SemaphoreDataSerializerHook
 uk.org.hecaton.cp.internal.raft.impl.RaftDataSerializerHook

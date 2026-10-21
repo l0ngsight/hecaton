@@ -43,7 +43,7 @@ import static uk.org.hecaton.internal.util.ThreadUtil.getThreadId;
 /**
  * Implements session management APIs for Raft-based server and client proxies
  */
-public abstract class AbstractProxySessionManager {
+public abstract class AbstractProxySessionManager implements ProxySessionManager {
 
     /**
      * Represents absence of a Raft session

@@ -23,6 +23,7 @@ import uk.org.hecaton.cp.CPGroup;
 import uk.org.hecaton.cp.CPGroupId;
 import uk.org.hecaton.cp.CPGroupsSnapshot;
 import uk.org.hecaton.cp.CPMap;
+import uk.org.hecaton.cp.CPMapPurgeResponse;
 import uk.org.hecaton.cp.CPMember;
 import uk.org.hecaton.cp.CPObjectInfo;
 import uk.org.hecaton.cp.CPSubsystem;
@@ -37,7 +38,8 @@ import uk.org.hecaton.cp.exception.NotLeaderException;
 import uk.org.hecaton.cp.internal.datastructures.atomiclong.AtomicLongService;
 import uk.org.hecaton.cp.internal.datastructures.atomicref.AtomicRefService;
 import uk.org.hecaton.cp.internal.datastructures.countdownlatch.CountDownLatchService;
-import uk.org.hecaton.cp.internal.datastructures.cpmap.CPMapServiceUtil;
+import uk.org.hecaton.cp.internal.datastructures.cpmap.CPMapService;
+import uk.org.hecaton.cp.internal.datastructures.cpmap.operation.PurgeOp;
 import uk.org.hecaton.cp.internal.datastructures.lock.LockService;
 import uk.org.hecaton.cp.internal.datastructures.semaphore.SemaphoreService;
 import uk.org.hecaton.cp.internal.datastructures.spi.RaftRemoteService;
@@ -47,25 +49,30 @@ import uk.org.hecaton.cp.internal.raft.SnapshotAwareService;
 import uk.org.hecaton.cp.internal.session.RaftSessionService;
 import uk.org.hecaton.cp.lock.FencedLock;
 import uk.org.hecaton.cp.session.CPSessionManagementService;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.spi.exception.TargetNotMemberException;
 import uk.org.hecaton.spi.impl.InternalCompletableFuture;
 import uk.org.hecaton.spi.impl.NodeEngine;
 
 import javax.annotation.Nonnull;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static uk.org.hecaton.cp.internal.RaftService.getGroupNameForProxy;
+import static uk.org.hecaton.cp.internal.RaftService.getObjectNameForProxy;
+import static uk.org.hecaton.cp.internal.RaftService.withoutDefaultGroupName;
 import static uk.org.hecaton.internal.util.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
@@ -73,9 +80,6 @@ import static java.util.stream.Collectors.toList;
  * Provides access to CP Subsystem utilities
  */
 public class CPSubsystemImpl implements CPSubsystem {
-
-    public static final String CPMAP_LICENSE_MESSAGE =
-            "CPMap is not included in your license. Please also ensure you are using the enterprise client.";
 
     protected final boolean cpSubsystemEnabled;
     private final NodeEngine nodeEngine;
@@ -136,8 +140,31 @@ public class CPSubsystemImpl implements CPSubsystem {
 
     @Override
     public CPDataStructureManagementService getCPDataStructureManagementService() {
-        return (mapName, age) -> CompletableFuture.failedFuture(
-                new UnsupportedOperationException(HecatonFeature.CP_MAP.notAvailableMessage()));
+        return this::purgeCPMap;
+    }
+
+    private CompletionStage<CPMapPurgeResponse> purgeCPMap(String mapName, Duration age) {
+        checkNotNull(mapName, "mapName cannot be null");
+        checkNotNull(age, "age cannot be null");
+        CPMapService cpMapService = getService(CPMapService.SERVICE_NAME);
+        if (!cpMapService.getConfig(mapName).isPurgeEnabled()) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException(
+                    "Purge is not enabled for CPMap " + mapName + ", see CPMapConfig.setPurgeEnabled"));
+        }
+        String proxyName = withoutDefaultGroupName(mapName);
+        String groupName = getGroupNameForProxy(proxyName);
+        PurgeOp op = new PurgeOp(getObjectNameForProxy(proxyName), age.toMillis());
+        RaftService raftService = getService(RaftService.SERVICE_NAME);
+        if (!cpSubsystemEnabled) {
+            return raftService.createRaftGroupForProxyAsync(proxyName)
+                    .thenCompose(groupId -> raftService.getInvocationManager().<CPMapPurgeResponse>invoke(groupId, op));
+        }
+        return raftService.getCPGroup(groupName).thenCompose(group -> {
+            if (group == null) {
+                throw new NoSuchElementException("CP group " + groupName + " of CPMap " + mapName + " does not exist");
+            }
+            return raftService.getInvocationManager().<CPMapPurgeResponse>invoke(group.id(), op);
+        });
     }
 
     @Override
@@ -199,7 +226,8 @@ public class CPSubsystemImpl implements CPSubsystem {
     @Nonnull
     @Override
     public <K, V> CPMap<K, V> getMap(@Nonnull String name) {
-        throw new UnsupportedOperationException(CPMAP_LICENSE_MESSAGE);
+        checkNotNull(name, "Retrieving a CPMap instance with a null name is not allowed!");
+        return createProxy(CPMapService.SERVICE_NAME, name);
     }
 
     @Nonnull
@@ -266,6 +294,7 @@ public class CPSubsystemImpl implements CPSubsystem {
 
             case AtomicLongService.SERVICE_NAME:
             case AtomicRefService.SERVICE_NAME:
+            case CPMapService.SERVICE_NAME:
                 return listSnapshotAwareServiceResourceNames(
                         groupId,
                         returnTombstone,
@@ -276,10 +305,6 @@ public class CPSubsystemImpl implements CPSubsystem {
                                         .map(Map.Entry::getKey)
                                         .collect(Collectors.toSet())
                 );
-
-            case CPMapServiceUtil.SERVICE_NAME:
-                // This behavior is overridden in EE
-                throw new UnsupportedOperationException(CPMAP_LICENSE_MESSAGE);
 
             default:
                 throw new IllegalArgumentException("Calling getCPObjectInfo is not supported for " + serviceName);

@@ -41,7 +41,7 @@ public enum HecatonFeature {
     /** F7. */
     CP_SUBSYSTEM("F7", "CP Subsystem", "M4", null, true),
     /** F8. */
-    CP_MAP("F8", "CPMap", "M4"),
+    CP_MAP("F8", "CPMap", "M4", null, true),
     /** F10. */
     PERSISTENCE("F10", "Persistence (Hot Restart)", "M6"),
     /** F11. */

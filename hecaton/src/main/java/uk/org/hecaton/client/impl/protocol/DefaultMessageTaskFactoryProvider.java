@@ -922,6 +922,7 @@ public class DefaultMessageTaskFactoryProvider implements MessageTaskFactoryProv
         initializeCPSubsystemMessageTaskFactories();
         initializeAtomicLongTaskFactories();
         initializeAtomicReferenceTaskFactories();
+        initializeCPMapTaskFactories();
         initializeCountDownLatchTaskFactories();
         initializeFencedLockTaskFactories();
         initializeSemaphoreTaskFactories();
@@ -1768,6 +1769,23 @@ public class DefaultMessageTaskFactoryProvider implements MessageTaskFactoryProv
                 (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.atomicref.client.GetMessageTask(cm, node, con));
         factories.put(AtomicRefCompareAndSetCodec.REQUEST_MESSAGE_TYPE,
                 (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.atomicref.client.CompareAndSetMessageTask(cm, node, con));
+    }
+
+    private void initializeCPMapTaskFactories() {
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.CPMapGetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.GetMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.CPMapPutCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.PutMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.CPMapSetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.SetMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.CPMapPutIfAbsentCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.PutIfAbsentMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.CPMapRemoveCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.RemoveMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.CPMapDeleteCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.DeleteMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.CPMapCompareAndSetCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.CompareAndSetMessageTask(cm, node, con));
     }
 
     private void initializeCountDownLatchTaskFactories() {

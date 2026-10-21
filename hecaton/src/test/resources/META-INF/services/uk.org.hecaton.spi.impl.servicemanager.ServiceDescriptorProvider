@@ -1,1 +1,2 @@
 uk.org.hecaton.serviceprovider.TestServiceDescriptorProvider
+uk.org.hecaton.cp.internal.RaftDataServiceDescriptorProvider

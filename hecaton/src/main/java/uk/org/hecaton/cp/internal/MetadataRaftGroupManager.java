@@ -670,7 +670,7 @@ public class MetadataRaftGroupManager implements SnapshotAwareService<MetadataRa
             } else {
                 Operation op = new TerminateRaftNodesOp(Collections.singleton(group.id()));
                 CPMemberInfo cpMember = activeMembersMap.get(endpoint.getUuid());
-                operationService.invokeOnTarget(SERVICE_NAME, op, cpMember.getAddress());
+                operationService.send(op, cpMember.getAddress());
             }
         }
     }
