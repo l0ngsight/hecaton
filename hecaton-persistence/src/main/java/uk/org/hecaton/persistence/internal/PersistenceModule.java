@@ -69,6 +69,10 @@ public class PersistenceModule implements MemberModule, PersistenceCapability {
     public UUID start(Node node, UUID newUuid) {
         this.node = node;
         PersistenceConfig config = node.getConfig().getPersistenceConfig();
+        if (config.getEncryptionAtRestConfig().isEnabled()) {
+            throw new IllegalStateException("Encryption at rest (F10) is not available in Hecaton yet; it is planned for "
+                    + "milestone M9. Disable persistence.encryption-at-rest.");
+        }
         directory = MemberDirectory.claim(config.getBaseDir().toPath().toAbsolutePath());
         UUID uuid = directory.memberUuid();
         if (uuid == null) {

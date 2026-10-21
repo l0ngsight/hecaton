@@ -13,7 +13,8 @@ management operations (force start, partial start, backup) are the ones core alr
 <base-dir>/<member-dir>/            one directory per member, locked while the member runs
     member                          member UUID, address, cluster name
     cluster/                        cluster metadata (members, partition table, state, version)
-    structures                      structure ids: (id, kind, name), append-only
+    data/structures                 structure ids: (id, kind, name), append-only
+    data/configs/<id>               configurations of caches, to recreate them
     data/p<partition>/<id>.chunk    one log per partition
 ```
 
@@ -32,8 +33,8 @@ so a log needs no locking.
   structure). `seq` grows by one per record in a partition. The value is opaque to the store;
   the map and cache layers put their record metadata in front of the serialized value.
 - **Chunks** start with a header (magic, format version, chunk id, and the id of the oldest chunk
-  it supersedes). The active chunk is appended to; at `max chunk size` it is closed (and forced
-  to disk) and a new one started.
+  it supersedes). The active chunk is appended to; at `hecaton.persistence.max.chunk.size`
+  (4 MB) it is closed (and forced to disk) and a new one started.
 - **Index**: per structure, the key → (chunk, offset, size, seq) of its live record, on the heap.
   It is rebuilt by reading the log at start and is used for garbage accounting and compaction.
 - **Compaction** runs when the closed chunks hold more garbage than live data (and at least two
@@ -53,28 +54,55 @@ so a log needs no locking.
 
 ## Map and cache data (F10.2)
 
-A record store of a structure with data persistence enabled gets a mutation observer that writes
-every put, update, removal, eviction, clear and destroy to the partition's log. Data arriving by
-migration or replication is written the same way, and a replica leaving the member (migration)
-clears it from the log. At start, after the cluster has validated the restored partition table,
-each member reads its logs (with `parallelism` threads) into the record stores of the
-partitions it holds.
+A map record store of a map with data persistence gets a mutation observer (core's hook for
+Hazelcast's Enterprise record stores) that writes every put, update, removal, eviction, reset,
+clear and destroy to the partition's log; the value carries the record's version, times, TTL and
+max idle. A cache record store reports its record changes to a `CacheRecordObserver`, a hook
+Hecaton adds to core; cache records are logged in their serialized form, and the cache's
+configuration is kept, so caches created at runtime can be recreated. Data arriving by migration
+or replication is written the same way, and a replica leaving the member clears it from the log;
+destroys during shutdown are not logged. At start, each member reads its logs into the record
+stores, on the partition threads, then builds the indexes of the partitions it owns.
 
 ## Cluster metadata and restart (F10.3, F10.4)
 
 A member writes (atomically: temporary file, then rename) its UUID, the member list, the
-partition table, the cluster state and the cluster version whenever they change. A restarted
-member reuses its UUID. The master waits up to `validation-timeout-seconds` for the members of
-the persisted member list, checks that they agree on the partition table, installs it (with the
-members' current addresses), and asks the members to load their data; operations are retried
-until loading completes on all members (`data-load-timeout-seconds`). If members are missing or
-disagree, `cluster-data-recovery-policy` decides: `FULL_RECOVERY_ONLY` fails the restart, the
-partial policies start with the members holding the most recent (or most complete) partition
-table and exclude the others, which delete their data and join as new members. Force start
-deletes the data of all members and starts the cluster empty.
+partition table (replica UUIDs and versions) and the cluster state whenever they change, once its
+start has completed. A restarted member reuses its UUID.
+
+Recovery is a protocol of `RecoveryOperation`s driven by the master; every step can be repeated,
+so a new master starts over:
+
+1. Wait up to `validation-timeout-seconds` for the members that held replicas.
+2. Collect each member's status (whether it has data, a stamp of its table and the sum of its
+   partition versions) and check that they persisted the same table.
+3. Ask every member to load its data for the table; a member deletes the logs of partitions it
+   does not hold. Wait up to `data-load-timeout-seconds`.
+4. Ask every member to install the table (`setInitialState`, with the members' current addresses)
+   and complete its start; deferred post-join operations run then. Restore the cluster state.
+
+Until step 4 no partition has an owner, so partition operations wait; partition assignment is
+already held back by core while the start is not complete.
+
+If members are missing or disagree, `FULL_RECOVERY_ONLY` fails. The partial policies (or a
+partial-start request) keep the members with the most recent (highest version sum) or most common
+table, remove the other members' replicas from it (the remaining replicas of a partition move up,
+so a backup becomes owner), and, after completing, make the owners' replica versions newer than
+the backups' so anti-entropy sends the backups again. Force start has every member delete its
+data and metadata and complete its start as a new member. A member that finds the master already
+started gives up its data the same way.
 
 ## Backup (F10.5)
 
-`PersistenceService#backup()` copies, on every member, the closed chunks (hard links where the
-file system allows) and a copy of the active chunk's written part, plus the metadata, into
-`<backup-dir>/backup-<seq>/<member-dir>`. A backup is restored by using it as `base-dir`.
+`PersistenceService#backup()` starts a `BackupOperation` on every member, which copies its
+member file, metadata and structure ids, then, partition by partition on the partition threads,
+the closed chunks (hard links where the file system allows) and the written part of the active
+chunk, into `<backup-dir>/backup-<seq>/<member-dir>`. A backup is restored by using it as
+`base-dir`.
+
+## Testing
+
+`PartitionLogTest` (store, torn writes, corruption, compaction, crash during compaction, a random
+model), `PersistenceRestartTest` and `PersistenceRecoveryTest` (restarts, partial and force start,
+rejoining members, caches, indexes, backups) and `CrashConsistencyTest` (members in their own
+JVMs killed while writing).

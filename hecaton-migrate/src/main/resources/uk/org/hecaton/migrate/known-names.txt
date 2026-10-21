@@ -304,6 +304,7 @@ hecaton.partitioning.strategy.class
 hecaton.persistence.auto.cluster.state
 hecaton.persistence.auto.cluster.state.strategy
 hecaton.persistence.enabled
+hecaton.persistence.max.chunk.size
 hecaton.prefer.ipv4.stack
 hecaton.public
 hecaton.query.disableSkipIndex
