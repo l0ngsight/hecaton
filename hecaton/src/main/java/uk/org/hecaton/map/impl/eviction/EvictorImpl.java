@@ -69,7 +69,19 @@ public class EvictorImpl implements Evictor {
 
     @Override
     public void forceEvictByPercentage(RecordStore recordStore, double evictionPercentage) {
-        // NOP.
+        // used when a NATIVE map runs out of native memory: evict regardless of the max-size policy
+        assertRunningOnPartitionThread();
+
+        long now = getNow();
+        boolean backup = isBackup(recordStore);
+        int count = (int) Math.ceil(recordStore.size() * evictionPercentage);
+        for (int i = 0; i < count; i++) {
+            EntryView entryView = selectEvictableEntry(recordStore, null, now, backup);
+            if (entryView == null) {
+                return;
+            }
+            evictEntry(recordStore, entryView, now, backup);
+        }
     }
 
     @SuppressWarnings("checkstyle:rvcheckcomparetoforspecificreturnvalue")

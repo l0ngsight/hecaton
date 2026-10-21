@@ -17,6 +17,8 @@
 package uk.org.hecaton.query.impl;
 
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.InMemoryFormat;
+import uk.org.hecaton.config.IndexType;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.query.Predicate;
@@ -75,6 +77,10 @@ public class IndexConcurrencyTest extends AbstractIndexConcurrencyTest {
     @Test
     public void testIndexCreationAndQueryDeterministicConcurrency() {
         Config config = getConfig();
+        if (indexType == IndexType.BITMAP) {
+            // BITMAP indexes need an on-heap map, also when maps default to NATIVE
+            config.getMapConfig("default").setInMemoryFormat(InMemoryFormat.BINARY);
+        }
 
         HecatonInstance node = createHecatonInstance(config);
         IMap<Integer, Person> map = node.getMap(randomMapName());

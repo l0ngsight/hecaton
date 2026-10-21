@@ -26,7 +26,7 @@ abstract class AbstractMemoryManager implements HdMemoryManager {
 
     protected final long capacity;
     protected final long maxMetadata;
-    /** Bytes taken from the operating system: data and metadata. */
+    /** Bytes taken from the operating system for data; at most capacity - maxMetadata. */
     private final AtomicLong reserved = new AtomicLong();
     private final AtomicLong usedMetadata = new AtomicLong();
 
@@ -36,17 +36,20 @@ abstract class AbstractMemoryManager implements HdMemoryManager {
     }
 
     /**
-     * Reserves {@code size} bytes of the capacity before taking them from the operating system.
+     * Reserves {@code size} bytes of the data space (the capacity without the metadata space)
+     * before taking them from the operating system.
      *
      * @throws NativeOutOfMemoryError if they do not fit
      */
     protected final void reserve(long size, String what) {
+        long dataSpace = capacity - maxMetadata;
         long current;
         do {
             current = reserved.get();
-            if (current + size > capacity) {
+            if (current + size > dataSpace) {
                 throw new NativeOutOfMemoryError("Not enough native memory for " + what + " of " + size
-                        + " bytes: " + current + " of the configured " + capacity + " bytes are in use");
+                        + " bytes: " + current + " of the " + dataSpace + " bytes for data (the configured capacity"
+                        + " without the metadata space) are in use");
             }
         } while (!reserved.compareAndSet(current, current + size));
     }
@@ -76,18 +79,17 @@ abstract class AbstractMemoryManager implements HdMemoryManager {
                         + " of " + maxMetadata + " bytes (the metadata space percentage of the capacity) are in use");
             }
         } while (!usedMetadata.compareAndSet(current, current + size));
-        try {
-            return mallocReserved(size, "metadata");
-        } catch (NativeOutOfMemoryError e) {
+        long address = Libc.malloc(size);
+        if (address == NULL_ADDRESS) {
             usedMetadata.addAndGet(-size);
-            throw e;
+            throw new NativeOutOfMemoryError("The operating system has no memory for metadata of " + size + " bytes");
         }
+        return address;
     }
 
     @Override
     public void freeMetadata(long address, long size) {
         Libc.free(address);
-        unreserve(size);
         usedMetadata.addAndGet(-size);
     }
 

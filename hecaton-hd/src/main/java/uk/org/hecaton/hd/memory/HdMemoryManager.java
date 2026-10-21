@@ -19,9 +19,9 @@ import uk.org.hecaton.config.NativeMemoryConfig;
 import uk.org.hecaton.internal.memory.MemoryAllocator;
 
 /**
- * Allocates the native memory of a member. Data blocks and metadata (hash tables, allocator
- * bookkeeping) share the configured capacity; metadata may use at most the configured metadata
- * space percentage of it. An allocation that does not fit throws
+ * Allocates the native memory of a member. The configured metadata space percentage of the
+ * capacity is reserved for metadata (hash tables, allocator bookkeeping), the rest is for data
+ * blocks, so neither can starve the other. An allocation that does not fit throws
  * {@link uk.org.hecaton.memory.NativeOutOfMemoryError}.
  * <p>
  * Allocation and free are thread-safe. Freeing a block with a size other than the one it was

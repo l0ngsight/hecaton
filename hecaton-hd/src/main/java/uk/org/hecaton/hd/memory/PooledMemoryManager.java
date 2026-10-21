@@ -17,8 +17,10 @@ package uk.org.hecaton.hd.memory;
 
 import uk.org.hecaton.memory.NativeOutOfMemoryError;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -53,7 +55,12 @@ final class PooledMemoryManager extends AbstractMemoryManager {
     private final long bitmapBytes;
 
     private final Map<Long, Page> pages = new ConcurrentHashMap<>();
-    private final ThreadLocal<Pool> pools = ThreadLocal.withInitial(Pool::new);
+    private final List<Pool> allPools = new CopyOnWriteArrayList<>();
+    private final ThreadLocal<Pool> pools = ThreadLocal.withInitial(() -> {
+        Pool pool = new Pool();
+        allPools.add(pool);
+        return pool;
+    });
     private final AtomicLong used = new AtomicLong();
     private final AtomicLong committed = new AtomicLong();
 
@@ -85,9 +92,31 @@ final class PooledMemoryManager extends AbstractMemoryManager {
             return address;
         }
         int order = orderOf(size);
-        long address = pools.get().allocate(order);
+        Pool own = pools.get();
+        long address;
+        try {
+            address = own.allocate(order);
+        } catch (NativeOutOfMemoryError e) {
+            // no room for a new page: take a free block from another thread's pages
+            address = stealFromOtherPools(own, order);
+            if (address == NULL_ADDRESS) {
+                throw e;
+            }
+        }
         used.addAndGet(minBlockSize << order);
         return address;
+    }
+
+    private long stealFromOtherPools(Pool own, int order) {
+        for (Pool pool : allPools) {
+            if (pool != own) {
+                long address = pool.allocateFromFreeLists(order);
+                if (address != NULL_ADDRESS) {
+                    return address;
+                }
+            }
+        }
+        return NULL_ADDRESS;
     }
 
     @Override
@@ -170,29 +199,43 @@ final class PooledMemoryManager extends AbstractMemoryManager {
         final long[] freeLists = new long[maxOrder + 1];
         int freePages;
 
-        long allocate(int order) {
+        /** A block from this pool's free lists, without taking a new page; 0 if there is none. */
+        long allocateFromFreeLists(int order) {
             lock.lock();
             try {
                 int available = order;
                 while (available <= maxOrder && freeLists[available] == NULL_ADDRESS) {
                     available++;
                 }
-                long block;
-                Page page;
                 if (available > maxOrder) {
-                    page = newPage();
-                    block = page.address;
-                    available = maxOrder;
-                } else {
-                    block = freeLists[available];
-                    page = pages.get(block & -pageSize);
-                    unlink(page, block, available);
+                    return NULL_ADDRESS;
                 }
-                // split until the block has the requested order; the upper halves become free
+                long block = freeLists[available];
+                Page page = pages.get(block & -pageSize);
+                unlink(page, block, available);
                 while (available > order) {
                     available--;
-                    long buddy = block + (minBlockSize << available);
-                    push(page, buddy, available);
+                    push(page, block + (minBlockSize << available), available);
+                }
+                return block;
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        long allocate(int order) {
+            lock.lock();
+            try {
+                long block = allocateFromFreeLists(order);
+                if (block != NULL_ADDRESS) {
+                    return block;
+                }
+                Page page = newPage();
+                block = page.address;
+                // split the page until the block has the requested order; the upper halves become free
+                for (int available = maxOrder; available > order; ) {
+                    available--;
+                    push(page, block + (minBlockSize << available), available);
                 }
                 return block;
             } finally {

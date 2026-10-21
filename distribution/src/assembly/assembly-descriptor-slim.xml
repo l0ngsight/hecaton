@@ -29,6 +29,7 @@
             <includes>
                 <include>uk.org.hecaton:hecaton</include>
                 <include>uk.org.hecaton:hecaton-sql</include>
+                <include>uk.org.hecaton:hecaton-hd</include>
                 <include>uk.org.hecaton:hecaton-wm</include>
                 <include>uk.org.hecaton:hecaton-distribution</include>
                 <include>io.prometheus.jmx:jmx_prometheus_javaagent</include>

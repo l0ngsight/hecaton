@@ -95,6 +95,12 @@
                     <version>33.5.0-jre</version>
                     <scope>test</scope>
                 </dependency>
+                <dependency>
+                    <groupId>org.codehaus.groovy</groupId>
+                    <artifactId>groovy-all</artifactId>
+                    <version>2.4.21</version>
+                    <scope>test</scope>
+                </dependency>
             </dependencies>
             <properties>
                 <hd.native.suites>uk/org/hecaton/map/*Test.java</hd.native.suites>

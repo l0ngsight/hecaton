@@ -16,6 +16,7 @@
 package uk.org.hecaton.hd.map;
 
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.EvictionConfig;
 import uk.org.hecaton.config.EvictionPolicy;
 import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.MapConfig;
@@ -28,6 +29,7 @@ import uk.org.hecaton.internal.memory.MemoryStats;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.memory.Capacity;
 import uk.org.hecaton.memory.MemoryUnit;
+import uk.org.hecaton.memory.NativeOutOfMemoryError;
 import uk.org.hecaton.query.Predicates;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
@@ -45,6 +47,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static uk.org.hecaton.test.Accessors.getNode;
 
 @RunWith(HecatonParallelClassRunner.class)
@@ -57,7 +60,7 @@ public class HdMapTest extends HecatonTestSupport {
               .setCapacity(new Capacity(128, MemoryUnit.MEGABYTES));
         config.addMapConfig(new MapConfig("native*").setInMemoryFormat(InMemoryFormat.NATIVE));
         config.addMapConfig(new MapConfig("evicting*").setInMemoryFormat(InMemoryFormat.NATIVE)
-                .setEvictionConfig(new uk.org.hecaton.config.EvictionConfig()
+                .setEvictionConfig(new EvictionConfig()
                         .setEvictionPolicy(EvictionPolicy.LRU)
                         .setMaxSizePolicy(MaxSizePolicy.PER_PARTITION)
                         .setSize(10)));
@@ -188,6 +191,37 @@ public class HdMapTest extends HecatonTestSupport {
         member.getMap("native-stats").put(1, "x");
         assertThat(stats.getUsedNative()).isGreaterThan(0);
         assertThat(stats.getCommittedNative()).isGreaterThanOrEqualTo(stats.getUsedNative());
+    }
+
+    @Test
+    public void runningOutOfNativeMemoryEvictsOrFails() {
+        Config config = smallInstanceConfig();
+        config.getNativeMemoryConfig().setEnabled(true)
+              .setAllocatorType(NativeMemoryConfig.MemoryAllocatorType.POOLED)
+              .setCapacity(new Capacity(16, MemoryUnit.MEGABYTES))
+              // each partition thread needs pages of its own
+              .setPageSize(1 << 16);
+        config.addMapConfig(new MapConfig("forced").setInMemoryFormat(InMemoryFormat.NATIVE)
+                .setEvictionConfig(new EvictionConfig()
+                        .setEvictionPolicy(EvictionPolicy.LRU)
+                        .setMaxSizePolicy(MaxSizePolicy.USED_NATIVE_MEMORY_PERCENTAGE)
+                        .setSize(100)));
+        config.addMapConfig(new MapConfig("unbounded").setInMemoryFormat(InMemoryFormat.NATIVE));
+        HecatonInstance member = createHecatonInstance(config);
+
+        IMap<Integer, byte[]> forced = member.getMap("forced");
+        for (int i = 0; i < 40_000; i++) {
+            forced.set(i, new byte[1000]);
+        }
+        assertThat(forced.size()).isLessThan(40_000);
+        forced.destroy();
+
+        IMap<Integer, byte[]> unbounded = member.getMap("unbounded");
+        assertThatThrownBy(() -> {
+            for (int i = 0; i < 40_000; i++) {
+                unbounded.set(i, new byte[1000]);
+            }
+        }).hasCauseInstanceOf(NativeOutOfMemoryError.class);
     }
 
     static long usedNative(HecatonInstance member) {

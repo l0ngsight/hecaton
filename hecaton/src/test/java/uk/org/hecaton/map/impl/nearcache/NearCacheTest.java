@@ -26,6 +26,7 @@ import uk.org.hecaton.config.NearCacheConfig;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.internal.nearcache.NearCache;
 import uk.org.hecaton.internal.partition.InternalPartitionService;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.map.LocalMapStats;
 import uk.org.hecaton.map.impl.proxy.NearCachedMapProxyImpl;
@@ -881,8 +882,8 @@ public class NearCacheTest extends NearCacheTestSupport {
         assertNearCacheExpiration(nearCachedMap, MAX_CACHE_SIZE);
     }
 
-    @Test(expected = InvalidConfigurationException.class)
-    public void testNearCache_whenInMemoryFormatIsNative_thenThrowIllegalArgumentException() {
+    @Test
+    public void testNearCache_whenInMemoryFormatIsNative_requiresHighDensityMemory() {
         String mapName = randomMapName();
 
         Config config = getConfig();
@@ -891,9 +892,14 @@ public class NearCacheTest extends NearCacheTestSupport {
         );
 
         TestHecatonInstanceFactory factory = createHecatonInstanceFactory(2);
-        HecatonInstance instance = factory.newHecatonInstance(config);
-
-        instance.getMap(mapName);
+        if (!HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable()) {
+            assertThrows(InvalidConfigurationException.class, () -> factory.newHecatonInstance(config).getMap(mapName));
+            return;
+        }
+        config.getNativeMemoryConfig().setEnabled(true);
+        IMap<Integer, Integer> map = factory.newHecatonInstance(config).getMap(mapName);
+        map.put(1, 1);
+        assertEquals(1, (int) map.get(1));
     }
 
     @Test

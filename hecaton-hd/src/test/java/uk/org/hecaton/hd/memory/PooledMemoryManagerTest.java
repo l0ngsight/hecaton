@@ -90,6 +90,34 @@ public class PooledMemoryManagerTest {
     }
 
     @Test
+    public void threadsUseFreeBlocksOfOtherPoolsWhenNoPageFits() throws Exception {
+        // room for two pages and their bitmaps
+        PooledMemoryManager small = new PooledMemoryManager(2 * PAGE + 1024, 1024, PAGE, 16);
+        try {
+            List<Long> blocks = new ArrayList<>();
+            for (int i = 0; i < 2 * PAGE / 64; i++) {
+                blocks.add(small.allocate(64));
+            }
+            for (int i = 0; i < blocks.size(); i += 2) {
+                small.free(blocks.get(i), 64);
+            }
+            long[] stolen = new long[1];
+            Thread other = new Thread(() -> stolen[0] = small.allocate(64));
+            other.start();
+            other.join();
+            assertThat(stolen[0]).isNotZero();
+            assertThat(small.pageCount()).isEqualTo(2);
+            small.free(stolen[0], 64);
+            for (int i = 1; i < blocks.size(); i += 2) {
+                small.free(blocks.get(i), 64);
+            }
+            assertThat(small.usedNative()).isZero();
+        } finally {
+            small.dispose();
+        }
+    }
+
+    @Test
     public void largeBlocksComeFromTheCLibrary() {
         long address = memory.allocate(3 * PAGE);
         assertThat(memory.pageCount()).isZero();

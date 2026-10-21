@@ -36,6 +36,7 @@ import uk.org.hecaton.map.impl.MapContainer;
 import uk.org.hecaton.map.impl.MapKeyLoader;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.properties.ClusterProperty;
 import uk.org.hecaton.spi.properties.HecatonProperties;
 
 import java.util.Map;
@@ -47,6 +48,8 @@ import java.util.concurrent.atomic.LongAdder;
  * structures in native memory, allocated as configured by {@link NativeMemoryConfig}.
  */
 public class HdModule implements MemberModule, NativeMemoryCapability {
+
+    private static final int MIN_PAGES_PER_THREAD = 8;
 
     private final Map<String, LongAdder> cacheFootprints = new ConcurrentHashMap<>();
     private volatile HdMemoryManager memoryManager;
@@ -69,8 +72,27 @@ public class HdModule implements MemberModule, NativeMemoryCapability {
         }
         memoryManager = HdMemoryManager.create(config);
         memoryStats = new HdMemoryStats(memoryManager);
-        node.getLogger(HdModule.class).info("Native memory: " + config.getAllocatorType() + " allocator, capacity "
+        ILogger logger = node.getLogger(HdModule.class);
+        logger.info("Native memory: " + config.getAllocatorType() + " allocator, capacity "
                 + config.getCapacity().bytes() + " bytes");
+        warnIfPagesAreTooLarge(node, config, logger);
+    }
+
+    /**
+     * The POOLED allocator gives every thread pages of its own, and a thread can only evict the
+     * entries of its own partitions: with too few pages for the threads, a thread can run out of
+     * memory that eviction cannot free.
+     */
+    private static void warnIfPagesAreTooLarge(Node node, NativeMemoryConfig config, ILogger logger) {
+        if (config.getAllocatorType() != NativeMemoryConfig.MemoryAllocatorType.POOLED) {
+            return;
+        }
+        int threads = node.getProperties().getInteger(ClusterProperty.PARTITION_OPERATION_THREAD_COUNT);
+        long pagesPerThread = config.getCapacity().bytes() / ((long) config.getPageSize() * Math.max(1, threads));
+        if (pagesPerThread < MIN_PAGES_PER_THREAD) {
+            logger.warning("The native memory capacity holds only " + pagesPerThread + " pages of " + config.getPageSize()
+                    + " bytes per partition thread (" + threads + " threads); use a smaller page-size or a larger capacity");
+        }
     }
 
     /**
