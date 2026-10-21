@@ -30,7 +30,7 @@ persisted.
 
 A member can apply new data structure configurations to the cluster:
 
-| Operation | API | REST (`CONFIG` endpoint group) |
+| Operation | API | REST (`CLUSTER_WRITE` endpoint group) |
 |---|---|---|
 | Reload the member's configuration file | `ConfigurationService#update()` | `POST /hecaton/rest/config/reload` |
 | Apply a configuration (YAML or XML), asynchronously | `ConfigurationService#updateAsync(String)` | `POST /hecaton/rest/config/update` with the configuration as the third parameter |
