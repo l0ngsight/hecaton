@@ -17,10 +17,18 @@
 package uk.org.hecaton.cache.impl;
 
 import uk.org.hecaton.cache.impl.event.CacheWanEventPublisher;
+import uk.org.hecaton.cache.impl.operation.CacheMergeOperation;
+import uk.org.hecaton.cache.impl.operation.CacheRemoveOperation;
 import uk.org.hecaton.cache.impl.operation.CacheReplicationOperation;
+import uk.org.hecaton.cache.impl.operation.MutableOperation;
+import uk.org.hecaton.cache.impl.wan.CacheWanEventPublisherImpl;
+import uk.org.hecaton.cache.impl.wan.WanCacheRemoveEvent;
+import uk.org.hecaton.cache.impl.wan.WanCacheUpdateEvent;
 import uk.org.hecaton.config.CacheConfig;
 import uk.org.hecaton.config.CacheSimpleConfig;
 import uk.org.hecaton.config.InMemoryFormat;
+import uk.org.hecaton.config.WanAcknowledgeType;
+import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.instance.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.nearcache.impl.invalidation.MetaDataGenerator;
 import uk.org.hecaton.internal.partition.MigrationAwareService;
@@ -29,12 +37,23 @@ import uk.org.hecaton.internal.partition.PartitionReplicationEvent;
 import uk.org.hecaton.internal.services.DistributedObjectNamespace;
 import uk.org.hecaton.internal.services.ObjectNamespace;
 import uk.org.hecaton.internal.services.ServiceNamespace;
+import uk.org.hecaton.internal.services.WanSupportingService;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
+import uk.org.hecaton.spi.impl.merge.MergingValueFactory;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
+import uk.org.hecaton.spi.merge.SplitBrainMergePolicy;
+import uk.org.hecaton.spi.merge.SplitBrainMergeTypes.CacheMergeTypes;
+import uk.org.hecaton.wan.WanEventCounters;
+import uk.org.hecaton.wan.impl.DelegatingWanScheme;
+import uk.org.hecaton.wan.impl.InternalWanEvent;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import static uk.org.hecaton.internal.partition.MigrationEndpoint.DESTINATION;
 import static uk.org.hecaton.internal.partition.MigrationEndpoint.SOURCE;
@@ -63,7 +82,9 @@ import static uk.org.hecaton.internal.partition.MigrationEndpoint.SOURCE;
  * using {@code AbstractHecatonCacheManager#getCacheNamePrefix()}.
  * </p>
  */
-public class CacheService extends AbstractCacheService {
+public class CacheService extends AbstractCacheService implements WanSupportingService {
+
+    private volatile CacheWanEventPublisher wanEventPublisher;
 
     @Override
     protected CachePartitionSegment newPartitionSegment(int partitionId) {
@@ -165,17 +186,75 @@ public class CacheService extends AbstractCacheService {
 
     @Override
     public boolean isWanReplicationEnabled(String cacheNameWithPrefix) {
-        return false;
+        CacheConfig config = getCacheConfig(cacheNameWithPrefix);
+        WanReplicationRef ref = config == null ? null : config.getWanReplicationRef();
+        return ref != null && nodeEngine.getWanReplicationService().hasWanReplicationScheme(ref.getName());
     }
 
     @Override
     public CacheWanEventPublisher getCacheWanEventPublisher() {
-        throw new UnsupportedOperationException("WAN replication is not supported");
+        CacheWanEventPublisher publisher = wanEventPublisher;
+        if (publisher == null) {
+            publisher = new CacheWanEventPublisherImpl(nodeEngine, this::getCacheConfig);
+            wanEventPublisher = publisher;
+        }
+        return publisher;
     }
 
     @Override
     public void doPrepublicationChecks(String cacheName) {
-        // NOP intentionally
+        CacheConfig config = getCacheConfig(cacheName);
+        WanReplicationRef ref = config == null ? null : config.getWanReplicationRef();
+        if (ref != null) {
+            DelegatingWanScheme scheme = nodeEngine.getWanReplicationService().getWanReplicationPublishers(ref.getName());
+            if (scheme != null) {
+                scheme.doPrepublicationChecks();
+            }
+        }
+    }
+
+    // WanSupportingService: applying the cache events received by WAN replication
+
+    @Override
+    public void onReplicationEvent(InternalWanEvent event, WanAcknowledgeType acknowledgeType) {
+        CompletionStage<Void> applied = applyReplicationEvent(event);
+        if (acknowledgeType != WanAcknowledgeType.ACK_ON_RECEIPT) {
+            applied.toCompletableFuture().join();
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public CompletionStage<Void> applyReplicationEvent(InternalWanEvent event) {
+        WanEventCounters counters = nodeEngine.getWanReplicationService().getReceivedEventCounters(SERVICE_NAME);
+        String cacheName = event.getObjectName();
+        Operation operation;
+        if (event instanceof WanCacheUpdateEvent update) {
+            CacheConfig config = getCacheConfig(cacheName);
+            SplitBrainMergePolicy<Object, CacheMergeTypes<Object, Object>, Object> mergePolicy =
+                    nodeEngine.getSplitBrainMergePolicyProvider().getMergePolicy(update.getMergePolicyClassName(),
+                            config == null ? null : config.getUserCodeNamespace());
+            CacheMergeTypes<Object, Object> entry =
+                    MergingValueFactory.createMergingEntry(nodeEngine.getSerializationService(), update.getEntryView());
+            operation = new CacheMergeOperation(cacheName, List.of(entry), mergePolicy, true);
+        } else if (event instanceof WanCacheRemoveEvent) {
+            operation = new CacheRemoveOperation(cacheName, event.getKey(), null, MutableOperation.IGNORE_COMPLETION, true);
+        } else {
+            return CompletableFuture.completedFuture(null);
+        }
+        int partitionId = nodeEngine.getPartitionService().getPartitionId(event.getKey());
+        return nodeEngine.getOperationService().invokeOnPartition(SERVICE_NAME, operation, partitionId)
+                .thenAccept(response -> event.incrementEventCount(counters));
+    }
+
+    @Override
+    public CompletionStage<Void> onSyncBatch(Collection<InternalWanEvent> batch, WanAcknowledgeType acknowledgeType) {
+        throw new UnsupportedOperationException(HecatonFeature.WAN_SYNC.notAvailableMessage());
+    }
+
+    @Override
+    public void onWanConfigChange() {
+        // whether a cache replicates is looked up for every operation
     }
 
     /**

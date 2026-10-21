@@ -45,6 +45,11 @@ public class CacheRemoveBackupOperation
     }
 
     @Override
+    protected boolean isWanOriginated() {
+        return wanOriginated;
+    }
+
+    @Override
     public void run() {
         if (recordStore != null) {
             recordStore.removeRecord(key);

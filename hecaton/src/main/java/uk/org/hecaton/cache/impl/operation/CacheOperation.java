@@ -91,7 +91,7 @@ public abstract class CacheOperation extends AbstractNamedOperation
             throw ExceptionUtil.rethrow(t, Exception.class);
         }
 
-        if (recordStore != null && recordStore.isWanReplicationEnabled()) {
+        if (recordStore != null && recordStore.isWanReplicationEnabled() && !isWanOriginated()) {
             wanEventPublisher = cacheService.getCacheWanEventPublisher();
             cacheService.doPrepublicationChecks(name);
         }
@@ -196,8 +196,16 @@ public abstract class CacheOperation extends AbstractNamedOperation
         return recordStore != null ? recordStore.getConfig().getAsyncBackupCount() : 0;
     }
 
+    /**
+     * Whether the operation applies a change received by WAN replication, which is not replicated
+     * again.
+     */
+    protected boolean isWanOriginated() {
+        return false;
+    }
+
     protected final void publishWanUpdate(Data dataKey, CacheRecord record) {
-        if (!recordStore.isWanReplicationEnabled() || record == null) {
+        if (!recordStore.isWanReplicationEnabled() || record == null || wanEventPublisher == null) {
             return;
         }
 
@@ -208,7 +216,7 @@ public abstract class CacheOperation extends AbstractNamedOperation
     }
 
     protected final void publishWanUpdate(Data dataKey, Data dataValue, CacheRecord record) {
-        if (!recordStore.isWanReplicationEnabled() || record == null) {
+        if (!recordStore.isWanReplicationEnabled() || record == null || wanEventPublisher == null) {
             return;
         }
         NodeEngine nodeEngine = getNodeEngine();
@@ -221,7 +229,7 @@ public abstract class CacheOperation extends AbstractNamedOperation
     protected final void publishWanUpdate(Data dataKey, Data dataValue, Data dataExpiryPolicy, CacheRecord cacheRecord) {
         assert dataValue != null;
 
-        if (!recordStore.isWanReplicationEnabled() || cacheRecord == null) {
+        if (!recordStore.isWanReplicationEnabled() || cacheRecord == null || wanEventPublisher == null) {
             return;
         }
 
@@ -231,7 +239,7 @@ public abstract class CacheOperation extends AbstractNamedOperation
     }
 
     protected final void publishWanRemove(Data dataKey) {
-        if (!recordStore.isWanReplicationEnabled()) {
+        if (!recordStore.isWanReplicationEnabled() || wanEventPublisher == null) {
             return;
         }
 

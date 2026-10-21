@@ -15,6 +15,8 @@
  */
 package uk.org.hecaton.wan.impl.batch;
 
+import uk.org.hecaton.cache.ICache;
+import uk.org.hecaton.config.CacheSimpleConfig;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.WanAcknowledgeType;
@@ -38,10 +40,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import javax.cache.Cache;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static uk.org.hecaton.cache.CacheTestSupport.createServerCachingProvider;
 import static uk.org.hecaton.test.Accessors.getNode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,6 +56,7 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
 
     private static final String WAN = "to-b";
     private static final String MAP = "replicated";
+    private static final String CACHE = "replicated-cache";
     private static final int ENTRIES = 1000;
 
     private TestHecatonInstanceFactory factory;
@@ -187,6 +192,28 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
         assertTrueEventually(() -> assertThat(target.get(0).getMap(MAP).size()).isEqualTo(ENTRIES));
     }
 
+    @Test
+    public void cacheChangesAreReplicatedToTheTargetCluster() {
+        List<HecatonInstance> target = startCluster("b", 2, null);
+        List<HecatonInstance> source = startCluster("a", 2, publisher("b", target));
+        Cache<Integer, String> targetCache = createServerCachingProvider(target.get(0)).getCacheManager().getCache(CACHE);
+        Cache<Integer, String> cache = createServerCachingProvider(source.get(0)).getCacheManager().getCache(CACHE);
+        for (int i = 0; i < ENTRIES; i++) {
+            cache.put(i, "value" + i);
+        }
+        for (int i = 0; i < ENTRIES; i += 2) {
+            cache.remove(i);
+        }
+        cache.replace(1, "updated");
+
+        assertTrueEventually(() -> {
+            assertThat(targetCache.unwrap(ICache.class).size()).isEqualTo(ENTRIES / 2);
+            assertThat(targetCache.get(1)).isEqualTo("updated");
+        });
+        assertThat(targetCache.get(0)).isNull();
+        assertTrueEventually(() -> assertThat(outboundQueueSize(source)).isZero());
+    }
+
     private WanBatchPublisherConfig publisher(String targetCluster, List<HecatonInstance> target) {
         String endpoints = target.stream()
                 .map(member -> member.getCluster().getLocalMember().getAddress().getHost() + ":"
@@ -208,6 +235,12 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
             config.addWanReplicationConfig(new WanReplicationConfig().setName(WAN)
                     .addBatchReplicationPublisherConfig(publisher));
         }
+        CacheSimpleConfig cacheConfig = new CacheSimpleConfig().setName(CACHE);
+        if (replicatedMap) {
+            cacheConfig.setWanReplicationRef(new WanReplicationRef().setName(WAN)
+                    .setMergePolicyClassName(PassThroughMergePolicy.class.getName()));
+        }
+        config.addCacheConfig(cacheConfig);
         if (replicatedMap) {
             config.addMapConfig(new MapConfig(MAP).setWanReplicationRef(new WanReplicationRef()
                     .setName(WAN).setMergePolicyClassName(PassThroughMergePolicy.class.getName())));
