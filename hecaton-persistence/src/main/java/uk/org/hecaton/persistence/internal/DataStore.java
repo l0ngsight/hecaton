@@ -15,6 +15,7 @@
  */
 package uk.org.hecaton.persistence.internal;
 
+import uk.org.hecaton.persistence.internal.store.AtomicFiles;
 import uk.org.hecaton.persistence.internal.store.LogSettings;
 import uk.org.hecaton.persistence.internal.store.PartitionLog;
 import uk.org.hecaton.persistence.internal.store.PersistenceStoreException;
@@ -74,6 +75,32 @@ public final class DataStore implements AutoCloseable {
 
     public int structureId(byte kind, String name) {
         return structures.idOf(kind, name);
+    }
+
+    /**
+     * Keeps the configuration of a structure, so it can be recreated when the data is loaded (for
+     * caches created at runtime).
+     */
+    public void saveConfig(int structureId, byte[] config) {
+        Path file = configFile(structureId);
+        if (!Files.exists(file)) {
+            AtomicFiles.write(file, config);
+        }
+    }
+
+    /** @return the saved configuration of the structure, or null */
+    public byte[] config(int structureId) {
+        return AtomicFiles.read(configFile(structureId));
+    }
+
+    private Path configFile(int structureId) {
+        Path configs = dir.resolve("configs");
+        try {
+            Files.createDirectories(configs);
+        } catch (IOException e) {
+            throw new PersistenceStoreException("Cannot create " + configs, e);
+        }
+        return configs.resolve(Integer.toString(structureId));
     }
 
     /** @return the structure, or null if the id is unknown */

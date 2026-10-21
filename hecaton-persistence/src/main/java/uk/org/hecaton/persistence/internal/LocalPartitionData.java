@@ -19,6 +19,7 @@ import uk.org.hecaton.internal.partition.InternalPartition;
 import uk.org.hecaton.internal.partition.InternalPartitionService;
 import uk.org.hecaton.internal.partition.PartitionReplicaVersionManager;
 import uk.org.hecaton.map.impl.MapService;
+import uk.org.hecaton.persistence.internal.cache.CachePartitionLoader;
 import uk.org.hecaton.persistence.internal.cluster.LocalData;
 import uk.org.hecaton.persistence.internal.map.MapPartitionLoader;
 import uk.org.hecaton.persistence.internal.store.StructureRegistry.Structure;
@@ -59,12 +60,18 @@ final class LocalPartitionData implements LocalData {
     @Override
     public void load(int partitionId, boolean owner) {
         MapPartitionLoader mapLoader = new MapPartitionLoader(nodeEngine.get(), partitionId);
+        CachePartitionLoader cacheLoader = new CachePartitionLoader(nodeEngine.get(), partitionId);
         store.setLoading(partitionId, true);
         try {
             store.log(partitionId).replay((structureId, key, value) -> {
                 Structure structure = store.structure(structureId);
-                if (structure != null && structure.kind() == Structure.MAP) {
+                if (structure == null) {
+                    return;
+                }
+                if (structure.kind() == Structure.MAP) {
                     mapLoader.load(structure.name(), key, value);
+                } else if (structure.kind() == Structure.CACHE) {
+                    cacheLoader.load(structure.name(), store.config(structureId), key, value);
                 }
             });
             if (owner) {

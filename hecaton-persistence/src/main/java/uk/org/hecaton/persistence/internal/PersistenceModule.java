@@ -15,6 +15,8 @@
  */
 package uk.org.hecaton.persistence.internal;
 
+import uk.org.hecaton.cache.impl.CacheRecordObserver;
+import uk.org.hecaton.cache.impl.ICacheRecordStore;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.config.PersistenceConfig;
 import uk.org.hecaton.hotrestart.HotRestartService;
@@ -26,6 +28,7 @@ import uk.org.hecaton.internal.hotrestart.NoopInternalHotRestartService;
 import uk.org.hecaton.map.impl.record.Record;
 import uk.org.hecaton.map.impl.recordstore.MutationObserver;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
+import uk.org.hecaton.persistence.internal.cache.CachePersistenceObserver;
 import uk.org.hecaton.persistence.internal.cluster.ClusterMetadata;
 import uk.org.hecaton.persistence.internal.cluster.RecoveryService;
 import uk.org.hecaton.persistence.internal.map.MapPersistenceObserver;
@@ -105,6 +108,11 @@ public class PersistenceModule implements MemberModule, PersistenceCapability {
     @Override
     public MutationObserver<Record> createMapObserver(RecordStore<Record> recordStore) {
         return new MapPersistenceObserver(dataStore, recordStore, node.getSerializationService());
+    }
+
+    @Override
+    public CacheRecordObserver createCacheObserver(ICacheRecordStore recordStore) {
+        return new CachePersistenceObserver(dataStore, recordStore, node.getSerializationService());
     }
 
     @Override

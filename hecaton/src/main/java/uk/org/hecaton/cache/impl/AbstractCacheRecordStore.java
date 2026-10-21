@@ -33,6 +33,7 @@ import uk.org.hecaton.config.WanConsumerConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.core.ManagedContext;
+import uk.org.hecaton.instance.module.PersistenceCapability;
 import uk.org.hecaton.internal.diagnostics.StoreLatencyPlugin;
 import uk.org.hecaton.internal.eviction.ClearExpiredRecordsTask;
 import uk.org.hecaton.internal.eviction.EvictionCandidate;
@@ -136,6 +137,8 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
     protected final EvictionPolicyEvaluator<Data, R> evictionPolicyEvaluator;
     protected final Map<CacheEventType, Set<CacheEventData>> batchEvent = new EnumMap<>(CacheEventType.class);
     protected final CompositeCacheRSMutationObserver compositeCacheRSMutationObserver;
+    /** Observes the record changes for persistence. */
+    protected final CacheRecordObserver recordObserver;
 
     protected boolean primary;
     protected boolean eventsEnabled = true;
@@ -150,6 +153,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
     protected InvalidationQueue<ExpiredKey> expiredKeys = new InvalidationQueue<>();
     protected boolean hasEntryWithExpiration;
     protected boolean wanReplicateEvictions;
+    private boolean closingOnShutdown;
 
     @SuppressWarnings({"checkstyle:npathcomplexity", "checkstyle:executablestatementcount", "checkstyle:methodlength"})
     public AbstractCacheRecordStore(String cacheNameWithPrefix, int partitionId, NodeEngine nodeEngine,
@@ -185,6 +189,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
         this.valueComparator = getValueComparatorOf(cacheConfig.getInMemoryFormat());
         this.clearExpiredRecordsTask = cacheService.getExpirationManager().getTask();
         this.compositeCacheRSMutationObserver = new CompositeCacheRSMutationObserver();
+        this.recordObserver = createRecordObserver();
 
         if (cacheConfig.isStatisticsEnabled()) {
             statistics = cacheService.createCacheStatIfAbsent(cacheNameWithPrefix);
@@ -540,6 +545,18 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
         return null;
     }
 
+    private CacheRecordObserver createRecordObserver() {
+        if (cacheConfig.getDataPersistenceConfig().isEnabled()
+                && nodeEngine.getConfig().getPersistenceConfig().isEnabled()) {
+            CacheRecordObserver observer = ((NodeEngineImpl) nodeEngine).getNode().getMemberModules()
+                    .require(PersistenceCapability.class, "Persistence").createCacheObserver(this);
+            if (observer != null) {
+                return observer;
+            }
+        }
+        return CacheRecordObserver.NONE;
+    }
+
     protected void onProcessExpiredEntry(Data key, R record, long expiryTime, long now, UUID source, UUID origin) {
         accumulateOrSendExpiredKeysToBackup(key, record);
     }
@@ -567,6 +584,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
 
     @Override
     public void onEvict(Data key, R record, boolean wasExpired) {
+        recordObserver.onRemove(key);
         if (wasExpired) {
             compositeCacheRSMutationObserver.onExpire(key, record.getValue());
         } else {
@@ -730,6 +748,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
             // Writing to `CacheWriter` failed, so we should revert entry (remove added record).
             final R removed = records.remove(key);
             if (removed != null) {
+                recordObserver.onRemove(key);
                 compositeCacheRSMutationObserver.onRemove(
                         key, removed.getValue());
             }
@@ -798,6 +817,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
 
     protected void updateRecord(Data key, CacheRecord record, long expiryTime, long now, UUID origin) {
         record.setExpirationTime(expiryTime);
+        recordObserver.onPut(key, record);
         invalidateEntry(key, origin);
     }
 
@@ -852,6 +872,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
 
                 updateRecordValue(record, recordValue);
                 onUpdateRecord(key, record, value, dataOldValue);
+                recordObserver.onPut(key, record);
                 invalidateEntry(key, source);
 
                 if (isEventsEnabled()) {
@@ -896,6 +917,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
         try {
             onUpdateExpiryPolicy(key, record, dataOldExpiryPolicy);
             record.setExpiryPolicy(inMemoryExpiryPolicy);
+            recordObserver.onPut(key, record);
         } catch (Throwable error) {
             onUpdateExpiryPolicyError(key, record, dataOldExpiryPolicy);
             throw ExceptionUtil.rethrow(error);
@@ -1161,6 +1183,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
     protected R doPutRecord(Data key, R record, UUID source, boolean updateJournal) {
         markExpirable(record.getExpirationTime());
         R oldRecord = records.put(key, record);
+        recordObserver.onPut(key, record);
         if (updateJournal) {
             if (oldRecord != null) {
                 compositeCacheRSMutationObserver.onUpdate(
@@ -1182,6 +1205,7 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
     protected R doRemoveRecord(Data key, UUID source) {
         R removedRecord = records.remove(key);
         if (removedRecord != null) {
+            recordObserver.onRemove(key);
             compositeCacheRSMutationObserver.onRemove(
                     key, removedRecord.getValue());
             invalidateEntry(key, source);
@@ -1947,10 +1971,14 @@ public abstract class AbstractCacheRecordStore<R extends CacheRecord, CRM extend
     @Override
     public void reset() {
         records.clear();
+        if (!closingOnShutdown) {
+            recordObserver.onClear();
+        }
     }
 
     @Override
     public void close(boolean onShutdown) {
+        closingOnShutdown = onShutdown;
         clear();
         closeListeners();
     }

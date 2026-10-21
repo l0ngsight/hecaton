@@ -15,7 +15,9 @@
  */
 package uk.org.hecaton.persistence.internal;
 
+import uk.org.hecaton.cache.ICache;
 import uk.org.hecaton.cluster.ClusterState;
+import uk.org.hecaton.config.CacheConfig;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.DataPersistenceConfig;
 import uk.org.hecaton.config.IndexType;
@@ -34,6 +36,8 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
+import javax.cache.Cache;
+import javax.cache.CacheManager;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -43,6 +47,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static uk.org.hecaton.cache.CacheTestSupport.createServerCachingProvider;
 import static uk.org.hecaton.test.Accessors.getNode;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -147,6 +152,38 @@ public class PersistenceRestartTest extends HecatonTestSupport {
         map = member.getMap("persistent");
         assertThat(map.values(Predicates.lessThan("this", 100))).hasSize(100);
         assertThat(map.getLocalMapStats().getIndexStats()).isNotEmpty();
+    }
+
+    @Test
+    public void cacheRestartsWithItsData() throws IOException {
+        File baseDir = folder.newFolder();
+        TestHecatonInstanceFactory factory = createHecatonInstanceFactory(4);
+        List<HecatonInstance> members = startMembers(factory, baseDir, 2);
+        CacheManager cacheManager = createServerCachingProvider(members.get(0)).getCacheManager();
+        CacheConfig<Integer, String> cacheConfig = new CacheConfig<>();
+        cacheConfig.setDataPersistenceConfig(new DataPersistenceConfig().setEnabled(true));
+        Cache<Integer, String> cache = cacheManager.createCache("persistent-cache", cacheConfig);
+        for (int i = 0; i < ENTRIES; i++) {
+            cache.put(i, "value" + i);
+        }
+        for (int i = 0; i < ENTRIES; i += 10) {
+            cache.replace(i, "updated" + i);
+        }
+        for (int i = 1; i < ENTRIES; i += 10) {
+            cache.remove(i);
+        }
+        members.get(0).getCluster().shutdown();
+
+        List<HecatonInstance> restarted = startMembers(factory, baseDir, 2);
+        for (HecatonInstance member : restarted) {
+            waitUntilRecovered(member);
+        }
+        Cache<Integer, String> recovered = createServerCachingProvider(restarted.get(1)).getCacheManager()
+                .getCache("persistent-cache");
+        assertThat(recovered.unwrap(ICache.class).size()).isEqualTo(ENTRIES - ENTRIES / 10);
+        assertThat(recovered.get(0)).isEqualTo("updated0");
+        assertThat(recovered.get(1)).isNull();
+        assertThat(recovered.get(2)).isEqualTo("value2");
     }
 
     private static Config config(File baseDir) {

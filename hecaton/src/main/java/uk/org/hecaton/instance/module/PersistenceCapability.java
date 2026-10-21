@@ -15,6 +15,8 @@
  */
 package uk.org.hecaton.instance.module;
 
+import uk.org.hecaton.cache.impl.CacheRecordObserver;
+import uk.org.hecaton.cache.impl.ICacheRecordStore;
 import uk.org.hecaton.cluster.ClusterState;
 import uk.org.hecaton.hotrestart.HotRestartService;
 import uk.org.hecaton.instance.impl.Node;
@@ -55,6 +57,13 @@ public non-sealed interface PersistenceCapability extends MemberCapability {
      */
     @Nullable
     MutationObserver<Record> createMapObserver(RecordStore<Record> recordStore);
+
+    /**
+     * An observer that writes the record changes of a cache's record store to disk, or {@code null}
+     * if the cache does not persist its data.
+     */
+    @Nullable
+    CacheRecordObserver createCacheObserver(ICacheRecordStore recordStore);
 
     /** Called just before the member joins the cluster. */
     void beforeJoin();
