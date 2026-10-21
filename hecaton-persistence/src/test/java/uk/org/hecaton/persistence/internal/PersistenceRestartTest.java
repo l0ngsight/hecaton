@@ -157,6 +157,13 @@ public class PersistenceRestartTest extends HecatonTestSupport {
     }
 
     @Test
+    public void memberWithoutPersistenceStartsWithTheModuleOnTheClasspath() {
+        HecatonInstance member = createHecatonInstance(smallInstanceConfig());
+        member.getMap("map").put(1, 1);
+        assertThat(getNode(member).getNodeExtension().getInternalHotRestartService().isEnabled()).isFalse();
+    }
+
+    @Test
     public void cacheRestartsWithItsData() throws IOException {
         File baseDir = folder.newFolder();
         TestHecatonInstanceFactory factory = createHecatonInstanceFactory(4);

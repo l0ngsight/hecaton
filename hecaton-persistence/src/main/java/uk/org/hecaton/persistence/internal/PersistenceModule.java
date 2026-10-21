@@ -92,10 +92,10 @@ public class PersistenceModule implements MemberModule, PersistenceCapability {
 
     @Override
     public void init(Node node) {
-        if (directory == null) {
-            throw new IllegalStateException("Persistence was not started");
+        // started by the node extension when persistence is enabled; otherwise the module is idle
+        if (directory != null) {
+            node.getLogger(PersistenceModule.class).info("Persistence directory: " + directory.path());
         }
-        node.getLogger(PersistenceModule.class).info("Persistence directory: " + directory.path());
     }
 
     @Override
