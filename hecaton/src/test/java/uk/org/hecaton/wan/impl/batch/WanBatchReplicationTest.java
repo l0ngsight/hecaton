@@ -34,6 +34,7 @@ import uk.org.hecaton.test.TestHecatonInstanceFactory;
 import uk.org.hecaton.test.annotation.QuickTest;
 import uk.org.hecaton.wan.WanPublisherState;
 import uk.org.hecaton.wan.WanQueueFullException;
+import uk.org.hecaton.wan.impl.AddWanConfigResult;
 import uk.org.hecaton.wan.impl.WanReplicationService;
 import org.junit.Before;
 import org.junit.Test;
@@ -178,6 +179,34 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
         sleepSeconds(2);
         assertThat(outboundQueueSize(a)).isZero();
         assertThat(outboundQueueSize(b)).isZero();
+    }
+
+    @Test
+    public void configAddedAtRuntimeAppliesToAllMembers() {
+        List<HecatonInstance> b = startCluster("b", 1, null);
+        List<HecatonInstance> c = startCluster("c", 1, null);
+        List<HecatonInstance> a = startCluster("a", 2, null, true);
+        wanService(a.get(0)).addWanReplicationConfig(new WanReplicationConfig().setName(WAN)
+                .addBatchReplicationPublisherConfig(publisher("b", b)));
+        // a publisher added to the scheme later
+        AddWanConfigResult result = wanService(a.get(1)).addWanReplicationConfig(new WanReplicationConfig().setName(WAN)
+                .addBatchReplicationPublisherConfig(publisher("b", b))
+                .addBatchReplicationPublisherConfig(publisher("c", c)));
+        assertThat(result.getAddedPublisherIds()).containsExactly("c");
+        assertThat(result.getIgnoredPublisherIds()).containsExactly("b");
+        for (HecatonInstance member : a) {
+            assertThat(wanService(member).getPublisherOrFail(WAN, "b")).isNotNull();
+            assertThat(wanService(member).getPublisherOrFail(WAN, "c")).isNotNull();
+        }
+
+        IMap<Integer, String> map = a.get(1).getMap(MAP);
+        for (int i = 0; i < ENTRIES; i++) {
+            map.put(i, "value" + i);
+        }
+        assertTrueEventually(() -> {
+            assertThat(b.get(0).getMap(MAP).size()).isEqualTo(ENTRIES);
+            assertThat(c.get(0).getMap(MAP).size()).isEqualTo(ENTRIES);
+        });
     }
 
     @Test

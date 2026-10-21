@@ -21,6 +21,7 @@ import uk.org.hecaton.config.AbstractWanPublisherConfig;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
+import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.core.ManagedContext;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.management.events.WanConsistencyCheckIgnoredEvent;
@@ -37,7 +38,9 @@ import uk.org.hecaton.internal.services.ServiceNamespace;
 import uk.org.hecaton.internal.services.WanSupportingService;
 import uk.org.hecaton.internal.util.ConstructorFunction;
 import uk.org.hecaton.map.impl.MapService;
+import uk.org.hecaton.spi.impl.InternalCompletableFuture;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.version.Version;
 import uk.org.hecaton.wan.WanEventCounters;
@@ -281,7 +284,26 @@ public class WanReplicationServiceImpl implements WanReplicationService,
 
     @Override
     public AddWanConfigResult addWanReplicationConfig(WanReplicationConfig wanReplicationConfig) {
-        return addConfig(wanReplicationConfig);
+        String name = wanReplicationConfig.getName();
+        NodeEngineImpl nodeEngine = node.getNodeEngine();
+        boolean known = node.getConfig().getWanReplicationConfigs().containsKey(name)
+                || nodeEngine.getConfigurationService().findWanReplicationConfig(name) != null;
+        AddWanConfigResult result = addConfig(wanReplicationConfig);
+        if (!known) {
+            // a new scheme is kept in the dynamic configuration, so members that join later get it too;
+            // its members add it locally
+            nodeEngine.getConfigurationService().broadcastConfig(wanReplicationConfig);
+            return result;
+        }
+        List<InternalCompletableFuture<Object>> futures = new ArrayList<>();
+        for (Member member : nodeEngine.getClusterService().getMembers()) {
+            if (!member.localMember()) {
+                futures.add(nodeEngine.getOperationService().invokeOnTarget(SERVICE_NAME,
+                        new AddWanConfigOperation(wanReplicationConfig), member.getAddress()));
+            }
+        }
+        futures.forEach(InternalCompletableFuture::joinInternal);
+        return result;
     }
 
     @Override

@@ -49,6 +49,7 @@ public class WanDataSerializerHook implements DataSerializerHook {
     public static final int WAN_PARTITION_EVENTS = 7;
     public static final int CACHE_REPLICATION_UPDATE = 8;
     public static final int CACHE_REPLICATION_REMOVE = 9;
+    public static final int ADD_WAN_CONFIG_OPERATION = 10;
 
     @Override
     public int getFactoryId() {
@@ -68,6 +69,7 @@ public class WanDataSerializerHook implements DataSerializerHook {
             case WAN_PARTITION_EVENTS -> new WanPartitionEvents();
             case CACHE_REPLICATION_UPDATE -> new WanCacheUpdateEvent();
             case CACHE_REPLICATION_REMOVE -> new WanCacheRemoveEvent();
+            case ADD_WAN_CONFIG_OPERATION -> new AddWanConfigOperation();
             default -> throw new IllegalArgumentException("Unknown type-id: " + typeId);
         };
     }
