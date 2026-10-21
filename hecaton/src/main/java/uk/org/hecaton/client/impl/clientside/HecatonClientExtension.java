@@ -50,7 +50,6 @@ import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.internal.memory.DefaultMemoryStats;
 import uk.org.hecaton.internal.memory.MemoryStats;
 import uk.org.hecaton.internal.nearcache.NearCacheManager;
-import uk.org.hecaton.internal.nearcache.impl.DefaultNearCacheManager;
 import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.nio.ClassLoaderUtil;
 import uk.org.hecaton.internal.nio.ssl.SSLEngineFactories;
@@ -75,6 +74,8 @@ import uk.org.hecaton.spi.impl.executionservice.TaskScheduler;
 import uk.org.hecaton.spi.properties.HecatonProperties;
 
 import java.util.Map;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
 
 import static uk.org.hecaton.config.InstanceTrackingConfig.InstanceTrackingProperties.LICENSED;
 import static uk.org.hecaton.config.InstanceTrackingConfig.InstanceTrackingProperties.MODE;
@@ -96,6 +97,8 @@ public class HecatonClientExtension implements ClientExtension {
     protected JetClientInstanceImpl jetClient;
 
     private final MemoryStats memoryStats = new DefaultMemoryStats();
+    private volatile ClientNativeMemory nativeMemory;
+    private boolean nativeMemoryResolved;
 
     @Override
     public void beforeStart(HecatonClientInstanceImpl client) {
@@ -237,6 +240,10 @@ public class HecatonClientExtension implements ClientExtension {
 
     @Override
     public MemoryStats getMemoryStats() {
+        ClientNativeMemory memory = nativeMemory;
+        if (memory != null) {
+            return memory.memoryStats();
+        }
         return memoryStats;
     }
 
@@ -260,7 +267,44 @@ public class HecatonClientExtension implements ClientExtension {
         ClassLoader classLoader = client.getClientConfig().getClassLoader();
         HecatonProperties properties = client.getProperties();
 
-        return new DefaultNearCacheManager(ss, taskScheduler, classLoader, properties);
+        return new ClientNearCacheManager(ss, taskScheduler, classLoader, properties, nativeMemory(),
+                client.getLoggingService().getLogger(ClientNearCacheManager.class));
+    }
+
+    /** The client's native memory for NATIVE Near Caches (F11), or null if it has none. */
+    private ClientNativeMemory nativeMemory() {
+        if (!client.getClientConfig().getNativeMemoryConfig().isEnabled()) {
+            return null;
+        }
+        synchronized (this) {
+            if (!nativeMemoryResolved) {
+                nativeMemoryResolved = true;
+                nativeMemory = createNativeMemory();
+                if (nativeMemory != null) {
+                    client.disposeOnClientShutdown(nativeMemory::dispose);
+                }
+            }
+            return nativeMemory;
+        }
+    }
+
+    private ClientNativeMemory createNativeMemory() {
+        ILogger logger = client.getLoggingService().getLogger(ClientNativeMemory.class);
+        ClassLoader classLoader = client.getClientConfig().getClassLoader();
+        try {
+            for (ClientNativeMemory.Factory factory : ServiceLoader.load(ClientNativeMemory.Factory.class,
+                    classLoader != null ? classLoader : HecatonClientExtension.class.getClassLoader())) {
+                return factory.create(client.getClientConfig().getNativeMemoryConfig());
+            }
+            logger.warning("Native memory is enabled, but uk.org.hecaton:hecaton-hd is not on the classpath: NATIVE"
+                    + " Near Caches keep their entries on the heap");
+        } catch (ServiceConfigurationError | LinkageError e) {
+            // hecaton-hd needs Java 25+
+            logger.warning("Native memory is enabled, but uk.org.hecaton:hecaton-hd cannot be used on Java "
+                    + Runtime.version().feature() + " (it needs Java 25+): NATIVE Near Caches keep their entries on the heap",
+                    e);
+        }
+        return null;
     }
 
     @Override

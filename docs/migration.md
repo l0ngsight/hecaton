@@ -100,7 +100,7 @@ that delivers them, rather than being ignored.
 | Audit log, socket interceptor | Yes (F4, F5) | [security.md](security.md) |
 | Symmetric encryption | No (F6) | Deprecated in Hazelcast; use TLS |
 | CP Subsystem, CPMap | Yes (F7, F8, F9) | Including CP persistence; files are not compatible with Hazelcast's. [cp.md](cp.md) |
-| High-Density memory (`NATIVE` format) | Yes (F11) | IMap, ICache, member Near Cache; indexes of `NATIVE` maps are on the heap; client HD Near Cache: 1.x. [hd.md](hd.md) |
+| High-Density memory (`NATIVE` format) | Yes (F11) | IMap, ICache, member and client Near Caches (clients need `hecaton-hd` and Java 25); indexes of `NATIVE` maps are on the heap. [hd.md](hd.md) |
 | Persistence (Hot Restart) | Yes (F10) | IMap, ICache, cluster metadata, coordinated restart, partial/force start, hot backup; encryption at rest (Java KeyStore or Vault master keys, key rotation); files are not compatible with Hazelcast's. [persistence.md](persistence.md) |
 | WAN replication | Yes (F13) | Batch publisher, consumer, management, full and Merkle tree sync, consistency check; replicates to Hecaton clusters only. [wan.md](wan.md) |
 | Client blue/green failover | Yes (F15) | |
