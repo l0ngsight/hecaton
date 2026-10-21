@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.org.hecaton.hd.map;
+package uk.org.hecaton.hd.table;
 
-import uk.org.hecaton.hd.table.NativeHashTable;
 import uk.org.hecaton.internal.iteration.IterationPointer;
 
 /**
@@ -24,7 +23,7 @@ import uk.org.hecaton.internal.iteration.IterationPointer;
  * 31 bits) and size (its low bit, above the 30-bit count of entries with that hash), so both stay
  * non-negative: the start pointer has size -1 and the end pointer index -1.
  */
-final class IterationPointers {
+public final class IterationPointers {
 
     private static final int COUNT_BITS = 30;
     private static final int COUNT_MASK = (1 << COUNT_BITS) - 1;
@@ -32,7 +31,7 @@ final class IterationPointers {
     private IterationPointers() {
     }
 
-    static NativeHashTable.Cursor toCursor(IterationPointer[] pointers) {
+    public static NativeHashTable.Cursor toCursor(IterationPointer[] pointers) {
         IterationPointer pointer = pointers[pointers.length - 1];
         if (pointer.getSize() < 0 || pointer.getIndex() < 0) {
             return new NativeHashTable.Cursor();
@@ -41,7 +40,7 @@ final class IterationPointers {
         return new NativeHashTable.Cursor(hash, pointer.getSize() & COUNT_MASK);
     }
 
-    static IterationPointer[] fromCursor(NativeHashTable.Cursor cursor, boolean done) {
+    public static IterationPointer[] fromCursor(NativeHashTable.Cursor cursor, boolean done) {
         if (done) {
             return new IterationPointer[]{new IterationPointer(-1, -1)};
         }

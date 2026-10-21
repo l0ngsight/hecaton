@@ -23,6 +23,7 @@ import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.NearCacheConfig;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.internal.monitor.impl.MemberPartitionStateImpl;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.nio.ObjectDataInput;
 import uk.org.hecaton.nio.ObjectDataOutput;
 import uk.org.hecaton.nio.serialization.DataSerializable;
@@ -207,24 +208,36 @@ public class InMemoryFormatTest extends HecatonTestSupport {
         }
     }
 
-    @Test(expected = InvalidConfigurationException.class)
-    public void testNativeIMap_throwsException() {
+    @Test
+    public void testNativeIMap_requiresHighDensityMemory() {
         Config config = getConfig();
         config.getMapConfig("default").setInMemoryFormat(InMemoryFormat.NATIVE);
 
-        HecatonInstance member = createHecatonInstance(config);
-        member.getMap("default");
+        if (!HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable()) {
+            assertThrows(InvalidConfigurationException.class, () -> createHecatonInstance(config).getMap("default"));
+            return;
+        }
+        config.getNativeMemoryConfig().setEnabled(true);
+        IMap<Integer, String> map = createHecatonInstance(config).getMap("default");
+        map.put(1, "value");
+        assertEquals("value", map.get(1));
     }
 
-    @Test(expected = InvalidConfigurationException.class)
-    public void testNativeNearCache_throwsException() {
+    @Test
+    public void testNativeNearCache_requiresHighDensityMemory() {
         NearCacheConfig nearCacheConfig = new NearCacheConfig();
         nearCacheConfig.setInMemoryFormat(InMemoryFormat.NATIVE);
 
         Config config = getConfig();
         config.getMapConfig("default").setNearCacheConfig(nearCacheConfig);
 
-        HecatonInstance member = createHecatonInstance(config);
-        member.getMap("default");
+        if (!HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable()) {
+            assertThrows(InvalidConfigurationException.class, () -> createHecatonInstance(config).getMap("default"));
+            return;
+        }
+        config.getNativeMemoryConfig().setEnabled(true);
+        IMap<Integer, String> map = createHecatonInstance(config).getMap("default");
+        map.put(1, "value");
+        assertEquals("value", map.get(1));
     }
 }

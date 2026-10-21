@@ -53,4 +53,52 @@
             <classifier>tests</classifier>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <!-- Runs core's map test suites with NATIVE as the default map in-memory format -->
+            <id>native-suites</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <dependenciesToScan>
+                                <dependency>uk.org.hecaton:hecaton:jar:tests</dependency>
+                            </dependenciesToScan>
+                            <includes>
+                                <include>${hd.native.suites}</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <hecaton.test.map.inMemoryFormat>NATIVE</hecaton.test.map.inMemoryFormat>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+            <dependencies>
+                <!-- what core's tests use besides core -->
+                <dependency>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                    <version>33.5.0-jre</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <properties>
+                <hd.native.suites>uk/org/hecaton/map/*Test.java</hd.native.suites>
+            </properties>
+        </profile>
+    </profiles>
 </project>

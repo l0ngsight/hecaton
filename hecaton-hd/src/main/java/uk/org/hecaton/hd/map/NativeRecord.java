@@ -18,6 +18,7 @@ package uk.org.hecaton.hd.map;
 import uk.org.hecaton.hd.memory.HdMemoryManager;
 import uk.org.hecaton.hd.memory.NativeAccess;
 import uk.org.hecaton.hd.memory.NativeData;
+import uk.org.hecaton.hd.table.NativeBlockRecord;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.map.impl.record.Record;
 import uk.org.hecaton.map.impl.record.RecordReaderWriter;
@@ -35,7 +36,7 @@ import static uk.org.hecaton.internal.util.TimeStripUtil.stripBaseTime;
  * last update and last stored times (as {@link uk.org.hecaton.internal.util.TimeStripUtil} seconds),
  * hits.
  */
-public final class NativeRecord implements Record<Data> {
+public final class NativeRecord implements Record<Data>, NativeBlockRecord {
 
     static final long KEY = 0;
     static final long VALUE = 8;
@@ -75,17 +76,13 @@ public final class NativeRecord implements Record<Data> {
         return address != 0;
     }
 
-    long address() {
+    @Override
+    public long address() {
         return address;
     }
 
-    /**
-     * Writes this detached record into a new record block for the key block at {@code keyBlock}
-     * and makes this object a view of it.
-     *
-     * @return the record block
-     */
-    long attach(HdMemoryManager memory, long keyBlock) {
+    @Override
+    public long attach(HdMemoryManager memory, long keyBlock) {
         long valueBlock = value == null ? 0 : NativeData.write(memory, value);
         long block;
         try {
@@ -111,8 +108,8 @@ public final class NativeRecord implements Record<Data> {
         return block;
     }
 
-    /** Copies the record block's state into this object, which no longer refers to it. */
-    void detach() {
+    @Override
+    public void detach() {
         if (address == 0) {
             return;
         }

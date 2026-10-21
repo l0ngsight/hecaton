@@ -18,6 +18,9 @@ package uk.org.hecaton.test;
 
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.InMemoryFormat;
+import uk.org.hecaton.config.MapConfig;
+import uk.org.hecaton.config.NativeMemoryConfig;
 import uk.org.hecaton.config.NetworkConfig;
 import uk.org.hecaton.config.PersistenceClusterDataRecoveryPolicy;
 import uk.org.hecaton.config.XmlConfigBuilder;
@@ -38,6 +41,8 @@ import uk.org.hecaton.internal.server.FirewallingServer;
 import uk.org.hecaton.internal.server.Server;
 import uk.org.hecaton.internal.server.tcp.LocalAddressRegistry;
 import uk.org.hecaton.internal.server.tcp.ServerSocketRegistry;
+import uk.org.hecaton.memory.Capacity;
+import uk.org.hecaton.memory.MemoryUnit;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.properties.ClusterProperty;
 import uk.org.hecaton.test.metrics.MetricsRule;
@@ -84,6 +89,9 @@ import static org.mockito.Mockito.spy;
 
 @ThreadSafe
 public class TestHecatonInstanceFactory {
+
+    /** System property selecting the in-memory format of maps without their own configuration. */
+    public static final String SYSPROP_MAP_IN_MEMORY_FORMAT = "hecaton.test.map.inMemoryFormat";
     private static final int DEFAULT_INITIAL_PORT = NetworkConfig.DEFAULT_PORT;
     private static final int MAX_PORT_NUMBER = (1 << 16) - 1;
 
@@ -595,6 +603,30 @@ public class TestHecatonInstanceFactory {
         }
     }
 
+    /**
+     * With {@value #SYSPROP_MAP_IN_MEMORY_FORMAT}{@code =NATIVE}, maps without their own
+     * configuration use the NATIVE format, so map test suites can run against High-Density memory
+     * ({@code hecaton-hd} runs them that way).
+     */
+    private static void applyDefaultMapInMemoryFormat(Config config) {
+        if (!"NATIVE".equals(System.getProperty(SYSPROP_MAP_IN_MEMORY_FORMAT))) {
+            return;
+        }
+        if (!config.getNativeMemoryConfig().isEnabled()) {
+            config.getNativeMemoryConfig().setEnabled(true)
+                  .setAllocatorType(NativeMemoryConfig.MemoryAllocatorType.POOLED)
+                  .setCapacity(new Capacity(256, MemoryUnit.MEGABYTES));
+        }
+        MapConfig defaultMapConfig = config.getMapConfigOrNull("default");
+        if (defaultMapConfig == null) {
+            defaultMapConfig = new MapConfig("default");
+            config.addMapConfig(defaultMapConfig);
+        }
+        if (defaultMapConfig.getInMemoryFormat() == InMemoryFormat.BINARY) {
+            defaultMapConfig.setInMemoryFormat(InMemoryFormat.NATIVE);
+        }
+    }
+
     public static Config initOrCreateConfig(Config config) {
         if (config == null) {
             if (System.getProperty(SYSPROP_MEMBER_CONFIG) != null
@@ -607,6 +639,7 @@ public class TestHecatonInstanceFactory {
             config.getJetConfig().setEnabled(true);
         }
         config.setProperty(ClusterProperty.WAIT_SECONDS_BEFORE_JOIN.getName(), "0");
+        applyDefaultMapInMemoryFormat(config);
         String gracefulShutdownMaxWaitValue = System.getProperty(ClusterProperty.GRACEFUL_SHUTDOWN_MAX_WAIT.getName(), "120");
         config.setProperty(ClusterProperty.GRACEFUL_SHUTDOWN_MAX_WAIT.getName(), gracefulShutdownMaxWaitValue);
         if (config.getProperty(ClusterProperty.PARTITION_BACKUP_SYNC_INTERVAL.getName()) == null) {

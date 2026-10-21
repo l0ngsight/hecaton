@@ -705,7 +705,7 @@ public abstract class AbstractCacheService implements ICacheService,
 
     @Override
     public CacheOperationProvider getCacheOperationProvider(String cacheNameWithPrefix, InMemoryFormat inMemoryFormat) {
-        if (InMemoryFormat.NATIVE == inMemoryFormat) {
+        if (InMemoryFormat.NATIVE == inMemoryFormat && !HecatonFeature.HIGH_DENSITY_MEMORY.isAvailable()) {
             throw new IllegalArgumentException(HecatonFeature.HIGH_DENSITY_MEMORY.notAvailableMessage());
         }
         CacheOperationProvider cacheOperationProvider = operationProviderCache.get(cacheNameWithPrefix);

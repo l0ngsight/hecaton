@@ -15,11 +15,14 @@
  */
 package uk.org.hecaton.instance.module;
 
+import uk.org.hecaton.cache.impl.AbstractCacheService;
+import uk.org.hecaton.cache.impl.ICacheRecordStore;
 import uk.org.hecaton.internal.memory.MemoryStats;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.map.impl.MapContainer;
 import uk.org.hecaton.map.impl.MapKeyLoader;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
+import uk.org.hecaton.spi.impl.NodeEngine;
 
 /**
  * High-Density memory (F11), provided by {@code uk.org.hecaton:hecaton-hd}: data of structures
@@ -37,4 +40,10 @@ public non-sealed interface NativeMemoryCapability extends MemberCapability {
      */
     RecordStore createMapRecordStore(MapContainer mapContainer, int partitionId, MapKeyLoader keyLoader,
                                      ILogger logger);
+
+    /**
+     * Creates the record store of one partition of a cache with the {@code NATIVE} in-memory format.
+     */
+    ICacheRecordStore createCacheRecordStore(String cacheNameWithPrefix, int partitionId, NodeEngine nodeEngine,
+                                             AbstractCacheService cacheService);
 }

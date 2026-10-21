@@ -16,6 +16,8 @@
 
 package uk.org.hecaton.instance.module;
 
+import uk.org.hecaton.cache.impl.AbstractCacheService;
+import uk.org.hecaton.cache.impl.ICacheRecordStore;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.instance.impl.Node;
@@ -25,6 +27,7 @@ import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.map.impl.MapContainer;
 import uk.org.hecaton.map.impl.MapKeyLoader;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
+import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
 import uk.org.hecaton.test.annotation.ParallelJVMTest;
@@ -137,6 +140,12 @@ public class MemberModulesTest extends HecatonTestSupport {
         @Override
         public RecordStore createMapRecordStore(MapContainer mapContainer, int partitionId, MapKeyLoader keyLoader,
                                                 ILogger logger) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ICacheRecordStore createCacheRecordStore(String cacheNameWithPrefix, int partitionId,
+                                                        NodeEngine nodeEngine, AbstractCacheService cacheService) {
             throw new UnsupportedOperationException();
         }
     }

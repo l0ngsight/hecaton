@@ -19,6 +19,7 @@ package uk.org.hecaton.map.impl.eviction;
 import uk.org.hecaton.config.EvictionConfig;
 import uk.org.hecaton.config.MaxSizePolicy;
 import uk.org.hecaton.internal.cluster.ClusterService;
+import uk.org.hecaton.internal.memory.MemoryStats;
 import uk.org.hecaton.internal.nearcache.NearCache;
 import uk.org.hecaton.internal.util.MemoryInfoAccessor;
 import uk.org.hecaton.logging.ILogger;
@@ -29,6 +30,7 @@ import uk.org.hecaton.map.impl.nearcache.MapNearCacheManager;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
 import uk.org.hecaton.nearcache.NearCacheStats;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -56,12 +58,14 @@ public class EvictionChecker {
     private final MemoryInfoAccessor memoryInfoAccessor;
     private final MapNearCacheManager mapNearCacheManager;
     private final AtomicBoolean misconfiguredPerNodeMaxSizeWarningLogged;
+    private final NodeEngine nodeEngine;
 
     public EvictionChecker(MemoryInfoAccessor givenMemoryInfoAccessor, MapServiceContext mapServiceContext) {
         checkNotNull(givenMemoryInfoAccessor, "givenMemoryInfoAccessor cannot be null");
         checkNotNull(mapServiceContext, "mapServiceContext cannot be null");
 
         NodeEngine nodeEngine = mapServiceContext.getNodeEngine();
+        this.nodeEngine = nodeEngine;
         this.logger = nodeEngine.getLogger(getClass());
         this.containers = mapServiceContext.getPartitionContainers();
         this.clusterService = nodeEngine.getClusterService();
@@ -101,6 +105,24 @@ public class EvictionChecker {
                 return (usedHeapInBytes(mapName) * ONE_HUNDRED / Math.max(maxMemoryInBytes(), 1)) > maxConfiguredSize;
             case FREE_HEAP_PERCENTAGE:
                 return (availableMemoryInBytes() * ONE_HUNDRED / Math.max(maxMemoryInBytes(), 1)) < maxConfiguredSize;
+            default:
+                return checkNativeMemoryEvictable(maximumSizePolicy, mapName, maxConfiguredSize);
+        }
+    }
+
+    /** The native memory policies; a NATIVE record store's owned entry cost is its native footprint. */
+    private boolean checkNativeMemoryEvictable(MaxSizePolicy maximumSizePolicy, String mapName, int maxConfiguredSize) {
+        switch (maximumSizePolicy) {
+            case USED_NATIVE_MEMORY_SIZE:
+                return usedHeapInBytes(mapName) > MEGABYTES.toBytes(maxConfiguredSize);
+            case USED_NATIVE_MEMORY_PERCENTAGE:
+                return (usedHeapInBytes(mapName) * ONE_HUNDRED / Math.max(memoryStats().getMaxNative(), 1))
+                        > maxConfiguredSize;
+            case FREE_NATIVE_MEMORY_SIZE:
+                return memoryStats().getFreeNative() < MEGABYTES.toBytes(maxConfiguredSize);
+            case FREE_NATIVE_MEMORY_PERCENTAGE:
+                return (memoryStats().getFreeNative() * ONE_HUNDRED / Math.max(memoryStats().getMaxNative(), 1))
+                        < maxConfiguredSize;
             default:
                 throw new IllegalArgumentException("Not an appropriate max size policy [" + maximumSizePolicy + ']');
         }
@@ -160,6 +182,10 @@ public class EvictionChecker {
             return 0L;
         }
         return existingRecordStore.getOwnedEntryCost();
+    }
+
+    private MemoryStats memoryStats() {
+        return ((NodeEngineImpl) nodeEngine).getNode().getNodeExtension().getMemoryStats();
     }
 
     private long totalMemoryInBytes() {

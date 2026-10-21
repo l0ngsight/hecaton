@@ -15,7 +15,10 @@
  */
 package uk.org.hecaton.hd;
 
+import uk.org.hecaton.cache.impl.AbstractCacheService;
+import uk.org.hecaton.cache.impl.ICacheRecordStore;
 import uk.org.hecaton.config.NativeMemoryConfig;
+import uk.org.hecaton.hd.cache.HdCacheRecordStore;
 import uk.org.hecaton.hd.map.HdRecordStore;
 import uk.org.hecaton.hd.memory.HdMemoryManager;
 import uk.org.hecaton.hd.memory.HdMemoryStats;
@@ -28,6 +31,11 @@ import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.map.impl.MapContainer;
 import uk.org.hecaton.map.impl.MapKeyLoader;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
+import uk.org.hecaton.spi.impl.NodeEngine;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * The High-Density memory module ({@code hecaton-hd}): keeps the data of {@code NATIVE}
@@ -35,6 +43,7 @@ import uk.org.hecaton.map.impl.recordstore.RecordStore;
  */
 public class HdModule implements MemberModule, NativeMemoryCapability {
 
+    private final Map<String, LongAdder> cacheFootprints = new ConcurrentHashMap<>();
     private volatile HdMemoryManager memoryManager;
     private volatile MemoryStats memoryStats = new DefaultMemoryStats();
 
@@ -70,6 +79,17 @@ public class HdModule implements MemberModule, NativeMemoryCapability {
             throw new IllegalStateException("Native memory is not enabled (native-memory.enabled)");
         }
         return manager;
+    }
+
+    /** Counts the native bytes of the records of a cache on this member, over all its partitions. */
+    public LongAdder cacheFootprint(String cacheNameWithPrefix) {
+        return cacheFootprints.computeIfAbsent(cacheNameWithPrefix, name -> new LongAdder());
+    }
+
+    @Override
+    public ICacheRecordStore createCacheRecordStore(String cacheNameWithPrefix, int partitionId, NodeEngine nodeEngine,
+                                                    AbstractCacheService cacheService) {
+        return new HdCacheRecordStore(cacheNameWithPrefix, partitionId, nodeEngine, cacheService);
     }
 
     @Override
