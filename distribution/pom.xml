@@ -38,6 +38,22 @@
     <build>
         <plugins>
             <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>jdk-version</id>
+                        <configuration>
+                            <rules>
+                                <enforceBytecodeVersion>
+                                    <!-- hecaton-hd is a Java 25 member module; the client side stays on 17 -->
+                                    <maxJdkVersion>25</maxJdkVersion>
+                                </enforceBytecodeVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <executions>
