@@ -376,10 +376,10 @@ consistency check are P1, in M9.)
 
 | Feature | Notes | Est. |
 |---|---|---|
-| F12 Tiered Storage | Memory tier (HD) + disk tier on the log-structured store, `LocalDeviceConfig` | 8 ew |
-| F18 Jet lossless restart, isolated jobs, job upgrade / exported snapshots | Persist Jet snapshot maps through F10; job placement isolation; snapshot export/import | 6 ew |
-| F19 SQL catalog persistence | Persist the `__sql.catalog` map via F10 (lives in an Apache module; the HCL `hecaton-sql` only reads it) | 1 ew |
-| F20 Vector collection | Service + partitioned HNSW index on an Apache-2.0 ANN library (e.g. jvector), metrics, backups, client codecs (already in core) | 10 ew |
+| F12 Tiered Storage — done (`hecaton-tiered`) | Memory tier (HD native memory) + disk tier, `LocalDeviceConfig`. The disk tier is an append-only file per partition with compaction rather than the persistence store: it is a cache that does not survive restarts, so it needs no recovery | 8 ew |
+| F18 Jet lossless restart, isolated jobs, job upgrade / exported snapshots — done (export from running jobs only) | Persist Jet snapshot maps through F10; job placement isolation; snapshot export/import | 6 ew |
+| F19 SQL catalog persistence — done | Persist the `__sql.catalog` map via F10 (lives in an Apache module; the HCL `hecaton-sql` only reads it) | 1 ew |
+| F20 Vector collection — done (own HNSW; no metrics yet) | Service + partitioned HNSW index, backups, client message tasks (codecs already in core). The HNSW graph is written for Hecaton rather than taken from an ANN library: the index has to follow the backing map's record store partition by partition, which a small graph per partition replica does directly | 10 ew |
 
 ---
 

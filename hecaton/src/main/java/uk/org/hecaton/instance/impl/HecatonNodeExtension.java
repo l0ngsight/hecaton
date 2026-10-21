@@ -263,6 +263,14 @@ public class HecatonNodeExtension implements NodeExtension {
         if (jetConfig.isLosslessRestartEnabled() && !HecatonFeature.JET_LOSSLESS_RESTART.isAvailable()) {
             throw new IllegalStateException(HecatonFeature.JET_LOSSLESS_RESTART.notAvailableMessage());
         }
+        requirePersistence(jetConfig.isLosslessRestartEnabled(), "Jet lossless restart (F18)");
+    }
+
+    /** Features that keep their data with persistence (F10) need it enabled. */
+    private void requirePersistence(boolean featureEnabled, String feature) {
+        if (featureEnabled && !node.getConfig().getPersistenceConfig().isEnabled()) {
+            throw new InvalidConfigurationException(feature + " needs persistence: enable persistence (F10) too");
+        }
     }
 
     private void checkCPPersistenceAllowed() {
@@ -292,6 +300,7 @@ public class HecatonNodeExtension implements NodeExtension {
         if (config.getSqlConfig().isCatalogPersistenceEnabled() && !HecatonFeature.SQL_CATALOG_PERSISTENCE.isAvailable()) {
             throw new IllegalStateException(HecatonFeature.SQL_CATALOG_PERSISTENCE.notAvailableMessage());
         }
+        requirePersistence(config.getSqlConfig().isCatalogPersistenceEnabled(), "SQL catalog persistence (F19)");
     }
 
     @Override

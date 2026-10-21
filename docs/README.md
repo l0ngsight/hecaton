@@ -25,6 +25,9 @@ as the [migration guide](migration.md) describes.
 | Audit log, socket interceptor (F4, F5) | [security.md](security.md) | 0.9.0 |
 | Dynamic configuration persistence, reload (F16) | [dynamic-configuration.md](dynamic-configuration.md) | 0.9.0 |
 | User Code Namespaces (F17) | [user-code-namespaces.md](user-code-namespaces.md) | 0.9.0 |
+| Jet lossless restart, isolated jobs, job upgrades; SQL catalog persistence (F18, F19) | [jet.md](jet.md) | 0.10.0 |
+| Vector collections (F20) | [vector.md](vector.md) | 0.10.0 |
+| Tiered Storage (F12) | [tiered.md](tiered.md) | 0.10.0 |
 | Client blue/green failover (F15) | [changes-from-hazelcast.md](changes-from-hazelcast.md) | 0.2.0 |
 
 ## The project

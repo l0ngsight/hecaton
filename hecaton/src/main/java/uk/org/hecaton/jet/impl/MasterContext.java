@@ -114,6 +114,7 @@ public class MasterContext implements DynamicMetricsProvider {
 
     private final MasterJobContext jobContext;
     private final MasterSnapshotContext snapshotContext;
+    private volatile JetMemberSelector memberSelector;
 
     MasterContext(NodeEngineImpl nodeEngine, JobCoordinationService coordinationService, @Nonnull JobRecord jobRecord,
                   @Nonnull JobExecutionRecord jobExecutionRecord) {
@@ -313,11 +314,22 @@ public class MasterContext implements DynamicMetricsProvider {
         return coordinationService.membersView(memberSelector(null));
     }
 
+    /**
+     * The member selector of an isolated job (F18), or null: the one set when the job was submitted,
+     * or else the one in its DAG (after a restart of the master, for example).
+     */
     JetMemberSelector memberSelector(@Nullable Supplier<DAG> dag) {
-        return null;
+        JetMemberSelector selector = memberSelector;
+        if (selector == null && dag != null) {
+            selector = dag.get().memberSelector();
+            memberSelector = selector;
+        }
+        return selector;
     }
 
-    void setMemberSelector(JetMemberSelector memberSelector) { }
+    void setMemberSelector(JetMemberSelector memberSelector) {
+        this.memberSelector = memberSelector;
+    }
 
     boolean hasTimeout() {
         return jobConfig().getTimeoutMillis() > 0;

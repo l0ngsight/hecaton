@@ -47,7 +47,7 @@ public enum HecatonFeature {
     /** F11. */
     HIGH_DENSITY_MEMORY("F11", "High-Density memory (NATIVE in-memory format)", "M5", null, false, "hd"),
     /** F12. */
-    TIERED_STORE("F12", "Tiered Storage", "M10"),
+    TIERED_STORE("F12", "Tiered Storage", "M10", null, false, "tiered"),
     /** F9. */
     CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9", null, true),
     /** F13. */
@@ -61,13 +61,15 @@ public enum HecatonFeature {
     /** F17. */
     USER_CODE_NAMESPACES("F17", "User Code Namespaces", "M9", null, true),
     /** F18. */
-    JET_LOSSLESS_RESTART("F18", "Jet lossless restart", "M10"),
+    JET_LOSSLESS_RESTART("F18", "Jet lossless restart", "M10", null, false, "persistence"),
     /** F18. */
-    JET_ISOLATED_JOBS("F18", "Jet isolated jobs", "M10"),
+    JET_ISOLATED_JOBS("F18", "Jet isolated jobs", "M10", null, true),
     /** F18. */
-    JET_JOB_UPGRADE("F18", "Jet job upgrade and exported snapshots", "M10"),
+    JET_JOB_UPGRADE("F18", "Jet job upgrade and exported snapshots", "M10", null, true),
     /** F19. */
-    SQL_CATALOG_PERSISTENCE("F19", "SQL catalog persistence", "M10"),
+    SQL_CATALOG_PERSISTENCE("F19", "SQL catalog persistence", "M10", null, false, "persistence"),
+    /** F20. */
+    VECTOR_COLLECTION("F20", "Vector collections", "M10", null, false, "vector"),
     /** F21: Hecaton has no licenses. */
     LICENSE("F21", "License management", null, "Hecaton needs no license; license keys are ignored"),
     /** Not in the spec's scope (yet). */

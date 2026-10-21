@@ -31,6 +31,8 @@
                 <include>uk.org.hecaton:hecaton-sql</include>
                 <include>uk.org.hecaton:hecaton-hd</include>
                 <include>uk.org.hecaton:hecaton-persistence</include>
+                <include>uk.org.hecaton:hecaton-vector</include>
+                <include>uk.org.hecaton:hecaton-tiered</include>
                 <include>uk.org.hecaton:hecaton-wm</include>
                 <include>uk.org.hecaton:hecaton-distribution</include>
                 <include>io.prometheus.jmx:jmx_prometheus_javaagent</include>
