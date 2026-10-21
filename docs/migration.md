@@ -105,7 +105,7 @@ that delivers them, rather than being ignored.
 | WAN replication | Yes (F13) | Batch publisher, consumer, management, full and Merkle tree sync, consistency check; replicates to Hecaton clusters only. [wan.md](wan.md) |
 | Client blue/green failover | Yes (F15) | |
 | Rolling upgrades | 1.x (F14) | |
-| Dynamic configuration persistence and reload | 1.x (F16) | |
+| Dynamic configuration persistence and reload | Yes (F16) | [dynamic-configuration.md](dynamic-configuration.md) |
 | User Code Namespaces | 1.x (F17) | |
 | Tiered Storage, Jet lossless restart and job upgrades, SQL catalog persistence, vector collections | 2.x (F12, F18, F19, F20) | |
 | Management Center | No | Out of scope; the operations are available through the API, REST and `hc-cluster-admin` |

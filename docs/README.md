@@ -23,6 +23,7 @@ as the [migration guide](migration.md) describes.
 | Persistence (F10) | [persistence.md](persistence.md) | 0.6.0 |
 | WAN replication (F13) | [wan.md](wan.md) | 0.7.0; sync 0.9.0 |
 | Audit log, socket interceptor (F4, F5) | [security.md](security.md) | 0.9.0 |
+| Dynamic configuration persistence, reload (F16) | [dynamic-configuration.md](dynamic-configuration.md) | 0.9.0 |
 | Client blue/green failover (F15) | [changes-from-hazelcast.md](changes-from-hazelcast.md) | 0.2.0 |
 
 ## The project

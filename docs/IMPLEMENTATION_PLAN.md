@@ -366,7 +366,7 @@ consistency check are P1, in M9.)
 | F11 Client HD Near Cache | FFM allocator has to be usable from the Java 17 client: ship a Java 17 Unsafe-free fallback (on-heap) and enable native near cache on Java 22+ clients only (multi-release jar) | 2 ew |
 | F13 WAN sync & consistency check — done (maps) | Full sync, Merkle-tree delta sync, consistency check | 4 ew |
 | F14 Rolling upgrades | `supportedVersions={N-1,N}`, auto-upgrade; becomes testable with the second Hecaton minor; upgrade test N-1→N in CI | 3 ew |
-| F16 Dynamic config persistence, config reload/update | Persist dynamic config changes back to the declarative file; reload/update diff engine | 3 ew |
+| F16 Dynamic config persistence, config reload/update — done | Persist dynamic config changes back to the declarative file; reload/update diff engine | 3 ew |
 | F17 User Code Namespaces | Namespace service, per-namespace classloaders, resource upload, integration points | 4 ew |
 | Slim client jar (§8.3 phase 2) | Reachability-based packaging + ArchUnit rules | 2 ew |
 

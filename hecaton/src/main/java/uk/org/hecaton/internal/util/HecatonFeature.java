@@ -55,9 +55,9 @@ public enum HecatonFeature {
     /** F13: synchronization and consistency checks. */
     WAN_SYNC("F13", "WAN synchronization", "M9", null, true),
     /** F16. */
-    DYNAMIC_CONFIGURATION_PERSISTENCE("F16", "Dynamic configuration persistence", "M9"),
+    DYNAMIC_CONFIGURATION_PERSISTENCE("F16", "Dynamic configuration persistence", "M9", null, true),
     /** F16. */
-    CONFIGURATION_RELOAD("F16", "Configuration reload and update", "M9"),
+    CONFIGURATION_RELOAD("F16", "Configuration reload and update", "M9", null, true),
     /** F17. */
     USER_CODE_NAMESPACES("F17", "User Code Namespaces", "M9"),
     /** F18. */
