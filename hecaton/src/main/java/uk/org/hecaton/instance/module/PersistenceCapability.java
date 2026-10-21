@@ -15,10 +15,62 @@
  */
 package uk.org.hecaton.instance.module;
 
+import uk.org.hecaton.cluster.ClusterState;
+import uk.org.hecaton.hotrestart.HotRestartService;
+import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.hotrestart.InternalHotRestartService;
+import uk.org.hecaton.map.impl.record.Record;
+import uk.org.hecaton.map.impl.recordstore.MutationObserver;
+import uk.org.hecaton.map.impl.recordstore.RecordStore;
+import uk.org.hecaton.version.Version;
+
+import javax.annotation.Nullable;
+import java.util.UUID;
+
 /**
- * Persistence (storage for F9, F10, F16, F18 and F19), provided by
- * {@code uk.org.hecaton:hecaton-persistence}. Its operations are added when the module is
- * implemented.
+ * Persistence (F10, storage for F9, F16, F18 and F19 later), provided by
+ * {@code uk.org.hecaton:hecaton-persistence}: data and cluster metadata kept on disk, so a
+ * cluster can be restarted with its data. Used by the member only when persistence is enabled.
  */
 public non-sealed interface PersistenceCapability extends MemberCapability {
+
+    /**
+     * Prepares persistence before the member is created: claims the member's directory and reads
+     * what the member left there when it last ran. Called once, before {@link MemberModule#init}.
+     *
+     * @param newUuid the UUID of a member that has not run before
+     * @return the UUID the member had when it last ran, or {@code newUuid}
+     */
+    UUID start(Node node, UUID newUuid);
+
+    /** The member's persistence state, as core sees it. */
+    InternalHotRestartService internalHotRestartService();
+
+    /** The public persistence service (backups). */
+    HotRestartService hotRestartService();
+
+    /**
+     * An observer that writes the changes of a map's record store to disk, or {@code null} if the
+     * map does not persist its data.
+     */
+    @Nullable
+    MutationObserver<Record> createMapObserver(RecordStore<Record> recordStore);
+
+    /** Called just before the member joins the cluster. */
+    void beforeJoin();
+
+    /** Called once the member has joined the cluster: starts the recovery of persisted data. */
+    void afterStart();
+
+    /** The member list changed. */
+    void onMemberListChange();
+
+    /** The partition table changed. */
+    void onPartitionStateChange();
+
+    /** The cluster state changed. */
+    void onClusterStateChange(ClusterState newState);
+
+    /** The cluster version changed. */
+    void onClusterVersionChange(Version newVersion);
 }

@@ -48,6 +48,7 @@ GROUPS = [
         "extensions/mongodb", "extensions/elasticsearch/elasticsearch-7", "extensions/cdc-debezium",
         "extensions/cdc-mysql", "extensions/cdc-postgres", "extensions/hadoop", "extensions/mapstore"]},
     {"group": "hd", "shards": 1, "modules": ["hecaton-hd"]},
+    {"group": "persistence", "shards": 1, "modules": ["hecaton-persistence"]},
     # core's map and query tests with NATIVE as the default map in-memory format (hecaton-hd)
     {"group": "hd-native-suites", "shards": 1, "modules": ["hecaton-hd"], "args": [
         "-Pnative-suites",
