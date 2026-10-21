@@ -291,11 +291,11 @@ Est.: 2–3 ew.
 
 | Step | Work | Est. |
 |---|---|---|
-| F7.1 | Import `com/hazelcast/cp/**` (main and test) from `v5.4.0` (Apache 2.0, ~375 main files) into core through `tools/rebrand` (same rename table). Keep the original headers; add provenance to `NOTICE`/`docs/provenance.md`. | 0.5 ew |
-| F7.2 | Diff the CP public/SPI surface between 5.4.0 and 5.7.0 (`CPSubsystem`, `CPSubsystemManagementService`, `CPSubsystemConfig`, CP group/session APIs, metrics, client codecs) and adapt the ported engine to it. Replace `CPSubsystemStubImpl` (delete the stub). | 2.5 ew |
-| F7.3 | Register CP client message tasks (codecs exist in core), CP membership REST/CLI (`hc-cluster-cp-admin`). | 1 ew |
-| F8 | `CPMap` new implementation: Raft-replicated KV state machine with the documented ops and size limits, snapshotting, client proxy, config (`CPMapConfig`). | 2.5 ew |
-| Tests | Ported 5.4 CP tests (~114 files) + CPMap tests + linearizability harness (Porcupine-style checker over recorded histories, nemesis: partitions, pauses, kills). | 2 ew |
+| F7.1 — done | Import `com/hazelcast/cp/**` (main and test) from `v5.4.0` (Apache 2.0, ~375 main files) into core through `tools/rebrand` (same rename table). Keep the original headers; add provenance to `NOTICE`/`docs/provenance.md`. | 0.5 ew |
+| F7.2 — done | Diff the CP public/SPI surface between 5.4.0 and 5.7.0 (`CPSubsystem`, `CPSubsystemManagementService`, `CPSubsystemConfig`, CP group/session APIs, metrics, client codecs) and adapt the ported engine to it. Replace `CPSubsystemStubImpl` (delete the stub). | 2.5 ew |
+| F7.3 — done (incl. Management Center CP messages) | Register CP client message tasks (codecs exist in core), CP membership REST/CLI (`hc-cluster-cp-admin`). | 1 ew |
+| F8 — done (purge on members; no client message for it) | `CPMap` new implementation: Raft-replicated KV state machine with the documented ops and size limits, snapshotting, client proxy, config (`CPMapConfig`). | 2.5 ew |
+| Tests — done (`CPLinearizabilityTest`; nemesis: Raft partitions, leader isolation, CP member replacement) | Ported 5.4 CP tests (~114 files) + CPMap tests + linearizability harness (Porcupine-style checker over recorded histories, nemesis: partitions, pauses, kills). | 2 ew |
 
 ---
 

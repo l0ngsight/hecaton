@@ -48,6 +48,8 @@ public enum HecatonFeature {
     HIGH_DENSITY_MEMORY("F11", "High-Density memory (NATIVE in-memory format)", "M5"),
     /** F12. */
     TIERED_STORE("F12", "Tiered Storage", "M10"),
+    /** F9. */
+    CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9"),
     /** F13. */
     WAN_REPLICATION("F13", "WAN replication", "M7"),
     /** F13: synchronization and consistency checks. */

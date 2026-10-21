@@ -923,6 +923,7 @@ public class DefaultMessageTaskFactoryProvider implements MessageTaskFactoryProv
         initializeAtomicLongTaskFactories();
         initializeAtomicReferenceTaskFactories();
         initializeCPMapTaskFactories();
+        initializeManagementCenterCPTaskFactories();
         initializeCountDownLatchTaskFactories();
         initializeFencedLockTaskFactories();
         initializeSemaphoreTaskFactories();
@@ -1786,6 +1787,19 @@ public class DefaultMessageTaskFactoryProvider implements MessageTaskFactoryProv
                 (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.DeleteMessageTask(cm, node, con));
         factories.put(uk.org.hecaton.client.impl.protocol.codec.CPMapCompareAndSetCodec.REQUEST_MESSAGE_TYPE,
                 (cm, con) -> new uk.org.hecaton.cp.internal.datastructures.cpmap.client.CompareAndSetMessageTask(cm, node, con));
+    }
+
+    private void initializeManagementCenterCPTaskFactories() {
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.MCGetCPMembersCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.client.impl.protocol.task.management.GetCPMembersMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.MCPromoteToCPMemberCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.client.impl.protocol.task.management.PromoteToCPMemberMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.MCRemoveCPMemberCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.client.impl.protocol.task.management.RemoveCPMemberMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.MCResetCPSubsystemCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.client.impl.protocol.task.management.ResetCPSubsystemMessageTask(cm, node, con));
+        factories.put(uk.org.hecaton.client.impl.protocol.codec.MCForceCloseCPSessionCodec.REQUEST_MESSAGE_TYPE,
+                (cm, con) -> new uk.org.hecaton.client.impl.protocol.task.management.ForceCloseCPSessionTask(cm, node, con));
     }
 
     private void initializeCountDownLatchTaskFactories() {

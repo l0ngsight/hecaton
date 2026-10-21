@@ -193,6 +193,7 @@ public class HecatonNodeExtension implements NodeExtension {
         checkSecurityAllowed();
         checkPersistenceAllowed();
         checkLosslessRestartAllowed();
+        checkCPPersistenceAllowed();
         checkDynamicConfigurationPersistenceAllowed();
         checkSqlCatalogPersistenceAllowed();
 
@@ -244,6 +245,12 @@ public class HecatonNodeExtension implements NodeExtension {
         JetConfig jetConfig = node.getConfig().getJetConfig();
         if (jetConfig.isLosslessRestartEnabled() && !HecatonFeature.JET_LOSSLESS_RESTART.isAvailable()) {
             throw new IllegalStateException(HecatonFeature.JET_LOSSLESS_RESTART.notAvailableMessage());
+        }
+    }
+
+    private void checkCPPersistenceAllowed() {
+        if (node.getConfig().getCPSubsystemConfig().isPersistenceEnabled() && !HecatonFeature.CP_PERSISTENCE.isAvailable()) {
+            throw new IllegalStateException(HecatonFeature.CP_PERSISTENCE.notAvailableMessage());
         }
     }
 

@@ -22,6 +22,7 @@ import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.cp.CPGroupId;
 import uk.org.hecaton.cp.CPMap;
 import uk.org.hecaton.cp.CPSubsystem;
+import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
 import uk.org.hecaton.test.TestHecatonInstanceFactory;
@@ -194,6 +195,14 @@ public class CPSubsystemImplTest extends HecatonTestSupport {
         CPMap<String, String> map = instance.getCPSubsystem().getMap("myMap");
         map.set("key", "value");
         assertEquals("value", map.get("key"));
+    }
+
+    @Test
+    public void testCPPersistenceRefused() {
+        Config config = new Config();
+        config.getCPSubsystemConfig().setCPMemberCount(3).setPersistenceEnabled(true);
+        Throwable t = assertThrows(IllegalStateException.class, () -> factory.newHecatonInstance(config));
+        assertEquals(HecatonFeature.CP_PERSISTENCE.notAvailableMessage(), t.getMessage());
     }
 
     @Test
