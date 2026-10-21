@@ -1,0 +1,88 @@
+name: Release
+
+# Builds a release when a tag v<version> is pushed (docs/releasing.md): signed artifacts to
+# Maven Central, the member image to GitHub Packages, and a GitHub release with the
+# distributions, the SBOM and the release notes. Without the Central and GPG secrets the
+# release is built unsigned and nothing is uploaded to Central.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to build, without the v (a dry run unless the tag exists)
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version || github.ref_name }}
+      CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+      CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      # read by maven-gpg-plugin 3.2
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Version
+        run: echo "VERSION=${VERSION#v}" >> "$GITHUB_ENV"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          server-id: release-repository
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_TOKEN
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+      - name: Build
+        run: |
+          options=()
+          [[ -n "$GPG_PRIVATE_KEY" ]] || options+=(--no-sign)
+          if [[ "$GITHUB_EVENT_NAME" == push && -n "$CENTRAL_USERNAME" && -n "$GPG_PRIVATE_KEY" ]]; then
+            options+=(--deploy)
+          fi
+          tools/release/release.sh "$VERSION" "${options[@]}"
+      - name: Test the image
+        run: tools/ci/image-test.sh
+      - uses: docker/setup-qemu-action@v3
+        if: github.event_name == 'push'
+      - uses: docker/setup-buildx-action@v3
+        if: github.event_name == 'push'
+      - uses: docker/login-action@v3
+        if: github.event_name == 'push'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish the image
+        if: github.event_name == 'push'
+        run: tools/release/publish-image.sh "$VERSION" "ghcr.io/${GITHUB_REPOSITORY,,}"
+      - name: GitHub release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          prerelease=()
+          [[ "$VERSION" == *-* ]] && prerelease=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" --title "Hecaton $VERSION" \
+            --notes-file target/release/RELEASE_NOTES.md "${prerelease[@]}" target/release/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ env.VERSION }}
+          path: target/release
+          retention-days: 14

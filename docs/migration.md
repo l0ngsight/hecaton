@@ -85,6 +85,34 @@ first for an exact copy. ICache contents are not copied yet.
 Official Hazelcast clients can connect to Hecaton (spec §5.4), so clients can move before or
 after the application code.
 
+## 4. From Hazelcast Enterprise
+
+Hecaton provides open-source implementations of most Enterprise features, configured the same
+way: after the steps above an Enterprise configuration works unchanged where this table says
+so. Features that are not available yet fail at startup with a message naming the milestone
+that delivers them, rather than being ignored.
+
+| Enterprise feature | In Hecaton | Notes |
+|---|---|---|
+| License key | Not needed | `license-key` is ignored with an INFO message |
+| TLS/SSL (member, client, WAN, REST, Memcache) | Yes (F1) | `BasicSSLContextFactory` and custom factories; OpenSSL factory not yet. [security.md](security.md), [ee-class-map.md](ee-class-map.md) |
+| Security: realms, JAAS, member authentication, client permissions, security interceptors | Yes (F2, F3) | LDAP and Kerberos realms: 1.x (M9). [security.md](security.md) |
+| Audit log, socket interceptor | 1.x (F4, F5) | |
+| Symmetric encryption | No (F6) | Deprecated in Hazelcast; use TLS |
+| CP Subsystem, CPMap | Yes (F7, F8) | CP persistence: 1.x (F9). [cp.md](cp.md) |
+| High-Density memory (`NATIVE` format) | Yes (F11) | IMap, ICache, member Near Cache; indexes of `NATIVE` maps are on the heap; client HD Near Cache: 1.x. [hd.md](hd.md) |
+| Persistence (Hot Restart) | Yes (F10) | IMap, ICache, cluster metadata, coordinated restart, partial/force start, hot backup; files are not compatible with Hazelcast's; encryption at rest: 1.x. [persistence.md](persistence.md) |
+| WAN replication | Yes (F13) | Batch publisher, consumer, management; replicates to Hecaton clusters only; WAN sync and consistency check: 1.x. [wan.md](wan.md) |
+| Client blue/green failover | Yes (F15) | |
+| Rolling upgrades | 1.x (F14) | |
+| Dynamic configuration persistence and reload | 1.x (F16) | |
+| User Code Namespaces | 1.x (F17) | |
+| Tiered Storage, Jet lossless restart and job upgrades, SQL catalog persistence, vector collections | 2.x (F12, F18, F19, F20) | |
+| Management Center | No | Out of scope; the operations are available through the API, REST and `hc-cluster-admin` |
+
+[changes-from-hazelcast.md](changes-from-hazelcast.md) lists every difference applications
+can observe.
+
 ## What is checked
 
 `migration-tests/` holds sample Hazelcast applications and the reviewed result of migrating

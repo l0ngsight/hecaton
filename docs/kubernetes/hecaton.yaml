@@ -1,0 +1,66 @@
+# A three-member Hecaton cluster on Kubernetes (docs/operations.md). Apply kubernetes-rbac.yaml
+# first. The members find each other through the Kubernetes API (service-name); for DNS lookup
+# of the headless service, replace HC_NETWORK_JOIN_KUBERNETES_SERVICENAME with
+# HC_NETWORK_JOIN_KUBERNETES_SERVICEDNS=hecaton.<namespace>.svc.cluster.local.
+# kubernetes-tests/ runs the same setup nightly on kind.
+apiVersion: v1
+kind: Service
+metadata:
+  name: hecaton
+spec:
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: hecaton
+  ports:
+    - name: hecaton
+      port: 5701
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hecaton
+spec:
+  serviceName: hecaton
+  replicas: 3
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: hecaton
+  template:
+    metadata:
+      labels:
+        app: hecaton
+    spec:
+      terminationGracePeriodSeconds: 600
+      containers:
+        - name: hecaton
+          image: ghcr.io/l0ngsight/hecaton:1.0.0
+          ports:
+            - containerPort: 5701
+          env:
+            - name: HC_NETWORK_JOIN_AUTODETECTION_ENABLED
+              value: "false"
+            - name: HC_NETWORK_JOIN_MULTICAST_ENABLED
+              value: "false"
+            - name: HC_NETWORK_JOIN_KUBERNETES_ENABLED
+              value: "true"
+            - name: HC_NETWORK_JOIN_KUBERNETES_SERVICENAME
+              value: hecaton
+            # let a member hand its partitions over before it stops (rolling restarts)
+            - name: JAVA_OPTS
+              value: >-
+                -XX:MaxRAMPercentage=75
+                -Dhecaton.shutdownhook.policy=GRACEFUL
+                -Dhecaton.graceful.shutdown.max.wait=600
+          resources:
+            requests:
+              cpu: "1"
+              memory: 2Gi
+            limits:
+              memory: 2Gi
+          readinessProbe:
+            tcpSocket:
+              port: 5701
+            initialDelaySeconds: 5
+            periodSeconds: 5
