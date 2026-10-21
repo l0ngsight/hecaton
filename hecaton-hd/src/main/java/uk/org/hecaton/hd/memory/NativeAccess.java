@@ -72,9 +72,9 @@ public final class NativeAccess {
         ALL.asSlice(address, length).fill(value);
     }
 
-    /** Whether {@code length} bytes at {@code address} equal {@code bytes}. */
-    public static boolean equals(long address, byte[] bytes, int length) {
+    /** Whether {@code length} bytes at {@code address} equal those of {@code bytes} from {@code offset}. */
+    public static boolean equals(long address, byte[] bytes, int offset, int length) {
         return MemorySegment.mismatch(ALL, address, address + length,
-                MemorySegment.ofArray(bytes), 0, length) == -1;
+                MemorySegment.ofArray(bytes), offset, offset + length) == -1;
     }
 }

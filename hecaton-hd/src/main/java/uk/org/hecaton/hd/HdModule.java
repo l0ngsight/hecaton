@@ -16,6 +16,7 @@
 package uk.org.hecaton.hd;
 
 import uk.org.hecaton.config.NativeMemoryConfig;
+import uk.org.hecaton.hd.map.HdRecordStore;
 import uk.org.hecaton.hd.memory.HdMemoryManager;
 import uk.org.hecaton.hd.memory.HdMemoryStats;
 import uk.org.hecaton.instance.impl.Node;
@@ -79,7 +80,7 @@ public class HdModule implements MemberModule, NativeMemoryCapability {
     @Override
     public RecordStore createMapRecordStore(MapContainer mapContainer, int partitionId, MapKeyLoader keyLoader,
                                             ILogger logger) {
-        throw new UnsupportedOperationException("NATIVE maps are not implemented yet");
+        return new HdRecordStore(mapContainer, partitionId, keyLoader, logger, memoryManager());
     }
 
     @Override
