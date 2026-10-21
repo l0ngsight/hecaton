@@ -21,4 +21,29 @@ tools/perf/compare.py results.json                     # table; exit status 1 on
 to run only the client benchmarks. Run them on a quiet machine with at least 4 cores; shared CI
 runners are too noisy to compare runs, so the benchmarks are not part of CI.
 
-RESULTS
+## Results
+
+First run (Hecaton 0.8.0-test against Hazelcast CE 5.7.0, JDK 25, a shared 4-core VM, one fork,
+3 × 5 s warm-up and 3 × 10 s measurement per case; throughput in operations per second, with the
+99.9% confidence interval):
+
+| Benchmark | Caller | Value | Hazelcast CE 5.7 | Hecaton | Hecaton / Hazelcast |
+|---|---|---|---|---|---|
+| get | member | 100 B | 61,932 ± 38,322 | 60,636 ± 16,220 | 0.98 |
+| get | member | 1 KB | 62,379 ± 62,596 | 63,267 ± 31,314 | 1.01 |
+| get | client | 100 B | 36,990 ± 25,790 | 36,082 ± 40,199 | 0.98 |
+| get | client | 1 KB | 36,008 ± 52,751 | 35,111 ± 20,074 | 0.98 |
+| set | member | 100 B | 32,327 ± 2,659 | 32,269 ± 25,668 | 1.00 |
+| set | member | 1 KB | 28,895 ± 8,972 | 31,503 ± 15,978 | 1.09 |
+| set | client | 100 B | 23,415 ± 16,530 | 23,107 ± 11,684 | 0.99 |
+| set | client | 1 KB | 19,110 ± 53,362 | 22,191 ± 23,659 | 1.16 |
+| put | member | 100 B | 32,621 ± 15,662 | 32,197 ± 34,678 | 0.99 |
+| put | member | 1 KB | 30,556 ± 12,684 | 30,194 ± 8,530 | 0.99 |
+| put | client | 100 B | 24,190 ± 9,272 | 22,830 ± 8,100 | 0.94 |
+| put | client | 1 KB | 21,977 ± 11,922 | 20,428 ± 9,845 | 0.93 |
+
+On this machine the differences are well inside the confidence intervals: the run does not show a
+regression, nor rule out one of a few percent. Client `put` was measured again with two forks and
+5 × 10 s (Hecaton: 22,301 ± 652 ops/s with 100 B values, 22,261 ± 966 with 1 KB); the Hazelcast half
+of that run was not completed. The §10 gate needs a run on a dedicated machine with the default
+settings (`java -jar benchmarks/target/benchmarks.jar`, two forks per case), which is open.
