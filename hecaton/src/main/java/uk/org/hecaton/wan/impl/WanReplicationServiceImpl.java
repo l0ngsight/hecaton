@@ -20,6 +20,7 @@ import uk.org.hecaton.cache.impl.ICacheService;
 import uk.org.hecaton.config.AbstractWanPublisherConfig;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
+import uk.org.hecaton.config.WanConsumerConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.core.ManagedContext;
@@ -43,6 +44,7 @@ import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.version.Version;
+import uk.org.hecaton.wan.WanConsumer;
 import uk.org.hecaton.wan.WanEventCounters;
 import uk.org.hecaton.wan.WanMigrationAwarePublisher;
 import uk.org.hecaton.wan.WanPublisher;
@@ -52,6 +54,7 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +102,9 @@ public class WanReplicationServiceImpl implements WanReplicationService,
     private final ConstructorFunction<String, DelegatingWanScheme> publisherDelegateConstructor;
     /** WAN replication configs added at runtime. */
     private final ConcurrentMap<String, WanReplicationConfig> addedConfigs = createConcurrentHashMap(1);
+    /** Custom WAN consumers, by WAN replication name; created once the member has started. */
+    private final Map<String, WanConsumer> consumers = new HashMap<>();
+    private boolean started;
 
     public WanReplicationServiceImpl(Node node) {
         this.node = node;
@@ -223,7 +229,37 @@ public class WanReplicationServiceImpl implements WanReplicationService,
                 }
             }
             wanReplications.clear();
+            consumers.values().forEach(WanConsumer::shutdown);
+            consumers.clear();
         }
+    }
+
+    /**
+     * Called once the member has started: creates the custom WAN consumers of the WAN replication
+     * configs.
+     */
+    public synchronized void afterStart() {
+        started = true;
+        node.getConfig().getWanReplicationConfigs().values().forEach(this::startConsumer);
+        addedConfigs.values().forEach(this::startConsumer);
+    }
+
+    private void startConsumer(WanReplicationConfig config) {
+        WanConsumerConfig consumerConfig = config.getConsumerConfig();
+        if (consumerConfig == null || consumers.containsKey(config.getName())
+                || consumerConfig.getImplementation() == null && consumerConfig.getClassName() == null) {
+            return;
+        }
+        WanConsumer consumer;
+        try {
+            consumer = getOrCreate(consumerConfig.getImplementation(), node.getConfigClassLoader(),
+                    consumerConfig.getClassName());
+        } catch (Exception e) {
+            throw new InvalidConfigurationException("Cannot create the WAN consumer " + consumerConfig.getClassName(), e);
+        }
+        consumer = (WanConsumer) node.getSerializationService().getManagedContext().initialize(consumer);
+        consumer.init(config.getName(), consumerConfig);
+        consumers.put(config.getName(), consumer);
     }
 
     @Override
@@ -319,6 +355,9 @@ public class WanReplicationServiceImpl implements WanReplicationService,
         String name = newConfig.getName();
         if (!hasWanReplicationScheme(name)) {
             addedConfigs.put(name, newConfig);
+            if (started) {
+                startConsumer(newConfig);
+            }
         }
         DelegatingWanScheme scheme = getWanReplicationPublishers(name);
         List<AbstractWanPublisherConfig> publisherConfigs = new ArrayList<>(newConfig.getBatchPublisherConfigs());

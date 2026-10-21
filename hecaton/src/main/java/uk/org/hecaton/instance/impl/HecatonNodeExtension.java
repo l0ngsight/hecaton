@@ -135,8 +135,8 @@ import uk.org.hecaton.spi.properties.ClusterProperty;
 import uk.org.hecaton.spi.properties.HecatonProperties;
 import uk.org.hecaton.version.MemberVersion;
 import uk.org.hecaton.version.Version;
-import uk.org.hecaton.wan.impl.WanReplicationService;
 import uk.org.hecaton.wan.impl.WanReplicationServiceImpl;
+import uk.org.hecaton.wan.impl.WanReplicationService;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -377,6 +377,9 @@ public class HecatonNodeExtension implements NodeExtension {
         }
         if (jetServiceBackend != null) {
             jetServiceBackend.startScanningForJobs();
+        }
+        if (node.getNodeEngine().getWanReplicationService() instanceof WanReplicationServiceImpl wanReplicationService) {
+            wanReplicationService.afterStart();
         }
     }
 

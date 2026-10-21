@@ -21,6 +21,7 @@ import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.WanAcknowledgeType;
 import uk.org.hecaton.config.WanBatchPublisherConfig;
+import uk.org.hecaton.config.WanConsumerConfig;
 import uk.org.hecaton.config.WanQueueFullBehavior;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.config.WanReplicationRef;
@@ -32,6 +33,7 @@ import uk.org.hecaton.test.HecatonSerialClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
 import uk.org.hecaton.test.TestHecatonInstanceFactory;
 import uk.org.hecaton.test.annotation.QuickTest;
+import uk.org.hecaton.wan.WanConsumer;
 import uk.org.hecaton.wan.WanPublisherState;
 import uk.org.hecaton.wan.WanQueueFullException;
 import uk.org.hecaton.wan.impl.AddWanConfigResult;
@@ -44,6 +46,7 @@ import org.junit.runner.RunWith;
 import javax.cache.Cache;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import static uk.org.hecaton.cache.CacheTestSupport.createServerCachingProvider;
@@ -243,6 +246,17 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
         assertTrueEventually(() -> assertThat(outboundQueueSize(source)).isZero());
     }
 
+    @Test
+    public void customConsumerIsCreatedOnStartAndShutDown() {
+        Config config = smallInstanceConfig().setClusterName("consumer");
+        config.addWanReplicationConfig(new WanReplicationConfig().setName("from-a")
+                .setConsumerConfig(new WanConsumerConfig().setClassName(RecordingConsumer.class.getName())));
+        HecatonInstance member = factory.newHecatonInstance(config);
+        assertThat(RecordingConsumer.INITIALIZED).containsExactly("from-a");
+        member.shutdown();
+        assertThat(RecordingConsumer.SHUT_DOWN).containsExactly("from-a");
+    }
+
     private WanBatchPublisherConfig publisher(String targetCluster, List<HecatonInstance> target) {
         String endpoints = target.stream()
                 .map(member -> member.getCluster().getLocalMember().getAddress().getHost() + ":"
@@ -308,5 +322,23 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
 
     private static WanReplicationService wanService(HecatonInstance member) {
         return getNode(member).getNodeEngine().getWanReplicationService();
+    }
+
+    public static class RecordingConsumer implements WanConsumer {
+        static final List<String> INITIALIZED = new CopyOnWriteArrayList<>();
+        static final List<String> SHUT_DOWN = new CopyOnWriteArrayList<>();
+
+        private String name;
+
+        @Override
+        public void init(String wanReplicationName, WanConsumerConfig config) {
+            name = wanReplicationName;
+            INITIALIZED.add(name);
+        }
+
+        @Override
+        public void shutdown() {
+            SHUT_DOWN.add(name);
+        }
     }
 }
