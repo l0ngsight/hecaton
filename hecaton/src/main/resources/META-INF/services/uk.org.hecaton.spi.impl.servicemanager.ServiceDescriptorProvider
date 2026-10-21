@@ -1,1 +1,3 @@
 uk.org.hecaton.internal.longregister.LongRegisterServiceDescriptorProvider
+uk.org.hecaton.cp.internal.RaftServiceDescriptorProvider
+uk.org.hecaton.cp.internal.datastructures.RaftDataServiceDescriptorProvider

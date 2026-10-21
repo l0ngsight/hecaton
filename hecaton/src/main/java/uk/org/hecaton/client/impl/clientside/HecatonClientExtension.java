@@ -21,6 +21,9 @@ import uk.org.hecaton.client.config.ClientConfig;
 import uk.org.hecaton.client.config.ClientNetworkConfig;
 import uk.org.hecaton.client.config.RoutingMode;
 import uk.org.hecaton.client.config.SocketOptions;
+import uk.org.hecaton.client.cp.internal.CPSubsystemImpl;
+import uk.org.hecaton.client.cp.internal.datastructures.proxy.ClientRaftProxyFactory;
+import uk.org.hecaton.client.cp.internal.session.ClientProxySessionManager;
 import uk.org.hecaton.client.impl.ClientExtension;
 import uk.org.hecaton.client.impl.connection.tcp.ClientPlainChannelInitializer;
 import uk.org.hecaton.client.impl.proxy.ClientMapProxy;
@@ -41,9 +44,7 @@ import uk.org.hecaton.config.SerializationConfig;
 import uk.org.hecaton.config.SocketInterceptorConfig;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.cp.CPSubsystem;
-import uk.org.hecaton.cp.CPSubsystemStubImpl;
 import uk.org.hecaton.cp.internal.session.ProxySessionManager;
-import uk.org.hecaton.cp.internal.session.StubProxySessionManager;
 import uk.org.hecaton.instance.BuildInfo;
 import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.internal.memory.DefaultMemoryStats;
@@ -255,12 +256,12 @@ public class HecatonClientExtension implements ClientExtension {
 
     @Override
     public CPSubsystem createCPSubsystem(HecatonClientInstanceImpl hecatonClientInstance) {
-        return new CPSubsystemStubImpl(true);
+        return new CPSubsystemImpl(new ClientRaftProxyFactory(hecatonClientInstance));
     }
 
     @Override
     public ProxySessionManager createProxySessionManager(HecatonClientInstanceImpl hecatonClientInstance) {
-        return new StubProxySessionManager();
+        return new ClientProxySessionManager(hecatonClientInstance);
     }
 
     @Override

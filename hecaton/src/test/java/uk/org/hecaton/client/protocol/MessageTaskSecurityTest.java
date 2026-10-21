@@ -25,8 +25,8 @@ import uk.org.hecaton.client.impl.protocol.task.AddPartitionLostListenerMessageT
 import uk.org.hecaton.client.impl.protocol.task.AuthenticationCustomCredentialsMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.AuthenticationMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.ClientStatisticsMessageTask;
-import uk.org.hecaton.client.impl.protocol.task.CreateProxiesMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.ClientTpcAuthenticationMessageTask;
+import uk.org.hecaton.client.impl.protocol.task.CreateProxiesMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.GetDistributedObjectsMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.MessageTask;
 import uk.org.hecaton.client.impl.protocol.task.NoSuchMessageTask;
@@ -42,6 +42,13 @@ import uk.org.hecaton.client.impl.protocol.task.map.MapMadePublishableMessageTas
 import uk.org.hecaton.client.impl.protocol.task.schema.FetchSchemaMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.schema.SendAllSchemasMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.schema.SendSchemaMessageTask;
+import uk.org.hecaton.cp.internal.client.AddCPGroupAvailabilityListenerMessageTask;
+import uk.org.hecaton.cp.internal.client.AddCPMembershipListenerMessageTask;
+import uk.org.hecaton.cp.internal.client.CPSubsystemGetCPGroupIdsMessageTask;
+import uk.org.hecaton.cp.internal.client.CPSubsystemGetCPObjectInfosMessageTask;
+import uk.org.hecaton.cp.internal.client.RemoveCPGroupAvailabilityListenerMessageTask;
+import uk.org.hecaton.cp.internal.client.RemoveCPMembershipListenerMessageTask;
+import uk.org.hecaton.cp.internal.datastructures.spi.client.CreateRaftGroupMessageTask;
 import uk.org.hecaton.sql.impl.client.SqlCloseMessageTask;
 import uk.org.hecaton.sql.impl.client.SqlExecuteMessageTask;
 import uk.org.hecaton.sql.impl.client.SqlFetchMessageTask;
@@ -108,6 +115,13 @@ public class MessageTaskSecurityTest {
         skip(AuthenticationCustomCredentialsMessageTask.class, "Authentication message processing");
         skip(ClientTpcAuthenticationMessageTask.class, "Authentication message processing");
         skip(CreateProxiesMessageTask.class, "Permissions handled in beforeProcess() method");
+        skip(CPSubsystemGetCPGroupIdsMessageTask.class, "Gets names of CP objects");
+        skip(CPSubsystemGetCPObjectInfosMessageTask.class, "Gets names of CP objects");
+        skip(AddCPGroupAvailabilityListenerMessageTask.class, "Listener for the cluster-topology change");
+        skip(AddCPMembershipListenerMessageTask.class, "Listener for the cluster-topology change");
+        skip(RemoveCPGroupAvailabilityListenerMessageTask.class, "Listener for the cluster-topology change");
+        skip(RemoveCPMembershipListenerMessageTask.class, "Listener for the cluster-topology change");
+        skip(CreateRaftGroupMessageTask.class, "Initial message while creating a Client proxy for any CP object");
     }
 
     @Test

@@ -39,15 +39,17 @@ public enum HecatonFeature {
     /** F6: not planned, TLS replaces it. */
     SYMMETRIC_ENCRYPTION("F6", "Symmetric encryption", null, "use TLS/SSL (F1) instead"),
     /** F7. */
-    CP_SUBSYSTEM("F7", "CP Subsystem", "M4"),
+    CP_SUBSYSTEM("F7", "CP Subsystem", "M4", null, true),
     /** F8. */
-    CP_MAP("F8", "CPMap", "M4"),
+    CP_MAP("F8", "CPMap", "M4", null, true),
     /** F10. */
     PERSISTENCE("F10", "Persistence (Hot Restart)", "M6"),
     /** F11. */
     HIGH_DENSITY_MEMORY("F11", "High-Density memory (NATIVE in-memory format)", "M5"),
     /** F12. */
     TIERED_STORE("F12", "Tiered Storage", "M10"),
+    /** F9. */
+    CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9"),
     /** F13. */
     WAN_REPLICATION("F13", "WAN replication", "M7"),
     /** F13: synchronization and consistency checks. */

@@ -12,6 +12,10 @@ Parts of the original work are licensed under the Hazelcast Community License
 (see licenses/hazelcast-community-license.txt). Those files say so in their
 headers and are distributed only in separate, optional artifacts.
 
+The CP Subsystem (packages uk.org.hecaton.cp and the Raft invocation classes)
+is taken from Hazelcast Platform 5.4.0 (Apache License 2.0), the last release
+in which it was open source, and modified; see docs/provenance.md.
+
 "Hazelcast" is a trademark of Hazelcast, Inc. Hecaton is not affiliated with
 or endorsed by Hazelcast, Inc.
 

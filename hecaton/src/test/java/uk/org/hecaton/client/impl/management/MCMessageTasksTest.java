@@ -57,6 +57,7 @@ import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.cluster.Cluster;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.WanReplicationRef;
+import uk.org.hecaton.core.HecatonException;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.instance.impl.HecatonInstanceProxy;
@@ -79,7 +80,6 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import static uk.org.hecaton.cp.CPSubsystemStubImpl.CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_CLIENTS;
 import static uk.org.hecaton.internal.util.StringUtil.isNullOrEmptyAfterTrim;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.Assert.assertEquals;
@@ -200,7 +200,7 @@ public class MCMessageTasksTest extends HecatonTestSupport {
 
     @Test
     public void testGetCPMembersMessageTask() throws Exception {
-        assertFailure(MCGetCPMembersCodec.encodeRequest(), UnsupportedOperationException.class, CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_CLIENTS);
+        assertFailure(MCGetCPMembersCodec.encodeRequest(), HecatonException.class, "CP Subsystem is not enabled!");
     }
 
     @Test
@@ -419,17 +419,17 @@ public class MCMessageTasksTest extends HecatonTestSupport {
 
     @Test
     public void testPromoteToCPMemberMessageTask() throws Exception {
-        assertFailure(MCPromoteToCPMemberCodec.encodeRequest(), UnsupportedOperationException.class, CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_CLIENTS);
+        assertFailure(MCPromoteToCPMemberCodec.encodeRequest(), HecatonException.class, "CP Subsystem is not enabled!");
     }
 
     @Test
     public void testRemoveCPMemberMessageTask() throws Exception {
-        assertFailure(MCRemoveCPMemberCodec.encodeRequest(UUID.randomUUID()), UnsupportedOperationException.class, CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_CLIENTS);
+        assertFailure(MCRemoveCPMemberCodec.encodeRequest(UUID.randomUUID()), HecatonException.class, "CP Subsystem is not enabled!");
     }
 
     @Test
     public void testResetCPSubsystemMessageTask() throws Exception {
-        assertFailure(MCResetCPSubsystemCodec.encodeRequest(), UnsupportedOperationException.class, CP_SUBSYSTEM_IS_NOT_AVAILABLE_IN_OS_CLIENTS);
+        assertFailure(MCResetCPSubsystemCodec.encodeRequest(), HecatonException.class, "CP Subsystem is not enabled!");
     }
 
     @Test
