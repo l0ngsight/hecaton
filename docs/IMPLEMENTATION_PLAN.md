@@ -368,7 +368,7 @@ consistency check are P1, in M9.)
 | F14 Rolling upgrades — done (tested with artificial versions until a second cluster version exists) | `supportedVersions={N-1,N}`, auto-upgrade; becomes testable with the second Hecaton minor; upgrade test N-1→N in CI | 3 ew |
 | F16 Dynamic config persistence, config reload/update — done | Persist dynamic config changes back to the declarative file; reload/update diff engine | 3 ew |
 | F17 User Code Namespaces — done | Namespace service, per-namespace classloaders, resource upload, integration points | 4 ew |
-| Slim client jar (§8.3 phase 2) | Reachability-based packaging + ArchUnit rules | 2 ew |
+| Slim client jar (§8.3 phase 2) — investigated, not shipped | `tools/client-jar/reachability.py` (jdeps): 74% of core's classes are reachable from the client entry points, 90% with the serializer hooks and other service files the client loads, so a reachability-built jar would be about 5% smaller while risking missing classes on reflective paths. A useful client jar first needs client and member code decoupled (shared serializer hooks, `HecatonInstanceFactory`, CP proxy helpers in `RaftService`); `--gateways` lists where to start. `hecaton-client` stays the core jar | 2 ew |
 
 ---
 
