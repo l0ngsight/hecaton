@@ -104,12 +104,14 @@ import uk.org.hecaton.spi.impl.executionservice.ExecutionService;
 import uk.org.hecaton.spi.impl.operationexecutor.impl.PartitionOperationThread;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.spi.impl.operationservice.impl.OperationServiceImpl;
+import uk.org.hecaton.spi.impl.operationservice.impl.RaftInvocationContext;
 import uk.org.hecaton.spi.impl.servicemanager.ServiceInfo;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EventListener;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -133,6 +135,7 @@ import static uk.org.hecaton.cluster.memberselector.MemberSelectors.NON_LOCAL_ME
 import static uk.org.hecaton.cp.CPGroup.DEFAULT_GROUP_NAME;
 import static uk.org.hecaton.cp.CPGroup.METADATA_CP_GROUP_NAME;
 import static uk.org.hecaton.cp.internal.RaftGroupMembershipManager.MANAGEMENT_TASK_PERIOD_IN_MILLIS;
+import static uk.org.hecaton.cp.internal.RaftServiceUtil.CP_MEMBER_UUID_ATTRIBUTE;
 import static uk.org.hecaton.cp.internal.raft.QueryPolicy.LEADER_LOCAL;
 import static uk.org.hecaton.cp.internal.raft.QueryPolicy.LINEARIZABLE;
 import static uk.org.hecaton.cp.internal.raft.impl.RaftNodeImpl.newRaftNode;
@@ -640,7 +643,26 @@ public class RaftService implements ManagedService, SnapshotAwareService<Metadat
 
     @Override
     public void memberAdded(MembershipServiceEvent event) {
+        updateRestartedCPMemberAddress(event.getMember());
         metadataGroupManager.broadcastActiveCPMembers();
+    }
+
+    /**
+     * A member that restarted with its persisted CP state advertises its CP member UUID: if it is
+     * a known CP member with another address, invocations and Raft messages go to the new address.
+     */
+    public void updateRestartedCPMemberAddress(Member member) {
+        String cpMemberUuid = member.getAttribute(CP_MEMBER_UUID_ATTRIBUTE);
+        if (cpMemberUuid == null) {
+            return;
+        }
+        RaftInvocationContext context = invocationManager.getRaftInvocationContext();
+        CPMember known = context.getCPMember(UUID.fromString(cpMemberUuid));
+        if (known != null && !known.getAddress().equals(member.getAddress())) {
+            logger.info("CP member " + known + " restarted with the address " + member.getAddress());
+            context.updateMember(new CPMemberInfo(known.getUuid(), member.getAddress(),
+                    ((CPMemberInfo) known).isAutoStepDownWhenLeader()));
+        }
     }
 
     @Override
@@ -978,7 +1000,32 @@ public class RaftService implements ManagedService, SnapshotAwareService<Metadat
 
     public boolean updateInvocationManagerMembers(long groupIdSeed, long membersCommitIndex,
             Collection<? extends CPMember> members) {
-        return invocationManager.getRaftInvocationContext().setMembers(groupIdSeed, membersCommitIndex, members);
+        return invocationManager.getRaftInvocationContext().setMembers(groupIdSeed, membersCommitIndex,
+                withRestartedAddresses(members));
+    }
+
+    /**
+     * The CP members with the current addresses of those that restarted with their persisted CP
+     * state at another address, which the list may not have yet.
+     */
+    private Collection<? extends CPMember> withRestartedAddresses(Collection<? extends CPMember> members) {
+        if (!getCPPersistenceService().isEnabled()) {
+            return members;
+        }
+        Map<UUID, Address> restarted = new HashMap<>();
+        for (Member member : nodeEngine.getClusterService().getMembers()) {
+            String cpMemberUuid = member.getAttribute(CP_MEMBER_UUID_ATTRIBUTE);
+            if (cpMemberUuid != null) {
+                restarted.put(UUID.fromString(cpMemberUuid), member.getAddress());
+            }
+        }
+        List<CPMember> updated = new ArrayList<>(members.size());
+        for (CPMember member : members) {
+            Address address = restarted.get(member.getUuid());
+            updated.add(address == null || address.equals(member.getAddress()) ? member
+                    : new CPMemberInfo(member.getUuid(), address, ((CPMemberInfo) member).isAutoStepDownWhenLeader()));
+        }
+        return updated;
     }
 
     public void terminateRaftNode(CPGroupId groupId, boolean groupDestroyed) {

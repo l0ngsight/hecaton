@@ -45,6 +45,7 @@ import uk.org.hecaton.core.HecatonInstanceNotActiveException;
 import uk.org.hecaton.cp.CPSubsystem;
 import uk.org.hecaton.cp.internal.CPSubsystemImpl;
 import uk.org.hecaton.cp.internal.persistence.CPPersistenceService;
+import uk.org.hecaton.cp.internal.persistence.CPPersistenceServiceImpl;
 import uk.org.hecaton.cp.internal.persistence.NopCPPersistenceService;
 import uk.org.hecaton.hotrestart.HotRestartService;
 import uk.org.hecaton.instance.BuildInfo;
@@ -92,6 +93,7 @@ import uk.org.hecaton.internal.memory.DefaultMemoryStats;
 import uk.org.hecaton.internal.memory.MemoryStats;
 import uk.org.hecaton.internal.namespace.UserCodeNamespaceService;
 import uk.org.hecaton.internal.namespace.impl.NoOpUserCodeNamespaceService;
+import uk.org.hecaton.internal.namespace.impl.UserCodeNamespaceServiceImpl;
 import uk.org.hecaton.internal.namespace.impl.NodeEngineThreadLocalContext;
 import uk.org.hecaton.internal.networking.ChannelInitializer;
 import uk.org.hecaton.internal.networking.InboundHandler;
@@ -193,6 +195,8 @@ public class HecatonNodeExtension implements NodeExtension {
     private final Set<Version> supportedVersions;
     /** Null unless persistence is enabled. */
     private final PersistenceCapability persistence;
+    /** Null unless CP Subsystem persistence is enabled; created on first use. */
+    private volatile CPPersistenceServiceImpl cpPersistence;
     private volatile AuditlogService auditlogService;
     private final Map<EndpointQualifier, Optional<MemberSocketInterceptor>> socketInterceptors = new ConcurrentHashMap<>();
     private final HotRestartService noOpHotRestartService = new NoOpHotRestartService();
@@ -362,12 +366,22 @@ public class HecatonNodeExtension implements NodeExtension {
         if (persistence != null) {
             persistence.beforeJoin();
         }
+        if (cpPersistence() != null) {
+            cpPersistence().beforeJoin();
+        }
     }
 
     @Override
     public void afterStart() {
         if (persistence != null) {
             persistence.afterStart();
+        }
+        if (cpPersistence() != null) {
+            cpPersistence().afterJoin();
+        }
+        UserCodeNamespaceService namespaceService = node.getNamespaceService();
+        if (namespaceService.isEnabled() && node.getProperties().getBoolean(ClusterProperty.METRICS_USER_CODE_NAMESPACES)) {
+            node.getNodeEngine().getMetricsRegistry().registerDynamicMetricsProvider(namespaceService);
         }
         if (jetServiceBackend != null) {
             jetServiceBackend.startScanningForJobs();
@@ -380,7 +394,8 @@ public class HecatonNodeExtension implements NodeExtension {
     @Override
     public boolean isStartCompleted() {
         return node.getClusterService().isJoined()
-                && (persistence == null || persistence.internalHotRestartService().isStartCompleted());
+                && (persistence == null || persistence.internalHotRestartService().isStartCompleted())
+                && (cpPersistence() == null || cpPersistence().isRestoreCompleted());
     }
 
     @Override
@@ -600,6 +615,9 @@ public class HecatonNodeExtension implements NodeExtension {
     @Override
     public void afterShutdown() {
         logger.info("Destroying node NodeExtension.");
+        if (cpPersistence != null) {
+            cpPersistence.close();
+        }
     }
 
     @Override
@@ -795,8 +813,26 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public CPPersistenceService getCPPersistenceService() {
-        // CP persistence (F9) comes with the persistence module
-        return NopCPPersistenceService.INSTANCE;
+        CPPersistenceService service = cpPersistence();
+        return service != null ? service : NopCPPersistenceService.INSTANCE;
+    }
+
+    /** The CP Subsystem persistence service (F9), or null if it is not enabled. */
+    private CPPersistenceServiceImpl cpPersistence() {
+        if (!node.getConfig().getCPSubsystemConfig().isPersistenceEnabled()) {
+            return null;
+        }
+        CPPersistenceServiceImpl service = cpPersistence;
+        if (service == null) {
+            synchronized (this) {
+                service = cpPersistence;
+                if (service == null) {
+                    service = new CPPersistenceServiceImpl(node);
+                    cpPersistence = service;
+                }
+            }
+        }
+        return service;
     }
 
     @Override
@@ -870,6 +906,10 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public UserCodeNamespaceService getNamespaceService() {
+        if (node.getConfig().getNamespacesConfig().isEnabled()) {
+            return new UserCodeNamespaceServiceImpl(node.getConfigClassLoader(), node.getConfig().getNamespacesConfig(),
+                    node.getLogger(UserCodeNamespaceService.class));
+        }
         return new NoOpUserCodeNamespaceService(node.getConfigClassLoader());
     }
 

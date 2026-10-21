@@ -18,12 +18,13 @@ as the [migration guide](migration.md) describes.
 | Feature | Reference | Since |
 |---|---|---|
 | TLS/SSL, authentication, client permissions (F1–F3) | [security.md](security.md), [ee-class-map.md](ee-class-map.md) | 0.3.0 |
-| CP Subsystem and CPMap (F7, F8) | [cp.md](cp.md) | 0.4.0 |
+| CP Subsystem and CPMap (F7, F8) | [cp.md](cp.md) | 0.4.0; persistence (F9) 0.9.0 |
 | High-Density memory (F11) | [hd.md](hd.md) | 0.5.0 |
 | Persistence (F10) | [persistence.md](persistence.md) | 0.6.0 |
 | WAN replication (F13) | [wan.md](wan.md) | 0.7.0; sync 0.9.0 |
 | Audit log, socket interceptor (F4, F5) | [security.md](security.md) | 0.9.0 |
 | Dynamic configuration persistence, reload (F16) | [dynamic-configuration.md](dynamic-configuration.md) | 0.9.0 |
+| User Code Namespaces (F17) | [user-code-namespaces.md](user-code-namespaces.md) | 0.9.0 |
 | Client blue/green failover (F15) | [changes-from-hazelcast.md](changes-from-hazelcast.md) | 0.2.0 |
 
 ## The project

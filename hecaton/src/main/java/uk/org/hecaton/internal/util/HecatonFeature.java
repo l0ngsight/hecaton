@@ -49,7 +49,7 @@ public enum HecatonFeature {
     /** F12. */
     TIERED_STORE("F12", "Tiered Storage", "M10"),
     /** F9. */
-    CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9"),
+    CP_PERSISTENCE("F9", "CP Subsystem persistence", "M9", null, true),
     /** F13. */
     WAN_REPLICATION("F13", "WAN replication", "M7", null, true),
     /** F13: synchronization and consistency checks. */
@@ -59,7 +59,7 @@ public enum HecatonFeature {
     /** F16. */
     CONFIGURATION_RELOAD("F16", "Configuration reload and update", "M9", null, true),
     /** F17. */
-    USER_CODE_NAMESPACES("F17", "User Code Namespaces", "M9"),
+    USER_CODE_NAMESPACES("F17", "User Code Namespaces", "M9", null, true),
     /** F18. */
     JET_LOSSLESS_RESTART("F18", "Jet lossless restart", "M10"),
     /** F18. */

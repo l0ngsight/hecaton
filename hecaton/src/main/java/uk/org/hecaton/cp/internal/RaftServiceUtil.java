@@ -24,6 +24,8 @@ public class RaftServiceUtil {
      Used to propagate autoStepDownWhenLeader through MemberImpl.
      */
     public static final String CP_AUTO_STEP_DOWN_WHEN_LEADER_ATTRIBUTE = "hecaton.cp.auto.step.down.when.leader";
+    /** The CP member UUID of a member that restarted with its persisted CP state (CP Subsystem persistence). */
+    public static final String CP_MEMBER_UUID_ATTRIBUTE = "hecaton.cp.member.uuid";
 
 
     private RaftServiceUtil() {

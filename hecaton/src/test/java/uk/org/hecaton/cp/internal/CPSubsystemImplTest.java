@@ -22,7 +22,6 @@ import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.cp.CPGroupId;
 import uk.org.hecaton.cp.CPMap;
 import uk.org.hecaton.cp.CPSubsystem;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
 import uk.org.hecaton.test.TestHecatonInstanceFactory;
@@ -35,11 +34,15 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static uk.org.hecaton.test.Accessors.getNode;
 
 @RunWith(HecatonParallelClassRunner.class)
 @Category({QuickTest.class, ParallelJVMTest.class})
@@ -198,11 +201,12 @@ public class CPSubsystemImplTest extends HecatonTestSupport {
     }
 
     @Test
-    public void testCPPersistenceRefused() {
+    public void testCPPersistenceAvailable() throws IOException {
         Config config = new Config();
-        config.getCPSubsystemConfig().setCPMemberCount(3).setPersistenceEnabled(true);
-        Throwable t = assertThrows(IllegalStateException.class, () -> factory.newHecatonInstance(config));
-        assertEquals(HecatonFeature.CP_PERSISTENCE.notAvailableMessage(), t.getMessage());
+        config.getCPSubsystemConfig().setCPMemberCount(3).setPersistenceEnabled(true)
+                .setBaseDir(Files.createTempDirectory("cp-data").toFile());
+        HecatonInstance instance = factory.newHecatonInstance(config);
+        assertTrue(getNode(instance).getNodeExtension().getCPPersistenceService().isEnabled());
     }
 
     @Test
