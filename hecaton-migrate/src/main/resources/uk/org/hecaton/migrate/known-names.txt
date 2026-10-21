@@ -312,6 +312,7 @@ hecaton.query.optimizer.type
 hecaton.query.predicate.parallel.evaluation
 hecaton.query.reflectiveAttributeLookupPolicy
 hecaton.query.result.size.limit
+hecaton.raft.leadership.rebalance.period
 hecaton.replicatedmap.iterator.cleanup.period.seconds
 hecaton.replicatedmap.iterator.cleanup.timeout.millis
 hecaton.restclient.ca.storetype
@@ -323,6 +324,7 @@ hecaton.serialization.ds.cardinality_estimator
 hecaton.serialization.ds.client
 hecaton.serialization.ds.collection
 hecaton.serialization.ds.config
+hecaton.serialization.ds.cp.event
 hecaton.serialization.ds.durable.executor
 hecaton.serialization.ds.enterprise.cache
 hecaton.serialization.ds.enterprise.config
@@ -354,7 +356,15 @@ hecaton.serialization.ds.predicate
 hecaton.serialization.ds.projection
 hecaton.serialization.ds.queue
 hecaton.serialization.ds.raft
+hecaton.serialization.ds.raft.atomiclong
+hecaton.serialization.ds.raft.atomicref
+hecaton.serialization.ds.raft.countdownlatch
+hecaton.serialization.ds.raft.cpmap
+hecaton.serialization.ds.raft.data
+hecaton.serialization.ds.raft.lock
+hecaton.serialization.ds.raft.sema
 hecaton.serialization.ds.raft.service
+hecaton.serialization.ds.raft.session
 hecaton.serialization.ds.replicated_map
 hecaton.serialization.ds.ringbuffer
 hecaton.serialization.ds.scheduled.executor
