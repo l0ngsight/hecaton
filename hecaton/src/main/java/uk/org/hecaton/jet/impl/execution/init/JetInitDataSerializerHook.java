@@ -33,6 +33,7 @@ import uk.org.hecaton.jet.impl.connector.WriteFileP;
 import uk.org.hecaton.jet.impl.operation.AddJobStatusListenerOperation;
 import uk.org.hecaton.jet.impl.operation.CheckLightJobsOperation;
 import uk.org.hecaton.jet.impl.operation.GetJobAndSqlSummaryListOperation;
+import uk.org.hecaton.jet.impl.operation.ExportSnapshotOperation;
 import uk.org.hecaton.jet.impl.operation.GetJobConfigOperation;
 import uk.org.hecaton.jet.impl.operation.GetJobIdsOperation;
 import uk.org.hecaton.jet.impl.operation.GetJobIdsOperation.GetJobIdsResult;
@@ -124,6 +125,7 @@ public final class JetInitDataSerializerHook implements DataSerializerHook {
     public static final int UPLOAD_JOB_MULTIPART_OP = 53;
     public static final int UPDATE_JOB_CONFIG_OP = 54;
     public static final int JOB_AND_SQL_SUMMARY = 55;
+    public static final int EXPORT_SNAPSHOT_OP = 56;
 
     public static final int FACTORY_ID = FactoryIdHelper.getFactoryId(JET_IMPL_DS_FACTORY, JET_IMPL_DS_FACTORY_ID);
 
@@ -169,6 +171,7 @@ public final class JetInitDataSerializerHook implements DataSerializerHook {
                         AsyncSnapshotWriterImpl.SnapshotDataValueTerminator.INSTANCE;
                 case SNAPSHOT_PHASE1_RESULT -> new SnapshotPhase1Result();
                 case RESUME_JOB_OP -> new ResumeJobOperation();
+                case EXPORT_SNAPSHOT_OP -> new ExportSnapshotOperation();
                 case NOTIFY_MEMBER_SHUTDOWN_OP -> new NotifyMemberShutdownOperation();
                 case GET_JOB_SUMMARY_LIST_OP -> new GetJobSummaryListOperation();
                 case JOB_SUMMARY -> new JobSummary();

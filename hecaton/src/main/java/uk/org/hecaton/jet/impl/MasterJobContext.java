@@ -665,6 +665,35 @@ public class MasterJobContext {
         }
     }
 
+    /**
+     * Exports a snapshot of the running job under {@code name} (F18). With {@code cancelJob} it is
+     * the terminal snapshot of a graceful cancellation: the job stops at the exported state.
+     *
+     * @return completes when the snapshot is exported
+     */
+    CompletableFuture<Void> exportSnapshot(@Nonnull String name, boolean cancelJob) {
+        CompletableFuture<Void> exported = new CompletableFuture<>();
+        mc.lock();
+        try {
+            if (mc.jobStatus() != RUNNING) {
+                throw new JetException("Cannot export a snapshot of " + mc.jobIdString() + ", its status is "
+                        + mc.jobStatus());
+            }
+            if (cancelJob) {
+                if (terminationRequest != null) {
+                    throw new JetException(mc.jobIdString() + " is already terminating in mode "
+                            + terminationRequest.mode.name());
+                }
+                terminationRequest = new TerminationRequest(CANCEL_GRACEFUL, true);
+            }
+            mc.snapshotContext().enqueueSnapshot(name, cancelJob, exported);
+        } finally {
+            mc.unlock();
+        }
+        mc.snapshotContext().tryBeginSnapshot();
+        return exported;
+    }
+
     void handleTermination(@Nonnull TerminationMode mode) {
         // this method can be called multiple times to handle the termination, it must
         // be safe against it (idempotent).

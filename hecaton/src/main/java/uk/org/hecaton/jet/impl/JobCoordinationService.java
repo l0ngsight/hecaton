@@ -23,6 +23,7 @@ import uk.org.hecaton.core.HecatonInstanceNotActiveException;
 import uk.org.hecaton.function.FunctionEx;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.cluster.ClusterService;
+import uk.org.hecaton.internal.cluster.MemberInfo;
 import uk.org.hecaton.internal.cluster.impl.MasterNodeChangedException;
 import uk.org.hecaton.internal.cluster.impl.MembersView;
 import uk.org.hecaton.internal.metrics.DynamicMetricsProvider;
@@ -34,7 +35,6 @@ import uk.org.hecaton.internal.partition.impl.InternalPartitionServiceImpl;
 import uk.org.hecaton.internal.partition.impl.PartitionServiceState;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.util.ExceptionUtil;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.counters.Counter;
 import uk.org.hecaton.internal.util.counters.MwCounter;
 import uk.org.hecaton.internal.util.executor.ManagedExecutorService;
@@ -378,8 +378,8 @@ public class JobCoordinationService implements DynamicMetricsProvider {
         }
     }
 
+    /** Isolated jobs (F18) run on the members the selector selects; any selector is accepted. */
     protected void validateIsolatedJob(@Nonnull JetMemberSelector memberSelector) {
-        throw new UnsupportedOperationException(HecatonFeature.JET_ISOLATED_JOBS.notAvailableMessage());
     }
 
     protected void onJobSubmitted(DAG dag, JobConfig config) {
@@ -754,6 +754,20 @@ public class JobCoordinationService implements DynamicMetricsProvider {
         );
     }
 
+    /** Exports a snapshot of a running job, cancelling it after the snapshot if requested (F18). */
+    public CompletableFuture<Void> exportSnapshot(long jobId, String name, boolean cancelJob) {
+        return this.<CompletableFuture<Void>>callWithJob(jobId,
+                masterContext -> masterContext.jobContext().exportSnapshot(name, cancelJob),
+                jobResult -> {
+                    throw new JetException("Cannot export a snapshot of " + idToString(jobId) + ", it has completed");
+                },
+                jobRecord -> {
+                    throw new RetryableHecatonException("Job " + idToString(jobId) + " not yet discovered");
+                },
+                null
+        ).thenCompose(exported -> exported);
+    }
+
     public CompletableFuture<Void> resumeJob(long jobId) {
         return runWithJob(jobId,
                 masterContext -> masterContext.jobContext().resumeJob(),
@@ -967,7 +981,8 @@ public class JobCoordinationService implements DynamicMetricsProvider {
     }
 
     boolean shouldStartJobs() {
-        if (!isMaster() || !nodeEngine.isRunning()) {
+        // the start completes once, for example, persisted job records and snapshots are loaded (lossless restart)
+        if (!isMaster() || !nodeEngine.isRunning() || !nodeEngine.getNode().getNodeExtension().isStartCompleted()) {
             return false;
         }
 
@@ -1100,8 +1115,20 @@ public class JobCoordinationService implements DynamicMetricsProvider {
         });
     }
 
+    /** The members a job runs on: all of them, or those the job's member selector selects (isolated jobs, F18). */
     MembersView membersView(JetMemberSelector memberSelector) {
-        return Util.getMembersView(nodeEngine);
+        MembersView membersView = Util.getMembersView(nodeEngine);
+        if (memberSelector == null) {
+            return membersView;
+        }
+        List<MemberInfo> selected = new ArrayList<>();
+        for (MemberInfo memberInfo : membersView.getMembers()) {
+            Member member = nodeEngine.getClusterService().getMember(memberInfo.getUuid());
+            if (member != null && memberSelector.test(member)) {
+                selected.add(memberInfo);
+            }
+        }
+        return new MembersView(membersView.getVersion(), selected);
     }
 
     void onMemberAdded(MemberImpl addedMember) {

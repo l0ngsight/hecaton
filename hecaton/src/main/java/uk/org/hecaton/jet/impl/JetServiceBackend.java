@@ -36,7 +36,6 @@ import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.services.ManagedService;
 import uk.org.hecaton.internal.services.MembershipAwareService;
 import uk.org.hecaton.internal.services.MembershipServiceEvent;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.internal.util.InvocationUtil;
 import uk.org.hecaton.jet.JetException;
 import uk.org.hecaton.jet.JetService;
@@ -45,6 +44,7 @@ import uk.org.hecaton.jet.config.JobConfig;
 import uk.org.hecaton.jet.core.JobNotFoundException;
 import uk.org.hecaton.jet.impl.execution.TaskletExecutionService;
 import uk.org.hecaton.jet.impl.metrics.JobMetricsPublisher;
+import uk.org.hecaton.jet.impl.operation.ExportSnapshotOperation;
 import uk.org.hecaton.jet.impl.operation.NotifyMemberShutdownOperation;
 import uk.org.hecaton.jet.impl.operation.PrepareForPassiveClusterOperation;
 import uk.org.hecaton.jet.impl.serialization.DelegatingSerializationService;
@@ -172,6 +172,8 @@ public class JetServiceBackend implements ManagedService, MembershipAwareService
                 .setStatisticsEnabled(true);
 
         internalMapConfig.getMergePolicyConfig().setPolicy(DiscardMergePolicy.class.getName());
+        // lossless restart (F18): job records, snapshots and results survive a cluster restart
+        internalMapConfig.getDataPersistenceConfig().setEnabled(jetConfig.isLosslessRestartEnabled());
 
         MapConfig resultsMapConfig = new MapConfig(internalMapConfig)
                 .setName(JOB_RESULTS_MAP_NAME)
@@ -184,11 +186,22 @@ public class JetServiceBackend implements ManagedService, MembershipAwareService
         config.addMapConfig(internalMapConfig)
                 .addMapConfig(resultsMapConfig)
                 .addMapConfig(metricsMapConfig)
-                .addMapConfig(createSqlCatalogConfig());
+                .addMapConfig(createSqlCatalogConfig(config.getSqlConfig().isCatalogPersistenceEnabled()));
     }
 
     // visible for tests
     static MapConfig createSqlCatalogConfig() {
+        return createSqlCatalogConfig(false);
+    }
+
+    /** @param persistent whether the catalog is persisted (SQL catalog persistence, F19) */
+    static MapConfig createSqlCatalogConfig(boolean persistent) {
+        MapConfig config = createSqlCatalogMapConfig();
+        config.getDataPersistenceConfig().setEnabled(persistent);
+        return config;
+    }
+
+    private static MapConfig createSqlCatalogMapConfig() {
         // TODO HZ-1743 when implemented properly align this with the chosen
         //  approach that HZ-1743 follows
         return new MapConfig(SQL_CATALOG_MAP_NAME)
@@ -316,9 +329,9 @@ public class JetServiceBackend implements ManagedService, MembershipAwareService
                 .from(getNodeEngine().getSerializationService(), serializerConfigs);
     }
 
-    @SuppressWarnings("unused") // parameters are used from jet-enterprise
+    /** Snapshot export and job upgrade (F18). */
     public Operation createExportSnapshotOperation(long jobId, String name, boolean cancelJob) {
-        throw new UnsupportedOperationException(HecatonFeature.JET_JOB_UPGRADE.notAvailableMessage());
+        return new ExportSnapshotOperation(jobId, name, cancelJob);
     }
 
     public JetService getJet() {

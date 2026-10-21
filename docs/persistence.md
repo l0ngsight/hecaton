@@ -144,7 +144,8 @@ compacted. The design is in [`design/persistence.md`](design/persistence.md).
 
 ## Limitations
 
-- CP Subsystem persistence (F9), SQL catalog persistence (F19) and Jet lossless restart (F18) come later; their settings are refused at startup.
+- CP Subsystem persistence (F9) has its own files: see [cp.md](cp.md). Jet lossless restart (F18) and
+  SQL catalog persistence (F19) persist their maps with this module: see [jet.md](jet.md).
 - Maps configured at runtime (`Config#addMapConfig` on a running member) are not recreated:
   configure persisted maps statically.
 - Not persisted: TTL changes with `IMap#setTtl`, expiration times extended by access in ICaches,

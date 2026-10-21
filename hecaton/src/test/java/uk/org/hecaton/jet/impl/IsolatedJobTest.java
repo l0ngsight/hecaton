@@ -16,46 +16,97 @@
 
 package uk.org.hecaton.jet.impl;
 
-import uk.org.hecaton.internal.util.HecatonFeature;
-import uk.org.hecaton.jet.SimpleTestInClusterSupport;
+import uk.org.hecaton.cluster.Member;
+import uk.org.hecaton.config.Config;
+import uk.org.hecaton.core.HecatonInstance;
+import uk.org.hecaton.jet.core.AbstractProcessor;
 import uk.org.hecaton.jet.core.DAG;
-import uk.org.hecaton.jet.core.Vertex;
+import uk.org.hecaton.test.HecatonSerialClassRunner;
+import uk.org.hecaton.test.HecatonTestSupport;
+import uk.org.hecaton.test.TestHecatonInstanceFactory;
 import uk.org.hecaton.test.annotation.QuickTest;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
-import static uk.org.hecaton.jet.core.processor.Processors.noopP;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import javax.annotation.Nonnull;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Isolated jobs (F18): a job with a member selector runs on the selected members only.
+ */
+@RunWith(HecatonSerialClassRunner.class)
 @Category(QuickTest.class)
-public class IsolatedJobTest extends SimpleTestInClusterSupport {
+public class IsolatedJobTest extends HecatonTestSupport {
 
-    @BeforeClass
-    public static void beforeClass() {
-        initializeWithClient(1, null, null);
+    private static final Set<UUID> RAN_ON = ConcurrentHashMap.newKeySet();
+
+    private HecatonInstance selected;
+    private HecatonInstance other;
+
+    @Before
+    public void setUp() {
+        RAN_ON.clear();
+        TestHecatonInstanceFactory factory = createHecatonInstanceFactory(2);
+        selected = factory.newHecatonInstance(config("jet"));
+        other = factory.newHecatonInstance(config("data"));
+        assertClusterSizeEventually(2, selected, other);
     }
 
     @Test
-    public void test_normal() {
-        assertThatThrownBy(() ->
-                client().getJet().newJobBuilder(new DAG().vertex(new Vertex("test", noopP())))
-                        .withMemberSelector(member -> true)
-                        .start()
-                        .join())
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining(HecatonFeature.JET_ISOLATED_JOBS.notAvailableMessage());
+    public void normalJobRunsOnSelectedMembersOnly() {
+        other.getJet().newJobBuilder(recordingDag())
+                .withMemberSelector(IsolatedJobTest::isJetMember)
+                .start()
+                .join();
+
+        assertThat(RAN_ON).containsExactly(selected.getCluster().getLocalMember().getUuid());
     }
 
     @Test
-    public void test_light() {
-        assertThatThrownBy(() ->
-                client().getJet().newJobBuilder(new DAG().vertex(new Vertex("test", noopP())))
-                        .withMemberSelector(member -> true)
-                        .asLightJob()
-                        .start()
-                        .join())
-                .hasCauseInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining(HecatonFeature.JET_ISOLATED_JOBS.notAvailableMessage());
+    public void lightJobRunsOnSelectedMembersOnly() {
+        other.getJet().newJobBuilder(recordingDag())
+                .withMemberSelector(IsolatedJobTest::isJetMember)
+                .asLightJob()
+                .start()
+                .join();
+
+        assertThat(RAN_ON).containsExactly(selected.getCluster().getLocalMember().getUuid());
+    }
+
+    private static boolean isJetMember(Member member) {
+        return "jet".equals(member.getAttribute("role"));
+    }
+
+    private static Config config(String role) {
+        Config config = smallInstanceConfig();
+        config.getJetConfig().setEnabled(true);
+        config.getMemberAttributeConfig().setAttribute("role", role);
+        return config;
+    }
+
+    private static DAG recordingDag() {
+        DAG dag = new DAG();
+        dag.newVertex("record", RecordingP::new);
+        return dag;
+    }
+
+    /** Records the member it runs on. */
+    private static final class RecordingP extends AbstractProcessor {
+
+        @Override
+        protected void init(@Nonnull Context context) {
+            RAN_ON.add(context.hecatonInstance().getCluster().getLocalMember().getUuid());
+        }
+
+        @Override
+        public boolean complete() {
+            return true;
+        }
     }
 }
