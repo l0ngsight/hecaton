@@ -317,13 +317,13 @@ Est.: 2–3 ew.
 
 | Step | Work | Est. |
 |---|---|---|
-| F10.1 | **Log-structured store** (shared engine): per-partition-thread append-only chunk files, record/tombstone format with CRC, prefix-tombstones for bulk deletes, background compaction (garbage-ratio driven), `fsync` policy, mmap/FFM I/O, on-heap and native (HD) index of keys → file offsets. | 6 ew |
-| F10.2 | Integration with IMap/ICache record stores (on-heap and HD): write-through on mutation, backup replicas persisted, partition migration hand-off. | 3 ew |
-| F10.3 | **Cluster metadata persistence:** member UUID/address, member list, partition table + version, cluster state, cluster version. | 2 ew |
-| F10.4 | **Coordinated restart:** validation phase (member list/partition table agreement), parallel data load, `ClusterDataRecoveryPolicy` (FULL_RECOVERY_ONLY / PARTIAL_RECOVERY_MOST_RECENT / PARTIAL_RECOVERY_MOST_COMPLETE), force start, partial start, `auto-remove-stale-data`, rejoin of a restarted member with a new address (`rebalance-delay`), timeouts. | 4 ew |
-| F10.5 | **Hot backup:** `PersistenceService#backup()` with consistent cut per partition, backup dir layout, restore by pointing `base-dir` at the backup. | 1.5 ew |
-| F10.6 | Management ops: `ClusterState` changes, REST/CLI (`hc-cluster-admin` force/partial start, backup). | 1 ew |
-| Tests | kill -9 matrix during writes/compaction/migration, torn-write injection, full cluster restart with 10⁷ entries, partial start scenarios, backup/restore. Nightly; must pass 30 consecutive runs before persistence leaves "preview". | 2.5 ew |
+| F10.1 — done (per-partition logs written by the partition threads; compaction on the partition thread; key index on the heap) | **Log-structured store** (shared engine): per-partition-thread append-only chunk files, record/tombstone format with CRC, prefix-tombstones for bulk deletes, background compaction (garbage-ratio driven), `fsync` policy, mmap/FFM I/O, on-heap and native (HD) index of keys → file offsets. | 6 ew |
+| F10.2 — done (map mutation observer; a record observer in the cache record store; caches created at runtime keep their configuration) | Integration with IMap/ICache record stores (on-heap and HD): write-through on mutation, backup replicas persisted, partition migration hand-off. | 3 ew |
+| F10.3 — done (member UUID, member list, partition table, cluster state) | **Cluster metadata persistence:** member UUID/address, member list, partition table + version, cluster state, cluster version. | 2 ew |
+| F10.4 — done; Kubernetes-managed restarts open | **Coordinated restart:** validation phase (member list/partition table agreement), parallel data load, `ClusterDataRecoveryPolicy` (FULL_RECOVERY_ONLY / PARTIAL_RECOVERY_MOST_RECENT / PARTIAL_RECOVERY_MOST_COMPLETE), force start, partial start, `auto-remove-stale-data`, rejoin of a restarted member with a new address (`rebalance-delay`), timeouts. | 4 ew |
+| F10.5 — done | **Hot backup:** `PersistenceService#backup()` with consistent cut per partition, backup dir layout, restore by pointing `base-dir` at the backup. | 1.5 ew |
+| F10.6 — done (the existing REST, MC and `hc-cluster-admin` operations) | Management ops: `ClusterState` changes, REST/CLI (`hc-cluster-admin` force/partial start, backup). | 1 ew |
+| Tests — kill -9 suite (single member and cluster, during writes and compaction), restart, partial/force start and backup tests; on every build and nightly. 10⁷-entry restart and migration-time kills open | kill -9 matrix during writes/compaction/migration, torn-write injection, full cluster restart with 10⁷ entries, partial start scenarios, backup/restore. Nightly; must pass 30 consecutive runs before persistence leaves "preview". | 2.5 ew |
 
 ---
 

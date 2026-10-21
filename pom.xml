@@ -52,6 +52,7 @@
         <module>hecaton-build-utils</module>
         <module>hecaton-sql</module>
         <module>hecaton-hd</module>
+        <module>hecaton-persistence</module>
         <module>hecaton-member</module>
         <module>hecaton-migrate</module>
         <module>hecaton-migrate-rewrite</module>

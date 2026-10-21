@@ -198,15 +198,22 @@ public abstract class AbstractCacheService implements ICacheService,
     }
 
     private void reset(boolean onShutdown) {
+        CachePartitionSegment[] partitionSegments = segments;
+        if (onShutdown) {
+            // close the record stores as on shutdown first: deleting the caches would clear them,
+            // and with them their persisted data
+            for (CachePartitionSegment partitionSegment : partitionSegments) {
+                if (partitionSegment != null) {
+                    partitionSegment.shutdown();
+                }
+            }
+        }
         for (String objectName : configs.keySet()) {
             deleteCache(objectName, null, false);
         }
-        CachePartitionSegment[] partitionSegments = segments;
-        for (CachePartitionSegment partitionSegment : partitionSegments) {
-            if (partitionSegment != null) {
-                if (onShutdown) {
-                    partitionSegment.shutdown();
-                } else {
+        if (!onShutdown) {
+            for (CachePartitionSegment partitionSegment : partitionSegments) {
+                if (partitionSegment != null) {
                     partitionSegment.reset();
                     partitionSegment.init();
                 }

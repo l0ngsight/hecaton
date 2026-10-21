@@ -49,6 +49,7 @@ import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.instance.module.MemberModules;
 import uk.org.hecaton.instance.module.NativeMemoryCapability;
+import uk.org.hecaton.instance.module.PersistenceCapability;
 import uk.org.hecaton.internal.ascii.TextCommandService;
 import uk.org.hecaton.internal.ascii.TextCommandServiceImpl;
 import uk.org.hecaton.internal.cluster.ClusterStateListener;
@@ -143,6 +144,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
@@ -185,6 +187,10 @@ public class HecatonNodeExtension implements NodeExtension {
 
     private final MemoryStats memoryStats = new DefaultMemoryStats();
     private final Set<Version> supportedVersions;
+    /** Null unless persistence is enabled. */
+    private final PersistenceCapability persistence;
+    private final HotRestartService noOpHotRestartService = new NoOpHotRestartService();
+    private final InternalHotRestartService noOpInternalHotRestartService = new NoopInternalHotRestartService();
 
     public HecatonNodeExtension(Node node) {
         this.node = node;
@@ -199,6 +205,9 @@ public class HecatonNodeExtension implements NodeExtension {
         checkCPPersistenceAllowed();
         checkDynamicConfigurationPersistenceAllowed();
         checkSqlCatalogPersistenceAllowed();
+        persistence = node.getConfig().getPersistenceConfig().isEnabled()
+                ? node.getMemberModules().require(PersistenceCapability.class, "Persistence")
+                : null;
 
         if (node.getConfig().getJetConfig().isEnabled()) {
             jetServiceBackend = createService(JetServiceBackend.class);
@@ -349,7 +358,23 @@ public class HecatonNodeExtension implements NodeExtension {
     }
 
     @Override
+    public UUID createMemberUuid() {
+        UUID uuid = NodeExtension.super.createMemberUuid();
+        return persistence == null ? uuid : persistence.start(node, uuid);
+    }
+
+    @Override
+    public void beforeJoin() {
+        if (persistence != null) {
+            persistence.beforeJoin();
+        }
+    }
+
+    @Override
     public void afterStart() {
+        if (persistence != null) {
+            persistence.afterStart();
+        }
         if (jetServiceBackend != null) {
             jetServiceBackend.startScanningForJobs();
         }
@@ -357,7 +382,8 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public boolean isStartCompleted() {
-        return node.getClusterService().isJoined();
+        return node.getClusterService().isJoined()
+                && (persistence == null || persistence.internalHotRestartService().isStartCompleted());
     }
 
     @Override
@@ -494,6 +520,9 @@ public class HecatonNodeExtension implements NodeExtension {
         if (node.getConfig().getSecurityConfig().isEnabled()) {
             services.put(PermissionSyncService.SERVICE_NAME, new PermissionSyncService(node));
         }
+        if (persistence != null) {
+            services.put(InternalHotRestartService.SERVICE_NAME, persistence.internalHotRestartService());
+        }
         return services;
     }
 
@@ -587,6 +616,9 @@ public class HecatonNodeExtension implements NodeExtension {
     public void onClusterStateChange(ClusterState newState, boolean isTransient) {
         ServiceManager serviceManager = node.getNodeEngine().getServiceManager();
         serviceManager.getServices(ClusterStateListener.class).forEach(listener -> listener.onClusterStateChange(newState));
+        if (persistence != null && !isTransient) {
+            persistence.onClusterStateChange(newState);
+        }
     }
 
     @Override
@@ -594,6 +626,9 @@ public class HecatonNodeExtension implements NodeExtension {
         ClusterViewListenerService service = node.clientEngine.getClusterViewListenerService();
         if (service != null) {
             service.onPartitionStateChange();
+        }
+        if (persistence != null) {
+            persistence.onPartitionStateChange();
         }
     }
 
@@ -604,6 +639,9 @@ public class HecatonNodeExtension implements NodeExtension {
             service.onMemberListChange();
         }
         node.clusterTopologyIntentTracker.onMembershipChange();
+        if (persistence != null) {
+            persistence.onMemberListChange();
+        }
     }
 
     @Override
@@ -619,6 +657,9 @@ public class HecatonNodeExtension implements NodeExtension {
         ClusterViewListenerService service = node.clientEngine.getClusterViewListenerService();
         if (service != null) {
             service.onClusterVersionChange();
+        }
+        if (persistence != null) {
+            persistence.onClusterVersionChange(newVersion);
         }
     }
 
@@ -653,12 +694,12 @@ public class HecatonNodeExtension implements NodeExtension {
 
     @Override
     public HotRestartService getHotRestartService() {
-        return new NoOpHotRestartService();
+        return persistence == null ? noOpHotRestartService : persistence.hotRestartService();
     }
 
     @Override
     public InternalHotRestartService getInternalHotRestartService() {
-        return new NoopInternalHotRestartService();
+        return persistence == null ? noOpInternalHotRestartService : persistence.internalHotRestartService();
     }
 
     // obtain cluster version, if already initialized (not null)

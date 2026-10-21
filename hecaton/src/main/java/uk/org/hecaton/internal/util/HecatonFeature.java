@@ -43,7 +43,7 @@ public enum HecatonFeature {
     /** F8. */
     CP_MAP("F8", "CPMap", "M4", null, true),
     /** F10. */
-    PERSISTENCE("F10", "Persistence (Hot Restart)", "M6"),
+    PERSISTENCE("F10", "Persistence (Hot Restart)", "M6", null, false, "persistence"),
     /** F11. */
     HIGH_DENSITY_MEMORY("F11", "High-Density memory (NATIVE in-memory format)", "M5", null, false, "hd"),
     /** F12. */

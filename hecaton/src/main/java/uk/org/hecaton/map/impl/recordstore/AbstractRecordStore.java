@@ -21,6 +21,7 @@ import uk.org.hecaton.config.EvictionPolicy;
 import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.MetadataPolicy;
+import uk.org.hecaton.instance.module.PersistenceCapability;
 import uk.org.hecaton.internal.locksupport.LockStore;
 import uk.org.hecaton.internal.locksupport.LockSupportService;
 import uk.org.hecaton.internal.monitor.LocalRecordStoreStats;
@@ -43,6 +44,7 @@ import uk.org.hecaton.map.impl.record.Record;
 import uk.org.hecaton.map.impl.record.RecordFactory;
 import uk.org.hecaton.map.impl.record.RecordReaderWriter;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.wan.impl.CallerProvenance;
 
 import javax.annotation.Nonnull;
@@ -129,6 +131,17 @@ abstract class AbstractRecordStore implements RecordStore<Record> {
         // Add observer for indexing
         indexingObserver = new IndexingMutationObserver<>(this, serializationService);
         mutationObserver.add(indexingObserver);
+
+        // Add observer for persistence (F10)
+        NodeEngine nodeEngine = mapServiceContext.getNodeEngine();
+        if (mapContainer.getMapConfig().getDataPersistenceConfig().isEnabled()
+                && nodeEngine.getConfig().getPersistenceConfig().isEnabled()) {
+            MutationObserver<Record> persistenceObserver = ((NodeEngineImpl) nodeEngine).getNode().getMemberModules()
+                    .require(PersistenceCapability.class, "Persistence").createMapObserver(this);
+            if (persistenceObserver != null) {
+                mutationObserver.add(persistenceObserver);
+            }
+        }
     }
 
     public IndexingMutationObserver<Record> getIndexingObserver() {

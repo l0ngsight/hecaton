@@ -55,6 +55,11 @@
             <artifactId>hecaton-hd</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>uk.org.hecaton</groupId>
+            <artifactId>hecaton-persistence</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -67,7 +72,7 @@
                         <configuration>
                             <rules>
                                 <enforceBytecodeVersion>
-                                    <!-- hecaton-hd is a Java 25 member module; the client side stays on 17 -->
+                                    <!-- the member modules (hecaton-hd, hecaton-persistence) are Java 25; the client side stays on 17 -->
                                     <maxJdkVersion>25</maxJdkVersion>
                                 </enforceBytecodeVersion>
                             </rules>
