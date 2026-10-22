@@ -222,6 +222,7 @@ hecaton.jmx.update.interval.seconds
 hecaton.journal.cleanup.threshold
 hecaton.kubernetes.
 hecaton.licensekey
+hecaton.load-protection.enabled
 hecaton.local.localAddress
 hecaton.local.publicAddress
 hecaton.lock.max.lease.time.seconds
