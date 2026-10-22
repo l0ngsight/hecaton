@@ -44,6 +44,7 @@ scenarios=(
     "hazelcast member BINARY - no --sync"
     "hazelcast member BINARY - no --sync --near-cache BINARY"
     "hazelcast member BINARY - no --sync --near-cache OBJECT"
+    "hazelcast member BINARY - no --sync --near-cache OBJECT --warm-up-gets 0 --gets 256"
     "hazelcast short-lived-client BINARY ALL_MEMBERS no --gets 300 --warm-up-gets 20"
     "hecaton client BINARY ALL_MEMBERS no"
     "hecaton client BINARY ALL_MEMBERS yes"

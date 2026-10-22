@@ -81,6 +81,7 @@ Non-goals:
 | Production version, heap dumps? | **Hazelcast 5.7**; no heap dump or histogram (the members run with a 200 GB heap); our analysis suggests the value is copied several times | Phase 0 measures it with Flight Recorder on Hazelcast CE 5.7.0 itself and on Hecaton (§3.1) |
 | Stop-gap: smaller client socket buffers? | Will try | — |
 | Client-side changes? | **Server side only for now** | Hot-key spreading through clients (§4.4.4) is out; everything in §4 stays member side |
+| Which path do the hot reads take? | **The services read through the `IMap` of the member they embed** | Production is on the measured 4-copy path (§3.1). Reads between members (§4.3.3) are the first item of Phase 1 |
 
 ## 2. Requirements and where they are met
 
@@ -134,15 +135,16 @@ applies to production. Results and how to run it: [performance.md](../performanc
 | — the same with `getAsync` and a callback | **5** | `InvocationFuture#resolve` deserialises the response packet **once per stage waiting on the future** |
 | — the same with a near cache on the members, `BINARY` | 1 | the conversion to the caller's object on each read |
 | — the same with a near cache on the members, `OBJECT` | **0** (14× the throughput) | the cached object is shared by all readers |
+| — the same, near cache cold, 256 concurrent first reads | 0.75 (48 of the 256 reads went to the owner, 4 copies each) | concurrent misses are not coalesced |
 | A new client per read (short-lived connections) | 0, but **0.66 MB of member allocation per connection** (1.7 MB with TLS) | connection buffers and handshake (§3.2) |
 
 Copies are not only allocation: each one stays reachable until its response is written to the
 reader. 50,000 reads in flight of a 1 MB value on a 4-copy path hold about 200 GB, which would
-explain the heap our members need. The `BINARY` + smart-client path, on the other hand, does not copy
-at all. **The question that decides where the copies come from in production is therefore which
-path the reads take** (❓ §7): clients connected to the owner (0 copies), or the services' embedded
-members reading through their own `IMap` proxies (4–5 copies), or clients that reach non-owners
-(3 copies).
+explain the heap our members need. **Our services read through the `IMap` of the member they embed
+(§1.6), so production is on that path**: every read of a key that another member owns costs 4
+copies (blocking `get`) or 5 (`getAsync`). The `BINARY` + smart-client path, by contrast, does not
+copy at all. A near cache on the members removes the copies once it holds the value, but not for
+the first burst of a key: concurrent misses each go to the owner.
 
 Not measured (we do not run them): `NATIVE` copies per read into a new heap array
 (`NativeData#read`), tiered storage likewise, and TPC (`alto`) into an `IOBuffer` per response.
@@ -326,8 +328,9 @@ and the bounded, per-connection encryption into the TLS buffer.
 #### 4.3.3 Reads between members (measured: 3–5 copies, §3.1)
 
 A read that a member forwards to the key's owner — an embedded member reading through its own
-proxy, or a client request that reached a non-owner — copies the value 3–5 times today. For
-immutable maps, Phase 1 removes those copies, all on the member side:
+proxy, **which is how our services read**, or a client request that reached a non-owner — copies
+the value 3–5 times today. For immutable maps, Phase 1 removes those copies, all on the member side
+and in this order of value:
 
 1. **Member-side near cache by default.** An immutable map's entries never change and are never
    removed (§4.2.1), so a near cache on the members needs no invalidation and can never be stale.
@@ -336,7 +339,8 @@ immutable maps, Phase 1 removes those copies, all on the member side:
    be configured this way today (§7). Members return the cached instance to every caller, so callers
    must not modify it; for an immutable map that is the contract (documented).
 2. **Single flight.** Concurrent misses of the same key on a member share one remote invocation,
-   so a burst of 50,000 reads costs one transfer from the owner, not 50,000.
+   so a burst of 50,000 reads costs one transfer from the owner, not 50,000. Measured on 5.7's near
+   cache: 48 of 256 concurrent first reads went to the owner (§3.1).
 3. **Deserialise a response once.** `InvocationFuture#resolve` keeps the deserialised response
    instead of reading the packet again for every waiting stage (the fifth copy). This is a plain
    fix that helps every map, not only immutable ones.
@@ -522,7 +526,7 @@ Metrics in the existing registry (JMX, Prometheus exporter), prefix `loadProtect
 | Phase | Content | Exit criteria | Est. |
 |---|---|---|---|
 | **0 Measure** — allocation part done | Done: `HotReadAllocation` + `tools/perf/hot-read-allocation.sh` — copies per read by path on Hazelcast 5.7 and Hecaton (§3.1). Open: the perf rig at 50k readers, slow readers (retention), connection churn with p99 of unrelated map/queue ops, time to serve a 50k-reader burst | §3.1 measured (done); the rest in `docs/performance.md` | 1 ew left |
-| **1 Immutable maps + bounds** (mandatory first) | `LoadProtectionConfig` + toggle; insert-only maps; `SharedPayload`, shared frames and the no-copy invariant test; reads between members (§4.3.3: member near cache, single flight, deserialise once, one copy on the wire); pooled, capped connection buffers; outbound accounting and limits; admission (defer/throttle/reject/disconnect); message size limit; metrics for these | `hot-read-allocation.sh` with `--max-copies-per-read 0` passes for every client and member-caller scenario of an immutable map (1 for cold remote reads); 50k × 1 MB reads over TLS keep heap growth below a fixed bound; 50k idle TLS connections cost less than the pool cap; no OOM with stalled readers; toggle off = inherited suite unchanged | 8–10 ew |
+| **1 Immutable maps + bounds** (mandatory first) | `LoadProtectionConfig` + toggle; insert-only maps; first, reads between members — our path (§4.3.3: member near cache, single flight, deserialise once, one copy on the wire); then `SharedPayload`, shared frames and the no-copy invariant test; pooled, capped connection buffers; outbound accounting and limits; admission (defer/throttle/reject/disconnect); message size limit; metrics for these | `hot-read-allocation.sh` with `--max-copies-per-read 0` passes for every client and member-caller scenario of an immutable map (1 for cold remote reads); 50k × 1 MB reads over TLS keep heap growth below a fixed bound; 50k idle TLS connections cost less than the pool cap; no OOM with stalled readers; toggle off = inherited suite unchanged | 8–10 ew |
 | **2 Isolation** (mandatory) | Maintenance lane, batched disconnects, accept/auth/handshake limits, TLS session resumption, quiet churn, cleanup metrics | Under a churn of N connections/s (N from Phase 0), p99 of map/queue ops within X% of the no-churn baseline; cleanup backlog bounded and drained | 3–4 ew |
 | **3 Other formats** (optional) | `NATIVE` and tiered immutable maps sharing native blocks | Only if needed | 2–3 ew |
 | **4 Partitioned queue** (nice to have) | `shardCount`, member-side routing, oldest-head polling, blocking take across shards, `shardNames` migration, optional smart client path | Throughput of one logical queue scales with members up to a measured limit; no acknowledged item lost when a member is killed; ordering error measured and documented | 4–6 ew |
@@ -562,14 +566,10 @@ DCO, fork log entry).
 
 Resolved in the reviews: see §1.6.
 
-- ❓ **Which path do the hot reads take in production?** This decides where the copies come from
-  (§3.1): do the services read through the `IMap` of the member they embed
-  (`hazelcastInstance.getMap(...)` on a member: 4–5 copies per read when another member owns the
-  key), or do separate client processes read with smart routing (0 copies)? Both?
 - ❓ **Stop-gaps on Hazelcast 5.7, server side, configuration only:**
-  - If the services read through their embedded members: a near cache on the members, `OBJECT`
-    format, sized for the hot set (measured: 4 copies → 0, §3.1). Callers then share the cached
-    instance and must not modify it.
+  - A near cache on the members, `OBJECT` format, sized for the hot set (measured: 4 copies → 0
+    once it holds the value, §3.1; the first concurrent burst of a key still goes to the owner).
+    Callers then share the cached instance and must not modify it.
     ```java
     config.getMapConfig("catalog").setNearCacheConfig(new NearCacheConfig()
             .setInMemoryFormat(InMemoryFormat.OBJECT)

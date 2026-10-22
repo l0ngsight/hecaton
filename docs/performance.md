@@ -88,6 +88,7 @@ Hecaton allocate the same on every path measured on both.
 | Member reads a key of another member, `get` | 4, 4.0 MB | 4, 4.2 MB (TLS) |
 | … with a member near cache, `BINARY` | 1, 1.0 MB | — |
 | … with a member near cache, `OBJECT` | 0, 11 B | — |
+| … the same, cold, 256 concurrent first reads | 0.75 (48 reads went to the owner), 0.75 MB | — |
 | A new client per read, smart routing | 0, 0.66 MB per connection | 0, 1.7 MB per connection (TLS) |
 
 The copies on the member-to-member path: the owner serialises the response into a packet

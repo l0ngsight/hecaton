@@ -116,7 +116,7 @@ record Scenario(String product, String caller, String format, String nearCache, 
     String name() {
         String callers = memberCaller() ? "member-caller" : shortLivedClients() ? "short-lived-" + routing : routing;
         return product + "-" + format + (nearCache == null ? "" : "-near-cache-" + nearCache) + "-" + callers
-                + (sync ? "-sync" : "") + (tls() ? "-tls" : "") + "-" + size(valueSize);
+                + (sync ? "-sync" : "") + (warmUpGets == 0 ? "-cold" : "") + (tls() ? "-tls" : "") + "-" + size(valueSize);
     }
 
     static long bytes(String text) {

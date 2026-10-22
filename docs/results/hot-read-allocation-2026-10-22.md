@@ -908,3 +908,68 @@ All object sizes, from the allocation events weighted by TLAB size (sampled belo
 | member-0 | priority-generic-operation | 7,432 | `PartitionReplica;` | `Arrays.copyOf:3478` ← `AbstractInternalPartition.getReplicasCopy:103` ← `ReadonlyInternalPartition.<init>:36` ← `PartitionStateManagerImpl.getPartitionsCopy:344` ← `PartitionStateManagerImpl.getPartitionTable:480` ← `InternalPartitionServiceImpl.createPartitionTableView:1365` ← `ClusterViewListenerService.getPartitionsView:177` ← `AuthenticationBaseMessageTask.prepareAuthenticatedClientMessage:243` |
 
 
+
+## hazelcast-BINARY-near-cache-OBJECT-member-caller-sync-cold-1m
+
+| | |
+|---|---|
+| Product | Hazelcast CE 5.7 |
+| Map | `BINARY`, hot key owned by `member-0`, 2 members, near cache `OBJECT` on the members |
+| Callers | the map proxies of the members other than `member-0`, TLS off |
+| Reads | 256 of a 1,048,576-byte value, 256 in flight (blocking `get` on as many threads), 0.4 s (715 reads/s) |
+| JVM heap after GC | at most 0 B during the reads, 0 collections (members and clients share the JVM) |
+| Recording | `hazelcast-BINARY-near-cache-OBJECT-member-caller-sync-cold-1m.jfr` |
+
+### Value-sized objects allocated by member threads: 0.75 per read
+
+Every object of at least the value's size (1,048,576 bytes) that a member thread allocated, by allocation site. A copy of the value per read shows as 1.00.
+
+| Member | Thread | Per read | Object | Size | Allocated at |
+|---|---|---|---|---|---|
+| member-1 | IO.thread-in | 0.19 | `byte[]` | 1.0 MiB | `PacketIOHelper.readValue:150` ← `PacketIOHelper.readFrom:133` ← `PacketDecoder.onRead:62` ← `NioInboundPipeline.process:136` ← `NioThread.processSelectionKey:383` ← `NioThread.processSelectionKeys:368` ← `NioThread.selectLoop:294` ← `NioThread.executeRun:249` ← `HazelcastManagedThread.run:111` |
+| member-0 | partition-operation | 0.19 | `byte[]` | 1.0 MiB | `OutboundResponseHandler.toNormalResponsePacket:139` ← `OutboundResponseHandler.sendNormalResponse:127` ← `OutboundResponseHandler.sendResponse:101` ← `Operation.sendResponse:491` ← `OperationRunnerImpl.sendBackupsAndResponse:327` ← `OperationRunnerImpl.call:299` ← `OperationRunnerImpl.run:263` ← `OperationRunnerImpl.run:501` ← `OperationThread.process:183` ← `OperationThread.process:141` ← `OperationThread.loop:134` ← `OperationThread.executeRun:115` ← `HazelcastManagedThread.run:111` |
+| application | reader | 0.19 | `byte[]` | 1.0 MiB | `ByteArrayObjectDataInput.readByteArray:392` ← `ByteArrayObjectDataInput.readData:617` ← `IOUtil.readData:268` ← `IOUtil.readObject:155` ← `NormalResponse.readData:102` ← `VersionedDataSerializableSerializer.readIdentifiedDataSerializable:259` ← `VersionedDataSerializableSerializer.doRead:228` ← `VersionedDataSerializableSerializer.read:222` ← `VersionedDataSerializableSerializer.read:55` ← `StreamSerializerAdapter.read:44` ← `AbstractSerializationService.toObject:277` ← `InvocationFuture.resolve:133` ← `InvocationFuture.resolveAndThrowIfException:99` ← `AbstractInvocationFuture.get:617` ← `MapProxySupport.invokeOperation:524` ← `MapProxySupport.getInternal:433` ← `NearCachedMapProxyImpl.getInternal:118` ← `MapProxyImpl.get:122` ← `HazelcastReadCluster.get:134` ← `HotReadAllocation.lambda$read$0:137` ← `0x000000006d376000.call:-1` ← `FutureTask.run:328` ← `ThreadPoolExecutor.runWorker:1090` ← `ThreadPoolExecutor$Worker.run:614` |
+| application | reader | 0.18 | `byte[]` | 1.0 MiB | `ByteArrayObjectDataInput.readByteArray:392` ← `ByteArraySerializerAdapter.read:45` ← `AbstractSerializationService.toObject:277` ← `MapProxySupport.toObject:1395` ← `MapProxyImpl.get:122` ← `HazelcastReadCluster.get:134` ← `HotReadAllocation.lambda$read$0:137` ← `0x000000006d376000.call:-1` ← `FutureTask.run:328` ← `ThreadPoolExecutor.runWorker:1090` ← `ThreadPoolExecutor$Worker.run:614` ← `Thread.runWith:1487` ← `Thread.run:1474` |
+| application | reader | 0.00 | `byte[]` | 1.0 MiB | `ByteArrayObjectDataInput.readByteArray:392` ← `ByteArraySerializerAdapter.read:45` ← `AbstractSerializationService.toObject:277` ← `AbstractNearCacheRecordStore.toValue:160` ← `NearCacheObjectRecordStore.updateRecordValue:69` ← `NearCacheObjectRecordStore.updateRecordValue:34` ← `AbstractNearCacheRecordStore.publishReservedRecord:374` ← `BaseHeapNearCacheRecordStore.lambda$tryPublishReserved$1:157` ← `0x000000006d3c4fc8.apply:-1` ← `ConcurrentReferenceHashMap$Segment.applyIfPresent:747` ← `ConcurrentReferenceHashMap.applyIfPresent:1490` ← `BaseHeapNearCacheRecordStore.tryPublishReserved:156` ← `DefaultNearCache.tryPublishReserved:210` ← `NearCachedMapProxyImpl.tryPublishReserved:598` ← `NearCachedMapProxyImpl.getInternal:120` ← `MapProxyImpl.get:122` ← `HazelcastReadCluster.get:134` ← `HotReadAllocation.lambda$read$0:137` ← `0x000000006d376000.call:-1` ← `FutureTask.run:328` ← `ThreadPoolExecutor.runWorker:1090` ← `ThreadPoolExecutor$Worker.run:614` ← `Thread.runWith:1487` ← `Thread.run:1474` |
+
+### Bytes allocated by member threads: 788,541 per read (0.75 × the value)
+
+Exact, from `ThreadMXBean#getThreadAllocatedBytes`, all object sizes. Threads of one pool are added up.
+
+| Member | Thread | Bytes per read | × value |
+|---|---|---|---|
+| application | reader | 394,986 | 0.377 |
+| member-0 | partition-operation | 196,845 | 0.188 |
+| member-1 | IO.thread-in | 196,631 | 0.188 |
+| member-0 | IO.thread-in | 28 | 0.000 |
+| member-0 | MetricsRegistry | 21 | 0.000 |
+| member-0 | TcpServer | 17 | 0.000 |
+| member-1 | priority-generic-operation | 6 | 0.000 |
+| member-1 | response | 1 | 0.000 |
+| member-0 | cached | 1 | 0.000 |
+| member-0 | scheduled.thread- | 1 | 0.000 |
+| member-1 | IO.thread-out | 0 | 0.000 |
+| member-1 | generic-operation | 0 | 0.000 |
+
+### Largest allocation sites of member threads
+
+All object sizes, from the allocation events weighted by TLAB size (sampled below 64 KB).
+
+| Member | Thread | Bytes per read | Object | Allocated at |
+|---|---|---|---|---|
+| member-1 | IO.thread-in | 196,620 | `byte[]` | `PacketIOHelper.readValue:150` ← `PacketIOHelper.readFrom:133` ← `PacketDecoder.onRead:62` ← `NioInboundPipeline.process:136` ← `NioThread.processSelectionKey:383` ← `NioThread.processSelectionKeys:368` ← `NioThread.selectLoop:294` ← `NioThread.executeRun:249` |
+| member-0 | partition-operation | 196,620 | `byte[]` | `OutboundResponseHandler.toNormalResponsePacket:139` ← `OutboundResponseHandler.sendNormalResponse:127` ← `OutboundResponseHandler.sendResponse:101` ← `Operation.sendResponse:491` ← `OperationRunnerImpl.sendBackupsAndResponse:327` ← `OperationRunnerImpl.call:299` ← `OperationRunnerImpl.run:263` ← `OperationRunnerImpl.run:501` |
+| application | reader | 196,614 | `byte[]` | `ByteArrayObjectDataInput.readByteArray:392` ← `ByteArrayObjectDataInput.readData:617` ← `IOUtil.readData:268` ← `IOUtil.readObject:155` ← `NormalResponse.readData:102` ← `VersionedDataSerializableSerializer.readIdentifiedDataSerializable:259` ← `VersionedDataSerializableSerializer.doRead:228` ← `VersionedDataSerializableSerializer.read:222` |
+| application | reader | 192,514 | `byte[]` | `ByteArrayObjectDataInput.readByteArray:392` ← `ByteArraySerializerAdapter.read:45` ← `AbstractSerializationService.toObject:277` ← `MapProxySupport.toObject:1395` ← `MapProxyImpl.get:122` ← `HazelcastReadCluster.get:134` ← `HotReadAllocation.lambda$read$0:137` ← `0x000000006d376000.call:-1` |
+| application | reader | 53,764 | `AbstractQueuedSynchronizer$ConditionNode` | `AbstractQueuedSynchronizer$ConditionObject.newConditionNode:1667` ← `AbstractQueuedSynchronizer$ConditionObject.await:1737` ← `LinkedBlockingQueue.take:435` ← `ThreadPoolExecutor.getTask:1016` ← `ThreadPoolExecutor.runWorker:1076` ← `ThreadPoolExecutor$Worker.run:614` ← `Thread.runWith:1487` ← `Thread.run:1474` |
+| application | reader | 9,987 | `ThreadLocal$ThreadLocalMap` | `ThreadLocal.createMap:299` ← `ThreadLocal.setInitialValue:208` ← `ThreadLocal.get:193` ← `ThreadLocal.get:171` ← `BufferPoolThreadLocal.get:97` ← `AbstractSerializationService.toBytes:232` ← `AbstractSerializationService.toBytes:224` ← `AbstractSerializationService.toData:209` |
+| application | reader | 4,096 | `byte[]` | `ByteArrayObjectDataInput.readByteArray:392` ← `ByteArraySerializerAdapter.read:45` ← `AbstractSerializationService.toObject:277` ← `AbstractNearCacheRecordStore.toValue:160` ← `NearCacheObjectRecordStore.updateRecordValue:69` ← `NearCacheObjectRecordStore.updateRecordValue:34` ← `AbstractNearCacheRecordStore.publishReservedRecord:374` ← `BaseHeapNearCacheRecordStore.lambda$tryPublishReserved$1:157` |
+| application | reader | 1,024 | `Class;` | `Striped64.casBase:178` ← `LongAccumulator.accumulate:112` ← `NearCacheStatsImpl.incrementMisses:185` ← `AbstractNearCacheRecordStore.get:237` ← `DefaultNearCache.get:125` ← `NearCachedMapProxyImpl.getCachedValue:603` ← `NearCachedMapProxyImpl.getInternal:110` ← `MapProxyImpl.get:122` |
+| application | reader | 257 | `Striped64$Cell` | `Striped64.longAccumulate:232` ← `LongAccumulator.accumulate:121` ← `NearCacheStatsImpl.incrementMisses:185` ← `AbstractNearCacheRecordStore.get:247` ← `DefaultNearCache.get:125` ← `NearCachedMapProxyImpl.getCachedValue:603` ← `NearCachedMapProxyImpl.getInternal:110` ← `MapProxyImpl.get:122` |
+| application | reader | 257 | `Striped64$Cell` | `Striped64.longAccumulate:232` ← `LongAccumulator.accumulate:121` ← `NearCacheStatsImpl.incrementHits:170` ← `AbstractNearCacheRecordStore.get:266` ← `DefaultNearCache.get:125` ← `NearCachedMapProxyImpl.getCachedValue:603` ← `NearCachedMapProxyImpl.getInternal:110` ← `MapProxyImpl.get:122` |
+| application | reader | 257 | `byte[]` | `BufWriterImpl.<init>:66` ← `DirectClassBuilder.build:193` ← `ClassFileImpl.build:145` ← `InvokerBytecodeGenerator.classFileSetup:248` ← `InvokerBytecodeGenerator.generateCustomizedCodeBytes:543` ← `InvokerBytecodeGenerator.generateCustomizedCode:514` ← `LambdaForm.compileToBytecode:804` ← `DirectMethodHandle.makePreparedLambdaForm:308` |
+| member-0 | IO.thread-in | 256 | `byte[]` | `PacketIOHelper.readValue:150` ← `PacketIOHelper.readFrom:133` ← `PacketDecoder.onRead:62` ← `NioInboundPipeline.process:136` ← `NioThread.processSelectionKey:383` ← `NioThread.processSelectionKeys:368` ← `NioThread.selectLoop:294` ← `NioThread.executeRun:249` |
+| member-1 | IO.thread-out | 256 | `DirectByteBuffer` | `Buffer$2.newDirectByteBuffer:852` ← `Util.getTemporaryDirectBuffer:245` ← `IOUtil.write:94` ← `IOUtil.write:58` ← `SocketChannelImpl.implWrite:562` ← `SocketChannelImpl.write:614` ← `NioOutboundPipeline.flushToSocket:435` ← `NioOutboundPipeline.process:320` |
+| application | reader | 256 | `AbstractPoolEntry$Utf8EntryImpl` | `SplitConstantPool.classEntryForClassOrInterface:446` ← `SplitConstantPool.classEntry:514` ← `ConstantPoolBuilder.methodRefEntry:329` ← `CodeBuilder.invoke:560` ← `InvokerBytecodeGenerator.emitStaticInvoke:840` ← `InvokerBytecodeGenerator$4$1.accept:649` ← `InvokerBytecodeGenerator$4$1.accept:569` ← `DirectCodeBuilder.build:93` |
+| member-0 | partition-operation | 256 | `ByteArrayObjectDataInput` | `ByteArrayInputOutputFactory.createInput:46` ← `AbstractSerializationService.createObjectDataInput:399` ← `BufferPoolImpl.takeInputBuffer:70` ← `AbstractSerializationService.toObject:274` ← `NodeEngineImpl.toObject:447` ← `OperationRunnerImpl.run:486` ← `OperationThread.process:183` ← `OperationThread.process:141` |
+
