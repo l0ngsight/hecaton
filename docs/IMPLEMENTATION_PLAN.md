@@ -25,6 +25,7 @@ Companion to [`SPEC.md`](SPEC.md). Section references (§) point to the spec.
 | **M8** Hecaton 1.0 | Hardening, perf, docs, security review, release | §10 quality gates met | 4–6 ew |
 | **M9** 1.x (P1) | F4, F5, F9, F10 encryption at rest, F11 client near cache, F13 sync, F14, F16, F17, LDAP/Kerberos, slim client jar | per feature | 30–40 ew |
 | **M10** 2.x (P2) | F12, F18, F19, F20 | per feature | 25–35 ew |
+| **M11** Load protection (proposed) | F23: immutable maps with shared payloads, bounded buffers and back pressure, workload isolation, partitioned queues ([design](design/load-protection.md)) | per phase, see the design | 17–24 ew |
 
 M3–M7 can run in parallel after M2. With about 5 engineers, 1.0 is realistic in roughly
 8–10 months. The critical path is M1 → M2 → M5 → M6 (persistence builds on the HD/FFM
@@ -60,6 +61,7 @@ into `main` once its exit criteria are met.
 | M8 Hecaton 1.0 | `feature/m8-release-1.0` |
 | M9 1.x (P1) | `feature/m9-p1-features` |
 | M10 2.x (P2) | `feature/m10-p2-features` |
+| M11 Load protection | `feature/m11-load-protection` |
 
 `upstream/main` (the 5.7.0 snapshot) and `rebrand/v5.7.0` (its renamed form) are kept
 read-only as the record of how the fork was made (spec §9). No new branches of either kind
@@ -380,6 +382,14 @@ consistency check are P1, in M9.)
 | F18 Jet lossless restart, isolated jobs, job upgrade / exported snapshots — done (export from running jobs only) | Persist Jet snapshot maps through F10; job placement isolation; snapshot export/import | 6 ew |
 | F19 SQL catalog persistence — done | Persist the `__sql.catalog` map via F10 (lives in an Apache module; the HCL `hecaton-sql` only reads it) | 1 ew |
 | F20 Vector collection — done (own HNSW; no metrics yet) | Service + partitioned HNSW index, backups, client message tasks (codecs already in core). The HNSW graph is written for Hecaton rather than taken from an ANN library: the index has to follow the backing map's record store partition by partition, which a small graph per partition replica does directly | 10 ew |
+
+---
+
+## Phase 11 — Load protection (M11, proposed)
+
+Plan under review: [design/load-protection.md](design/load-protection.md). Server-side, off by
+default (`LoadProtectionConfig#setEnabled`). Phases: 0 measure, 1 shared payloads and bounds
+(first), 2 workload isolation, 3 remote reads, 4 partitioned queue (nice to have), 5 hardening.
 
 ---
 
