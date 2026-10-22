@@ -76,4 +76,10 @@ public class ReplaceOperation extends BasePutOperation implements MutatingOperat
     public int getClassId() {
         return MapDataSerializerHook.REPLACE;
     }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // replaces a held value
+        return ImmutableMapAccess.CHANGE;
+    }
 }

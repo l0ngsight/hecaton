@@ -20,6 +20,7 @@ import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.util.UUIDSerializationUtil;
 import uk.org.hecaton.map.impl.MapDataSerializerHook;
 import uk.org.hecaton.map.impl.operation.BaseRemoveOperation;
+import uk.org.hecaton.map.impl.operation.ImmutableMapAccess;
 import uk.org.hecaton.map.impl.operation.steps.engine.Step;
 import uk.org.hecaton.map.impl.operation.steps.engine.State;
 import uk.org.hecaton.map.impl.operation.steps.TxnDeleteOpSteps;
@@ -180,5 +181,11 @@ public class TxnDeleteOperation
     @Override
     public int getClassId() {
         return MapDataSerializerHook.TXN_DELETE;
+    }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // TransactionalMapProxy refuses removes from an immutable map before the commit
+        return ImmutableMapAccess.READ;
     }
 }

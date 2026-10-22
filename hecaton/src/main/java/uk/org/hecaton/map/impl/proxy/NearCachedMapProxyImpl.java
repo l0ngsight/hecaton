@@ -36,6 +36,7 @@ import uk.org.hecaton.map.impl.nearcache.invalidation.UuidFilter;
 import uk.org.hecaton.query.Predicate;
 import uk.org.hecaton.spi.impl.InternalCompletableFuture;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.eventservice.EventFilter;
 
 import java.util.Collection;
@@ -45,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import static uk.org.hecaton.internal.nearcache.NearCache.CACHED_AS_NULL;
@@ -67,6 +70,10 @@ public class NearCachedMapProxyImpl<K, V> extends MapProxyImpl<K, V> {
     private final boolean cacheLocalEntries;
     private final boolean invalidateOnChange;
     private final boolean serializeKeys;
+    /** Immutable map (load protection, F23): concurrent misses share one read, absent keys are not cached. */
+    private final boolean immutable;
+    /** Reads of immutable entries in flight, by Near Cache key; their futures complete with the cached object. */
+    private final ConcurrentMap<Object, InternalCompletableFuture<Object>> immutableReads = new ConcurrentHashMap<>();
 
     private MapNearCacheManager mapNearCacheManager;
     private NearCache<Object, Object> nearCache;
@@ -84,6 +91,8 @@ public class NearCachedMapProxyImpl<K, V> extends MapProxyImpl<K, V> {
         cacheLocalEntries = nearCacheConfig.isCacheLocalEntries();
         invalidateOnChange = nearCacheConfig.isInvalidateOnChange();
         serializeKeys = nearCacheConfig.isSerializeKeys();
+        immutable = nodeEngine instanceof NodeEngineImpl nodeEngineImpl
+                && nodeEngineImpl.getLoadProtection().isImmutable(mapConfig);
     }
 
     public NearCache<Object, Object> getNearCache() {
@@ -111,6 +120,9 @@ public class NearCachedMapProxyImpl<K, V> extends MapProxyImpl<K, V> {
         if (value != NOT_CACHED) {
             return value;
         }
+        if (immutable) {
+            return (V) readImmutable(key).joinInternal();
+        }
 
         try {
             Data keyData = toDataWithStrategy(key);
@@ -132,6 +144,9 @@ public class NearCachedMapProxyImpl<K, V> extends MapProxyImpl<K, V> {
         Object value = getCachedValue(ncKey, false);
         if (value != NOT_CACHED) {
             return InternalCompletableFuture.newCompletedFuture(value);
+        }
+        if (immutable) {
+            return (InternalCompletableFuture) readImmutable(ncKey);
         }
 
         final Data keyData = toDataWithStrategy(ncKey);
@@ -589,6 +604,80 @@ public class NearCachedMapProxyImpl<K, V> extends MapProxyImpl<K, V> {
             return;
         }
         nearCache.invalidate(key);
+    }
+
+    /**
+     * Reads an entry of an immutable map that is not in the Near Cache (load protection, F23).
+     * Concurrent reads of the same key share one remote read, so a burst of readers costs one
+     * transfer, and they all get the one object that the Near Cache keeps. Entries never change,
+     * so the cached object is never stale; absent keys are not cached, because they can be
+     * inserted later.
+     */
+    private InternalCompletableFuture<Object> readImmutable(Object ncKey) {
+        InternalCompletableFuture<Object> read = new InternalCompletableFuture<>();
+        InternalCompletableFuture<Object> inFlight = immutableReads.putIfAbsent(ncKey, read);
+        if (inFlight != null) {
+            return inFlight;
+        }
+        Object cached = getCachedValue(ncKey, false);
+        if (cached != NOT_CACHED) {
+            // published between our miss and our registration
+            immutableReads.remove(ncKey, read);
+            read.complete(cached);
+            return read;
+        }
+        Data keyData = toDataWithStrategy(ncKey);
+        long reservationId = tryReserveForUpdate(ncKey, keyData);
+        InternalCompletableFuture<Data> remote;
+        try {
+            remote = super.getAsyncInternal(keyData);
+        } catch (Throwable t) {
+            completeImmutableRead(ncKey, read, null, t, reservationId);
+            throw rethrow(t);
+        }
+        remote.whenCompleteAsync((value, t) -> completeImmutableRead(ncKey, read, value, t, reservationId),
+                ConcurrencyUtil.getDefaultAsyncExecutor());
+        return read;
+    }
+
+    private void completeImmutableRead(Object ncKey, InternalCompletableFuture<Object> read, Object value, Throwable t,
+                                       long reservationId) {
+        Object result = null;
+        try {
+            if (t == null) {
+                result = publishImmutable(ncKey, value, reservationId);
+            } else {
+                invalidateNearCache(ncKey);
+            }
+        } catch (Throwable e) {
+            t = e;
+        } finally {
+            // the Near Cache holds the value before later readers stop joining this read
+            immutableReads.remove(ncKey, read);
+        }
+        if (t == null) {
+            read.complete(result);
+        } else {
+            read.completeExceptionally(t);
+        }
+    }
+
+    /** The object for all readers of an immutable entry: the Near Cache's, or deserialised once if it cannot be cached. */
+    private Object publishImmutable(Object ncKey, Object value, long reservationId) {
+        if (value == null) {
+            if (reservationId != NOT_RESERVED) {
+                // releases the reservation: absent keys are not cached
+                nearCache.invalidate(ncKey);
+            }
+            return null;
+        }
+        if (reservationId != NOT_RESERVED) {
+            Object cached = nearCache.tryPublishReserved(ncKey, value, reservationId, true);
+            if (cached != null) {
+                return cached;
+            }
+        }
+        return toObject(value);
     }
 
     private Object tryPublishReserved(Object key, Object value, long reservationId) {

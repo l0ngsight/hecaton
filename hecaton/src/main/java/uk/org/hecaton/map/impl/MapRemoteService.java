@@ -17,16 +17,24 @@
 package uk.org.hecaton.map.impl;
 
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.EvictionConfig;
+import uk.org.hecaton.config.EvictionPolicy;
+import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.MapConfig;
+import uk.org.hecaton.config.MaxSizePolicy;
+import uk.org.hecaton.config.NearCacheConfig;
 import uk.org.hecaton.core.DistributedObject;
+import uk.org.hecaton.internal.loadprotection.LoadProtection;
 import uk.org.hecaton.internal.services.RemoteService;
 import uk.org.hecaton.map.impl.proxy.MapProxyImpl;
 import uk.org.hecaton.map.impl.proxy.NearCachedMapProxyImpl;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.merge.SplitBrainMergePolicyProvider;
 
 import java.util.UUID;
 
+import static uk.org.hecaton.internal.config.ConfigValidator.checkImmutableMapConfig;
 import static uk.org.hecaton.internal.config.ConfigValidator.checkMapConfig;
 import static uk.org.hecaton.internal.config.ConfigValidator.checkNearCacheConfig;
 
@@ -53,6 +61,11 @@ class MapRemoteService implements RemoteService {
 
         checkMapConfig(config, mapConfig, mergePolicyProvider
         );
+        LoadProtection loadProtection = ((NodeEngineImpl) nodeEngine).getLoadProtection();
+        if (loadProtection.isImmutable(mapConfig)) {
+            checkImmutableMapConfig(mapConfig);
+            mapConfig = withImmutableMapNearCache(mapConfig, loadProtection.getConfig().getImmutableMapNearCacheSize());
+        }
 
         if (mapConfig.isNearCacheEnabled()) {
             checkNearCacheConfig(name, mapConfig.getNearCacheConfig(), config.getNativeMemoryConfig(), false);
@@ -60,6 +73,25 @@ class MapRemoteService implements RemoteService {
         } else {
             return new MapProxyImpl(name, mapServiceContext.getService(), nodeEngine, mapConfig);
         }
+    }
+
+    /**
+     * The map config with a near cache for an immutable map that has none (F23): its entries never
+     * change, so the near cache never serves a stale value. It keeps deserialised values, shared by
+     * all readers on the member, local entries included.
+     */
+    static MapConfig withImmutableMapNearCache(MapConfig mapConfig, int size) {
+        if (mapConfig.isNearCacheEnabled() || size == 0) {
+            return mapConfig;
+        }
+        NearCacheConfig nearCacheConfig = new NearCacheConfig(mapConfig.getName())
+                .setInMemoryFormat(InMemoryFormat.OBJECT)
+                .setCacheLocalEntries(true)
+                .setEvictionConfig(new EvictionConfig()
+                        .setEvictionPolicy(EvictionPolicy.LRU)
+                        .setMaxSizePolicy(MaxSizePolicy.ENTRY_COUNT)
+                        .setSize(size));
+        return new MapConfig(mapConfig).setNearCacheConfig(nearCacheConfig);
     }
 
     @Override

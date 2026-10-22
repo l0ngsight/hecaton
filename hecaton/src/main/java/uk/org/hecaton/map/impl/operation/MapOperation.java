@@ -26,6 +26,7 @@ import uk.org.hecaton.internal.services.ObjectNamespace;
 import uk.org.hecaton.internal.services.ServiceNamespaceAware;
 import uk.org.hecaton.internal.util.ThreadUtil;
 import uk.org.hecaton.logging.ILogger;
+import uk.org.hecaton.map.ImmutableEntryException;
 import uk.org.hecaton.map.impl.MapContainer;
 import uk.org.hecaton.map.impl.MapDataSerializerHook;
 import uk.org.hecaton.map.impl.MapService;
@@ -47,6 +48,7 @@ import uk.org.hecaton.map.impl.wan.WanMapEntryView;
 import uk.org.hecaton.memory.NativeOutOfMemoryError;
 import uk.org.hecaton.nio.serialization.IdentifiedDataSerializable;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.operationservice.AbstractNamedOperation;
 import uk.org.hecaton.spi.impl.operationservice.BackupOperation;
 import uk.org.hecaton.spi.impl.operationservice.BlockingOperation;
@@ -143,7 +145,47 @@ public abstract class MapOperation extends AbstractNamedOperation
         namespace = mapConfig.getUserCodeNamespace();
         getNodeEngine().getNamespaceService().setupNamespace(namespace);
 
+        if (mapContainer.isImmutable()) {
+            checkImmutableAccess();
+        }
+
         innerBeforeRun();
+    }
+
+    /**
+     * How this operation uses an immutable map (load protection, F23). The default is
+     * {@link ImmutableMapAccess#READ}; operations that insert, change or remove entries override it.
+     */
+    protected ImmutableMapAccess immutableMapAccess() {
+        return ImmutableMapAccess.READ;
+    }
+
+    /**
+     * Refuses the operation, on the partition owner before it runs, if it would break the rules of
+     * an immutable map (F23). Operations with more than one key, or with rules of their own,
+     * override it.
+     */
+    protected void checkImmutableAccess() {
+        switch (immutableMapAccess()) {
+            case READ -> {
+            }
+            case CHANGE -> throw immutableRejection("it refuses " + operationName());
+            case INSERT -> throw new IllegalStateException(getClass().getName() + " inserts without a key");
+            default -> throw new IllegalStateException("unknown access " + immutableMapAccess());
+        }
+    }
+
+    /** A rejection of this operation by an immutable map (F23), counted in the load protection metrics. */
+    protected final ImmutableEntryException immutableRejection(String reason) {
+        ((NodeEngineImpl) getNodeEngine()).getLoadProtection().onImmutableRejection();
+        return new ImmutableEntryException("Map '" + name + "' is immutable (insert-only): " + reason);
+    }
+
+    /** {@code Remove} for {@code RemoveOperation}: the operation's name in messages. */
+    protected final String operationName() {
+        String className = getClass().getSimpleName();
+        return className.endsWith("Operation") ? className.substring(0, className.length() - "Operation".length())
+                : className;
     }
 
     public boolean checkMapExists() {

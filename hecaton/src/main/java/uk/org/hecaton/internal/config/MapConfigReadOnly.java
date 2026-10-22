@@ -340,6 +340,11 @@ public class MapConfigReadOnly extends MapConfig {
     }
 
     @Override
+    public MapConfig setImmutable(boolean immutable) {
+        throw throwReadOnly();
+    }
+
+    @Override
     public MapConfig setWanReplicationRef(WanReplicationRef wanReplicationRef) {
         throw throwReadOnly();
     }

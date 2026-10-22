@@ -27,6 +27,7 @@ import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.util.ThreadUtil;
 import uk.org.hecaton.internal.util.Timer;
 import uk.org.hecaton.internal.util.comparators.ValueComparator;
+import uk.org.hecaton.map.ImmutableEntryException;
 import uk.org.hecaton.map.impl.InterceptorRegistry;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.map.impl.MapServiceContext;
@@ -36,6 +37,7 @@ import uk.org.hecaton.map.impl.operation.MapOperation;
 import uk.org.hecaton.map.impl.operation.MapOperationProvider;
 import uk.org.hecaton.partition.PartitioningStrategy;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.TransactionalDistributedObject;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.spi.impl.operationservice.OperationFactory;
@@ -235,11 +237,40 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
     }
 
     Data putInternal(Data key, Data value, long ttl, TimeUnit timeUnit, RemoteCallHook hook) {
+        boolean immutable = isImmutable();
+        if (immutable && ttl > 0) {
+            throw immutableRejection("its entries never expire, so a put cannot have a time-to-live");
+        }
+        boolean unlockImmediately = !valueMap.containsKey(key);
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
+        if (immutable && versionedValue.value != null) {
+            if (unlockImmediately) {
+                unlock(key, versionedValue);
+            } else {
+                addUnlockTransactionRecord(key, versionedValue.version);
+            }
+            throw immutableRejection("it already holds the key, and refuses to insert it again in a transaction");
+        }
         long timeInMillis = getTimeInMillis(ttl, timeUnit);
         MapOperation op = operationProvider.createTxnSetOperation(name, key, value, versionedValue.version, timeInMillis);
         tx.add(new MapTransactionLogRecord(name, key, getPartitionId(key), op, tx.getOwnerUuid(), tx.getTxnId(), hook));
         return versionedValue.value;
+    }
+
+    /** Whether the map is immutable (load protection, F23): insert-only. */
+    private boolean isImmutable() {
+        return mapServiceContext.getMapContainer(name).isImmutable();
+    }
+
+    private void refuseChangeOfImmutableMap(String operation) {
+        if (isImmutable()) {
+            throw immutableRejection("it refuses " + operation + " in a transaction");
+        }
+    }
+
+    private ImmutableEntryException immutableRejection(String reason) {
+        ((NodeEngineImpl) getNodeEngine()).getLoadProtection().onImmutableRejection();
+        return new ImmutableEntryException("Map '" + name + "' is immutable (insert-only): " + reason);
     }
 
     Data putIfAbsentInternal(Data key, Data value, RemoteCallHook hook) {
@@ -262,6 +293,7 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
     }
 
     Data replaceInternal(Data key, Data value, RemoteCallHook hook) {
+        refuseChangeOfImmutableMap("replace");
         boolean unlockImmediately = !valueMap.containsKey(key);
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         if (versionedValue.value == null) {
@@ -281,6 +313,7 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
 
     boolean replaceIfSameInternal(Data key, Object oldValue,
                                   Data newValue, RemoteCallHook hook) {
+        refuseChangeOfImmutableMap("replace");
         boolean unlockImmediately = !valueMap.containsKey(key);
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         if (!isEquals(oldValue, versionedValue.value)) {
@@ -300,6 +333,7 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
     }
 
     Data removeInternal(Data key, RemoteCallHook hook) {
+        refuseChangeOfImmutableMap("remove");
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         tx.add(new MapTransactionLogRecord(name, key, getPartitionId(key),
                 operationProvider.createTxnDeleteOperation(name, key, versionedValue.version),
@@ -308,6 +342,7 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
     }
 
     boolean removeIfSameInternal(Data key, Object value, RemoteCallHook hook) {
+        refuseChangeOfImmutableMap("remove");
         boolean unlockImmediately = !valueMap.containsKey(key);
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         if (!isEquals(versionedValue.value, value)) {

@@ -55,6 +55,12 @@ public final class InvocationFuture<E> extends AbstractInvocationFuture<E> {
     final Invocation invocation;
     volatile boolean interrupted;
     private final boolean deserialize;
+    /**
+     * The {@link Data} read from the response packet: every stage waiting on this future resolves the
+     * same packet, and reading it once instead of once per stage saves a copy of the response per
+     * stage (load protection, F23, though it helps every caller).
+     */
+    private volatile PacketValue packetValue;
 
     InvocationFuture(Invocation invocation, boolean deserialize) {
         super(invocation.context.logger);
@@ -130,8 +136,7 @@ public final class InvocationFuture<E> extends AbstractInvocationFuture<E> {
         } else if (unresolved == INTERRUPTED || unresolved == CALL_TIMEOUT || unresolved == HEARTBEAT_TIMEOUT) {
             return toExceptionalResult(unresolved);
         } else if (unresolved.getClass() == Packet.class) {
-            NormalResponse response = invocation.context.serializationService.toObject(unresolved);
-            unresolved = response.getValue();
+            unresolved = readPacket((Packet) unresolved);
         }
 
         Object value = unresolved;
@@ -154,6 +159,24 @@ public final class InvocationFuture<E> extends AbstractInvocationFuture<E> {
         }
 
         return value;
+    }
+
+    private Object readPacket(Packet packet) {
+        PacketValue read = packetValue;
+        if (read != null && read.packet == packet) {
+            return read.value;
+        }
+        NormalResponse response = invocation.context.serializationService.toObject(packet);
+        Object value = response.getValue();
+        if (value instanceof Data) {
+            // only immutable values are shared by the stages
+            packetValue = new PacketValue(packet, value);
+        }
+        return value;
+    }
+
+    /** A response packet and the value read from it. */
+    private record PacketValue(Packet packet, Object value) {
     }
 
     @Override

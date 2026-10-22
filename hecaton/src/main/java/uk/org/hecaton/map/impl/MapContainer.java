@@ -28,6 +28,7 @@ import uk.org.hecaton.partition.PartitioningStrategy;
 import uk.org.hecaton.query.impl.IndexRegistry;
 import uk.org.hecaton.query.impl.QueryableEntry;
 import uk.org.hecaton.query.impl.getters.Extractors;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.properties.HecatonProperty;
 
 import javax.annotation.Nullable;
@@ -102,6 +103,15 @@ public interface MapContainer {
     MapStoreContext getMapStoreContext();
 
     MapConfig getMapConfig();
+
+    /**
+     * Whether the map is immutable: insert-only, with values shared by readers (load protection,
+     * F23). True when load protection is on and the map is configured immutable.
+     */
+    default boolean isImmutable() {
+        return getMapServiceContext().getNodeEngine() instanceof NodeEngineImpl nodeEngine
+                && nodeEngine.getLoadProtection().isImmutable(getMapConfig());
+    }
 
     void setMapConfig(MapConfig mapConfig);
 

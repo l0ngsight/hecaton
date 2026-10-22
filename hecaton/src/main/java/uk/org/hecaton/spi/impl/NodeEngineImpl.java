@@ -30,6 +30,7 @@ import uk.org.hecaton.internal.cluster.ClusterService;
 import uk.org.hecaton.internal.diagnostics.Diagnostics;
 import uk.org.hecaton.internal.dynamicconfig.ClusterWideConfigurationService;
 import uk.org.hecaton.internal.dynamicconfig.ConfigurationService;
+import uk.org.hecaton.internal.loadprotection.LoadProtection;
 import uk.org.hecaton.internal.management.ManagementCenterService;
 import uk.org.hecaton.internal.metrics.MetricsRegistry;
 import uk.org.hecaton.internal.metrics.impl.MetricsConfigHelper;
@@ -525,6 +526,11 @@ public class NodeEngineImpl implements NodeEngine {
         operationParker.onMemberLeft(member);
         operationService.onMemberLeft(member);
         eventService.onMemberLeft(member);
+    }
+
+    /** The member's load protection (F23). */
+    public LoadProtection getLoadProtection() {
+        return node.loadProtection;
     }
 
     @Override

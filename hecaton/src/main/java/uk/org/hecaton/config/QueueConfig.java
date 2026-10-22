@@ -37,6 +37,7 @@ import static uk.org.hecaton.internal.serialization.impl.SerializationUtil.write
 import static uk.org.hecaton.internal.util.Preconditions.checkAsyncBackupCount;
 import static uk.org.hecaton.internal.util.Preconditions.checkBackupCount;
 import static uk.org.hecaton.internal.util.Preconditions.checkNotNull;
+import static uk.org.hecaton.internal.util.Preconditions.checkPositive;
 
 /**
  * Contains the configuration for an {@link IQueue}.
@@ -78,6 +79,8 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
     private MergePolicyConfig mergePolicyConfig = new MergePolicyConfig();
     private String priorityComparatorClassName;
     private @Nullable String userCodeNamespace = DEFAULT_NAMESPACE;
+    private int shardCount = 1;
+    private List<String> shardNames = new ArrayList<>();
 
     public QueueConfig() {
     }
@@ -100,6 +103,8 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
         this.listenerConfigs = new ArrayList<>(config.getItemListenerConfigs());
         this.priorityComparatorClassName = config.priorityComparatorClassName;
         this.userCodeNamespace = config.userCodeNamespace;
+        this.shardCount = config.shardCount;
+        this.shardNames = new ArrayList<>(config.shardNames);
     }
 
     /**
@@ -403,6 +408,58 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
         return this;
     }
 
+    /**
+     * Returns the number of shards of the queue: physical queues, each on its own partition, that
+     * together form this logical queue (load protection, F23). {@code 1}, the default, is an
+     * ordinary queue.
+     *
+     * @see #setShardCount(int)
+     */
+    public int getShardCount() {
+        return shardNames.isEmpty() ? shardCount : shardNames.size();
+    }
+
+    /**
+     * Spreads the queue over {@code shardCount} physical queues, each on its own partition, so that
+     * its load is shared by several members (load protection, F23). Clients and members use the
+     * queue as before; the members route each operation to a shard. Items keep their order within
+     * a shard; across shards a poll takes from the shard whose head is oldest, so the queue as a
+     * whole is FIFO on a best-effort basis. Takes effect only when
+     * {@link LoadProtectionConfig#setEnabled(boolean) load protection} is on.
+     *
+     * @param shardCount the number of shards, at least 1
+     * @return this queue config instance
+     */
+    public QueueConfig setShardCount(int shardCount) {
+        this.shardCount = checkPositive("shardCount", shardCount);
+        return this;
+    }
+
+    /**
+     * Returns the names of existing queues that are the shards of this queue, or an empty list
+     * when the shards are named by the queue.
+     *
+     * @see #setShardNames(List)
+     */
+    @Nonnull
+    public List<String> getShardNames() {
+        return shardNames;
+    }
+
+    /**
+     * Makes existing queues the shards of this logical queue, without moving their items, for
+     * applications that spread items over several queues themselves (for example {@code jobs-0}
+     * to {@code jobs-7}): old code keeps using the physical queues, new code uses this queue, and
+     * both see the same items. The number of names is the shard count.
+     *
+     * @param shardNames the names of the shard queues
+     * @return this queue config instance
+     */
+    public QueueConfig setShardNames(@Nonnull List<String> shardNames) {
+        this.shardNames = new ArrayList<>(checkNotNull(shardNames, "shardNames must not be null"));
+        return this;
+    }
+
     @Override
     public String toString() {
         return "QueueConfig{"
@@ -417,6 +474,8 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
                 + ", mergePolicyConfig=" + mergePolicyConfig
                 + ", priorityComparatorClassName=" + priorityComparatorClassName
                 + ", userCodeNamespace=" + userCodeNamespace
+                + ", shardCount=" + shardCount
+                + ", shardNames=" + shardNames
                 + '}';
     }
 
@@ -448,6 +507,9 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
         if (out.getVersion().isGreaterOrEqual(V5_4)) {
             out.writeString(userCodeNamespace);
         }
+        // Hecaton F23
+        out.writeInt(shardCount);
+        writeNullableList(shardNames, out);
     }
 
     @Override
@@ -468,6 +530,10 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
         if (in.getVersion().isGreaterOrEqual(V5_4)) {
             userCodeNamespace = in.readString();
         }
+        // Hecaton F23
+        shardCount = in.readInt();
+        List<String> names = readNullableList(in);
+        shardNames = names == null ? new ArrayList<>() : names;
     }
 
     @Override
@@ -490,13 +556,15 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
                 && Objects.equals(splitBrainProtectionName, that.splitBrainProtectionName)
                 && Objects.equals(mergePolicyConfig, that.mergePolicyConfig)
                 && Objects.equals(priorityComparatorClassName, that.priorityComparatorClassName)
-                && Objects.equals(userCodeNamespace, that.userCodeNamespace);
+                && Objects.equals(userCodeNamespace, that.userCodeNamespace)
+                && getShardCount() == that.getShardCount()
+                && shardNames.equals(that.shardNames);
     }
 
     @Override
     public final int hashCode() {
         return Objects.hash(name, getItemListenerConfigs(), backupCount, asyncBackupCount, getMaxSize(), emptyQueueTtl,
                 queueStoreConfig, statisticsEnabled, splitBrainProtectionName, mergePolicyConfig,
-                priorityComparatorClassName, userCodeNamespace);
+                priorityComparatorClassName, userCodeNamespace, getShardCount(), shardNames);
     }
 }

@@ -132,4 +132,10 @@ public class SetTtlOperation extends LockAwareOperation
         super.readInternal(in);
         ttl = in.readLong();
     }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // makes entries expire
+        return ImmutableMapAccess.CHANGE;
+    }
 }

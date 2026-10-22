@@ -114,4 +114,10 @@ public class EvictOperation extends LockAwareOperation
     public int getClassId() {
         return MapDataSerializerHook.EVICT;
     }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // removes an entry from memory
+        return ImmutableMapAccess.CHANGE;
+    }
 }

@@ -228,6 +228,8 @@ public class Config {
     // @since 5.1
     private IntegrityCheckerConfig integrityCheckerConfig = new IntegrityCheckerConfig();
 
+    private LoadProtectionConfig loadProtectionConfig = new LoadProtectionConfig();
+
     // @since 5.3
     private final Map<String, DataConnectionConfig> dataConnectionConfigs = new ConcurrentHashMap<>();
 
@@ -3172,6 +3174,24 @@ public class Config {
     }
 
     /**
+     * Returns the load protection config (F23): insert-only maps with shared values, bounded
+     * buffers and back pressure, isolated connection lifecycle work, sharded queues.
+     */
+    @Nonnull
+    public LoadProtectionConfig getLoadProtectionConfig() {
+        return loadProtectionConfig;
+    }
+
+    /**
+     * Sets the load protection config (F23).
+     */
+    @Nonnull
+    public Config setLoadProtectionConfig(@Nonnull LoadProtectionConfig loadProtectionConfig) {
+        this.loadProtectionConfig = checkNotNull(loadProtectionConfig, "loadProtectionConfig must not be null");
+        return this;
+    }
+
+    /**
      * Returns the map of data connection configurations, mapped by config name.
      *
      * @since 5.3
@@ -3422,6 +3442,7 @@ public class Config {
                 + ", jetConfig=" + jetConfig
                 + ", deviceConfigs=" + deviceConfigs
                 + ", integrityCheckerConfig=" + integrityCheckerConfig
+                + ", loadProtectionConfig=" + loadProtectionConfig
                 + ", dataConnectionConfigs=" + dataConnectionConfigs
                 + ", tpcConfig=" + tpcConfig
                 + ", namespacesConfig=" + userCodeNamespacesConfig

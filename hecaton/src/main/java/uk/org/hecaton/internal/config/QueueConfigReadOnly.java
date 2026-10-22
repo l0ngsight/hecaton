@@ -74,6 +74,22 @@ public class QueueConfigReadOnly extends QueueConfig {
     }
 
     @Override
+    public QueueConfig setShardCount(int shardCount) {
+        throw new UnsupportedOperationException("This config is read-only queue: " + getName());
+    }
+
+    @Override
+    public QueueConfig setShardNames(@Nonnull List<String> shardNames) {
+        throw new UnsupportedOperationException("This config is read-only queue: " + getName());
+    }
+
+    @Nonnull
+    @Override
+    public List<String> getShardNames() {
+        return Collections.unmodifiableList(super.getShardNames());
+    }
+
+    @Override
     public QueueConfig setBackupCount(int backupCount) {
         throw new UnsupportedOperationException("This config is read-only queue: " + getName());
     }
