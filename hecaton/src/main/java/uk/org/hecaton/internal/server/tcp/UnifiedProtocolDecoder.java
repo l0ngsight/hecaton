@@ -215,11 +215,6 @@ public class UnifiedProtocolDecoder
 
     private int clientRcvBuf() {
         int rcvBuf = props.getInteger(SOCKET_CLIENT_RECEIVE_BUFFER_SIZE);
-        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
-        if (rcvBuf == -1 && admission != null) {
-            // load protection (F23): smaller buffers for client connections
-            return admission.clientBufferBytes();
-        }
         if (rcvBuf == -1) {
             rcvBuf = props.getInteger(SOCKET_RECEIVE_BUFFER_SIZE);
         }

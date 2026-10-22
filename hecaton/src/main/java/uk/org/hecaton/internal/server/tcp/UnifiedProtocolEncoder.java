@@ -155,7 +155,9 @@ public class UnifiedProtocolEncoder
         channel.options()
                 .setOption(SO_SNDBUF, clientSndBuf());
 
-        channel.outboundPipeline().replace(this, new ClientMessageEncoder());
+        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
+        int bufferBytes = admission == null ? -1 : admission.clientBufferBytes();
+        channel.outboundPipeline().replace(this, new ClientMessageEncoder(bufferBytes));
     }
 
     private void initChannelForText() {
@@ -168,11 +170,6 @@ public class UnifiedProtocolEncoder
 
     private int clientSndBuf() {
         int sndBuf = props.getInteger(SOCKET_CLIENT_SEND_BUFFER_SIZE);
-        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
-        if (sndBuf == -1 && admission != null) {
-            // load protection (F23): smaller buffers for client connections
-            return admission.clientBufferBytes();
-        }
         if (sndBuf == -1) {
             sndBuf = props.getInteger(SOCKET_SEND_BUFFER_SIZE);
         }

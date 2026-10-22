@@ -34,6 +34,7 @@ import uk.org.hecaton.internal.nio.Protocols;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
 import uk.org.hecaton.internal.serialization.impl.DefaultSerializationServiceBuilder;
+import uk.org.hecaton.internal.server.tcp.TcpServerConnection;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.test.HecatonSerialClassRunner;
 import uk.org.hecaton.test.HecatonTestSupport;
@@ -177,6 +178,23 @@ public class LoadProtectionNetworkTest extends HecatonTestSupport {
         assertTrueEventually(() -> {
             assertThat(pool.bytesInUse()).isZero();
             assertThat(pool.bytesIdle()).isGreaterThanOrEqualTo(2L * clients * bufferBytes);
+        });
+    }
+
+    @Test
+    public void clientSocketsKeepTheKernelBufferSizes() throws Exception {
+        HecatonInstance member = member(smallInstanceConfig());
+        ClientConfig clientConfig = new ClientConfig().setClusterName(member.getConfig().getClusterName());
+        clientConfig.getNetworkConfig().addAddress("127.0.0.1:" + member.getCluster().getLocalMember().getAddress().getPort());
+        HecatonInstance client = HecatonClient.newHecatonClient(clientConfig);
+        instances.add(client);
+        client.getMap("catalog").put("key", "value");
+
+        // the pooled buffers are small, the kernel's are not: TCP stalls when they are smaller than a segment (64 KB on loopback)
+        assertThat(getNode(member).clientEngine.getEndpointManager().getEndpoints()).isNotEmpty().allSatisfy(endpoint -> {
+            Socket socket = ((TcpServerConnection) endpoint.getConnection()).getChannel().socket();
+            assertThat(socket.getReceiveBufferSize()).isGreaterThanOrEqualTo(128 << 10);
+            assertThat(socket.getSendBufferSize()).isGreaterThanOrEqualTo(128 << 10);
         });
     }
 

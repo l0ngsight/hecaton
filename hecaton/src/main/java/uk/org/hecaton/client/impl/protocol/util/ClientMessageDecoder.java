@@ -74,7 +74,12 @@ public class ClientMessageDecoder extends InboundHandlerWithCounters<ByteBuffer,
 
     @Override
     public void handlerAdded() {
-        initSrcBuffer();
+        if (admission != null) {
+            // load protection (F23): the read buffer has its own size; the socket's is unchanged
+            initSrcBuffer(admission.clientBufferBytes());
+        } else {
+            initSrcBuffer();
+        }
     }
 
     @Override

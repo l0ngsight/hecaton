@@ -444,6 +444,8 @@ public class LoadProtectionConfig {
      * its read and write buffers (and, with TLS, two more) when it is opened, at the socket buffer
      * size (128 KB by default), whether or not it ever sends anything. With pooling, connections
      * take buffers from a member-wide pool while they read or write and give them back when idle.
+     * The kernel's socket buffers ({@code SO_RCVBUF}, {@code SO_SNDBUF}) keep their configured size:
+     * TCP can stall when they are smaller than a segment (64 KB on loopback).
      */
     public static class ConnectionBufferConfig {
 
@@ -475,7 +477,10 @@ public class LoadProtectionConfig {
             return this;
         }
 
-        /** The size of each read and write buffer of a client connection. */
+        /**
+         * The size of the client protocol's read and write buffers of a client connection, in the
+         * heap; not the kernel's socket buffers.
+         */
         public int getClientBufferBytes() {
             return clientBufferBytes;
         }
@@ -485,7 +490,7 @@ public class LoadProtectionConfig {
             return this;
         }
 
-        /** Bytes of pooled buffers in use above which connections wait for a buffer instead of reading. */
+        /** Bytes of idle buffers the pool keeps for reuse; a connection that finds the pool empty allocates one. */
         public long getMaxPooledBytes() {
             return maxPooledBytes;
         }

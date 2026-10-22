@@ -43,7 +43,9 @@ public class ClientChannelInitializer
             connection.close("Client connection refused by load protection", null);
             return;
         }
-        SingleProtocolEncoder protocolEncoder = new SingleProtocolEncoder(new ClientMessageEncoder());
+        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
+        SingleProtocolEncoder protocolEncoder = new SingleProtocolEncoder(
+                new ClientMessageEncoder(admission == null ? -1 : admission.clientBufferBytes()));
         SingleProtocolDecoder protocolDecoder = new SingleProtocolDecoder(
                 CLIENT,
                 new ClientMessageDecoder(connection, serverContext.getClientEngine(), serverContext.properties()),
@@ -51,7 +53,6 @@ public class ClientChannelInitializer
 
         channel.outboundPipeline().addLast(protocolEncoder);
         channel.inboundPipeline().addLast(protocolDecoder);
-        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
         if (admission != null) {
             admission.usePooledBuffers(channel);
         }

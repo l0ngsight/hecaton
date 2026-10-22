@@ -83,9 +83,13 @@ which sends the stored bytes.
   maximum, requests fail fast with `HecatonOverloadException`. Clients do not retry it: the
   application receives it, and should back off and try again.
   Client messages larger than `max-message-bytes` (64 MB) close the connection.
-- **Connection buffers:** client connections borrow their socket buffers
+- **Connection buffers:** client connections borrow their read and write buffers
   (`client-buffer-bytes`, 32 KB) from a member-wide pool while they have data to move, so an idle
-  connection holds none; the pool keeps at most `max-pooled-bytes` (1 GB) of idle buffers.
+  connection holds none; the pool keeps at most `max-pooled-bytes` (1 GB) of idle buffers. These are
+  the buffers in the heap; the kernel's socket buffers keep their configured size
+  (`hecaton.socket.client.receive.buffer.size` / `send.buffer.size`, 128 KB by default). Kernel
+  socket buffers smaller than one TCP segment can stall connections (see
+  [below](#socket-buffers-and-tcp-stalls)).
 
 ### Connection churn on its own threads
 
@@ -126,8 +130,8 @@ code running while new code uses the logical queue `jobs`; both see the same ite
 | `maintenance.max-backlog` | 100,000 | Tasks queued on the lane; above it they run on the caller |
 | `maintenance.max-accepts-per-second` | 0 | New client connections per second; 0 is unlimited |
 | `maintenance.max-concurrent-authentications` | 256 | Authentications in progress |
-| `connection-buffers.pooled` | `true` | Borrow socket buffers of client connections from the pool |
-| `connection-buffers.client-buffer-bytes` | 32 KB | Size of a client connection's socket buffer |
+| `connection-buffers.pooled` | `true` | Borrow the read and write buffers of client connections from the pool |
+| `connection-buffers.client-buffer-bytes` | 32 KB | Size of a client connection's read and write buffers in the heap (not the kernel's socket buffers) |
 | `connection-buffers.max-pooled-bytes` | 1 GB | Idle buffers kept for reuse |
 
 In Java the groups are `getOutboundConfig()`, `getAdmissionConfig()`, `getMaintenanceConfig()`
@@ -150,6 +154,19 @@ Under the `loadProtection` prefix:
 | `disconnectBatches`, `disconnectedClients` | Batched disconnect cleanup |
 | `authenticationsInProgress`, `clientConnectionsAccepted`, `clientConnectionsRefused` | New connections |
 | `immutableRejections`, `immutableMergeConflicts` | Changes refused on immutable maps |
+
+## Socket buffers and TCP stalls
+
+Keep the kernel's socket buffers for client connections at least as large as two TCP segments.
+With smaller buffers (for example `SO_RCVBUF`/`SO_SNDBUF` of 32 KB on loopback, where a segment is
+64 KB), a connection whose member has a full segment queued and whose client is busy can stop
+moving data altogether: the member's kernel holds the segment, the client has read everything that
+arrived, and neither side sends again. A test with 64 TLS clients and 50,000 reads of a 1 MB value
+in flight on one host stalled this way within a minute; with 128 KB buffers it completed. Over
+Ethernet a segment is about 1.5 KB (9 KB with jumbo frames), so the risk is for clients on the
+member's host or on networks with large segments. Load protection does not change the kernel's
+buffers; `hecaton.socket.client.receive.buffer.size` and `hecaton.socket.client.send.buffer.size`
+do.
 
 ## Measuring copies
 
