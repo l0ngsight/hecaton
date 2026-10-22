@@ -86,7 +86,9 @@ jobs:
             gh release create "$GITHUB_REF_NAME" --title "Hecaton $VERSION" \
               --notes-file target/release/RELEASE_NOTES.md "${prerelease[@]}" target/release/*
           fi
+      # also when a later step fails, so that a built release is not lost
       - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
         with:
           name: release-${{ env.VERSION }}
           path: target/release
