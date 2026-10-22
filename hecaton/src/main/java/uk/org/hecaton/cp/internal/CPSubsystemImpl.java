@@ -75,6 +75,7 @@ import static uk.org.hecaton.cp.internal.RaftService.getObjectNameForProxy;
 import static uk.org.hecaton.cp.internal.RaftService.withoutDefaultGroupName;
 import static uk.org.hecaton.internal.util.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
+import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
 
 /**
  * Provides access to CP Subsystem utilities
@@ -157,14 +158,15 @@ public class CPSubsystemImpl implements CPSubsystem {
         RaftService raftService = getService(RaftService.SERVICE_NAME);
         if (!cpSubsystemEnabled) {
             return raftService.createRaftGroupForProxyAsync(proxyName)
-                    .thenCompose(groupId -> raftService.getInvocationManager().<CPMapPurgeResponse>invoke(groupId, op));
+                    .thenComposeAsync(groupId -> raftService.getInvocationManager().<CPMapPurgeResponse>invoke(groupId, op),
+                            CALLER_RUNS);
         }
-        return raftService.getCPGroup(groupName).thenCompose(group -> {
+        return raftService.getCPGroup(groupName).thenComposeAsync(group -> {
             if (group == null) {
                 throw new NoSuchElementException("CP group " + groupName + " of CPMap " + mapName + " does not exist");
             }
             return raftService.getInvocationManager().<CPMapPurgeResponse>invoke(group.id(), op);
-        });
+        }, CALLER_RUNS);
     }
 
     @Override

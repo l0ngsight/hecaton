@@ -87,6 +87,13 @@ public class WanDataSerializerHook implements DataSerializerHook {
         constructors[MERKLE_TREE_LEAVES_OPERATION] = MerkleTreeLeavesOperation::new;
         constructors[WAN_MERKLE_TREE_QUERY_OPERATION] = WanMerkleTreeQueryOperation::new;
         constructors[WAN_SYNC_OPERATION] = WanSyncOperation::new;
-        return new ArrayDataSerializableFactory(constructors);
+        DataSerializableFactory factory = new ArrayDataSerializableFactory(constructors);
+        return typeId -> {
+            IdentifiedDataSerializable object = factory.create(typeId);
+            if (object == null) {
+                throw new IllegalArgumentException("Unknown type-id: " + typeId);
+            }
+            return object;
+        };
     }
 }

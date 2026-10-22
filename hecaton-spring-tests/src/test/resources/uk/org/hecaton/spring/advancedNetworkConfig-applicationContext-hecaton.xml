@@ -102,7 +102,7 @@
                         <hz:consistency-check-strategy>MERKLE_TREES</hz:consistency-check-strategy>
                     </hz:sync>
                 </hz:batch-publisher>
-                <hz:consumer class-name="WanConsumer" persist-wan-replicated-data="true"/>
+                <hz:consumer class-name="uk.org.hecaton.wan.custom.WanConsumer" persist-wan-replicated-data="true"/>
             </hz:wan-replication>
             <hz:wan-replication name="testWan3">
                 <hz:consumer persist-wan-replicated-data="false"/>

@@ -18,7 +18,7 @@ package uk.org.hecaton.map.impl.nearcache;
 
 import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.NearCacheConfig;
-import uk.org.hecaton.instance.module.NativeMemoryCapability;
+import uk.org.hecaton.instance.impl.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.cluster.ClusterService;
 import uk.org.hecaton.internal.nearcache.NearCache;
 import uk.org.hecaton.internal.nearcache.NearCacheRecordStore;

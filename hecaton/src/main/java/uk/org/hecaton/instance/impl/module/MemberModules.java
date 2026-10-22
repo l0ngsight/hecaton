@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.org.hecaton.instance.module;
+package uk.org.hecaton.instance.impl.module;
 
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.logging.ILogger;

@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
+
 /**
  * Sent by a publisher to a member of the target cluster: returns, for the given partitions, the leaf
  * hashes of the Merkle trees of a map in the target cluster (a {@code Map<Integer, int[]>}; a
@@ -69,7 +71,7 @@ public class WanMerkleTreeQueryOperation extends Operation implements WanOperati
             futures.put(partitionId, operationService.invokeOnPartition(
                     new MerkleTreeLeavesOperation(mapName).setPartitionId(partitionId)));
         }
-        CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[0])).whenComplete((ignored, failure) -> {
+        CompletableFuture.allOf(futures.values().toArray(new CompletableFuture[0])).whenCompleteAsync((ignored, failure) -> {
             if (failure != null) {
                 sendResponse(failure);
                 return;
@@ -82,7 +84,7 @@ public class WanMerkleTreeQueryOperation extends Operation implements WanOperati
                 }
             });
             sendResponse(leaves);
-        });
+        }, CALLER_RUNS);
     }
 
     @Override

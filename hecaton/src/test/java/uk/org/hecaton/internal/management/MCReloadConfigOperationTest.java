@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
 
 public class MCReloadConfigOperationTest
         extends AbstractClientMapTest {
@@ -37,11 +37,8 @@ public class MCReloadConfigOperationTest
                 MCReloadConfigCodec.encodeRequest(),
                 null
         );
-        try {
-            inv.invoke().get();
-            fail("did not throw exception");
-        } catch (ExecutionException e) {
-            assertInstanceOf(UnsupportedOperationException.class, e.getCause());
-        }
+        // configuration reload (F16) runs in the background: the request returns the update's ID (these members
+        // have no configuration file, so the update itself fails and is logged)
+        assertNotNull(MCReloadConfigCodec.decodeResponse(inv.invoke().get()));
     }
 }

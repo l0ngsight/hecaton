@@ -21,7 +21,7 @@ import uk.org.hecaton.cache.impl.CacheEntryProcessorEntry;
 import uk.org.hecaton.cache.impl.record.CacheRecord;
 import uk.org.hecaton.config.MaxSizePolicy;
 import uk.org.hecaton.hd.HdModule;
-import uk.org.hecaton.instance.module.NativeMemoryCapability;
+import uk.org.hecaton.instance.impl.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.eviction.EvictionChecker;
 import uk.org.hecaton.internal.memory.MemoryStats;
 import uk.org.hecaton.internal.serialization.Data;

@@ -24,7 +24,6 @@ import uk.org.hecaton.nio.ObjectDataOutput;
 import uk.org.hecaton.nio.serialization.IdentifiedDataSerializable;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.spi.impl.operationservice.PartitionAwareOperation;
-import uk.org.hecaton.spi.impl.operationservice.ReadonlyOperation;
 import uk.org.hecaton.wan.impl.WanDataSerializerHook;
 import uk.org.hecaton.wan.impl.merkletree.MerkleTreeUtil;
 import uk.org.hecaton.wan.impl.merkletree.MerkleTreeView;
@@ -36,7 +35,7 @@ import java.io.IOException;
  * keeps no Merkle tree (WAN consistency check and delta sync).
  */
 public class MerkleTreeLeavesOperation extends Operation
-        implements PartitionAwareOperation, ReadonlyOperation, IdentifiedDataSerializable {
+        implements PartitionAwareOperation, IdentifiedDataSerializable {
 
     private String mapName;
     private int[] leaves;

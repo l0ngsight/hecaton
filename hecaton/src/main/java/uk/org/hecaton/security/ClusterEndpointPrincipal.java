@@ -15,9 +15,13 @@
  */
 package uk.org.hecaton.security;
 
+import uk.org.hecaton.internal.serialization.SerializableByConvention;
+
 /**
  * The address the authenticated side connected from.
  */
+// a JAAS principal: Subjects (and so their principals) are Java-serialized
+@SerializableByConvention
 public class ClusterEndpointPrincipal extends HecatonPrincipal {
 
     private static final long serialVersionUID = 1L;

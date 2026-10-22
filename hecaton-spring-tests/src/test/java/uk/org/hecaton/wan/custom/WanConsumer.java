@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.org.hecaton.instance.module;
+
+package uk.org.hecaton.wan.custom;
+
+import uk.org.hecaton.config.WanConsumerConfig;
 
 /**
- * A feature that a {@link MemberModule} provides. At most one module per member may provide
- * each capability.
+ * The WAN consumer the full Spring configurations name: members create their WAN consumers when
+ * they start, so the class must exist.
  */
-public sealed interface MemberCapability
-        permits NativeMemoryCapability, PersistenceCapability, TieredStoreCapability, VectorCapability {
+public class WanConsumer implements uk.org.hecaton.wan.WanConsumer {
+
+    @Override
+    public void init(String wanReplicationName, WanConsumerConfig config) {
+    }
+
+    @Override
+    public void shutdown() {
+    }
 }

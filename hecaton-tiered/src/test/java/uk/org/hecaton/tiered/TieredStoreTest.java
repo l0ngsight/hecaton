@@ -25,7 +25,7 @@ import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.NativeMemoryConfig;
 import uk.org.hecaton.config.TieredStoreConfig;
 import uk.org.hecaton.core.HecatonInstance;
-import uk.org.hecaton.instance.module.TieredStoreCapability;
+import uk.org.hecaton.instance.impl.module.TieredStoreCapability;
 import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.memory.Capacity;

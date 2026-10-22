@@ -275,11 +275,13 @@ public class RestTest {
 
     @Test
     public void wanClearQueues() throws Exception {
+        // WAN replication (F13): Hazelcast's open-source edition refused the request; the WAN
+        // replication must exist
         Config config = instance.getConfig();
         String result = communicator.wanClearQueues(config.getClusterName(), "", "atob", "b");
         assertJsonContains(result,
                 "status", "fail",
-                "message", "Clearing WAN replication queues is not supported.");
+                "message", "WAN Replication Config doesn't exist with WAN configuration name atob and publisher ID b");
     }
 
     @Test
@@ -289,9 +291,10 @@ public class RestTest {
         wanReplicationConfig.setName("test");
         WanReplicationConfigDTO dto = new WanReplicationConfigDTO(wanReplicationConfig);
         String result = communicator.addWanConfig(config.getClusterName(), "", dto.toJson().toString());
+        // WAN replication (F13): the configuration is added (Hazelcast's open-source edition refused it)
         assertJsonContains(result,
-                "status", "fail",
-                "message", "Adding new WAN config is not supported.");
+                "status", "success",
+                "message", "WAN configuration added.");
     }
 
     @Test

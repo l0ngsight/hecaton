@@ -17,8 +17,8 @@
 package uk.org.hecaton.vector.module;
 
 import uk.org.hecaton.instance.impl.Node;
-import uk.org.hecaton.instance.module.MemberModule;
-import uk.org.hecaton.instance.module.VectorCapability;
+import uk.org.hecaton.instance.impl.module.MemberModule;
+import uk.org.hecaton.instance.impl.module.VectorCapability;
 import uk.org.hecaton.map.impl.record.Record;
 import uk.org.hecaton.map.impl.recordstore.MutationObserver;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;

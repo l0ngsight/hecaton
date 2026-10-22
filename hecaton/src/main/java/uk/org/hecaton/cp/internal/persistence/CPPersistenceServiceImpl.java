@@ -52,6 +52,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static uk.org.hecaton.cp.internal.RaftServiceUtil.CP_MEMBER_UUID_ATTRIBUTE;
+import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
 
 /**
  * CP Subsystem persistence (F9): the member's CP identity and the state of its Raft nodes are kept
@@ -253,7 +254,7 @@ public final class CPPersistenceServiceImpl implements CPPersistenceService {
                         node.getNodeEngine().getExecutionService().schedule(() -> updateAddress(member),
                                 RESTART_OP_RETRY_SECONDS, TimeUnit.SECONDS);
                     }
-                });
+                }, CALLER_RUNS);
     }
 
     /** Releases the member's directory (at shutdown). */

@@ -33,7 +33,7 @@ import uk.org.hecaton.config.WanConsumerConfig;
 import uk.org.hecaton.config.WanReplicationConfig;
 import uk.org.hecaton.config.WanReplicationRef;
 import uk.org.hecaton.core.ManagedContext;
-import uk.org.hecaton.instance.module.PersistenceCapability;
+import uk.org.hecaton.instance.impl.module.PersistenceCapability;
 import uk.org.hecaton.internal.diagnostics.StoreLatencyPlugin;
 import uk.org.hecaton.internal.eviction.ClearExpiredRecordsTask;
 import uk.org.hecaton.internal.eviction.EvictionCandidate;

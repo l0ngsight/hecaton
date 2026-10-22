@@ -15,7 +15,7 @@
  */
 package uk.org.hecaton.internal.util;
 
-import uk.org.hecaton.instance.module.MemberModule;
+import uk.org.hecaton.instance.impl.module.MemberModule;
 
 import java.util.HashSet;
 import java.util.ServiceConfigurationError;
