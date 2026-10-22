@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
+
 /**
  * A batch of WAN events, sent by a publisher to a member of the target cluster, which applies
  * them. With {@link WanAcknowledgeType#ACK_ON_RECEIPT} it responds once the events are dispatched,
@@ -73,7 +75,7 @@ public class WanBatchOperation extends Operation implements WanOperation, Identi
             sendResponse(Boolean.TRUE);
         } else {
             CompletableFuture.allOf(applied.toArray(new CompletableFuture[0]))
-                    .whenComplete((ignored, failure) -> sendResponse(failure == null ? Boolean.TRUE : failure));
+                    .whenCompleteAsync((ignored, failure) -> sendResponse(failure == null ? Boolean.TRUE : failure), CALLER_RUNS);
         }
     }
 

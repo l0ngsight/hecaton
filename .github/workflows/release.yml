@@ -77,11 +77,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          prerelease=()
-          [[ "$VERSION" == *-* ]] && prerelease=(--prerelease)
-          gh release create "$GITHUB_REF_NAME" --title "Hecaton $VERSION" \
-            --notes-file target/release/RELEASE_NOTES.md "${prerelease[@]}" target/release/*
+          # a release created by hand for the tag keeps its title and notes; the files are added to it
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" --clobber target/release/*
+          else
+            prerelease=()
+            [[ "$VERSION" == *-* ]] && prerelease=(--prerelease)
+            gh release create "$GITHUB_REF_NAME" --title "Hecaton $VERSION" \
+              --notes-file target/release/RELEASE_NOTES.md "${prerelease[@]}" target/release/*
+          fi
+      # also when a later step fails, so that a built release is not lost
       - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
         with:
           name: release-${{ env.VERSION }}
           path: target/release

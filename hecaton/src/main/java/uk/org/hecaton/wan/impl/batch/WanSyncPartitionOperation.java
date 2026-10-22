@@ -17,6 +17,7 @@
 package uk.org.hecaton.wan.impl.batch;
 
 import uk.org.hecaton.internal.serialization.Data;
+import uk.org.hecaton.internal.serialization.SerializableByConvention;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.map.impl.MapServiceContext;
 import uk.org.hecaton.map.impl.recordstore.RecordStore;
@@ -40,6 +41,7 @@ import static uk.org.hecaton.internal.util.ToHeapDataConverter.toHeapData;
  * counts them. With leaves, only the entries in those Merkle tree leaves. Runs on the member that
  * owns the partition, which created it: it is never sent.
  */
+@SerializableByConvention
 class WanSyncPartitionOperation extends Operation implements PartitionAwareOperation {
 
     private final WanBatchPublisher publisher;

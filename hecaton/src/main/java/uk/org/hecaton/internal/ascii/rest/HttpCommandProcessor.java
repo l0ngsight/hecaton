@@ -217,7 +217,8 @@ public abstract class HttpCommandProcessor<T extends HttpCommand> extends Abstra
                                  @Nullable String userName,
                                  @Nullable String pass) {
         String decodedName = userName != null ? URLDecoder.decode(userName, StandardCharsets.UTF_8) : null;
-        SecurityContext securityContext = getNode().getNodeExtension().getSecurityContext();
+        // the member's security context: null when security is disabled
+        SecurityContext securityContext = getNode().getNodeExtension().getSecurityContextOrNull();
         String clusterName = getNode().getConfig().getClusterName();
         if (securityContext == null) {
             if (pass != null && !pass.isEmpty()) {

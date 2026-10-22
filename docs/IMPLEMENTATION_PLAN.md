@@ -256,7 +256,7 @@ core (spec §7.1).
    built-in license.
 3. **`DefaultNodeExtension` → `HecatonNodeExtension` — done** (constructed directly; the
    priority-list lookup and `NodeExtensionFactory` are gone); same for the client extension.
-4. **`MemberModule` SPI — done** (spec §7.2): `uk.org.hecaton.instance.module`, capability
+4. **`MemberModule` SPI — done** (spec §7.2): `uk.org.hecaton.instance.impl.module`, capability
    interfaces for HD, persistence, tiered storage and vector (their operations come with
    the modules), `MemberModules#require` for the "requires `uk.org.hecaton:hecaton-<module>`"
    errors.

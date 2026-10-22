@@ -20,11 +20,13 @@ import uk.org.hecaton.client.impl.clientside.HecatonClientProxy;
 import uk.org.hecaton.client.impl.protocol.codec.MCUpdateConfigCodec;
 import uk.org.hecaton.client.impl.spi.impl.ClientInvocation;
 import uk.org.hecaton.client.map.AbstractClientMapTest;
+import uk.org.hecaton.config.MapConfig;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class MCUpdateConfigOperationTest
         extends AbstractClientMapTest {
@@ -42,11 +44,13 @@ public class MCUpdateConfigOperationTest
                 ),
                 null
         );
-        try {
-            inv.invoke().get();
-            fail("did not throw exception");
-        } catch (ExecutionException e) {
-            assertInstanceOf(UnsupportedOperationException.class, e.getCause());
-        }
+        // configuration update (F16): the new map configuration is added cluster-wide
+        assertNotNull(MCUpdateConfigCodec.decodeResponse(inv.invoke().get()));
+        // getMapConfigOrNull: getMapConfig would add a default configuration of the map
+        assertTrueEventually(() -> {
+            MapConfig added = member2.getConfig().getMapConfigOrNull("added-map");
+            assertNotNull(added);
+            assertEquals(3, added.getBackupCount());
+        });
     }
 }

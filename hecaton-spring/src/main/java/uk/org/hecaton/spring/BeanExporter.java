@@ -39,6 +39,7 @@ import uk.org.hecaton.ringbuffer.Ringbuffer;
 import uk.org.hecaton.scheduledexecutor.IScheduledExecutorService;
 import uk.org.hecaton.sql.SqlService;
 import uk.org.hecaton.topic.ITopic;
+import uk.org.hecaton.vector.VectorCollection;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -100,7 +101,10 @@ final class BeanExporter
                 .register(hecatonConfiguration.getCPSubsystemConfig().getLockConfigs(), FencedLock.class,
                           (i, n) -> i.getCPSubsystem().getLock(n))
                 .register(hecatonConfiguration.getCPSubsystemConfig().getSemaphoreConfigs(), ISemaphore.class,
-                          (i, n) -> i.getCPSubsystem().getSemaphore(n));
+                          (i, n) -> i.getCPSubsystem().getSemaphore(n))
+                // lazy beans: getting one needs hecaton-vector on the members
+                .register(hecatonConfiguration.getVectorCollectionConfigs(), VectorCollection.class,
+                          VectorCollection::getCollection);
 
         if (cachePresent()) {
             reg.register(hecatonConfiguration.getCacheConfigs(), ICache.class,

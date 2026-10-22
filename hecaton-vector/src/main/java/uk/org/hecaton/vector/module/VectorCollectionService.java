@@ -22,7 +22,7 @@ import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.vector.VectorCollectionConfig;
 import uk.org.hecaton.config.vector.VectorIndexConfig;
 import uk.org.hecaton.core.DistributedObject;
-import uk.org.hecaton.instance.module.VectorCapability;
+import uk.org.hecaton.instance.impl.module.VectorCapability;
 import uk.org.hecaton.internal.dynamicconfig.DynamicConfigurationAwareConfig;
 import uk.org.hecaton.internal.partition.IPartitionService;
 import uk.org.hecaton.internal.serialization.Data;

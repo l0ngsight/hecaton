@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
+import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
 import static uk.org.hecaton.internal.util.Preconditions.checkNotNull;
 
 /**
@@ -65,14 +66,14 @@ public class ClientVectorCollectionProxy<K, V> extends ClientProxy implements Ve
     @Override
     public CompletionStage<VectorDocument<V>> getAsync(@Nonnull K key) {
         return onKey(key, VectorCollectionGetCodec.encodeRequest(name, toData(checkNotNull(key, "key"))))
-                .thenApply(message -> document(VectorCollectionGetCodec.decodeResponse(message)));
+                .thenApplyAsync(message -> document(VectorCollectionGetCodec.decodeResponse(message)), CALLER_RUNS);
     }
 
     @Nonnull
     @Override
     public CompletionStage<VectorDocument<V>> putAsync(@Nonnull K key, @Nonnull VectorDocument<V> document) {
         return onKey(key, VectorCollectionPutCodec.encodeRequest(name, toData(checkNotNull(key, "key")), data(document)))
-                .thenApply(message -> document(VectorCollectionPutCodec.decodeResponse(message)));
+                .thenApplyAsync(message -> document(VectorCollectionPutCodec.decodeResponse(message)), CALLER_RUNS);
     }
 
     @Nonnull
@@ -80,14 +81,14 @@ public class ClientVectorCollectionProxy<K, V> extends ClientProxy implements Ve
     public CompletionStage<Void> putAllAsync(@Nonnull Map<? extends K, VectorDocument<V>> documents) {
         List<Map.Entry<Data, DataVectorDocument>> entries = new ArrayList<>(documents.size());
         documents.forEach((key, document) -> entries.add(new SimpleImmutableEntry<>(toData(key), data(document))));
-        return anywhere(VectorCollectionPutAllCodec.encodeRequest(name, entries)).thenApply(message -> null);
+        return anywhere(VectorCollectionPutAllCodec.encodeRequest(name, entries)).thenApplyAsync(message -> null, CALLER_RUNS);
     }
 
     @Nonnull
     @Override
     public CompletionStage<Void> setAsync(@Nonnull K key, @Nonnull VectorDocument<V> document) {
         return onKey(key, VectorCollectionSetCodec.encodeRequest(name, toData(checkNotNull(key, "key")), data(document)))
-                .thenApply(message -> null);
+                .thenApplyAsync(message -> null, CALLER_RUNS);
     }
 
     @Nonnull
@@ -95,21 +96,21 @@ public class ClientVectorCollectionProxy<K, V> extends ClientProxy implements Ve
     public CompletionStage<VectorDocument<V>> putIfAbsentAsync(@Nonnull K key, @Nonnull VectorDocument<V> document) {
         return onKey(key, VectorCollectionPutIfAbsentCodec.encodeRequest(name, toData(checkNotNull(key, "key")),
                 data(document)))
-                .thenApply(message -> document(VectorCollectionPutIfAbsentCodec.decodeResponse(message)));
+                .thenApplyAsync(message -> document(VectorCollectionPutIfAbsentCodec.decodeResponse(message)), CALLER_RUNS);
     }
 
     @Nonnull
     @Override
     public CompletionStage<VectorDocument<V>> removeAsync(@Nonnull K key) {
         return onKey(key, VectorCollectionRemoveCodec.encodeRequest(name, toData(checkNotNull(key, "key"))))
-                .thenApply(message -> document(VectorCollectionRemoveCodec.decodeResponse(message)));
+                .thenApplyAsync(message -> document(VectorCollectionRemoveCodec.decodeResponse(message)), CALLER_RUNS);
     }
 
     @Nonnull
     @Override
     public CompletionStage<Void> deleteAsync(@Nonnull K key) {
         return onKey(key, VectorCollectionDeleteCodec.encodeRequest(name, toData(checkNotNull(key, "key"))))
-                .thenApply(message -> null);
+                .thenApplyAsync(message -> null, CALLER_RUNS);
     }
 
     @Nonnull
@@ -122,13 +123,13 @@ public class ClientVectorCollectionProxy<K, V> extends ClientProxy implements Ve
     @Override
     public CompletionStage<Void> optimizeAsync(@Nullable String indexName) {
         return anywhere(VectorCollectionOptimizeCodec.encodeRequest(name, indexName, UuidUtil.newUnsecureUUID()))
-                .thenApply(message -> null);
+                .thenApplyAsync(message -> null, CALLER_RUNS);
     }
 
     @Nonnull
     @Override
     public CompletionStage<Void> clearAsync() {
-        return anywhere(VectorCollectionClearCodec.encodeRequest(name)).thenApply(message -> null);
+        return anywhere(VectorCollectionClearCodec.encodeRequest(name)).thenApplyAsync(message -> null, CALLER_RUNS);
     }
 
     @Nonnull
@@ -136,8 +137,8 @@ public class ClientVectorCollectionProxy<K, V> extends ClientProxy implements Ve
     public CompletionStage<SearchResults<K, V>> searchAsync(@Nonnull VectorValues vectors, @Nonnull SearchOptions options) {
         return anywhere(VectorCollectionSearchNearVectorCodec.encodeRequest(name, checkNotNull(vectors, "vectors"),
                 checkNotNull(options, "options")))
-                .thenApply(message -> SearchResultsImpl.of(VectorCollectionSearchNearVectorCodec.decodeResponse(message),
-                        getSerializationService()));
+                .thenApplyAsync(message -> SearchResultsImpl.of(VectorCollectionSearchNearVectorCodec.decodeResponse(message),
+                        getSerializationService()), CALLER_RUNS);
     }
 
     @Override

@@ -24,7 +24,9 @@ The workflow runs [`tools/release/release.sh`](../tools/release/release.sh), whi
 
 It then tests the member image, pushes it (amd64 and arm64) to `ghcr.io/l0ngsight/hecaton` as
 `<version>` and, for a final version, `latest`, and creates the GitHub release with the files of
-`target/release`. A version with a suffix (`1.1.0-rc.1`) is published as a pre-release.
+`target/release`. A version with a suffix (`1.1.0-rc.1`) is published as a pre-release. If the
+release was already created for the tag (for example from the GitHub UI, which also pushes the
+tag), its title, notes and pre-release flag are kept and the files are uploaded to it.
 
 Running the workflow by hand (`workflow_dispatch`) with a version builds the release without
 publishing anything: the files are kept as a workflow artifact. Locally:

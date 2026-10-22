@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.org.hecaton.instance.module;
+package uk.org.hecaton.instance.impl.module;
 
 import uk.org.hecaton.cache.impl.AbstractCacheService;
 import uk.org.hecaton.cache.impl.ICacheRecordStore;

@@ -132,6 +132,9 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
 
         wanService(source.get(0)).stop(WAN, "b");
         map.put(2, "while stopped");
+        // the event is published on the partition thread after put() answers: an operation on the
+        // same partition runs after it
+        map.get(2);
         resume(source);
         map.put(3, "after");
         assertTrueEventually(() -> assertThat(replicated.get(3)).isEqualTo("after"));
@@ -164,9 +167,12 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
         for (int i = 0; i < 20; i++) {
             map.put(i, "value");
         }
-        assertThat(outboundQueueSize(source)).isEqualTo(10);
-        assertThat(wanService(source.get(0)).getSentEventCounters(WAN, "b", "hz:impl:mapService")
-                .getEventCounterMap().get(MAP).getDroppedCount()).isEqualTo(10);
+        // events are published after the operation answers: wait for the last ones
+        assertTrueEventually(() -> {
+            assertThat(outboundQueueSize(source)).isEqualTo(10);
+            assertThat(wanService(source.get(0)).getSentEventCounters(WAN, "b", "hz:impl:mapService")
+                    .getEventCounterMap().get(MAP).getDroppedCount()).isEqualTo(10);
+        });
     }
 
     @Test

@@ -13,7 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package uk.org.hecaton.instance.impl.module;
+
 /**
- * The {@link uk.org.hecaton.instance.module.MemberModule} SPI: member features in separate jars.
+ * A feature that a {@link MemberModule} provides. At most one module per member may provide
+ * each capability.
  */
-package uk.org.hecaton.instance.module;
+public sealed interface MemberCapability
+        permits NativeMemoryCapability, PersistenceCapability, TieredStoreCapability, VectorCapability {
+}

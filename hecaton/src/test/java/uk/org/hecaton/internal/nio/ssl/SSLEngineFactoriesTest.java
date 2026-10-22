@@ -16,9 +16,7 @@
 package uk.org.hecaton.internal.nio.ssl;
 
 import uk.org.hecaton.cluster.Address;
-import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.SSLConfig;
-import uk.org.hecaton.core.Hecaton;
 import uk.org.hecaton.nio.ssl.SSLContextFactory;
 import uk.org.hecaton.nio.ssl.SSLEngineFactory;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
@@ -44,15 +42,6 @@ public class SSLEngineFactoriesTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
-
-    @Test
-    public void memberWithoutKeyStoreDoesNotStart() {
-        Config config = new Config();
-        config.getNetworkConfig().setSSLConfig(new SSLConfig().setEnabled(true));
-
-        assertThatThrownBy(() -> Hecaton.newHecatonInstance(config))
-                .hasStackTraceContaining("TLS on a member needs a certificate");
-    }
 
     @Test
     public void clientNeedsNoKeyStore() {

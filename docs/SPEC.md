@@ -323,7 +323,7 @@ Java 25 features are separate jars so that core keeps Java 17 bytecode for the c
 (§8.1):
 
 ```java
-package uk.org.hecaton.instance.module;
+package uk.org.hecaton.instance.impl.module;
 
 public interface MemberModule {
     String name();                                  // "hd", "persistence", ...

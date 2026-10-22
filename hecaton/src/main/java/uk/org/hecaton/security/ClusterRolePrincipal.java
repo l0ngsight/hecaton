@@ -15,9 +15,13 @@
  */
 package uk.org.hecaton.security;
 
+import uk.org.hecaton.internal.serialization.SerializableByConvention;
+
 /**
  * A role of the authenticated identity; permissions name roles as their principal.
  */
+// a JAAS principal: Subjects (and so their principals) are Java-serialized
+@SerializableByConvention
 public class ClusterRolePrincipal extends HecatonPrincipal {
 
     private static final long serialVersionUID = 1L;

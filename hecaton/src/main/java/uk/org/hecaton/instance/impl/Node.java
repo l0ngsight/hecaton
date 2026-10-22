@@ -46,7 +46,7 @@ import uk.org.hecaton.instance.BuildInfo;
 import uk.org.hecaton.instance.BuildInfoProvider;
 import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.instance.ProtocolType;
-import uk.org.hecaton.instance.module.MemberModules;
+import uk.org.hecaton.instance.impl.module.MemberModules;
 import uk.org.hecaton.internal.ascii.TextCommandService;
 import uk.org.hecaton.internal.cluster.Joiner;
 import uk.org.hecaton.internal.cluster.impl.ClusterJoinManager;

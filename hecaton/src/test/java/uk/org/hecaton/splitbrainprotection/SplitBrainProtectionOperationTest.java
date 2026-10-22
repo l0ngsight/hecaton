@@ -125,7 +125,9 @@ public class SplitBrainProtectionOperationTest {
             "uk.org.hecaton.internal.usercodedeployment.impl.operation.",
             "uk.org.hecaton.spi.impl.eventservice.impl.operations",
             "uk.org.hecaton.spi.impl.operationservice.impl.operations.",
-            "uk.org.hecaton.spi.impl.proxyservice.impl.operations"
+            "uk.org.hecaton.spi.impl.proxyservice.impl.operations",
+            // WAN replication between clusters and its management (Hecaton's WAN, F13)
+            "uk.org.hecaton.wan.impl."
     );
 
     /**
