@@ -29,7 +29,7 @@ import uk.org.hecaton.config.CacheSimpleConfig;
 import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.WanAcknowledgeType;
 import uk.org.hecaton.config.WanReplicationRef;
-import uk.org.hecaton.instance.module.NativeMemoryCapability;
+import uk.org.hecaton.instance.impl.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.nearcache.impl.invalidation.MetaDataGenerator;
 import uk.org.hecaton.internal.partition.MigrationAwareService;
 import uk.org.hecaton.internal.partition.PartitionMigrationEvent;
@@ -56,6 +56,7 @@ import java.util.concurrent.CompletionStage;
 
 import static uk.org.hecaton.internal.partition.MigrationEndpoint.DESTINATION;
 import static uk.org.hecaton.internal.partition.MigrationEndpoint.SOURCE;
+import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
 
 /**
  * Cache Service is the main access point of JCache implementation.
@@ -243,7 +244,7 @@ public class CacheService extends AbstractCacheService implements WanSupportingS
         }
         int partitionId = nodeEngine.getPartitionService().getPartitionId(event.getKey());
         return nodeEngine.getOperationService().invokeOnPartition(SERVICE_NAME, operation, partitionId)
-                .thenAccept(response -> event.incrementEventCount(counters));
+                .thenAcceptAsync(response -> event.incrementEventCount(counters), CALLER_RUNS);
     }
 
     @Override

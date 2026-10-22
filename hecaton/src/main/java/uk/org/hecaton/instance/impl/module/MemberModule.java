@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.org.hecaton.instance.module;
+package uk.org.hecaton.instance.impl.module;
 
 import uk.org.hecaton.instance.impl.Node;
 
@@ -23,7 +23,7 @@ import uk.org.hecaton.instance.impl.Node;
  * while core keeps Java 17 bytecode for the client.
  * <p>
  * Modules are found with {@link java.util.ServiceLoader} when a member starts (register the
- * implementation in {@code META-INF/services/uk.org.hecaton.instance.module.MemberModule}). A
+ * implementation in {@code META-INF/services/uk.org.hecaton.instance.impl.module.MemberModule}). A
  * module provides features by also implementing {@link MemberCapability} interfaces; core asks
  * {@link MemberModules} for a capability where it needs one.
  */

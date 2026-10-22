@@ -34,7 +34,6 @@ import uk.org.hecaton.cp.internal.raftop.metadata.GetMembershipChangeScheduleOp;
 import uk.org.hecaton.cp.internal.raftop.metadata.GetRaftGroupOp;
 import uk.org.hecaton.cp.internal.session.ProxySessionManagerService;
 import uk.org.hecaton.cp.lock.FencedLock;
-import uk.org.hecaton.instance.StaticMemberNodeContext;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.instance.impl.NodeState;
 import uk.org.hecaton.test.HecatonParallelClassRunner;
@@ -60,12 +59,10 @@ import static uk.org.hecaton.cp.internal.raft.impl.RaftUtil.getCommitIndex;
 import static uk.org.hecaton.cp.internal.raft.impl.RaftUtil.getLastLogOrSnapshotEntry;
 import static uk.org.hecaton.cp.internal.raft.impl.RaftUtil.getSnapshotEntry;
 import static uk.org.hecaton.cp.internal.session.AbstractProxySessionManager.NO_SESSION_ID;
-import static uk.org.hecaton.instance.impl.HecatonInstanceFactory.newHecatonInstance;
 import static uk.org.hecaton.internal.util.FutureUtil.returnWithDeadline;
 import static uk.org.hecaton.test.Accessors.getAddress;
 import static uk.org.hecaton.test.Accessors.getNode;
 import static uk.org.hecaton.test.Accessors.getNodeEngineImpl;
-import static uk.org.hecaton.test.TestHecatonInstanceFactory.initOrCreateConfig;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
@@ -638,8 +635,7 @@ public class CPMemberAddRemoveTest extends HecatonRaftTestSupport {
         instances[1].getCPSubsystem().getCPSubsystemManagementService().removeCPMember(localCpMember.getUuid())
                     .toCompletableFuture().get();
 
-        instances[0] = newHecatonInstance(initOrCreateConfig(createConfig(3, 3)), randomString(),
-                new StaticMemberNodeContext(factory, localMember));
+        instances[0] = factory.newHecatonInstance(localMember, createConfig(3, 3));
         assertEquals(localMember, instances[0].getCluster().getLocalMember());
 
         assertTrueAllTheTime(() -> assertNull(instances[0].getCPSubsystem().getLocalCPMember()), 5);

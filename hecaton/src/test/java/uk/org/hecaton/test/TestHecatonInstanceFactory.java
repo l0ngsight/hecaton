@@ -17,6 +17,7 @@
 package uk.org.hecaton.test;
 
 import uk.org.hecaton.cluster.Address;
+import uk.org.hecaton.cluster.Member;
 import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.MapConfig;
@@ -186,6 +187,17 @@ public class TestHecatonInstanceFactory {
      */
     public HecatonInstance newHecatonInstance(Address address, Config config) {
         return newHecatonInstance(address, null, config, emptySet());
+    }
+
+    /**
+     * Creates a new test Hecaton instance with the UUID and address of a member that left, as a
+     * restarted member. Only available in mock network.
+     */
+    public HecatonInstance newHecatonInstance(Member member, Config config) {
+        if (!isMockNetwork) {
+            throw new UnsupportedOperationException("Restarting a member is only available in mock network");
+        }
+        return newHecatonInstance(member.getAddress(), member.getUuid(), config, emptySet());
     }
 
     protected HecatonInstance newHecatonInstance(Address address, UUID uuid, Config config,

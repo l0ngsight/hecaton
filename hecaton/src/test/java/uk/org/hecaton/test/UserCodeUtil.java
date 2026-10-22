@@ -31,7 +31,8 @@ import static uk.org.hecaton.internal.util.ExceptionUtil.sneakyThrow;
  * References to classes which are not part of the classpath at test execution time.
  */
 public class UserCodeUtil {
-    public static final UserCodeUtil INSTANCE = new UserCodeUtil(GeneratedBuildProperties.ARTIFACT_ID, GeneratedBuildProperties.VERSION);
+    public static final UserCodeUtil INSTANCE = new UserCodeUtil(GeneratedBuildProperties.ARTIFACT_ID,
+            GeneratedBuildProperties.PRODUCT_VERSION);
 
     private String artifactId;
     private String version;
@@ -47,7 +48,7 @@ public class UserCodeUtil {
      * <a href="https://maven.apache.org/plugins/maven-assembly-plugin/single-mojo.html#appendAssemblyId">nasty side
      * effects</a>.
      *
-     * @return something like <code>hecaton-5.4.0-SNAPSHOT-{YOUR-ASSEMBLY-ID}.jar</code>
+     * @return something like <code>hecaton-0.1.0-SNAPSHOT-{YOUR-ASSEMBLY-ID}.jar</code> (the jar is named after the product version)
      */
     public String getCompiledJARName(String assemblyId) {
         return String.join("-", artifactId, version, assemblyId) + FilenameUtils.EXTENSION_SEPARATOR + "jar";

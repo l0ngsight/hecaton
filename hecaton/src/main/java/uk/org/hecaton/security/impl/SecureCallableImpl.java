@@ -18,6 +18,7 @@ package uk.org.hecaton.security.impl;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.core.HecatonInstanceAware;
 import uk.org.hecaton.instance.impl.Node;
+import uk.org.hecaton.internal.serialization.SerializableByConvention;
 import uk.org.hecaton.internal.services.NodeAware;
 import uk.org.hecaton.security.SecureCallable;
 
@@ -28,6 +29,8 @@ import java.util.concurrent.Callable;
  * A client's task (executor service, scheduled executor) that runs on a member as the client:
  * while it runs, {@link SecurityContextImpl#isThreadRunningClientTask()} is {@code true}.
  */
+// wraps the user's Callable, which executor services Java-serialize by convention
+@SerializableByConvention
 final class SecureCallableImpl<V> implements SecureCallable<V> {
 
     private static final long serialVersionUID = 1L;

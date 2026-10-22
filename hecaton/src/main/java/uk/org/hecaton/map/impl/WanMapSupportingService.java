@@ -36,6 +36,7 @@ import java.util.concurrent.CompletionStage;
 import static uk.org.hecaton.internal.util.ExceptionUtil.rethrow;
 import static uk.org.hecaton.map.impl.MapService.SERVICE_NAME;
 import static uk.org.hecaton.spi.impl.merge.MergingValueFactory.createMergingEntry;
+import static uk.org.hecaton.internal.util.ConcurrencyUtil.CALLER_RUNS;
 
 class WanMapSupportingService implements WanSupportingService {
     private final MapServiceContext mapServiceContext;
@@ -90,7 +91,7 @@ class WanMapSupportingService implements WanSupportingService {
                 replicationRemove.getKey(), true);
         int partitionId = nodeEngine.getPartitionService().getPartitionId(replicationRemove.getKey());
         return nodeEngine.getOperationService().invokeOnPartition(SERVICE_NAME, operation, partitionId)
-                .thenAccept(response -> wanEventTypeCounters.incrementRemove(mapName));
+                .thenAcceptAsync(response -> wanEventTypeCounters.incrementRemove(mapName), CALLER_RUNS);
     }
 
     private CompletionStage<Void> handleAddOrUpdate(WanMapAddOrUpdateEvent replicationUpdate) {
@@ -105,6 +106,6 @@ class WanMapSupportingService implements WanSupportingService {
                 (SplitBrainMergePolicy<Object, MapMergeTypes<Object, Object>, Object>) mergePolicy, true);
         int partitionId = nodeEngine.getPartitionService().getPartitionId(replicationUpdate.getEntryView().getKey());
         return nodeEngine.getOperationService().invokeOnPartition(SERVICE_NAME, operation, partitionId)
-                .thenAccept(response -> wanEventTypeCounters.incrementUpdate(mapName));
+                .thenAcceptAsync(response -> wanEventTypeCounters.incrementUpdate(mapName), CALLER_RUNS);
     }
 }

@@ -17,7 +17,6 @@
 package uk.org.hecaton.jet.sql.impl;
 
 import uk.org.hecaton.core.HecatonInstance;
-import uk.org.hecaton.internal.util.HecatonFeature;
 import uk.org.hecaton.jet.Job;
 import uk.org.hecaton.jet.config.JobConfig;
 import uk.org.hecaton.jet.impl.JetClientInstanceImpl;
@@ -419,13 +418,17 @@ public class SqlJobManagementTest extends SqlTestSupport {
     }
 
     @Test
-    public void when_snapshotExport_then_failNotEnterprise() {
+    public void when_snapshotExport_then_snapshotExported() {
+        // exported snapshots (F18): Hazelcast's open-source edition refused them
         createMapping("dest", Long.class, Long.class);
 
         sqlService.execute("CREATE JOB testJob AS SINK INTO dest SELECT v, v FROM TABLE(GENERATE_STREAM(100))");
+        Job job = instance().getJet().getJob("testJob");
+        assertThat(job).eventuallyJobRunning(instance(), null);
 
-        assertThatThrownBy(() -> sqlService.execute("CREATE OR REPLACE SNAPSHOT mySnapshot FOR JOB testJob"))
-                .hasMessageContaining(HecatonFeature.JET_JOB_UPGRADE.notAvailableMessage());
+        sqlService.execute("CREATE OR REPLACE SNAPSHOT mySnapshot FOR JOB testJob");
+        assertNotNull(instance().getJet().getJobStateSnapshot("mySnapshot"));
+        assertEquals(RUNNING, job.getStatus());
     }
 
     @Test
@@ -442,13 +445,16 @@ public class SqlJobManagementTest extends SqlTestSupport {
     }
 
     @Test
-    public void when_dropJobWithSnapshot_then_failNotEnterprise() {
+    public void when_dropJobWithSnapshot_then_snapshotExportedAndJobCancelled() {
         createMapping("dest", Long.class, Long.class);
 
         sqlService.execute("CREATE JOB testJob AS SINK INTO dest SELECT v, v FROM TABLE(GENERATE_STREAM(100))");
+        Job job = instance().getJet().getJob("testJob");
+        assertThat(job).eventuallyJobRunning(instance(), null);
 
-        assertThatThrownBy(() -> sqlService.execute("DROP JOB testJob WITH SNAPSHOT mySnapshot"))
-                .hasMessageContaining(HecatonFeature.JET_JOB_UPGRADE.notAvailableMessage());
+        sqlService.execute("DROP JOB testJob WITH SNAPSHOT mySnapshot");
+        assertNotNull(instance().getJet().getJobStateSnapshot("mySnapshot"));
+        assertTrue(job.getStatus().isTerminal());
     }
 
     @Test

@@ -24,7 +24,7 @@ import uk.org.hecaton.config.MaxSizePolicy;
 import uk.org.hecaton.config.NativeMemoryConfig;
 import uk.org.hecaton.core.HecatonInstance;
 import uk.org.hecaton.hd.HdModule;
-import uk.org.hecaton.instance.module.NativeMemoryCapability;
+import uk.org.hecaton.instance.impl.module.NativeMemoryCapability;
 import uk.org.hecaton.internal.memory.MemoryStats;
 import uk.org.hecaton.map.IMap;
 import uk.org.hecaton.memory.Capacity;
