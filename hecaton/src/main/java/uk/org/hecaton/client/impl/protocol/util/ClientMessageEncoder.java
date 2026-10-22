@@ -57,6 +57,7 @@ public class ClientMessageEncoder extends OutboundHandler<Supplier<ClientMessage
 
                 if (clientMessageWriter.writeTo(dst, message)) {
                     // message got written, lets see if another message can be written
+                    message.written();
                     message = null;
                 } else {
                     // the message didn't get written completely, so we are done.

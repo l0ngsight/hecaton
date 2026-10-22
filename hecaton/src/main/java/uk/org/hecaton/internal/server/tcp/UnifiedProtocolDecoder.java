@@ -22,6 +22,7 @@ import uk.org.hecaton.client.impl.protocol.util.ClientMessageDecoder;
 import uk.org.hecaton.config.MemcacheProtocolConfig;
 import uk.org.hecaton.config.RestApiConfig;
 import uk.org.hecaton.instance.EndpointQualifier;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.networking.ChannelOptions;
 import uk.org.hecaton.internal.networking.HandlerStatus;
 import uk.org.hecaton.internal.networking.InboundHandler;
@@ -175,6 +176,10 @@ public class UnifiedProtocolDecoder
 
         ServerConnection connection = (TcpServerConnection) channel.attributeMap().get(ServerConnection.class);
         channel.inboundPipeline().replace(this, new ClientMessageDecoder(connection, serverContext.getClientEngine(), props));
+        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
+        if (admission != null) {
+            admission.usePooledBuffers(channel);
+        }
     }
 
     private void initChannelForText(String protocol, boolean restApi) {
@@ -202,6 +207,11 @@ public class UnifiedProtocolDecoder
 
     private int clientRcvBuf() {
         int rcvBuf = props.getInteger(SOCKET_CLIENT_RECEIVE_BUFFER_SIZE);
+        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
+        if (rcvBuf == -1 && admission != null) {
+            // load protection (F23): smaller buffers for client connections
+            return admission.clientBufferBytes();
+        }
         if (rcvBuf == -1) {
             rcvBuf = props.getInteger(SOCKET_RECEIVE_BUFFER_SIZE);
         }

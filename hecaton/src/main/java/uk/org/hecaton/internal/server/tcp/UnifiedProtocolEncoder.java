@@ -18,6 +18,7 @@ package uk.org.hecaton.internal.server.tcp;
 
 import uk.org.hecaton.client.impl.protocol.util.ClientMessageEncoder;
 import uk.org.hecaton.instance.EndpointQualifier;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.networking.HandlerStatus;
 import uk.org.hecaton.internal.networking.OutboundHandler;
 import uk.org.hecaton.internal.nio.ascii.TextEncoder;
@@ -167,6 +168,11 @@ public class UnifiedProtocolEncoder
 
     private int clientSndBuf() {
         int sndBuf = props.getInteger(SOCKET_CLIENT_SEND_BUFFER_SIZE);
+        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
+        if (sndBuf == -1 && admission != null) {
+            // load protection (F23): smaller buffers for client connections
+            return admission.clientBufferBytes();
+        }
         if (sndBuf == -1) {
             sndBuf = props.getInteger(SOCKET_SEND_BUFFER_SIZE);
         }

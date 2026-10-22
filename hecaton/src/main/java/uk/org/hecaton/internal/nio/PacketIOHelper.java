@@ -94,8 +94,7 @@ public class PacketIOHelper {
                 done = false;
             }
 
-            byte[] byteArray = packet.toByteArray();
-            dst.put(byteArray, valueOffset, bytesWrite);
+            packet.writeValueTo(dst, valueOffset, bytesWrite);
             valueOffset += bytesWrite;
 
             if (!done) {

@@ -19,6 +19,7 @@ package uk.org.hecaton.internal.server.tcp;
 import uk.org.hecaton.client.impl.protocol.util.ClientMessageDecoder;
 import uk.org.hecaton.client.impl.protocol.util.ClientMessageEncoder;
 import uk.org.hecaton.config.EndpointConfig;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.networking.Channel;
 import uk.org.hecaton.internal.server.ServerContext;
 import uk.org.hecaton.internal.server.ServerConnection;
@@ -43,5 +44,9 @@ public class ClientChannelInitializer
 
         channel.outboundPipeline().addLast(protocolEncoder);
         channel.inboundPipeline().addLast(protocolDecoder);
+        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
+        if (admission != null) {
+            admission.usePooledBuffers(channel);
+        }
     }
 }

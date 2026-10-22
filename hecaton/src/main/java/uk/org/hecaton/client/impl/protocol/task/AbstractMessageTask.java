@@ -33,6 +33,7 @@ import uk.org.hecaton.instance.BuildInfo;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.instance.impl.NodeExtension;
 import uk.org.hecaton.internal.cluster.impl.ClusterServiceImpl;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.nio.Connection;
 import uk.org.hecaton.internal.nio.ConnectionType;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
@@ -76,6 +77,9 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     protected final ILogger logger;
     protected final ClientEngine clientEngine;
     protected P parameters;
+
+    /** Load protection (F23): released when the response is sent; written once before the task runs. */
+    private volatile Runnable admissionTicket;
 
     private final ClientEndpointManager endpointManager;
     private final NodeExtension nodeExtension;
@@ -307,6 +311,15 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     @SuppressWarnings({"java:S125", "java:S1135"})
     protected void sendClientMessage(ClientMessage resultClientMessage) {
         resultClientMessage.setCorrelationId(clientMessage.getCorrelationId());
+        Runnable ticket = admissionTicket;
+        if (ticket != null) {
+            admissionTicket = null;
+            ticket.run();
+        }
+        ClientAdmission admission = clientEngine.getClientAdmission();
+        if (admission != null && asyncSocket == null) {
+            admission.onResponse(connection, resultClientMessage);
+        }
 
         if (asyncSocket == null) {
             connection.write(resultClientMessage);
@@ -326,6 +339,16 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
         int partitionId = key == null ? -1 : nodeEngine.getPartitionService().getPartitionId(key);
         resultClientMessage.setPartitionId(partitionId);
         sendClientMessage(resultClientMessage);
+    }
+
+    /** Load protection (F23): the request counts as in flight until its response is sent. */
+    public void setAdmissionTicket(Runnable admissionTicket) {
+        this.admissionTicket = admissionTicket;
+    }
+
+    /** Answers the request with {@code reason} without running it (load protection, F23). */
+    public void refuse(Throwable reason) {
+        sendClientMessage(reason);
     }
 
     private void sendClientMessage(Throwable throwable) {

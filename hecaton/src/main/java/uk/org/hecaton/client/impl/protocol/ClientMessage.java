@@ -139,6 +139,7 @@ public final class ClientMessage implements OutboundFrame {
     private transient String operationName;
     private transient Connection connection;
     private transient boolean containsSerializedDataInRequest;
+    private transient Runnable onWritten;
 
     private AsyncSocket asyncSocket;
 
@@ -259,6 +260,23 @@ public final class ClientMessage implements OutboundFrame {
 
     public boolean isRetryable() {
         return isRetryable;
+    }
+
+    /**
+     * Sets a task that the member runs once this message has been written into its connection's
+     * buffer, so that it no longer refers to its frames (load protection, F23).
+     */
+    public void setOnWritten(Runnable onWritten) {
+        this.onWritten = onWritten;
+    }
+
+    /** Runs and clears the task set with {@link #setOnWritten(Runnable)}, if any. */
+    public void written() {
+        Runnable task = onWritten;
+        if (task != null) {
+            onWritten = null;
+            task.run();
+        }
     }
 
     public void setRetryable(boolean isRetryable) {

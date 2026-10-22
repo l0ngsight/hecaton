@@ -20,7 +20,10 @@ import uk.org.hecaton.config.Config;
 import uk.org.hecaton.config.LoadProtectionConfig;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.QueueConfig;
+import uk.org.hecaton.internal.metrics.MetricsRegistry;
 import uk.org.hecaton.internal.metrics.Probe;
+import uk.org.hecaton.internal.networking.nio.ConnectionBufferPool;
+import uk.org.hecaton.internal.util.ThreadUtil;
 import uk.org.hecaton.internal.util.counters.MwCounter;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.spi.properties.ClusterProperty;
@@ -28,6 +31,9 @@ import uk.org.hecaton.spi.properties.HecatonProperties;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static uk.org.hecaton.internal.metrics.ProbeLevel.MANDATORY;
 import static uk.org.hecaton.internal.util.counters.MwCounter.newMwCounter;
@@ -46,19 +52,73 @@ public final class LoadProtection {
     @Probe(name = "immutableMergeConflicts", level = MANDATORY)
     final MwCounter immutableMergeConflicts = newMwCounter();
 
+    private static final long TICK_MILLIS = 5;
+
     private final boolean enabled;
     private final LoadProtectionConfig config;
     private final ILogger logger;
+    private final HeapMonitor heapMonitor;
+    private final ConnectionBufferPool bufferPool;
+    private final ClientAdmission clientAdmission;
+    private final ScheduledExecutorService scheduler;
 
-    public LoadProtection(Config config, HecatonProperties properties, ILogger logger) {
+    public LoadProtection(String instanceName, Config config, HecatonProperties properties, ILogger logger) {
         this.config = new LoadProtectionConfig(config.getLoadProtectionConfig());
         String override = properties.getString(ClusterProperty.LOAD_PROTECTION_ENABLED);
         this.enabled = override == null ? this.config.isEnabled() : Boolean.parseBoolean(override.trim());
         this.logger = logger;
         if (enabled) {
             logger.info("Load protection is on: " + this.config);
+            heapMonitor = new HeapMonitor();
+            LoadProtectionConfig.ConnectionBufferConfig buffers = this.config.getConnectionBufferConfig();
+            bufferPool = buffers.isPooled() ? new ConnectionBufferPool(buffers.getMaxPooledBytes(), false) : null;
+            clientAdmission = new ClientAdmission(this.config, bufferPool, heapMonitor, logger);
+            String threadName = ThreadUtil.createThreadName(instanceName, "load-protection");
+            scheduler = Executors.newSingleThreadScheduledExecutor(task -> {
+                Thread thread = new Thread(task, threadName);
+                thread.setDaemon(true);
+                return thread;
+            });
+            scheduler.scheduleWithFixedDelay(this::tick, TICK_MILLIS, TICK_MILLIS, TimeUnit.MILLISECONDS);
         } else {
+            heapMonitor = null;
+            bufferPool = null;
+            clientAdmission = null;
+            scheduler = null;
             warnAboutIgnoredSettings(config);
+        }
+    }
+
+    /** The admission of client requests, or {@code null} when load protection is off. */
+    public ClientAdmission getClientAdmission() {
+        return clientAdmission;
+    }
+
+    /** Registers the load protection metrics, prefixed {@value #METRICS_PREFIX}. */
+    public void registerMetrics(MetricsRegistry registry) {
+        registry.registerStaticMetrics(this, METRICS_PREFIX);
+        if (clientAdmission != null) {
+            registry.registerStaticMetrics(clientAdmission, METRICS_PREFIX);
+        }
+        if (bufferPool != null) {
+            registry.registerStaticMetrics(bufferPool, METRICS_PREFIX);
+        }
+    }
+
+    public void shutdown() {
+        if (scheduler != null) {
+            scheduler.shutdownNow();
+        }
+        if (heapMonitor != null) {
+            heapMonitor.stop();
+        }
+    }
+
+    private void tick() {
+        try {
+            clientAdmission.tick();
+        } catch (Throwable t) {
+            logger.warning("Load protection tick failed", t);
         }
     }
 

@@ -23,6 +23,7 @@ import uk.org.hecaton.client.impl.statistics.ClientStatistics;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.internal.cluster.AddressChecker;
 import uk.org.hecaton.internal.cluster.ClusterService;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.nio.ConnectionType;
 import uk.org.hecaton.internal.partition.IPartitionService;
 import uk.org.hecaton.logging.ILogger;
@@ -44,6 +45,11 @@ import java.util.function.LongConsumer;
  * todo: what is the purpose of the client engine.
  */
 public interface ClientEngine extends Consumer<ClientMessage> {
+
+    /** The admission of client requests (load protection, F23), or {@code null} when load protection is off. */
+    default ClientAdmission getClientAdmission() {
+        return null;
+    }
 
     /**
      * Registers client endpoint to endpointManager.

@@ -20,6 +20,9 @@ import uk.org.hecaton.internal.networking.OutboundFrame;
 import uk.org.hecaton.internal.server.ServerConnection;
 import uk.org.hecaton.internal.serialization.impl.HeapData;
 
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 import static uk.org.hecaton.internal.nio.PacketIOHelper.HEADER_SIZE;
 
 /**
@@ -109,6 +112,11 @@ public final class Packet extends HeapData implements OutboundFrame {
 
     private int partitionId;
     private transient ServerConnection conn;
+    /**
+     * Bytes that follow the payload on the wire without being copied into it: the stored array of a
+     * response's value (load protection, F23). {@link #toByteArray()} merges them into the payload.
+     */
+    private transient byte[] tail;
 
     public Packet() {
         raiseFlags(FLAG_4_0);
@@ -226,6 +234,57 @@ public final class Packet extends HeapData implements OutboundFrame {
         return (payload != null ? totalSize() : 0) + HEADER_SIZE;
     }
 
+    /**
+     * Sends {@code tail} after the payload without copying it: the array must not change while the
+     * packet exists.
+     */
+    public Packet setTail(byte[] tail) {
+        this.tail = tail;
+        return this;
+    }
+
+    @Override
+    public int totalSize() {
+        if (payload == null) {
+            return 0;
+        }
+        byte[] t = tail;
+        return t == null ? payload.length : payload.length + t.length;
+    }
+
+    @Override
+    public byte[] toByteArray() {
+        if (tail != null) {
+            mergeTail();
+        }
+        return payload;
+    }
+
+    private synchronized void mergeTail() {
+        byte[] t = tail;
+        if (t != null) {
+            byte[] merged = Arrays.copyOf(payload, payload.length + t.length);
+            System.arraycopy(t, 0, merged, payload.length, t.length);
+            payload = merged;
+            tail = null;
+        }
+    }
+
+    /** Puts {@code length} bytes of the packet's value, from {@code offset}, into {@code dst}, payload then tail. */
+    void writeValueTo(ByteBuffer dst, int offset, int length) {
+        byte[] head = payload;
+        byte[] t = tail;
+        if (t == null || head.length >= offset + length) {
+            dst.put(t == null ? toByteArray() : head, offset, length);
+            return;
+        }
+        int fromHead = Math.max(0, head.length - offset);
+        if (fromHead > 0) {
+            dst.put(head, offset, fromHead);
+        }
+        dst.put(t, offset + fromHead - head.length, length - fromHead);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -236,6 +295,8 @@ public final class Packet extends HeapData implements OutboundFrame {
             return false;
         }
 
+        toByteArray();
+        packet.toByteArray();
         if (!super.equals(packet)) {
             return false;
         }
@@ -248,6 +309,7 @@ public final class Packet extends HeapData implements OutboundFrame {
 
     @Override
     public int hashCode() {
+        toByteArray();
         int result = super.hashCode();
         result = 31 * result + (int) flags;
         result = 31 * result + partitionId;

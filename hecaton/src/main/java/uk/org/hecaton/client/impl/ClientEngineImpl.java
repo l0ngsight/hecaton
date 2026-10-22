@@ -34,10 +34,12 @@ import uk.org.hecaton.client.impl.protocol.task.map.AbstractMapQueryMessageTask;
 import uk.org.hecaton.client.impl.statistics.ClientStatistics;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.cluster.Member;
+import uk.org.hecaton.core.HecatonOverloadException;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.cluster.AddressChecker;
 import uk.org.hecaton.internal.cluster.ClusterService;
 import uk.org.hecaton.internal.cluster.impl.AddressCheckerImpl;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.nio.Connection;
 import uk.org.hecaton.internal.nio.ConnectionListener;
 import uk.org.hecaton.internal.partition.IPartitionService;
@@ -256,7 +258,9 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
         if (isUrgent(messageTask)) {
             operationService.execute((UrgentMessageTask) messageTask);
         } else if (messageTask instanceof AbstractPartitionMessageTask task) {
-            operationService.execute(task);
+            if (admit(task, connection)) {
+                operationService.execute(task);
+            }
         } else if (isQuery(messageTask)) {
             queryExecutor.execute(messageTask);
         } else if (messageTask instanceof TransactionalMessageTask) {
@@ -266,6 +270,29 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
         } else {
             executor.execute(messageTask);
         }
+    }
+
+    /**
+     * Load protection (F23): refuses a partition request while the heap is above its threshold after
+     * garbage collection, and counts it as in flight until it is answered otherwise.
+     */
+    private boolean admit(AbstractPartitionMessageTask<?> task, Connection connection) {
+        ClientAdmission admission = getClientAdmission();
+        if (admission == null) {
+            return true;
+        }
+        if (admission.shouldRefuse()) {
+            task.refuse(new HecatonOverloadException("The member refuses requests while its heap is above the load"
+                    + " protection threshold after garbage collection; retry later"));
+            return false;
+        }
+        task.setAdmissionTicket(admission.admit(connection));
+        return true;
+    }
+
+    @Override
+    public ClientAdmission getClientAdmission() {
+        return node.loadProtection.getClientAdmission();
     }
 
     private boolean isUrgent(MessageTask messageTask) {
@@ -472,6 +499,10 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
         @Override
         public void connectionRemoved(Connection c) {
             ServerConnection connection = (ServerConnection) c;
+            ClientAdmission admission = getClientAdmission();
+            if (admission != null) {
+                admission.connectionRemoved(connection);
+            }
 
             if (!connection.isClient() || !nodeEngine.isRunning()) {
                 return;

@@ -279,13 +279,14 @@ public class Node {
             compatibilitySerializationService = nodeExtension.createCompatibilitySerializationService();
             securityContext = config.getSecurityConfig().isEnabled() ? nodeExtension.getSecurityContext() : null;
             warnForUsageOfDeprecatedSymmetricEncryption(config, logger);
-            loadProtection = new LoadProtection(staticConfig, properties, loggingService.getLogger(LoadProtection.class));
+            loadProtection = new LoadProtection(hecatonInstance.getName(), staticConfig, properties,
+                    loggingService.getLogger(LoadProtection.class));
             nodeEngine = new NodeEngineImpl(this);
             config.setServices(nodeEngine);
             config.onSecurityServiceUpdated(getSecurityService());
             MetricsRegistry metricsRegistry = nodeEngine.getMetricsRegistry();
             metricsRegistry.provideMetrics(nodeExtension);
-            metricsRegistry.registerStaticMetrics(loadProtection, LoadProtection.METRICS_PREFIX);
+            loadProtection.registerMetrics(metricsRegistry);
             localAddressRegistry = new LocalAddressRegistry(this, addressPicker);
             server = nodeContext.createServer(this, serverSocketRegistry, localAddressRegistry);
             healthMonitor = nodeExtension.createHealthMonitor();
@@ -669,6 +670,9 @@ public class Node {
         if (nodeEngine != null) {
             logger.info("Shutting down node engine...");
             nodeEngine.shutdown(terminate);
+        }
+        if (loadProtection != null) {
+            loadProtection.shutdown();
         }
 
         if (memberModules != null) {

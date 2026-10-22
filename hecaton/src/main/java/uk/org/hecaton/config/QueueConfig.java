@@ -557,7 +557,7 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
                 && Objects.equals(mergePolicyConfig, that.mergePolicyConfig)
                 && Objects.equals(priorityComparatorClassName, that.priorityComparatorClassName)
                 && Objects.equals(userCodeNamespace, that.userCodeNamespace)
-                && getShardCount() == that.getShardCount()
+                && shardCount == that.shardCount
                 && shardNames.equals(that.shardNames);
     }
 
@@ -565,6 +565,6 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
     public final int hashCode() {
         return Objects.hash(name, getItemListenerConfigs(), backupCount, asyncBackupCount, getMaxSize(), emptyQueueTtl,
                 queueStoreConfig, statisticsEnabled, splitBrainProtectionName, mergePolicyConfig,
-                priorityComparatorClassName, userCodeNamespace, getShardCount(), shardNames);
+                priorityComparatorClassName, userCodeNamespace, shardCount, shardNames);
     }
 }

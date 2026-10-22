@@ -118,6 +118,10 @@ public final class NioOutboundPipeline
 
     private OutboundHandler[] handlers = new OutboundHandler[0];
     private ByteBuffer sendBuffer;
+    /** Load protection (F23): the pool the socket write buffer is borrowed from while writing, or null. */
+    private volatile ConnectionBufferPool bufferPool;
+    private int pooledCapacity;
+    private boolean bufferBorrowed;
 
     private final AtomicReference<State> scheduled = new AtomicReference<>(State.SCHEDULED);
     @Probe(name = NETWORKING_METRIC_NIO_OUTBOUND_PIPELINE_BYTES_WRITTEN, unit = BYTES, level = DEBUG)
@@ -176,6 +180,11 @@ public final class NioOutboundPipeline
 
     public long lastWriteTimeMillis() {
         return lastWriteTime;
+    }
+
+    /** Bytes of the frames queued and not yet taken by the first handler. */
+    public long pendingBytes() {
+        return writeQueuePendingBytes.get() + priorityWriteQueuePendingBytes.get();
     }
 
     @Probe(name = NETWORKING_METRIC_NIO_OUTBOUND_PIPELINE_IDLE_TIME_MILLIS, unit = MS, level = INFO)
@@ -299,6 +308,10 @@ public final class NioOutboundPipeline
     @SuppressWarnings("unchecked")
     public void process() throws Exception {
         processCount.inc();
+        ConnectionBufferPool pool = bufferPool;
+        if (pool != null) {
+            borrowSendBuffer(pool);
+        }
 
         OutboundHandler[] localHandlers = handlers;
         HandlerStatus pipelineStatus = CLEAN;
@@ -328,6 +341,10 @@ public final class NioOutboundPipeline
 
         if (sendBuffer.remaining() > 0) {
             pipelineStatus = DIRTY;
+        }
+
+        if (pool != null && pipelineStatus == CLEAN) {
+            releaseSendBuffer(pool);
         }
 
         switch (pipelineStatus) {
@@ -430,6 +447,47 @@ public final class NioOutboundPipeline
         }
     }
 
+    /**
+     * Borrows the socket write buffer from {@code pool} while writing and gives it back when it has
+     * been flushed, so that the connection holds no write buffer while idle (load protection, F23).
+     */
+    public void useBufferPool(ConnectionBufferPool pool) {
+        this.bufferPool = pool;
+    }
+
+    private void borrowSendBuffer(ConnectionBufferPool pool) {
+        OutboundHandler last = handlers[handlers.length - 1];
+        if (last.dst() == null) {
+            ByteBuffer buffer = pool.borrow(pooledCapacity);
+            bufferBorrowed = true;
+            // the handlers' dst is in reading mode between calls: an empty one has no bytes to read
+            buffer.flip();
+            last.dst(buffer);
+            sendBuffer = buffer;
+        }
+    }
+
+    private void releaseSendBuffer(ConnectionBufferPool pool) {
+        OutboundHandler last = handlers[handlers.length - 1];
+        if (last.dst() instanceof ByteBuffer buffer && !buffer.hasRemaining()) {
+            pooledCapacity = buffer.capacity();
+            last.dst(null);
+            sendBuffer = null;
+            pool.release(buffer, bufferBorrowed);
+            bufferBorrowed = false;
+        }
+    }
+
+    /** Stops the pool counting the write buffer of the closed connection. */
+    void forgetPooledBuffer() {
+        ConnectionBufferPool pool = bufferPool;
+        OutboundHandler[] localHandlers = handlers;
+        if (pool != null && bufferBorrowed && localHandlers.length > 0
+                && localHandlers[localHandlers.length - 1].dst() instanceof ByteBuffer buffer) {
+            pool.forget(buffer);
+        }
+    }
+
     private void flushToSocket() throws IOException {
         lastWriteTime = currentTimeMillis();
         int written = socketChannel.write(sendBuffer);
@@ -444,7 +502,8 @@ public final class NioOutboundPipeline
         priorityWriteQueuePendingBytes.set(0);
     }
 
-    long bytesWritten() {
+    /** Bytes written to the socket so far. */
+    public long bytesWritten() {
         return bytesWritten.get();
     }
 
@@ -509,6 +568,14 @@ public final class NioOutboundPipeline
     }
 
     private void updatePipeline(OutboundHandler[] newHandlers) {
+        if (bufferBorrowed) {
+            // the replaced handler keeps the buffer it borrowed
+            ConnectionBufferPool pool = bufferPool;
+            if (pool != null && sendBuffer != null) {
+                pool.forget(sendBuffer);
+            }
+            bufferBorrowed = false;
+        }
         this.handlers = newHandlers;
         this.sendBuffer = newHandlers.length == 0 ? null : (ByteBuffer) newHandlers[newHandlers.length - 1].dst();
 
