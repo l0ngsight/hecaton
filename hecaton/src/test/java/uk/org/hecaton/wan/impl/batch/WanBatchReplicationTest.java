@@ -132,6 +132,9 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
 
         wanService(source.get(0)).stop(WAN, "b");
         map.put(2, "while stopped");
+        // the event is published on the partition thread after put() answers: an operation on the
+        // same partition runs after it
+        map.get(2);
         resume(source);
         map.put(3, "after");
         assertTrueEventually(() -> assertThat(replicated.get(3)).isEqualTo("after"));
