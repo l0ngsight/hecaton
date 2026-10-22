@@ -47,3 +47,53 @@ regression, nor rule out one of a few percent. Client `put` was measured again w
 5 × 10 s (Hecaton: 22,301 ± 652 ops/s with 100 B values, 22,261 ± 966 with 1 KB); the Hazelcast half
 of that run was not completed. The §10 gate needs a run on a dedicated machine with the default
 settings (`java -jar benchmarks/target/benchmarks.jar`, two forks per case), which is open.
+
+## Hot reads of a large value
+
+Phase 0 of [load protection](design/load-protection.md): what do members allocate when many
+readers read the same large value? `HotReadAllocation` (in `benchmarks/`) starts a two-member
+cluster and its readers in one JVM, stores one value, reads it with many reads in flight and
+records the reads with Flight Recorder. Fixed 64 KB TLABs make Flight Recorder record every
+allocation above 64 KB with its stack, so the report counts exactly how many value-sized objects the
+member threads allocated per read, and where; `ThreadMXBean` gives the exact bytes per member
+thread. Each scenario runs in its own JVM, on Hecaton or on Hazelcast CE 5.7.
+
+```sh
+./mvnw -B -ntp -DskipTests -pl hecaton -am install    # Hecaton into the local repository
+mvn -f benchmarks/pom.xml package
+tools/perf/hot-read-allocation.sh target/fanout        # summary.md, and per scenario a .md and a .jfr
+```
+
+The script's scenarios cover clients connected to the owner (smart routing) or to another member,
+the `BINARY` and `OBJECT` formats, TLS, embedded members reading through their own map proxies
+(blocking or asynchronous, with and without a near cache), and a new client per read. Single runs
+take options such as `--value-size 4m`, `--gets 5000`, `--concurrency 1024`, and
+`--max-copies-per-read 0`, which makes the run fail (exit status 1) when the member threads copy
+the value; the `.jfr` files open in JDK Mission Control.
+
+### Results
+
+First run: a 1 MB value, 2,000 reads with 256 in flight, a shared 4-core VM (full report with the
+allocation stacks: [results/hot-read-allocation-2026-10-22.md](results/hot-read-allocation-2026-10-22.md)).
+"Copies" are the value-sized objects allocated in the members per read. Hazelcast CE 5.7.0 and
+Hecaton allocate the same on every path measured on both.
+
+| Read path | Hazelcast 5.7: copies, member bytes per read | Hecaton: copies, member bytes per read |
+|---|---|---|
+| Client to the owner, `BINARY` | 0, 2 KB | 0, 1 KB |
+| Client to the owner, `BINARY`, TLS | — (not in CE) | 0, 82 KB (JDK TLS cipher objects) |
+| Client to another member, `BINARY` | 3, 3.0 MB | 3, 3.2 MB (TLS) |
+| Client to the owner, `OBJECT` | 2, 2.1 MB | 2, 2.1 MB |
+| Member reads a key of another member, `getAsync` | 5, 5.0 MB | 5, 5.2 MB (TLS) |
+| Member reads a key of another member, `get` | 4, 4.0 MB | 4, 4.2 MB (TLS) |
+| … with a member near cache, `BINARY` | 1, 1.0 MB | — |
+| … with a member near cache, `OBJECT` | 0, 11 B | — |
+| A new client per read, smart routing | 0, 0.66 MB per connection | 0, 1.7 MB per connection (TLS) |
+
+The copies on the member-to-member path: the owner serialises the response into a packet
+(`OutboundResponseHandler#toNormalResponsePacket`), the receiving member reads the packet
+(`PacketIOHelper#readValue`), deserialises the response (`NormalResponse#readData`) — once per
+stage waiting on the invocation's future (`InvocationFuture#resolve`), so three times for a
+`getAsync` with a callback — and converts it to the caller's object (`MapProxySupport#toObject`).
+Throughput on a shared VM is only indicative; the near cache `OBJECT` run served 8,675 reads/s
+against 630 without it.
