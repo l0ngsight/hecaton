@@ -27,7 +27,9 @@ import uk.org.hecaton.collection.impl.queue.operations.QueueReplicationOperation
 import uk.org.hecaton.collection.impl.txnqueue.TransactionalQueueProxy;
 import uk.org.hecaton.collection.impl.txnqueue.operations.QueueTransactionRollbackOperation;
 import uk.org.hecaton.config.QueueConfig;
+import uk.org.hecaton.core.DistributedObject;
 import uk.org.hecaton.core.ItemEventType;
+import uk.org.hecaton.internal.loadprotection.LoadProtection;
 import uk.org.hecaton.internal.metrics.DynamicMetricsProvider;
 import uk.org.hecaton.internal.metrics.MetricDescriptor;
 import uk.org.hecaton.internal.metrics.MetricsCollectionContext;
@@ -57,6 +59,7 @@ import uk.org.hecaton.internal.util.scheduler.EntryTaskSchedulerFactory;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.partition.strategy.StringPartitioningStrategy;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.eventservice.EventPublishingService;
 import uk.org.hecaton.spi.impl.eventservice.EventRegistration;
 import uk.org.hecaton.spi.impl.eventservice.EventService;
@@ -81,6 +84,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 import static uk.org.hecaton.internal.config.ConfigValidator.checkQueueConfig;
 import static uk.org.hecaton.internal.metrics.MetricDescriptorConstants.QUEUE_PREFIX;
@@ -106,6 +110,8 @@ public class QueueService implements ManagedService, MigrationAwareService, Tran
     private static final Object NULL_OBJECT = new Object();
 
     private final ConcurrentMap<String, QueueContainer> containerMap = new ConcurrentHashMap<>();
+    /** Load protection (F23): the sharded queues this member uses, by logical name. */
+    private final ConcurrentMap<String, ShardedQueue> shardedQueues = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, LocalQueueStatsImpl> statsMap;
     private final ConstructorFunction<String, LocalQueueStatsImpl> localQueueStatsConstructorFunction =
             key -> new LocalQueueStatsImpl();
@@ -154,6 +160,42 @@ public class QueueService implements ManagedService, MigrationAwareService, Tran
         if (dsMetricsEnabled) {
             nodeEngine.getMetricsRegistry().registerDynamicMetricsProvider(this);
         }
+        LoadProtection loadProtection = loadProtection();
+        if (loadProtection != null && loadProtection.isEnabled()) {
+            nodeEngine.getExecutionService().scheduleWithRepetition(
+                    () -> shardedQueues.values().forEach(ShardedQueue::refreshSizeHints),
+                    ShardedQueue.REFRESH_MILLIS, ShardedQueue.REFRESH_MILLIS, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    /**
+     * The sharded queue named {@code name}, or {@code null} if the queue has one shard (load
+     * protection, F23). Names with a partition key ({@code name@key}), as the shards have, are never
+     * sharded.
+     */
+    public ShardedQueue getShardedQueue(String name) {
+        ShardedQueue queue = shardedQueues.get(name);
+        if (queue != null) {
+            return queue;
+        }
+        if (name.indexOf('@') >= 0) {
+            return null;
+        }
+        LoadProtection loadProtection = loadProtection();
+        QueueConfig config = nodeEngine.getConfig().findQueueConfig(name);
+        if (loadProtection == null || loadProtection.shardCount(config) <= 1) {
+            return null;
+        }
+        return shardedQueues.computeIfAbsent(name, n -> new ShardedQueue(n,
+                ShardedQueue.shardNames(n, config, partitionService), nodeEngine));
+    }
+
+    void forgetShardedQueue(String name) {
+        shardedQueues.remove(name);
+    }
+
+    private LoadProtection loadProtection() {
+        return nodeEngine instanceof NodeEngineImpl impl ? impl.getLoadProtection() : null;
     }
 
     @Override
@@ -283,10 +325,14 @@ public class QueueService implements ManagedService, MigrationAwareService, Tran
     }
 
     @Override
-    public QueueProxyImpl createDistributedObject(String objectId, UUID source, boolean local) {
+    public DistributedObject createDistributedObject(String objectId, UUID source, boolean local) {
         QueueConfig queueConfig = nodeEngine.getConfig().findQueueConfig(objectId);
         checkQueueConfig(queueConfig, nodeEngine.getSplitBrainMergePolicyProvider());
 
+        ShardedQueue sharded = getShardedQueue(objectId);
+        if (sharded != null) {
+            return new ShardedQueueProxy<>(objectId, sharded, this, nodeEngine);
+        }
         return new QueueProxyImpl(objectId, this, nodeEngine, queueConfig);
     }
 

@@ -18,6 +18,7 @@ package uk.org.hecaton.internal.server.tcp;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.config.EndpointConfig;
 import uk.org.hecaton.instance.EndpointQualifier;
+import uk.org.hecaton.internal.loadprotection.MaintenanceLane;
 import uk.org.hecaton.internal.metrics.Probe;
 import uk.org.hecaton.internal.networking.Channel;
 import uk.org.hecaton.internal.nio.Connection;
@@ -241,7 +242,12 @@ abstract class TcpServerConnectionManagerBase implements ServerConnectionManager
     }
 
     private void fireConnectionRemovedEvent(final Connection connection, final Address endPoint) {
-        if (server.isLive()) {
+        MaintenanceLane maintenanceLane = serverContext.getClientEngine().getMaintenanceLane();
+        if (server.isLive() && maintenanceLane != null && connection instanceof ServerConnection serverConnection
+                && serverConnection.isClient()) {
+            // load protection (F23): client disconnects are cleaned up on the maintenance lane, not the event threads
+            maintenanceLane.execute(() -> connectionListeners.forEach(listener -> listener.connectionRemoved(connection)));
+        } else if (server.isLive()) {
             serverContext.getEventService().executeEventCallback(new StripedRunnable() {
                 @Override
                 public void run() {

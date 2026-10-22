@@ -23,6 +23,7 @@ import uk.org.hecaton.config.MemcacheProtocolConfig;
 import uk.org.hecaton.config.RestApiConfig;
 import uk.org.hecaton.instance.EndpointQualifier;
 import uk.org.hecaton.internal.loadprotection.ClientAdmission;
+import uk.org.hecaton.internal.loadprotection.MaintenanceLane;
 import uk.org.hecaton.internal.networking.ChannelOptions;
 import uk.org.hecaton.internal.networking.HandlerStatus;
 import uk.org.hecaton.internal.networking.InboundHandler;
@@ -168,6 +169,13 @@ public class UnifiedProtocolDecoder
     }
 
     private void initChannelForClient() {
+        MaintenanceLane maintenanceLane = serverContext.getClientEngine().getMaintenanceLane();
+        if (maintenanceLane != null && !maintenanceLane.admitNewConnection()) {
+            // load protection (F23): refused before any client work is done for it
+            ((ServerConnection) channel.attributeMap().get(ServerConnection.class))
+                    .close("Client connection refused by load protection", null);
+            return;
+        }
         protocolEncoder.signalEncoderCanReplace();
         channel.options()
                 .setOption(SO_RCVBUF, clientRcvBuf())

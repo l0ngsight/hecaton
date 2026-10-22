@@ -62,6 +62,10 @@ public class ClientLifecycleMonitor implements Runnable {
 
     }
 
+    long checkMillis() {
+        return checkMillis;
+    }
+
     public void start() {
         executionService.scheduleWithRepetition(this, checkMillis, checkMillis, MILLISECONDS);
     }

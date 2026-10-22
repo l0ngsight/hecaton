@@ -60,6 +60,7 @@ public final class LoadProtection {
     private final HeapMonitor heapMonitor;
     private final ConnectionBufferPool bufferPool;
     private final ClientAdmission clientAdmission;
+    private final MaintenanceLane maintenanceLane;
     private final ScheduledExecutorService scheduler;
 
     public LoadProtection(String instanceName, Config config, HecatonProperties properties, ILogger logger) {
@@ -80,7 +81,9 @@ public final class LoadProtection {
                 return thread;
             });
             scheduler.scheduleWithFixedDelay(this::tick, TICK_MILLIS, TICK_MILLIS, TimeUnit.MILLISECONDS);
+            maintenanceLane = new MaintenanceLane(instanceName, this.config.getMaintenanceConfig(), scheduler, logger);
         } else {
+            maintenanceLane = null;
             heapMonitor = null;
             bufferPool = null;
             clientAdmission = null;
@@ -94,6 +97,18 @@ public final class LoadProtection {
         return clientAdmission;
     }
 
+    /** The lane for client connection lifecycle work, or {@code null} when load protection is off. */
+    public MaintenanceLane getMaintenanceLane() {
+        return maintenanceLane;
+    }
+
+    /**
+     * Runs {@code task} on the maintenance lane at a fixed rate; requires load protection on.
+     */
+    public void scheduleMaintenance(Runnable task, long delay, TimeUnit unit) {
+        maintenanceLane.scheduleWithFixedDelay(scheduler, task, delay, unit);
+    }
+
     /** Registers the load protection metrics, prefixed {@value #METRICS_PREFIX}. */
     public void registerMetrics(MetricsRegistry registry) {
         registry.registerStaticMetrics(this, METRICS_PREFIX);
@@ -103,11 +118,17 @@ public final class LoadProtection {
         if (bufferPool != null) {
             registry.registerStaticMetrics(bufferPool, METRICS_PREFIX);
         }
+        if (maintenanceLane != null) {
+            registry.registerStaticMetrics(maintenanceLane, METRICS_PREFIX);
+        }
     }
 
     public void shutdown() {
         if (scheduler != null) {
             scheduler.shutdownNow();
+        }
+        if (maintenanceLane != null) {
+            maintenanceLane.shutdown();
         }
         if (heapMonitor != null) {
             heapMonitor.stop();

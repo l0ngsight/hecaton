@@ -54,6 +54,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static uk.org.hecaton.internal.util.ExceptionUtil.peel;
 
@@ -78,7 +79,10 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     protected final ClientEngine clientEngine;
     protected P parameters;
 
-    /** Load protection (F23): released when the response is sent; written once before the task runs. */
+    private static final AtomicReferenceFieldUpdater<AbstractMessageTask, Runnable> ADMISSION_TICKET =
+            AtomicReferenceFieldUpdater.newUpdater(AbstractMessageTask.class, Runnable.class, "admissionTicket");
+
+    /** Load protection (F23): released once, when the response is sent; set before the task runs. */
     private volatile Runnable admissionTicket;
 
     private final ClientEndpointManager endpointManager;
@@ -311,11 +315,7 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     @SuppressWarnings({"java:S125", "java:S1135"})
     protected void sendClientMessage(ClientMessage resultClientMessage) {
         resultClientMessage.setCorrelationId(clientMessage.getCorrelationId());
-        Runnable ticket = admissionTicket;
-        if (ticket != null) {
-            admissionTicket = null;
-            ticket.run();
-        }
+        releaseAdmissionTicket();
         ClientAdmission admission = clientEngine.getClientAdmission();
         if (admission != null && asyncSocket == null) {
             admission.onResponse(connection, resultClientMessage);
@@ -344,6 +344,16 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     /** Load protection (F23): the request counts as in flight until its response is sent. */
     public void setAdmissionTicket(Runnable admissionTicket) {
         this.admissionTicket = admissionTicket;
+    }
+
+    /** Releases the admission ticket if the response has not released it (load protection, F23). */
+    public void releaseAdmissionTicket() {
+        if (admissionTicket != null) {
+            Runnable ticket = ADMISSION_TICKET.getAndSet(this, null);
+            if (ticket != null) {
+                ticket.run();
+            }
+        }
     }
 
     /** Answers the request with {@code reason} without running it (load protection, F23). */
