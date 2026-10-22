@@ -164,9 +164,12 @@ public class WanBatchReplicationTest extends HecatonTestSupport {
         for (int i = 0; i < 20; i++) {
             map.put(i, "value");
         }
-        assertThat(outboundQueueSize(source)).isEqualTo(10);
-        assertThat(wanService(source.get(0)).getSentEventCounters(WAN, "b", "hz:impl:mapService")
-                .getEventCounterMap().get(MAP).getDroppedCount()).isEqualTo(10);
+        // events are published after the operation answers: wait for the last ones
+        assertTrueEventually(() -> {
+            assertThat(outboundQueueSize(source)).isEqualTo(10);
+            assertThat(wanService(source.get(0)).getSentEventCounters(WAN, "b", "hz:impl:mapService")
+                    .getEventCounterMap().get(MAP).getDroppedCount()).isEqualTo(10);
+        });
     }
 
     @Test
