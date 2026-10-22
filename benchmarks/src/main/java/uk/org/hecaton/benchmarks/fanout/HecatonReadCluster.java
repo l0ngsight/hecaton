@@ -67,6 +67,10 @@ final class HecatonReadCluster implements ReadCluster {
             }
             config.getJetConfig().setEnabled(false);
             config.getMapConfig(MAP).setInMemoryFormat(InMemoryFormat.valueOf(scenario.format()));
+            if (scenario.loadProtection()) {
+                config.getLoadProtectionConfig().setEnabled(true);
+                config.getMapConfig(MAP).setImmutable(true);
+            }
             if (scenario.nearCache() != null) {
                 config.getMapConfig(MAP).setNearCacheConfig(new NearCacheConfig()
                         .setInMemoryFormat(InMemoryFormat.valueOf(scenario.nearCache())).setCacheLocalEntries(true));

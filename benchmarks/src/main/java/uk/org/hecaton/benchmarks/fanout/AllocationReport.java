@@ -61,18 +61,21 @@ final class AllocationReport {
     private final Map<Row, Long> bytesByThread = new HashMap<>();
     private final Map<Site, Tally> valueSized = new HashMap<>();
     private final Map<Site, Tally> sites = new HashMap<>();
+    private final long overloadRejections;
     private long maxHeapAfterGc;
+    private long maxHeapBeforeGc;
     private int collections;
 
-    private AllocationReport(Scenario scenario, long elapsedNanos, boolean fixedTlabs) {
+    private AllocationReport(Scenario scenario, long elapsedNanos, boolean fixedTlabs, long overloadRejections) {
         this.scenario = scenario;
         this.elapsedNanos = elapsedNanos;
         this.fixedTlabs = fixedTlabs;
+        this.overloadRejections = overloadRejections;
     }
 
     static AllocationReport analyse(Scenario scenario, long elapsedNanos, ThreadAllocations allocations,
-                                    Path recordingFile, boolean fixedTlabs) throws IOException {
-        AllocationReport report = new AllocationReport(scenario, elapsedNanos, fixedTlabs);
+                                    Path recordingFile, boolean fixedTlabs, long overloadRejections) throws IOException {
+        AllocationReport report = new AllocationReport(scenario, elapsedNanos, fixedTlabs, overloadRejections);
         allocations.bytesByThreadName().forEach((name, bytes) -> {
             Row row = report.row(name);
             if (row != null) {
@@ -92,6 +95,8 @@ final class AllocationReport {
             case "jdk.GCHeapSummary" -> {
                 if ("After GC".equals(event.getString("when"))) {
                     maxHeapAfterGc = Math.max(maxHeapAfterGc, event.getLong("heapUsed"));
+                } else {
+                    maxHeapBeforeGc = Math.max(maxHeapBeforeGc, event.getLong("heapUsed"));
                 }
             }
             case "jdk.GarbageCollection" -> collections++;
@@ -143,8 +148,11 @@ final class AllocationReport {
                 scenario.gets(), scenario.valueSize(), scenario.concurrency(),
                 scenario.sync() ? "blocking `get` on as many threads" : "`getAsync` with a callback",
                 seconds, scenario.gets() / seconds));
-        out.append(String.format(Locale.ROOT, "| JVM heap after GC | at most %s during the reads, %d collections "
-                + "(members and clients share the JVM) |%n", mib(maxHeapAfterGc), collections));
+        out.append(String.format(Locale.ROOT, "| Load protection | %s |%n", scenario.loadProtection()
+                ? String.format(Locale.ROOT, "on, immutable map; %,d reads refused with an overload exception and retried after"
+                        + " %d ms", overloadRejections, HotReadAllocation.OVERLOAD_RETRY_MILLIS) : "off"));
+        out.append(String.format(Locale.ROOT, "| JVM heap | at most %s used before a GC and %s after it during the reads, %d"
+                + " collections (members and clients share the JVM) |%n", mib(maxHeapBeforeGc), mib(maxHeapAfterGc), collections));
         out.append("| Recording | `").append(scenario.name()).append(".jfr`").append(fixedTlabs ? ""
                 : " — **TLABs were not fixed** (`-XX:TLABSize=64k -XX:-ResizeTLAB`): value-sized objects that fit in a"
                 + " TLAB are missing below").append(" |\n\n");

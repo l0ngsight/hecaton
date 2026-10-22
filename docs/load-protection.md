@@ -80,7 +80,8 @@ which sends the stored bytes.
 - **Admission:** a client connection may have `max-in-flight-requests-per-connection` (1024)
   requests in progress and the member `max-in-flight-requests` (100,000). Above those limits, or
   when the heap after the last garbage collection is above `heap-reject-threshold` (90%) of the
-  maximum, requests fail fast with `HecatonOverloadException`, which clients retry with back-off.
+  maximum, requests fail fast with `HecatonOverloadException`. Clients do not retry it: the
+  application receives it, and should back off and try again.
   Client messages larger than `max-message-bytes` (64 MB) close the connection.
 - **Connection buffers:** client connections borrow their socket buffers
   (`client-buffer-bytes`, 32 KB) from a member-wide pool while they have data to move, so an idle

@@ -41,6 +41,7 @@ import java.util.Map;
  * @param concurrency reads in flight at any time, over all clients
  * @param sync        blocking {@code get}s on {@code concurrency} application threads instead of
  *                    {@code getAsync} with a callback
+ * @param loadProtection Hecaton only: load protection (F23) on, and the map immutable
  * @param gets        measured reads
  * @param warmUpGets  reads before the measurement
  * @param out         directory for the recording and the report
@@ -48,7 +49,7 @@ import java.util.Map;
  *                    negative to only report
  */
 record Scenario(String product, String caller, String format, String nearCache, String routing, Path keyStore, int valueSize, int members,
-                int readers, int concurrency, boolean sync, int gets, int warmUpGets, Path out, double maxCopies) {
+                int readers, int concurrency, boolean sync, boolean loadProtection, int gets, int warmUpGets, Path out, double maxCopies) {
 
     static final String KEY_STORE_PASSWORD = "changeit";
 
@@ -60,7 +61,7 @@ record Scenario(String product, String caller, String format, String nearCache, 
                 throw new IllegalArgumentException("unexpected argument " + arg);
             }
             String name = arg.substring(2);
-            if (name.equals("help") || name.equals("sync")) {
+            if (name.equals("help") || name.equals("sync") || name.equals("load-protection")) {
                 options.put(name, "true");
             } else if (i + 1 < args.length) {
                 options.put(name, args[++i]);
@@ -76,6 +77,9 @@ record Scenario(String product, String caller, String format, String nearCache, 
         if (keyStore != null && product.equals("hazelcast")) {
             throw new IllegalArgumentException("TLS is not part of Hazelcast CE; --key-store needs --product hecaton");
         }
+        if (options.containsKey("load-protection") && product.equals("hazelcast")) {
+            throw new IllegalArgumentException("load protection is Hecaton's; --load-protection needs --product hecaton");
+        }
         Scenario scenario = new Scenario(product,
                 options.getOrDefault("caller", "client"),
                 options.getOrDefault("format", "BINARY").toUpperCase(Locale.ROOT),
@@ -87,6 +91,7 @@ record Scenario(String product, String caller, String format, String nearCache, 
                 Integer.parseInt(options.getOrDefault("readers", "8")),
                 Integer.parseInt(options.getOrDefault("concurrency", "256")),
                 options.containsKey("sync"),
+                options.containsKey("load-protection"),
                 Integer.parseInt(options.getOrDefault("gets", "2000")),
                 Integer.parseInt(options.getOrDefault("warm-up-gets", "500")),
                 Path.of(options.getOrDefault("out", "target/fanout")),
@@ -116,7 +121,7 @@ record Scenario(String product, String caller, String format, String nearCache, 
     String name() {
         String callers = memberCaller() ? "member-caller" : shortLivedClients() ? "short-lived-" + routing : routing;
         return product + "-" + format + (nearCache == null ? "" : "-near-cache-" + nearCache) + "-" + callers
-                + (sync ? "-sync" : "") + (warmUpGets == 0 ? "-cold" : "") + (tls() ? "-tls" : "") + "-" + size(valueSize);
+                + (sync ? "-sync" : "") + (loadProtection ? "-load-protection" : "") + (warmUpGets == 0 ? "-cold" : "") + (tls() ? "-tls" : "") + "-" + size(valueSize);
     }
 
     static long bytes(String text) {

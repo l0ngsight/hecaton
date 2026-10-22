@@ -24,14 +24,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -57,9 +61,20 @@ import java.util.logging.Logger;
  * {@code --routing ALL_MEMBERS|SINGLE_MEMBER}, {@code --key-store <pkcs12>} (TLS, Hecaton only),
  * {@code --value-size}, {@code --members}, {@code --readers}, {@code --concurrency}, {@code --gets},
  * {@code --warm-up-gets}, {@code --out <dir>}, {@code --max-copies-per-read <n>} (exit status 1 if
- * exceeded).
+ * exceeded), {@code --load-protection} (Hecaton only: load protection on and the map immutable).
  */
 public final class HotReadAllocation {
+
+    /** How long a read refused with an overload exception waits before it is sent again. */
+    static final long OVERLOAD_RETRY_MILLIS = 10;
+
+    /** Reads refused with an overload exception (load protection) since the last reset. */
+    private static final AtomicLong OVERLOAD_REJECTIONS = new AtomicLong();
+    private static final ScheduledExecutorService RETRIES = Executors.newSingleThreadScheduledExecutor(task -> {
+        Thread thread = new Thread(task, "overload-retry");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     private HotReadAllocation() {
     }
@@ -89,6 +104,7 @@ public final class HotReadAllocation {
             cluster.put(key, value);
             read(cluster, scenario, application, key, scenario.warmUpGets());
             System.gc();
+            OVERLOAD_REJECTIONS.set(0);
 
             Path recordingFile = scenario.out().resolve(scenario.name() + ".jfr");
             ThreadAllocations before = ThreadAllocations.snapshot();
@@ -106,7 +122,8 @@ public final class HotReadAllocation {
             }
             long elapsedNanos = System.nanoTime() - start;
             ThreadAllocations after = ThreadAllocations.snapshot();
-            report = AllocationReport.analyse(scenario, elapsedNanos, before.until(after), recordingFile, fixedTlabs());
+            report = AllocationReport.analyse(scenario, elapsedNanos, before.until(after), recordingFile, fixedTlabs(),
+                    OVERLOAD_REJECTIONS.get());
         } finally {
             application.shutdownNow();
         }
@@ -124,7 +141,9 @@ public final class HotReadAllocation {
     /**
      * Reads {@code gets} times, keeping {@code concurrency} reads in flight over all readers: with
      * {@code getAsync} and a callback, or with {@code --sync} with blocking {@code get}s on as many
-     * application threads.
+     * application threads. A read refused with an overload exception, as load protection refuses
+     * reads above its limits, is counted and sent again after {@value #OVERLOAD_RETRY_MILLIS} ms, as
+     * an application that backs off would.
      */
     static void read(ReadCluster cluster, Scenario scenario, ExecutorService application, int key, int gets)
             throws Exception {
@@ -134,7 +153,7 @@ public final class HotReadAllocation {
             for (int t = 0; t < scenario.concurrency(); t++) {
                 threads.add(application.submit(() -> {
                     for (int i = next.getAndIncrement(); i < gets; i = next.getAndIncrement()) {
-                        byte[] value = cluster.get(i % scenario.readers(), key);
+                        byte[] value = getWithRetries(cluster, i % scenario.readers(), key);
                         if (value == null || value.length != scenario.valueSize()) {
                             throw new IllegalStateException("read a wrong value");
                         }
@@ -154,7 +173,7 @@ public final class HotReadAllocation {
             if (!inFlight.tryAcquire(1, TimeUnit.MINUTES) || failure.get() != null) {
                 break;
             }
-            cluster.getAsync(i % scenario.readers(), key).whenComplete((value, error) -> {
+            getAsyncWithRetries(cluster, i % scenario.readers(), key).whenComplete((value, error) -> {
                 if (error != null) {
                     failure.compareAndSet(null, error);
                 } else if (value == null || value.length != scenario.valueSize()) {
@@ -173,6 +192,50 @@ public final class HotReadAllocation {
         if (failure.get() != null) {
             throw new IllegalStateException("a read failed", failure.get());
         }
+    }
+
+    private static byte[] getWithRetries(ReadCluster cluster, int reader, int key) throws InterruptedException {
+        while (true) {
+            try {
+                return cluster.get(reader, key);
+            } catch (RuntimeException e) {
+                if (!isOverload(e)) {
+                    throw e;
+                }
+                OVERLOAD_REJECTIONS.incrementAndGet();
+                Thread.sleep(OVERLOAD_RETRY_MILLIS);
+            }
+        }
+    }
+
+    private static CompletionStage<byte[]> getAsyncWithRetries(ReadCluster cluster, int reader, int key) {
+        CompletableFuture<byte[]> result = new CompletableFuture<>();
+        getAsyncWithRetries(cluster, reader, key, result);
+        return result;
+    }
+
+    private static void getAsyncWithRetries(ReadCluster cluster, int reader, int key, CompletableFuture<byte[]> result) {
+        cluster.getAsync(reader, key).whenComplete((value, error) -> {
+            if (error == null) {
+                result.complete(value);
+            } else if (isOverload(error)) {
+                OVERLOAD_REJECTIONS.incrementAndGet();
+                RETRIES.schedule(() -> getAsyncWithRetries(cluster, reader, key, result), OVERLOAD_RETRY_MILLIS,
+                        TimeUnit.MILLISECONDS);
+            } else {
+                result.completeExceptionally(error);
+            }
+        });
+    }
+
+    /** {@code HecatonOverloadException} or Hazelcast's, anywhere in the cause chain. */
+    private static boolean isOverload(Throwable error) {
+        for (Throwable t = error; t != null; t = t.getCause()) {
+            if (t.getClass().getSimpleName().endsWith("OverloadException")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Whether TLABs have a fixed size, so that every large allocation gets its own event. */
