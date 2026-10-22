@@ -607,8 +607,15 @@ differs from §4:
   in `NearCachedMapProxyImpl`, sized by `immutableMapNearCacheSize`; `InvocationFuture` keeps the
   `Data` it reads from a response so that each waiting stage does not deserialize again.
 - **Spring** configuration is not done; Spring users set the fields on the `Config` bean.
+- **Kernel socket buffers.** `clientBufferBytes` sizes the buffers in the heap only. Applied to
+  `SO_RCVBUF`/`SO_SNDBUF` as well (as first implemented), it stalled TCP under read pauses once
+  below a segment; see [the 50k run](../results/hot-read-50k-2026-10-22.md).
 
-Not done from §5's exit criteria: the 50k-reader, churn-p99 and 24 h soak runs on the perf rig.
-The unit and multi-member tests (`ImmutableMapTest`, `LoadProtectionNetworkTest`,
+50,000 reads in flight, on one 4-core host: [results](../results/hot-read-50k-2026-10-22.md). Through
+an embedded member, Hazelcast 5.7 and Hecaton without load protection ran out of an 8 GB heap;
+with it, 0 copies per read and no GC. Smart clients completed in all versions with 0 copies on
+the members; the members' heap could not be separated from the clients'. Not done from §5's exit
+criteria: 50,000 client connections, the members' heap bound under client reads, churn p99 and
+the 24 h soak, which need hosts for the clients. The unit and multi-member tests (`ImmutableMapTest`, `LoadProtectionNetworkTest`,
 `MaintenanceLaneTest`, `ShardedQueueTest`, `LoadProtectionDeclarativeConfigTest`) cover the
 behaviour, and `hot-read-allocation.sh` measures copies per read.

@@ -157,16 +157,20 @@ Under the `loadProtection` prefix:
 
 ## Socket buffers and TCP stalls
 
-Keep the kernel's socket buffers for client connections at least as large as two TCP segments.
-With smaller buffers (for example `SO_RCVBUF`/`SO_SNDBUF` of 32 KB on loopback, where a segment is
-64 KB), a connection whose member has a full segment queued and whose client is busy can stop
-moving data altogether: the member's kernel holds the segment, the client has read everything that
-arrived, and neither side sends again. A test with 64 TLS clients and 50,000 reads of a 1 MB value
-in flight on one host stalled this way within a minute; with 128 KB buffers it completed. Over
-Ethernet a segment is about 1.5 KB (9 KB with jumbo frames), so the risk is for clients on the
-member's host or on networks with large segments. Load protection does not change the kernel's
-buffers; `hecaton.socket.client.receive.buffer.size` and `hecaton.socket.client.send.buffer.size`
-do.
+Keep the kernel's socket buffers for client connections at least as large as two TCP segments
+when load protection is on. In a test with 64 TLS clients on the member's host and 50,000 reads
+of a 1 MB value in flight, kernel buffers of 32 KB (one loopback segment is 64 KB) stalled
+connections within a minute: the member stopped reading a connection at its outbound limit, its
+kernel held one full segment for the client, the client had read everything that had arrived,
+and neither side sent again until the connection was closed as a slow consumer. With the
+inherited 128 KB buffers the same test completed. Load protection therefore leaves the kernel's
+buffers alone (`hecaton.socket.client.receive.buffer.size` and `send.buffer.size` set them);
+`client-buffer-bytes` sizes only the buffers in the heap. Over Ethernet a segment is about 1.5 KB
+(9 KB with jumbo frames), so the risk is for clients on the member's host or on networks with
+large segments.
+
+Hazelcast 5.7 with 32 KB client socket buffers and without TLS completed the same test: it does
+not pause reads.
 
 ## Measuring copies
 

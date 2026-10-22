@@ -98,3 +98,12 @@ stage waiting on the invocation's future (`InvocationFuture#resolve`), so three 
 `getAsync` with a callback — and converts it to the caller's object (`MapProxySupport#toObject`).
 Throughput on a shared VM is only indicative; the near cache `OBJECT` run served 8,675 reads/s
 against 630 without it.
+
+### 50,000 reads in flight
+
+With 50,000 reads of a 1 MB value in flight, services reading through an embedded member run
+Hazelcast 5.7 and Hecaton out of an 8 GB heap within half a minute; with load protection and an
+immutable map they copy nothing and need no GC. Smart clients complete in every version. Details,
+and a TCP stall that the run found and that is fixed:
+[results/hot-read-50k-2026-10-22.md](results/hot-read-50k-2026-10-22.md). `--load-protection`
+runs `HotReadAllocation` with load protection on and the map immutable.
