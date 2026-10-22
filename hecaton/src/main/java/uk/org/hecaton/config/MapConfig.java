@@ -1007,7 +1007,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         return hotRestartConfig.equals(that.hotRestartConfig);
     }
 
-    @SuppressWarnings("NPathComplexity")
+    @SuppressWarnings({"NPathComplexity", "checkstyle:cyclomaticcomplexity"})
     @Override
     public final int hashCode() {
         int result = (name != null ? name.hashCode() : 0);

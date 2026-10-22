@@ -113,6 +113,7 @@ public final class DynamicConfigXmlGenerator {
                             "batch-size", mergePolicyConfig.getBatchSize())
                     .node("split-brain-protection-ref", m.getSplitBrainProtectionName())
                     .node("read-backup-data", m.isReadBackupData())
+                    .node("immutable", m.isImmutable())
                     .node("metadata-policy", m.getMetadataPolicy());
 
             evictionConfigXmlGenerator(gen, m.getEvictionConfig());
@@ -207,6 +208,15 @@ public final class DynamicConfigXmlGenerator {
                     .node("backup-count", q.getBackupCount())
                     .node("async-backup-count", q.getAsyncBackupCount())
                     .node("empty-queue-ttl", q.getEmptyQueueTtl());
+            if (q.getShardNames().isEmpty()) {
+                gen.node("shard-count", q.getShardCount());
+            } else {
+                gen.open("shard-names");
+                for (String shardName : q.getShardNames()) {
+                    gen.node("shard-name", shardName);
+                }
+                gen.close();
+            }
             appendItemListenerConfigs(gen, q.getItemListenerConfigs());
             QueueStoreConfig storeConfig = q.getQueueStoreConfig();
             if (storeConfig != null) {

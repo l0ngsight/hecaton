@@ -67,6 +67,9 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     private static final List<Class<? extends Throwable>> NON_PEELABLE_EXCEPTIONS =
             List.of(Error.class, MemberLeftException.class);
 
+    private static final AtomicReferenceFieldUpdater<AbstractMessageTask, Runnable> ADMISSION_TICKET =
+            AtomicReferenceFieldUpdater.newUpdater(AbstractMessageTask.class, Runnable.class, "admissionTicket");
+
     protected AsyncSocket asyncSocket;
     protected IOBufferAllocator responseBufAllocator;
 
@@ -78,9 +81,6 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     protected final ILogger logger;
     protected final ClientEngine clientEngine;
     protected P parameters;
-
-    private static final AtomicReferenceFieldUpdater<AbstractMessageTask, Runnable> ADMISSION_TICKET =
-            AtomicReferenceFieldUpdater.newUpdater(AbstractMessageTask.class, Runnable.class, "admissionTicket");
 
     /** Load protection (F23): released once, when the response is sent; set before the task runs. */
     private volatile Runnable admissionTicket;

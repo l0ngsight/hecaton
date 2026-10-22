@@ -122,6 +122,7 @@ public final class NioInboundPipeline extends NioPipeline implements InboundPipe
     }
 
     @Override
+    @SuppressWarnings({"checkstyle:cyclomaticcomplexity", "checkstyle:npathcomplexity"})
     void process() throws Exception {
         ConnectionBufferPool pool = bufferPool;
         if (pool != null) {

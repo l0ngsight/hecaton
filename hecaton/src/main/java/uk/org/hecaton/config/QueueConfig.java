@@ -423,8 +423,8 @@ public class QueueConfig implements IdentifiedDataSerializable, NamedConfig, Ver
      * Spreads the queue over {@code shardCount} physical queues, each on its own partition, so that
      * its load is shared by several members (load protection, F23). Clients and members use the
      * queue as before; the members route each operation to a shard. Items keep their order within
-     * a shard; across shards a poll takes from the shard whose head is oldest, so the queue as a
-     * whole is FIFO on a best-effort basis. Takes effect only when
+     * a shard; across shards an offer goes to the emptiest shard and a poll takes from the fullest,
+     * so the queue as a whole is FIFO on a best-effort basis only. Takes effect only when
      * {@link LoadProtectionConfig#setEnabled(boolean) load protection} is on.
      *
      * @param shardCount the number of shards, at least 1

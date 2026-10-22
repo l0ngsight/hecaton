@@ -47,12 +47,12 @@ public final class LoadProtection {
     /** The prefix of the load protection metrics. */
     public static final String METRICS_PREFIX = "loadProtection";
 
+    private static final long TICK_MILLIS = 5;
+
     @Probe(name = "immutableRejections", level = MANDATORY)
     final MwCounter immutableRejections = newMwCounter();
     @Probe(name = "immutableMergeConflicts", level = MANDATORY)
     final MwCounter immutableMergeConflicts = newMwCounter();
-
-    private static final long TICK_MILLIS = 5;
 
     private final boolean enabled;
     private final LoadProtectionConfig config;

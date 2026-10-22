@@ -28,6 +28,7 @@ as the [migration guide](migration.md) describes.
 | Jet lossless restart, isolated jobs, job upgrades; SQL catalog persistence (F18, F19) | [jet.md](jet.md) | 0.10.0 |
 | Vector collections (F20) | [vector.md](vector.md) | 0.10.0 |
 | Tiered Storage (F12) | [tiered.md](tiered.md) | 0.10.0 |
+| Load protection: immutable maps, back pressure, connection churn, sharded queues (F23) | [load-protection.md](load-protection.md) | unreleased |
 | Client blue/green failover (F15) | [changes-from-hazelcast.md](changes-from-hazelcast.md) | 0.2.0 |
 
 ## The project

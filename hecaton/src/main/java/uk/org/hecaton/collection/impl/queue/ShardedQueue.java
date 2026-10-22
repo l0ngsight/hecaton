@@ -33,6 +33,7 @@ import uk.org.hecaton.config.QueueConfig;
 import uk.org.hecaton.internal.partition.IPartitionService;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.util.ConcurrencyUtil;
+import uk.org.hecaton.internal.util.UuidUtil;
 import uk.org.hecaton.partition.strategy.StringPartitioningStrategy;
 import uk.org.hecaton.spi.impl.InternalCompletableFuture;
 import uk.org.hecaton.spi.impl.NodeEngine;
@@ -63,6 +64,7 @@ import java.util.concurrent.atomic.AtomicLongArray;
  * waits on one shard at a time, for at most {@value #WAIT_SLICE_MILLIS} ms, then looks at all
  * shards again: no thread is blocked while it waits.
  */
+@SuppressWarnings("checkstyle:classdataabstractioncoupling")
 public final class ShardedQueue {
 
     /** Size hints are refreshed this often while the queue is in use. */
@@ -288,7 +290,7 @@ public final class ShardedQueue {
         for (String shardName : shardNames) {
             registrations.add(service.addItemListener(shardName, listener, includeValue));
         }
-        UUID id = UUID.randomUUID();
+        UUID id = UuidUtil.newUnsecureUUID();
         listenerRegistrations.put(id, registrations);
         return id;
     }

@@ -2,9 +2,9 @@
 
 |||
 |---|---|
-| Document status | **DRAFT — plan for review**. Revision 3: second review's answers applied (§1.6) and Phase 0 measurements in (§3.1) |
+| Document status | **Implemented** (phases 1, 2, 4 and the declarative config of 5), see §8 for what differs from this plan. Revision 3 of the plan: second review's answers applied (§1.6) and Phase 0 measurements in (§3.1) |
 | Feature | F23 (new, Hecaton-only; not an Enterprise parity feature) |
-| Milestone | M11 (proposed), branch `feature/m11-load-protection` once the plan is approved |
+| Milestone | M11, branch `claude/stoic-tesla-ny96s7` (one PR for the plan and the implementation) |
 | Toggle | Server side, programmatic: `Config#getLoadProtectionConfig().setEnabled(true)`. Off by default |
 
 ## 1. Background
@@ -583,3 +583,32 @@ Resolved in the reviews: see §1.6.
     client connection by about 4× (§3.2).
 - ❓ **Default limits.** Placeholders in §4.1 until the rest of Phase 0 is in.
 - ❓ **Names.** `LoadProtectionConfig`, `MapConfig#setImmutable`, `QueueConfig#setShardCount`.
+
+## 8. As implemented
+
+The user guide is [load-protection.md](../load-protection.md). Phases 1, 2 and 4 are in, with
+XML/YAML support from phase 5; phase 3 (`NATIVE`/tiered immutable maps) is not. Where the code
+differs from §4:
+
+- **Queue ordering.** Offers go to the emptiest shard and polls take from the fullest, using
+  size hints refreshed in the background, instead of polling the shard with the oldest head
+  (§4.6). It needs no timestamps in the items and keeps the shards level; the order across
+  shards is best effort, as agreed in §1.6. `maxSize` applies to each shard.
+- **Buffer pool cap.** `maxPooledBytes` caps the idle buffers kept for reuse. A connection that
+  needs a buffer when the pool is empty allocates one; reads never wait for a buffer.
+- **TLS buffers.** On the unified port the TLS buffers are sized before the protocol is known, so
+  only the socket-facing buffers of client connections are pooled; the TLS engine's own buffers
+  are not.
+- **TLS session resumption** (phase 2) is not implemented; the accept and authentication limits
+  bound the handshake cost instead.
+- **In-flight counting** covers requests that run as partition operations (map and queue
+  calls); other client requests are bounded by the per-connection read pause only.
+- **Reads between members.** The member near cache of an immutable map is a single-flight cache
+  in `NearCachedMapProxyImpl`, sized by `immutableMapNearCacheSize`; `InvocationFuture` keeps the
+  `Data` it reads from a response so that each waiting stage does not deserialize again.
+- **Spring** configuration is not done; Spring users set the fields on the `Config` bean.
+
+Not done from §5's exit criteria: the 50k-reader, churn-p99 and 24 h soak runs on the perf rig.
+The unit and multi-member tests (`ImmutableMapTest`, `LoadProtectionNetworkTest`,
+`MaintenanceLaneTest`, `ShardedQueueTest`, `LoadProtectionDeclarativeConfigTest`) cover the
+behaviour, and `hot-read-allocation.sh` measures copies per read.

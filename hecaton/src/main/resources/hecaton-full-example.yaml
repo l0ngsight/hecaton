@@ -921,6 +921,7 @@ hecaton:
       backup-count: 1
       async-backup-count: 0
       empty-queue-ttl: -1
+      shard-count: 1
       item-listeners:
         - include-value: true
           class-name: uk.org.hecaton.examples.ItemListener
@@ -1269,6 +1270,7 @@ hecaton:
         batch-size: 100
         class-name: PutIfAbsentMergePolicy
       read-backup-data: false
+      immutable: false
       data-persistence:
         enabled: false
         fsync: false
@@ -3846,6 +3848,33 @@ hecaton:
   # Integrity Checker is disabled by default.
   integrity-checker:
     enabled: false
+  #  ===== HECATON LOAD PROTECTION CONFIGURATION =====
+  #
+  # Load protection keeps a member responsive under heavy client load: it bounds the bytes queued for slow
+  # clients, admits client requests up to set limits, moves connection cleanup and authentication to a separate
+  # maintenance lane, and enables insert-only (immutable) maps and sharded queues (see "immutable" on maps and
+  # "shard-count"/"shard-names" on queues). It is disabled by default; see docs/load-protection.md.
+  load-protection:
+    enabled: false
+    immutable-map-near-cache-size: 1000
+    outbound:
+      max-pending-bytes-per-connection: 67108864
+      max-physical-pending-bytes: 1073741824
+      slow-consumer-timeout-seconds: 30
+    admission:
+      max-in-flight-requests-per-connection: 1024
+      max-in-flight-requests: 100000
+      max-message-bytes: 67108864
+      heap-reject-threshold: 0.9
+    maintenance:
+      thread-count: 2
+      max-backlog: 100000
+      max-accepts-per-second: 0
+      max-concurrent-authentications: 256
+    connection-buffers:
+      pooled: true
+      client-buffer-bytes: 32768
+      max-pooled-bytes: 1073741824
   #      ===== HECATON DATA CONNECTION CONFIGURATION =====
   #
   #      Configuration element's name is <data-connection>. Contains configuration of data connections

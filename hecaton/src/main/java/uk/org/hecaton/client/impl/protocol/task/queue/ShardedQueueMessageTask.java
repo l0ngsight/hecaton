@@ -118,7 +118,7 @@ public final class ShardedQueueMessageTask extends AbstractMessageTask<Object> i
         };
     }
 
-    @SuppressWarnings({"checkstyle:CyclomaticComplexity", "checkstyle:NPathComplexity"})
+    @SuppressWarnings({"checkstyle:CyclomaticComplexity", "checkstyle:NPathComplexity", "checkstyle:returncount"})
     private static String nameOf(Object request) {
         if (request instanceof String name) {
             return name;

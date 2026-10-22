@@ -305,7 +305,7 @@ public final class NioOutboundPipeline
 
     // is never called concurrently!
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "checkstyle:npathcomplexity"})
     public void process() throws Exception {
         processCount.inc();
         ConnectionBufferPool pool = bufferPool;

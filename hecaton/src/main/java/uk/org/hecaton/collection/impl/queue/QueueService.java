@@ -99,7 +99,7 @@ import static uk.org.hecaton.spi.impl.merge.MergingValueFactory.createMergingVal
  * Provides important services via methods for the the Queue
  * such as {@link uk.org.hecaton.collection.impl.queue.QueueEvictionProcessor }
  */
-@SuppressWarnings({"checkstyle:classfanoutcomplexity", "checkstyle:methodcount"})
+@SuppressWarnings({"checkstyle:classfanoutcomplexity", "checkstyle:methodcount", "checkstyle:classdataabstractioncoupling"})
 public class QueueService implements ManagedService, MigrationAwareService, TransactionalService, RemoteService,
         EventPublishingService<QueueEvent, ItemListener>, StatisticsAwareService<LocalQueueStats>,
         SplitBrainProtectionAwareService, SplitBrainHandlerService, DynamicMetricsProvider,

@@ -76,7 +76,7 @@ import static uk.org.hecaton.spi.impl.operationservice.CallStatus.RESPONSE;
 import static uk.org.hecaton.spi.impl.operationservice.CallStatus.VOID;
 import static uk.org.hecaton.spi.impl.operationservice.CallStatus.WAIT;
 
-@SuppressWarnings("checkstyle:methodcount")
+@SuppressWarnings({"checkstyle:methodcount", "checkstyle:classfanoutcomplexity"})
 public abstract class MapOperation extends AbstractNamedOperation
         implements IdentifiedDataSerializable, ServiceNamespaceAware,
         IMapStepAwareOperation {

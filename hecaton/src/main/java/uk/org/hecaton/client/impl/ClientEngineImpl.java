@@ -249,6 +249,7 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
 
     //PETER:
     @Override
+    @SuppressWarnings("checkstyle:cyclomaticcomplexity")
     public void accept(ClientMessage clientMessage) {
         Connection connection = clientMessage.getConnection();
         if (node.loadProtection.isEnabled()) {

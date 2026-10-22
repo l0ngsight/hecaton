@@ -146,7 +146,7 @@ public class NodeEngineImpl implements NodeEngine {
     private final InternalDataConnectionService dataConnectionService;
     private final TpcServerBootstrap tpcServerBootstrap;
 
-    @SuppressWarnings("checkstyle:executablestatementcount")
+    @SuppressWarnings({"checkstyle:executablestatementcount", "checkstyle:methodlength"})
     public NodeEngineImpl(Node node) {
         this.node = node;
         try {

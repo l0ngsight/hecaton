@@ -35,15 +35,6 @@ public abstract class KeyBasedMapOperation extends MapOperation
     public KeyBasedMapOperation() {
     }
 
-    @Override
-    protected void checkImmutableAccess() {
-        if (immutableMapAccess() != ImmutableMapAccess.INSERT) {
-            super.checkImmutableAccess();
-        } else if (recordStore != null && recordStore.containsKey(dataKey, getCallerAddress())) {
-            throw immutableRejection("it already holds the key, and refuses to insert it again with " + operationName());
-        }
-    }
-
     public KeyBasedMapOperation(String name, Data dataKey) {
         super(name);
         this.dataKey = dataKey;
@@ -53,6 +44,15 @@ public abstract class KeyBasedMapOperation extends MapOperation
         super(name);
         this.dataKey = dataKey;
         this.dataValue = dataValue;
+    }
+
+    @Override
+    protected void checkImmutableAccess() {
+        if (immutableMapAccess() != ImmutableMapAccess.INSERT) {
+            super.checkImmutableAccess();
+        } else if (recordStore != null && recordStore.containsKey(dataKey, getCallerAddress())) {
+            throw immutableRejection("it already holds the key, and refuses to insert it again with " + operationName());
+        }
     }
 
     @Override

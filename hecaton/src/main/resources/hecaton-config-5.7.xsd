@@ -80,6 +80,7 @@
                 <xs:element name="local-device" type="local-device" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="dynamic-configuration" type="dynamic-configuration" minOccurs="0"/>
                 <xs:element name="integrity-checker" type="integrity-checker" minOccurs="0"/>
+                <xs:element name="load-protection" type="load-protection" minOccurs="0"/>
                 <xs:element name="data-connection" type="data-connection" minOccurs="0" maxOccurs="unbounded"/>
                 <xs:element name="tpc" type="tpc" minOccurs="0"/>
                 <xs:element name="user-code-namespaces" type="namespaces-type" minOccurs="0"/>
@@ -270,6 +271,14 @@
                 <xs:annotation>
                     <xs:documentation>
                         True if reading local backup entries is enabled, false otherwise.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="immutable" type="xs:boolean" minOccurs="0" default="false">
+                <xs:annotation>
+                    <xs:documentation>
+                        True for an insert-only map: an entry, once put, is never changed or removed, so its
+                        value can be cached and shared by readers. Takes effect only when load protection is on.
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>
@@ -654,6 +663,27 @@
                         then your queue will be destroyed if it stays empty or unused for that time.
                     </xs:documentation>
                 </xs:annotation>
+            </xs:element>
+            <xs:element name="shard-count" type="xs:positiveInteger" minOccurs="0" default="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        The number of physical queues, each on its own partition, that form this logical queue.
+                        Takes effect only when load protection is on.
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="shard-names" minOccurs="0">
+                <xs:annotation>
+                    <xs:documentation>
+                        Names of existing queues that become the shards of this logical queue, without moving their
+                        items. Takes effect only when load protection is on.
+                    </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="shard-name" type="non-space-string" maxOccurs="unbounded"/>
+                    </xs:sequence>
+                </xs:complexType>
             </xs:element>
             <xs:element name="item-listeners" minOccurs="0">
                 <xs:annotation>
@@ -6363,6 +6393,58 @@
             <xs:annotation>
                 <xs:documentation>
                     True to enable integrity checker, false otherwise.
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
+
+    <xs:complexType name="load-protection">
+        <xs:all>
+            <xs:element name="immutable-map-near-cache-size" type="xs:nonNegativeInteger" minOccurs="0" default="1000"/>
+            <xs:element name="outbound" minOccurs="0">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="max-pending-bytes-per-connection" type="xs:positiveInteger" minOccurs="0"/>
+                        <xs:element name="max-physical-pending-bytes" type="xs:positiveInteger" minOccurs="0"/>
+                        <xs:element name="slow-consumer-timeout-seconds" type="xs:positiveInteger" minOccurs="0"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="admission" minOccurs="0">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="max-in-flight-requests-per-connection" type="xs:positiveInteger" minOccurs="0"/>
+                        <xs:element name="max-in-flight-requests" type="xs:positiveInteger" minOccurs="0"/>
+                        <xs:element name="max-message-bytes" type="xs:positiveInteger" minOccurs="0"/>
+                        <xs:element name="heap-reject-threshold" type="xs:float" minOccurs="0"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="maintenance" minOccurs="0">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="thread-count" type="xs:positiveInteger" minOccurs="0"/>
+                        <xs:element name="max-backlog" type="xs:positiveInteger" minOccurs="0"/>
+                        <xs:element name="max-accepts-per-second" type="xs:nonNegativeInteger" minOccurs="0"/>
+                        <xs:element name="max-concurrent-authentications" type="xs:positiveInteger" minOccurs="0"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="connection-buffers" minOccurs="0">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="pooled" type="xs:boolean" minOccurs="0"/>
+                        <xs:element name="client-buffer-bytes" type="xs:positiveInteger" minOccurs="0"/>
+                        <xs:element name="max-pooled-bytes" type="xs:positiveInteger" minOccurs="0"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+        <xs:attribute name="enabled" type="xs:boolean" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    True to turn on load protection (bounded buffers, admission control, the maintenance lane,
+                    insert-only maps and sharded queues), false otherwise.
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>

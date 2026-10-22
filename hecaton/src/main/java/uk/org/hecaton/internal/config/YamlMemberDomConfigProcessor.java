@@ -636,6 +636,15 @@ public class YamlMemberDomConfigProcessor extends MemberDomConfigProcessor {
     }
 
     @Override
+    protected List<String> handleQueueShardNames(Node n) {
+        List<String> shardNames = new ArrayList<>();
+        for (YamlNode shardNameNode : getWrappedYamlSequence(n).children()) {
+            shardNames.add(asScalar(shardNameNode).nodeValue());
+        }
+        return shardNames;
+    }
+
+    @Override
     protected void handleItemListeners(Node n, Consumer<ItemListenerConfig> configAddFunction) {
         for (Node listenerNode : childElements(n)) {
             boolean incValue = getBooleanValue(getTextContent(getNamedItemNode(listenerNode, "include-value")));
