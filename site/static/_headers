@@ -1,0 +1,10 @@
+# Cloudflare headers: https://developers.cloudflare.com/pages/configuration/headers/
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+
+# Schemas are fetched by IDEs, XML parsers and browser-based editors.
+/schema/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600

@@ -1,0 +1,10 @@
+// Cloudflare Worker that serves the hecaton.org.uk website and schemas (site/README.md).
+// Build command: bash site/build.sh. Deploy command: npx wrangler deploy.
+{
+  "name": "hecaton",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./site/dist",
+    "not_found_handling": "404-page"
+  }
+}
