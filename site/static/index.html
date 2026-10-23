@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hecaton · Open-source in-memory data grid</title>
+<meta name="description" content="Hecaton is an open-source in-memory data grid: a fork of Hazelcast CE 5.7 with TLS, the CP Subsystem, High-Density memory, persistence and WAN replication included. Apache 2.0, no license key.">
+<meta name="theme-color" content="#061827">
+<link rel="canonical" href="https://hecaton.org.uk/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://hecaton.org.uk/">
+<meta property="og:title" content="Hecaton · A hundred hands, one mind">
+<meta property="og:description" content="Open-source in-memory data grid. Enterprise features included, no license key.">
+<meta property="og:image" content="https://hecaton.org.uk/hecaton.svg">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="/"><img src="/favicon.svg" alt="">HECATON</a>
+    <ul>
+      <li><a href="#power-ups">Features</a></li>
+      <li><a href="#start">Quick start</a></li>
+      <li><a href="#schemas">Schemas</a></li>
+      <li><a href="#migrate">Migrate</a></li>
+      <li><a href="https://github.com/l0ngsight/hecaton">GitHub</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="stars"></div>
+  <div class="wrap">
+    <div>
+      <p class="kicker">&gt; PLAYER 1 READY</p>
+      <h1>A HUNDRED HANDS.<br><span>ONE MIND.</span></h1>
+      <p class="lead">Hecaton is an open-source in-memory data grid that spreads your data across many nodes and keeps it consistent. Enterprise features included. No license key.</p>
+      <div class="ctas">
+        <a class="btn" href="#start">&#9654; PRESS START</a>
+        <a class="btn alt" href="https://github.com/l0ngsight/hecaton">VIEW SOURCE</a>
+      </div>
+      <div class="box term">
+        <div class="term-bar"><i></i><i></i><i></i><span>~/hecaton</span><button class="copy" type="button" data-copy="docker run -p 5701:5701 ghcr.io/l0ngsight/hecaton:&lt;version&gt;">COPY</button></div>
+        <pre><span class="p">$ </span>docker run -p 5701:5701 ghcr.io/l0ngsight/hecaton:<span class="s">&lt;version&gt;</span><span class="cursor"></span></pre>
+      </div>
+    </div>
+    <img class="sprite" src="/hecaton.svg" alt="Pixel-art giant with many arms juggling data blocks" width="384" height="288">
+  </div>
+</header>
+
+<div class="alt" style="background:var(--bg-2);border-block:4px solid var(--line)">
+  <div class="wrap stats">
+    <div class="stat"><b>5.7</b><span>Hazelcast CE base</span></div>
+    <div class="stat"><b>JAVA 25</b><span>members &middot; clients on 17+</span></div>
+    <div class="stat"><b>APACHE 2.0</b><span>core license</span></div>
+    <div class="stat"><b>0</b><span>license keys</span></div>
+  </div>
+</div>
+
+<section id="power-ups">
+  <div class="wrap">
+    <p class="kicker">&gt; SELECT POWER-UP</p>
+    <h2>EVERYTHING UNLOCKED</h2>
+    <p class="intro">Everything Hazelcast Community Edition does (distributed maps, caches, queues, SQL, stream processing with Jet), plus open-source implementations of the features Hazelcast sells only in its Enterprise Edition.</p>
+    <div class="grid">
+      <article class="card box"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#c7ff39" d="M2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM1 1h1v1h-1zM6 1h1v1h-1zM1 2h1v1h-1zM6 2h1v1h-1z"/><path fill="#39d0ff" d="M0 3h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM0 5h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1zM0 7h1v1h-1zM1 7h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1z"/><path fill="#061827" d="M3 4h1v1h-1zM4 4h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1z"/></svg><h3>TLS &amp; SECURITY</h3><p>Encrypted member, client and WAN connections. JAAS realms, client certificates and client permissions.</p></article>
+      <article class="card box"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#c7ff39" d="M2 2h1v1h-1zM5 2h1v1h-1zM1 3h1v1h-1zM6 3h1v1h-1zM0 4h1v1h-1zM7 4h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1z"/><path fill="#39d0ff" d="M0 5h1v1h-1zM1 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1z"/><path fill="#ffc93c" d="M3 0h1v1h-1zM4 0h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1z"/></svg><h3>CP SUBSYSTEM</h3><p>Raft-based linearizable locks, atomics, semaphores, latches and CPMap.</p></article>
+      <article class="card box"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#c7ff39" d="M0 5h1v1h-1zM2 5h1v1h-1zM4 5h1v1h-1zM6 5h1v1h-1zM0 6h1v1h-1zM2 6h1v1h-1zM4 6h1v1h-1zM6 6h1v1h-1z"/><path fill="#39d0ff" d="M0 1h1v1h-1zM1 1h1v1h-1zM2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM0 2h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM0 3h1v1h-1zM3 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1z"/><path fill="#061827" d="M1 2h1v1h-1zM2 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1z"/></svg><h3>HIGH-DENSITY</h3><p>Data off the Java heap, managed with the FFM API. Big heaps, small GC pauses.</p></article>
+      <article class="card box"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#c7ff39" d="M1 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM6 4h1v1h-1zM1 5h1v1h-1zM6 5h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1z"/><path fill="#39d0ff" d="M0 0h1v1h-1zM1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM6 0h1v1h-1zM0 1h1v1h-1zM6 1h1v1h-1zM7 1h1v1h-1zM0 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM0 3h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM0 4h1v1h-1zM7 4h1v1h-1zM0 5h1v1h-1zM7 5h1v1h-1zM0 6h1v1h-1zM7 6h1v1h-1zM0 7h1v1h-1zM1 7h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1zM6 7h1v1h-1zM7 7h1v1h-1z"/><path fill="#061827" d="M5 1h1v1h-1zM5 2h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1z"/><path fill="#f4f7ee" d="M1 1h1v1h-1zM2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM1 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1z"/></svg><h3>PERSISTENCE</h3><p>Data and cluster metadata on disk, coordinated cluster restart and hot backups.</p></article>
+      <article class="card box"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#c7ff39" d="M2 1h1v1h-1zM5 1h1v1h-1zM1 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM6 2h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM1 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM5 6h1v1h-1z"/><path fill="#39d0ff" d="M2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM1 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM7 2h1v1h-1zM0 3h1v1h-1zM1 3h1v1h-1zM4 3h1v1h-1zM5 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM2 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM0 5h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM7 5h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM6 6h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1z"/></svg><h3>WAN REPLICATION</h3><p>Asynchronous replication of maps and caches between clusters and regions.</p></article>
+      <article class="card box"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#c7ff39" d="M2 0h1v1h-1zM1 1h1v1h-1zM2 1h1v1h-1zM0 2h1v1h-1zM1 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1z"/><path fill="#39d0ff" d="M5 4h1v1h-1zM6 4h1v1h-1zM0 5h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1z"/></svg><h3>BLUE/GREEN</h3><p>Client failover between clusters for zero-downtime cut-overs.</p></article>
+      <article class="card box"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#c7ff39" d="M2 2h1v1h-1zM1 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM2 4h1v1h-1z"/><path fill="#39d0ff" d="M1 1h1v1h-1zM2 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM1 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM5 2h1v1h-1zM7 2h1v1h-1zM0 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM5 4h1v1h-1zM7 4h1v1h-1zM0 5h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM6 6h1v1h-1zM7 6h1v1h-1z"/><path fill="#ff5ea8" d="M6 2h1v1h-1zM5 3h1v1h-1zM7 3h1v1h-1zM6 4h1v1h-1z"/></svg><h3>YOUR CLIENTS WORK</h3><p>Official Hazelcast clients for Java, Python, Node.js, Go and .NET connect to Hecaton clusters.</p></article>
+      <article class="card box"><svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true"><path fill="#061827" d="M3 2h1v1h-1zM4 2h1v1h-1zM2 3h1v1h-1zM5 3h1v1h-1zM2 4h1v1h-1zM5 4h1v1h-1zM3 5h1v1h-1zM4 5h1v1h-1z"/><path fill="#f4f7ee" d="M2 1h1v1h-1zM1 2h1v1h-1z"/><path fill="#ffc93c" d="M2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM1 1h1v1h-1zM3 1h1v1h-1zM4 1h1v1h-1zM5 1h1v1h-1zM6 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM5 2h1v1h-1zM6 2h1v1h-1zM7 2h1v1h-1zM0 3h1v1h-1zM1 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM7 3h1v1h-1zM0 4h1v1h-1zM1 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM7 4h1v1h-1zM0 5h1v1h-1zM1 5h1v1h-1zM2 5h1v1h-1zM5 5h1v1h-1zM6 5h1v1h-1zM7 5h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM2 7h1v1h-1zM3 7h1v1h-1zM4 7h1v1h-1zM5 7h1v1h-1z"/></svg><h3>FREE PLAY</h3><p>No license key, no node limits. Kubernetes discovery built in.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="compare">
+  <div class="wrap">
+    <p class="kicker">&gt; HIGH SCORES</p>
+    <h2>WHAT YOU GET</h2>
+    <div class="box table-wrap">
+      <table>
+        <thead><tr><th>FEATURE</th><th>HAZELCAST CE 5.7</th><th>HECATON</th></tr></thead>
+        <tbody>
+          <tr><td>Maps, caches, queues, SQL, Jet</td><td class="yes">&#9632; YES</td><td class="yes">&#9632; YES</td></tr>
+          <tr><td>TLS and authentication</td><td class="no">&times; NO</td><td class="yes">&#9632; YES</td></tr>
+          <tr><td>CP Subsystem (Raft)</td><td class="no">&times; NO</td><td class="yes">&#9632; YES</td></tr>
+          <tr><td>High-Density memory</td><td class="no">&times; NO</td><td class="yes">&#9632; YES</td></tr>
+          <tr><td>Persistence and hot backups</td><td class="no">&times; NO</td><td class="yes">&#9632; YES</td></tr>
+          <tr><td>WAN replication</td><td class="no">&times; NO</td><td class="yes">&#9632; YES</td></tr>
+          <tr><td>Client blue/green failover</td><td class="no">&times; NO</td><td class="yes">&#9632; YES</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="start">
+  <div class="wrap">
+    <p class="kicker">&gt; LEVEL SELECT</p>
+    <h2>QUICK START</h2>
+    <p class="intro">Members run on Java 25; client applications on Java 17 or later. On one network, members find each other by multicast.</p>
+    <div class="levels">
+      <div class="level box">
+        <span class="tag">LEVEL 1</span>
+        <h3>CONTAINER</h3>
+        <p>One member, one command.</p>
+<pre class="code">docker run -p 5701:5701 \
+  ghcr.io/l0ngsight/hecaton:<span class="s">&lt;version&gt;</span></pre>
+      </div>
+      <div class="level box">
+        <span class="tag">LEVEL 2</span>
+        <h3>DISTRIBUTION</h3>
+        <p>From the <a href="https://github.com/l0ngsight/hecaton/releases">GitHub releases</a>.</p>
+<pre class="code">tar xzf hecaton-<span class="s">&lt;version&gt;</span>.tar.gz
+cd hecaton-<span class="s">&lt;version&gt;</span>
+bin/hc start</pre>
+      </div>
+      <div class="level box">
+        <span class="tag">LEVEL 3</span>
+        <h3>EMBEDDED</h3>
+        <p>Depend on <code>uk.org.hecaton:hecaton-member</code>.</p>
+<pre class="code"><span class="t">HecatonInstance</span> member =
+    <span class="t">Hecaton</span>.newHecatonInstance();
+<span class="t">IMap</span>&lt;<span class="t">String</span>, <span class="t">String</span>&gt; map =
+    member.getMap(<span class="s">"scores"</span>);</pre>
+      </div>
+    </div>
+    <p style="margin-top:32px"><a class="btn alt" href="https://github.com/l0ngsight/hecaton/blob/main/docs/getting-started.md">FULL GUIDE &rarr;</a></p>
+  </div>
+</section>
+
+<section class="alt" id="schemas">
+  <div class="wrap split">
+    <div>
+      <p class="kicker">&gt; SAVE FILES</p>
+      <h2>CONFIG SCHEMAS</h2>
+      <p class="intro">XML Schemas for member, client and Spring configuration, so your IDE can validate and autocomplete <code>hecaton.xml</code>. JSON Schemas for YAML configuration are next to them.</p>
+      <ul class="ns">
+        <li><b>MEMBER</b><a href="/schema/config/"><code>https://hecaton.org.uk/schema/config</code></a></li>
+        <li><b>CLIENT &amp; FAILOVER</b><a href="/schema/client-config/"><code>https://hecaton.org.uk/schema/client-config</code></a></li>
+        <li><b>SPRING</b><a href="/schema/spring/"><code>https://hecaton.org.uk/schema/spring</code></a></li>
+      </ul>
+    </div>
+    <div class="box term">
+      <div class="term-bar"><i></i><i></i><i></i><span>hecaton.xml</span></div>
+<pre><span class="k">&lt;hecaton</span> <span class="t">xmlns</span>=<span class="s">"https://hecaton.org.uk/schema/config"</span>
+  <span class="t">xmlns:xsi</span>=<span class="s">"http://www.w3.org/2001/XMLSchema-instance"</span>
+  <span class="t">xsi:schemaLocation</span>=<span class="s">"https://hecaton.org.uk/schema/config
+    https://hecaton.org.uk/schema/config/hecaton-config-5.7.xsd"</span><span class="k">&gt;</span>
+
+  <span class="k">&lt;cluster-name&gt;</span>dev<span class="k">&lt;/cluster-name&gt;</span>
+  <span class="k">&lt;map</span> <span class="t">name</span>=<span class="s">"scores"</span><span class="k">&gt;</span>
+    <span class="k">&lt;backup-count&gt;</span>1<span class="k">&lt;/backup-count&gt;</span>
+  <span class="k">&lt;/map&gt;</span>
+<span class="k">&lt;/hecaton&gt;</span></pre>
+    </div>
+  </div>
+</section>
+
+<section class="continue" id="migrate">
+  <div class="wrap">
+    <p class="count" aria-hidden="true">9</p>
+    <h2>CONTINUE?</h2>
+    <p>Coming from Hazelcast? An OpenRewrite recipe moves your Java code and builds to Hecaton, and <code>hecaton-migrate</code> converts configuration, Dockerfiles, Kubernetes manifests and scripts. A data copier moves live map entries between clusters.</p>
+    <a class="btn" href="https://github.com/l0ngsight/hecaton/blob/main/docs/migration.md">&#9654; MIGRATION GUIDE</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <p>&copy; 2026 The Hecaton Authors. Licensed under the Apache License 2.0, except <code>hecaton-sql</code> and some Jet connectors, which keep the Hazelcast Community License.</p>
+      <p>Hecaton is a fork of Hazelcast Platform Community Edition. &ldquo;Hazelcast&rdquo; is a trademark of Hazelcast, Inc. Hecaton is not affiliated with or endorsed by Hazelcast, Inc.</p>
+    </div>
+    <ul>
+      <li><a href="https://github.com/l0ngsight/hecaton/blob/main/docs/README.md">Docs</a></li>
+      <li><a href="https://github.com/l0ngsight/hecaton/releases">Releases</a></li>
+      <li><a href="https://github.com/l0ngsight/hecaton/blob/main/SECURITY.md">Security</a></li>
+      <li><a href="/schema/">Schemas</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+  document.querySelectorAll(".copy").forEach(function (b) {
+    b.addEventListener("click", function () {
+      navigator.clipboard.writeText(b.dataset.copy).then(function () {
+        b.textContent = "COPIED!";
+        setTimeout(function () { b.textContent = "COPY"; }, 1500);
+      });
+    });
+  });
+</script>
+</body>
+</html>
