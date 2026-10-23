@@ -42,3 +42,4 @@ replay_pid*
 
 # Website build output
 site/dist/
+.wrangler/

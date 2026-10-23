@@ -6,6 +6,7 @@ The project website and the configuration schemas that Hecaton's XML namespaces 
 |---|---|
 | `static/` | The page (`index.html`), `style.css`, pixel art, `404.html`, Cloudflare `_headers` |
 | `build.sh` | Builds `dist/`: copies `static/` and the schemas from the source tree |
+| `../wrangler.jsonc` | The Cloudflare Worker that serves `dist/` |
 
 The schemas are not copied into `site/`: `build.sh` takes them from
 `hecaton/src/main/resources` and `hecaton-spring/src/main/resources` on every build, so the
@@ -24,36 +25,37 @@ bash site/build.sh
 python3 -m http.server 8787 -d site/dist     # http://localhost:8787
 ```
 
-## Deploy to Cloudflare Pages
+## Deploy to Cloudflare
 
-The domain is already on Cloudflare, so DNS and TLS are set up for you when the domain is
-attached. Do this once:
+The site is a Cloudflare Worker that only serves static files, configured by `wrangler.jsonc`
+at the repository root. The domain is already on Cloudflare, so DNS and TLS are set up for you
+when the domain is attached. Do this once:
 
-1. **Create the project.** Cloudflare dashboard → **Workers & Pages** → **Create** → **Pages**
-   tab → **Import an existing Git repository**. Connect GitHub if asked and choose
-   `l0ngsight/hecaton`.
-2. **Build settings:**
+1. **Create the Worker.** Cloudflare dashboard (account home, not the domain) → **Compute** →
+   **Workers & Pages** → **Create application** → **Import a repository**. Connect GitHub if
+   asked and choose `l0ngsight/hecaton`.
+2. **Settings:**
 
    | Setting | Value |
    |---|---|
-   | Project name | `hecaton` (the site is then also at `hecaton.pages.dev`) |
-   | Production branch | `main` |
-   | Framework preset | None |
+   | Project name | `hecaton` (must match `name` in `wrangler.jsonc`) |
    | Build command | `bash site/build.sh` |
-   | Build output directory | `site/dist` |
-   | Root directory | *(empty)* |
+   | Deploy command | `npx wrangler deploy` |
+   | Non-production branch deploy command | `npx wrangler versions upload` |
+   | Path | `/` |
 
-   **Save and Deploy**. The first build takes a minute; open the `*.pages.dev` URL it shows
-   and check the page and `/schema/config/`.
-3. **Build only when the site or schemas change** (optional): project → **Settings** →
-   **Builds** → **Build watch paths** → include `site/*`, `hecaton/src/main/resources/*`,
-   `hecaton-spring/src/main/resources/*`. Pull requests that touch them get a preview URL.
-4. **Attach the domain:** project → **Custom domains** → **Set up a custom domain** →
-   `hecaton.org.uk` → **Activate domain**. Cloudflare adds the DNS record itself. Repeat for
-   `www.hecaton.org.uk` if you want it.
-5. **Redirect `www`** (if added): the zone `hecaton.org.uk` → **Rules** → **Redirect Rules** →
-   template *Redirect from WWW to root*, status 301.
-6. **Check:** after a few minutes (certificate issuing):
+   **Deploy**. Open the `hecaton.<account>.workers.dev` URL it shows and check the page and
+   `/schema/config/`.
+3. **Build only when the site or schemas change** (optional): the Worker → **Settings** →
+   **Build** → **Build watch paths** → include `site/*`, `wrangler.jsonc`,
+   `hecaton/src/main/resources/*`, `hecaton-spring/src/main/resources/*`.
+4. **Attach the domain:** the Worker → **Settings** → **Domains & Routes** → **Add** →
+   **Custom domain** → `hecaton.org.uk`. Cloudflare adds the DNS record and certificate. Add
+   `www.hecaton.org.uk` the same way if you want it, then redirect it: the zone
+   `hecaton.org.uk` → **Rules** → **Redirect Rules** → template *Redirect from WWW to root*.
+   If the domain already has a DNS record for `hecaton.org.uk` (a parking page, for example),
+   delete it first.
+5. **Check:** after a few minutes (certificate issuing):
 
    ```sh
    curl -sI https://hecaton.org.uk/ | head -1
@@ -66,9 +68,11 @@ attached. Do this once:
 
 From then on every push to `main` redeploys the site.
 
-**Without Git integration:** build locally and upload with Wrangler (needs a Cloudflare login):
+**Without Git integration:** build locally and deploy with Wrangler (needs a Cloudflare login):
 
 ```sh
 bash site/build.sh
-npx wrangler pages deploy site/dist --project-name hecaton --branch main
+npx wrangler deploy
 ```
+
+`npx wrangler dev` serves the built site locally the way Cloudflare will.
