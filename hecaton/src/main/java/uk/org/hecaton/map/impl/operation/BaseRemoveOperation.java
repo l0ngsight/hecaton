@@ -95,4 +95,10 @@ public abstract class BaseRemoveOperation extends LockAwareOperation
     public void onWaitExpire() {
         sendResponse(null);
     }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // removes entries
+        return ImmutableMapAccess.CHANGE;
+    }
 }

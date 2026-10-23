@@ -37,6 +37,7 @@ import uk.org.hecaton.spi.impl.operationservice.LiveOperationsTracker;
 import uk.org.hecaton.spi.impl.operationservice.Notifier;
 import uk.org.hecaton.spi.impl.operationservice.WaitNotifyKey;
 
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -146,6 +147,19 @@ public class OperationParkerImpl implements OperationParker, LiveOperationsTrack
     public void onClientDisconnected(UUID clientUuid) {
         for (WaitSet waitSet : waitSetMap.values()) {
             waitSet.cancelAll(clientUuid, new TargetDisconnectedException("Client disconnected: " + clientUuid));
+        }
+    }
+
+    /**
+     * Cancels the parked operations of the disconnected clients in one pass over the wait sets,
+     * instead of one pass per client (load protection, F23).
+     */
+    public void onClientsDisconnected(Set<UUID> clientUuids) {
+        if (clientUuids.isEmpty()) {
+            return;
+        }
+        for (WaitSet waitSet : waitSetMap.values()) {
+            waitSet.cancelAll(clientUuids);
         }
     }
 

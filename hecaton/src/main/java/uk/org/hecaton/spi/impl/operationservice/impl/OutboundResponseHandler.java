@@ -17,6 +17,7 @@
 package uk.org.hecaton.spi.impl.operationservice.impl;
 
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
+import uk.org.hecaton.internal.serialization.impl.HeapData;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.internal.server.ServerConnectionManager;
@@ -65,18 +66,31 @@ import static java.nio.ByteOrder.BIG_ENDIAN;
  */
 public final class OutboundResponseHandler implements OperationResponseHandler {
 
+    /** The smallest value sent from its stored array: below it, copying costs less than an extra write. */
+    static final int SHARED_VALUE_MIN_BYTES = 4096;
+
     private final Address thisAddress;
     private final InternalSerializationService serializationService;
     private final boolean useBigEndian;
     private final ILogger logger;
+    /** Load protection (F23): large heap values are sent from their stored array instead of copied into the packet. */
+    private final boolean shareValues;
 
     OutboundResponseHandler(Address thisAddress,
                             InternalSerializationService serializationService,
                             ILogger logger) {
+        this(thisAddress, serializationService, logger, false);
+    }
+
+    OutboundResponseHandler(Address thisAddress,
+                            InternalSerializationService serializationService,
+                            ILogger logger,
+                            boolean shareValues) {
         this.thisAddress = thisAddress;
         this.serializationService = serializationService;
         this.useBigEndian = serializationService.getByteOrder() == BIG_ENDIAN;
         this.logger = logger;
+        this.shareValues = shareValues;
     }
 
     @Override
@@ -131,8 +145,14 @@ public final class OutboundResponseHandler implements OperationResponseHandler {
 
     Packet toNormalResponsePacket(long callId, int backupAcks, boolean urgent, Object value) {
         byte[] bytes;
+        byte[] tail = null;
         boolean isData = value instanceof Data;
-        if (isData) {
+        if (isData && shareValues && value instanceof HeapData heapData && heapData.totalSize() >= SHARED_VALUE_MIN_BYTES) {
+            // the packet sends the value's stored array after its prologue: heap data never changes in place
+            tail = heapData.toByteArray();
+            bytes = new byte[OFFSET_DATA_PAYLOAD];
+            writeInt(bytes, OFFSET_DATA_LENGTH, tail.length, useBigEndian);
+        } else if (isData) {
             Data data = (Data) value;
 
             int dataLengthInBytes = data.totalSize();
@@ -163,7 +183,8 @@ public final class OutboundResponseHandler implements OperationResponseHandler {
         bytes[OFFSET_IS_DATA] = (byte) (isData ? 1 : 0);
         //the remaining part of the byte array is already filled, so we are done.
 
-        return newResponsePacket(bytes, urgent);
+        Packet packet = newResponsePacket(bytes, urgent);
+        return tail == null ? packet : packet.setTail(tail);
     }
 
     public void sendBackupAck(ServerConnectionManager connectionManager, Address target, long callId, boolean urgent) {

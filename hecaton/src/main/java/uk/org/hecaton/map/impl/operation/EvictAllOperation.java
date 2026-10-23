@@ -117,4 +117,10 @@ public class EvictAllOperation extends MapOperation
     public int getClassId() {
         return MapDataSerializerHook.EVICT_ALL;
     }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // removes entries from memory
+        return ImmutableMapAccess.CHANGE;
+    }
 }

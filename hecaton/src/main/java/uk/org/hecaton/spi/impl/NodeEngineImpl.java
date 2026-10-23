@@ -30,6 +30,8 @@ import uk.org.hecaton.internal.cluster.ClusterService;
 import uk.org.hecaton.internal.diagnostics.Diagnostics;
 import uk.org.hecaton.internal.dynamicconfig.ClusterWideConfigurationService;
 import uk.org.hecaton.internal.dynamicconfig.ConfigurationService;
+import uk.org.hecaton.internal.loadprotection.LoadProtection;
+import uk.org.hecaton.internal.loadprotection.MaintenanceLane;
 import uk.org.hecaton.internal.management.ManagementCenterService;
 import uk.org.hecaton.internal.metrics.MetricsRegistry;
 import uk.org.hecaton.internal.metrics.impl.MetricsConfigHelper;
@@ -144,7 +146,7 @@ public class NodeEngineImpl implements NodeEngine {
     private final InternalDataConnectionService dataConnectionService;
     private final TpcServerBootstrap tpcServerBootstrap;
 
-    @SuppressWarnings("checkstyle:executablestatementcount")
+    @SuppressWarnings({"checkstyle:executablestatementcount", "checkstyle:methodlength"})
     public NodeEngineImpl(Node node) {
         this.node = node;
         try {
@@ -162,6 +164,10 @@ public class NodeEngineImpl implements NodeEngine {
             this.operationService = new OperationServiceImpl(this);
             this.eventService = new EventServiceImpl(this);
             this.operationParker = new OperationParkerImpl(this);
+            MaintenanceLane maintenanceLane = node.loadProtection.getMaintenanceLane();
+            if (maintenanceLane != null) {
+                maintenanceLane.setDisconnectHandler(operationParker::onClientsDisconnected);
+            }
             UserCodeDeploymentService userCodeDeploymentService = new UserCodeDeploymentService();
             this.configurationService = node.getNodeExtension().createService(ClusterWideConfigurationService.class, this);
             ClassLoader configClassLoader = node.getConfigClassLoader();
@@ -527,9 +533,20 @@ public class NodeEngineImpl implements NodeEngine {
         eventService.onMemberLeft(member);
     }
 
+    /** The member's load protection (F23). */
+    public LoadProtection getLoadProtection() {
+        return node.loadProtection;
+    }
+
     @Override
     public void onClientDisconnected(UUID clientUuid) {
-        operationParker.onClientDisconnected(clientUuid);
+        MaintenanceLane maintenanceLane = node.loadProtection.getMaintenanceLane();
+        if (maintenanceLane != null) {
+            // load protection (F23): cancelled with the next batch of disconnected clients
+            maintenanceLane.clientDisconnected(clientUuid);
+        } else {
+            operationParker.onClientDisconnected(clientUuid);
+        }
     }
 
     public void onPartitionMigrate(PartitionMigrationEvent migrationInfo) {

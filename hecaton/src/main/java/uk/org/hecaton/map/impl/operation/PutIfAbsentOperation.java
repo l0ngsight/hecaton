@@ -74,4 +74,10 @@ public class PutIfAbsentOperation
     public int getClassId() {
         return MapDataSerializerHook.PUT_IF_ABSENT;
     }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // inserts only an absent key and never replaces a held one
+        return ImmutableMapAccess.READ;
+    }
 }

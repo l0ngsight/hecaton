@@ -26,6 +26,7 @@ import uk.org.hecaton.internal.server.ServerConnection;
 import uk.org.hecaton.internal.util.counters.MwCounter;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.eventservice.EventRegistration;
 import uk.org.hecaton.spi.impl.eventservice.EventService;
 
@@ -52,6 +53,7 @@ public class ClientEndpointManagerImpl implements ClientEndpointManager, Dynamic
 
     private final ILogger logger;
     private final EventService eventService;
+    private final boolean quietChurn;
 
     @Probe(name = CLIENT_METRIC_ENDPOINT_MANAGER_COUNT, level = MANDATORY)
     private final ConcurrentMap<Connection, ClientEndpoint> endpoints =
@@ -63,6 +65,7 @@ public class ClientEndpointManagerImpl implements ClientEndpointManager, Dynamic
     public ClientEndpointManagerImpl(NodeEngine nodeEngine) {
         this.logger = nodeEngine.getLogger(ClientEndpointManager.class);
         this.eventService = nodeEngine.getEventService();
+        this.quietChurn = nodeEngine instanceof NodeEngineImpl impl && impl.getLoadProtection().isEnabled();
         MetricsRegistry metricsRegistry = nodeEngine.getMetricsRegistry();
         metricsRegistry.registerStaticMetrics(this, CLIENT_PREFIX_ENDPOINT);
         metricsRegistry.registerDynamicMetricsProvider(this);
@@ -112,7 +115,12 @@ public class ClientEndpointManagerImpl implements ClientEndpointManager, Dynamic
             return;
         }
 
-        logger.info("Destroying " + endpoint);
+        if (quietChurn) {
+            // load protection (F23): the maintenance lane logs a summary of client connections instead
+            logger.fine("Destroying " + endpoint);
+        } else {
+            logger.info("Destroying " + endpoint);
+        }
         try {
             endpoint.destroy();
         } catch (LoginException e) {

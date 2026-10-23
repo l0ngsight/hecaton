@@ -895,6 +895,12 @@
         * <empty-queue-ttl>:
             Used to purge unused or empty queues. If you define a value (time in seconds) for this element, then
             your queue will be destroyed if it stays empty or unused for that time.
+        * <shard-count>:
+            Number of physical queues, each on its own partition, that form this logical queue. Takes effect only
+            when load protection is on. Its default value is 1.
+        * <shard-names>:
+            Names (sub-element <shard-name>) of existing queues that become the shards of this logical queue,
+            without moving their items. Used instead of <shard-count>.
         * <item-listeners>:
             Adds listeners (listener classes) for the queue items using its sub-element <item-listener>. You can
             also set its attribute "include-value" to true if you want the item event to contain the item values,
@@ -935,6 +941,7 @@
         <backup-count>1</backup-count>
         <async-backup-count>0</async-backup-count>
         <empty-queue-ttl>-1</empty-queue-ttl>
+        <shard-count>1</shard-count>
         <item-listeners>
             <item-listener include-value="true">uk.org.hecaton.examples.ItemListener</item-listener>
         </item-listeners>
@@ -1062,6 +1069,9 @@
         * <read-backup-data>:
             Used to enable reading from local backup map entries. Its default value is false. It can be used if there is
             at least 1 sync or async backup.
+        * <immutable>:
+            True for an insert-only map: an entry, once put, is never changed or removed, so members can cache
+            and share its value. Takes effect only when load protection is on. Its default value is false.
             * <merkle-tree>:
             It has the following attributes and sub-elements:
             - enabled:
@@ -1278,6 +1288,7 @@
         <eviction eviction-policy="NONE" max-size-policy="PER_NODE" size="0"/>
         <merge-policy batch-size="100">PutIfAbsentMergePolicy</merge-policy>
         <read-backup-data>false</read-backup-data>
+        <immutable>false</immutable>
         <merkle-tree enabled="false">
             <depth>10</depth>
         </merkle-tree>
@@ -3948,6 +3959,48 @@
     it can be disabled to improve startup time. Integrity Checker is disabled by default.
     -->
     <integrity-checker enabled="false"/>
+
+    <!--
+    ===== HECATON LOAD PROTECTION CONFIGURATION =====
+
+    Configuration element's name is <load-protection>. Load protection keeps a member responsive under heavy
+    client load: it bounds the bytes queued for slow clients, admits client requests up to set limits, moves
+    connection cleanup and authentication to a separate maintenance lane, and enables insert-only (immutable)
+    maps and sharded queues. It is disabled by default; see docs/load-protection.md.
+        * <immutable-map-near-cache-size>: entries of each immutable map cached on every member.
+        * <outbound>: limits on the response bytes queued per client connection and in total, and the time
+          after which a client that does not read is disconnected.
+        * <admission>: limits on in-flight requests per connection and in total, the largest accepted client
+          message, and the heap use after a garbage collection above which requests are refused.
+        * <maintenance>: the maintenance lane's threads and backlog, accepted connections per second (0 is
+          unlimited) and concurrent authentications.
+        * <connection-buffers>: pooling and size of the socket buffers of client connections.
+    -->
+    <load-protection enabled="false">
+        <immutable-map-near-cache-size>1000</immutable-map-near-cache-size>
+        <outbound>
+            <max-pending-bytes-per-connection>67108864</max-pending-bytes-per-connection>
+            <max-physical-pending-bytes>1073741824</max-physical-pending-bytes>
+            <slow-consumer-timeout-seconds>30</slow-consumer-timeout-seconds>
+        </outbound>
+        <admission>
+            <max-in-flight-requests-per-connection>1024</max-in-flight-requests-per-connection>
+            <max-in-flight-requests>100000</max-in-flight-requests>
+            <max-message-bytes>67108864</max-message-bytes>
+            <heap-reject-threshold>0.9</heap-reject-threshold>
+        </admission>
+        <maintenance>
+            <thread-count>2</thread-count>
+            <max-backlog>100000</max-backlog>
+            <max-accepts-per-second>0</max-accepts-per-second>
+            <max-concurrent-authentications>256</max-concurrent-authentications>
+        </maintenance>
+        <connection-buffers>
+            <pooled>true</pooled>
+            <client-buffer-bytes>32768</client-buffer-bytes>
+            <max-pooled-bytes>1073741824</max-pooled-bytes>
+        </connection-buffers>
+    </load-protection>
 
     <!--
       ===== HECATON DATA CONNECTION CONFIGURATION =====

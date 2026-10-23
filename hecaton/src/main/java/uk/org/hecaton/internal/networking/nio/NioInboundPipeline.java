@@ -56,6 +56,10 @@ public final class NioInboundPipeline extends NioPipeline implements InboundPipe
 
     private InboundHandler[] handlers = new InboundHandler[0];
     private ByteBuffer receiveBuffer;
+    /** Load protection (F23): the pool the socket read buffer is borrowed from while reading, or null. */
+    private volatile ConnectionBufferPool bufferPool;
+    private int pooledCapacity;
+    private boolean bufferBorrowed;
 
     @Probe(name = NETWORKING_METRIC_NIO_INBOUND_PIPELINE_BYTES_READ, unit = BYTES, level = DEBUG)
     private final SwCounter bytesRead = newSwCounter();
@@ -109,8 +113,21 @@ public final class NioInboundPipeline extends NioPipeline implements InboundPipe
         return lastReadTime;
     }
 
+    /**
+     * Borrows the socket read buffer from {@code pool} while reading and gives it back when it is
+     * empty, so that the connection holds no read buffer while idle (load protection, F23).
+     */
+    public void useBufferPool(ConnectionBufferPool pool) {
+        this.bufferPool = pool;
+    }
+
     @Override
+    @SuppressWarnings({"checkstyle:cyclomaticcomplexity", "checkstyle:npathcomplexity"})
     void process() throws Exception {
+        ConnectionBufferPool pool = bufferPool;
+        if (pool != null) {
+            borrowReceiveBuffer(pool);
+        }
         int readBytes = socketChannel.read(receiveBuffer);
 
         if (readBytes == -1) {
@@ -165,6 +182,40 @@ public final class NioInboundPipeline extends NioPipeline implements InboundPipe
 
         if (unregisterRead) {
             unregisterOp(OP_READ);
+        }
+        if (pool != null) {
+            releaseReceiveBufferIfEmpty(pool);
+        }
+    }
+
+    private void borrowReceiveBuffer(ConnectionBufferPool pool) {
+        InboundHandler first = handlers[0];
+        if (first.src() == null) {
+            ByteBuffer buffer = pool.borrow(pooledCapacity);
+            bufferBorrowed = true;
+            first.src(buffer);
+            receiveBuffer = buffer;
+        }
+    }
+
+    private void releaseReceiveBufferIfEmpty(ConnectionBufferPool pool) {
+        InboundHandler first = handlers[0];
+        if (first.src() instanceof ByteBuffer buffer && buffer.position() == 0) {
+            pooledCapacity = buffer.capacity();
+            first.src(null);
+            receiveBuffer = null;
+            pool.release(buffer, bufferBorrowed);
+            bufferBorrowed = false;
+        }
+    }
+
+    /** Stops the pool counting the read buffer of the closed connection. */
+    void forgetPooledBuffer() {
+        ConnectionBufferPool pool = bufferPool;
+        InboundHandler[] localHandlers = handlers;
+        if (pool != null && bufferBorrowed && localHandlers.length > 0
+                && localHandlers[0].src() instanceof ByteBuffer buffer) {
+            pool.forget(buffer);
         }
     }
 
@@ -244,6 +295,14 @@ public final class NioInboundPipeline extends NioPipeline implements InboundPipe
     }
 
     private void updatePipeline(InboundHandler[] handlers) {
+        if (bufferBorrowed) {
+            // the replaced handler keeps the buffer it borrowed
+            ConnectionBufferPool pool = bufferPool;
+            if (pool != null && receiveBuffer != null) {
+                pool.forget(receiveBuffer);
+            }
+            bufferBorrowed = false;
+        }
         this.handlers = handlers;
         receiveBuffer = handlers.length == 0 ? null : (ByteBuffer) handlers[0].src();
 

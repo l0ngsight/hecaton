@@ -227,6 +227,8 @@ public class DynamicConfigYamlGenerator {
                     subConfigAsObject.getSplitBrainProtectionName());
             addNonNullToMap(subConfigAsMap, "read-backup-data",
                     subConfigAsObject.isReadBackupData());
+            addNonNullToMap(subConfigAsMap, "immutable",
+                    subConfigAsObject.isImmutable());
             addNonNullToMap(subConfigAsMap, "metadata-policy",
                     subConfigAsObject.getMetadataPolicy().name());
             addNonNullToMap(subConfigAsMap, "eviction",
@@ -355,6 +357,11 @@ public class DynamicConfigYamlGenerator {
                     subConfigAsObject.getAsyncBackupCount());
             addNonNullToMap(subConfigAsMap, "empty-queue-ttl",
                     subConfigAsObject.getEmptyQueueTtl());
+            if (subConfigAsObject.getShardNames().isEmpty()) {
+                addNonNullToMap(subConfigAsMap, "shard-count", subConfigAsObject.getShardCount());
+            } else {
+                addNonNullToMap(subConfigAsMap, "shard-names", new ArrayList<>(subConfigAsObject.getShardNames()));
+            }
             addNonNullToMap(subConfigAsMap, "item-listeners",
                     getItemListenerConfigsAsList(subConfigAsObject.getItemListenerConfigs()));
             addNonNullToMap(subConfigAsMap, "queue-store",

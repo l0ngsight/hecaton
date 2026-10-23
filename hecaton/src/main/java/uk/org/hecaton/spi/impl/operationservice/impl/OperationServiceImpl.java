@@ -173,7 +173,7 @@ public final class OperationServiceImpl implements StaticMetricsProvider, LiveOp
                 properties, node.getLogger(BackpressureRegulator.class));
 
         this.outboundResponseHandler = new OutboundResponseHandler(thisAddress, serializationService,
-                node.getLogger(OutboundResponseHandler.class));
+                node.getLogger(OutboundResponseHandler.class), node.loadProtection.isEnabled());
 
         this.invocationRegistry = new InvocationRegistry(
                 node.getLogger(OperationServiceImpl.class),

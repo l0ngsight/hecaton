@@ -18,6 +18,7 @@ package uk.org.hecaton.internal.server.tcp;
 
 import uk.org.hecaton.client.impl.protocol.util.ClientMessageEncoder;
 import uk.org.hecaton.instance.EndpointQualifier;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.networking.HandlerStatus;
 import uk.org.hecaton.internal.networking.OutboundHandler;
 import uk.org.hecaton.internal.nio.ascii.TextEncoder;
@@ -154,7 +155,9 @@ public class UnifiedProtocolEncoder
         channel.options()
                 .setOption(SO_SNDBUF, clientSndBuf());
 
-        channel.outboundPipeline().replace(this, new ClientMessageEncoder());
+        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
+        int bufferBytes = admission == null ? -1 : admission.clientBufferBytes();
+        channel.outboundPipeline().replace(this, new ClientMessageEncoder(bufferBytes));
     }
 
     private void initChannelForText() {

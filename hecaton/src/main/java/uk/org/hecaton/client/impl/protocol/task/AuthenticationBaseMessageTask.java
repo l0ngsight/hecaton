@@ -229,8 +229,14 @@ public abstract class AuthenticationBaseMessageTask<P> extends AbstractMessageTa
             return prepareNotAllowedInCluster();
         }
 
-        logger.info("Received auth from " + connection + ", successfully authenticated, clientUuid: " + clientUuid
-                + ", client name: " + clientName + ", client version: " + clientVersion);
+        String authenticated = "Received auth from " + connection + ", successfully authenticated, clientUuid: " + clientUuid
+                + ", client name: " + clientName + ", client version: " + clientVersion;
+        if (clientEngine.getMaintenanceLane() != null) {
+            // load protection (F23): the maintenance lane logs a summary of client connections instead
+            logger.fine(authenticated);
+        } else {
+            logger.info(authenticated);
+        }
         final Address thisAddress = clientEngine.getThisAddress();
         UUID uuid = nodeEngine.getClusterService().getLocalMember().getUuid();
         byte status = AUTHENTICATED.getId();

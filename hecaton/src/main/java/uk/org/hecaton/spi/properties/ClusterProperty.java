@@ -761,6 +761,14 @@ public final class ClusterProperty {
             = new HecatonProperty("hecaton.partitioning.strategy.class", "");
 
     /**
+     * Turns load protection (F23) on or off, overriding
+     * {@link uk.org.hecaton.config.LoadProtectionConfig#setEnabled(boolean)} when set, so that it
+     * can be switched without changing code.
+     */
+    public static final HecatonProperty LOAD_PROTECTION_ENABLED
+            = new HecatonProperty("hecaton.load-protection.enabled");
+
+    /**
      * Time period to check if a client is still part of the cluster.
      */
     public static final HecatonProperty CLIENT_CLEANUP_PERIOD

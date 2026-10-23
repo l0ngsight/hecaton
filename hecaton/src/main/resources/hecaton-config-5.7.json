@@ -148,6 +148,9 @@
         "integrity-checker": {
           "$ref": "#/definitions/IntegrityChecker"
         },
+        "load-protection": {
+          "$ref": "#/definitions/LoadProtection"
+        },
         "data-connection": {
           "$ref": "#/definitions/DataConnectionConfig"
         },
@@ -1189,6 +1192,11 @@
             "type": "boolean",
             "default": false
           },
+          "immutable": {
+            "description": "True for an insert-only map: an entry, once put, is never changed or removed. Takes effect only when load protection is on.",
+            "type": "boolean",
+            "default": false
+          },
           "hot-restart": {
             "type": "object",
             "additionalProperties": false,
@@ -1879,6 +1887,19 @@
             "type": "integer",
             "default": -1,
             "description": "Used to purge unused or empty queues. If you define a value (time in seconds) for this element, then your queue will be destroyed if it stays empty or unused for that time."
+          },
+          "shard-count": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1,
+            "description": "The number of physical queues, each on its own partition, that form this logical queue. Takes effect only when load protection is on."
+          },
+          "shard-names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Names of existing queues that become the shards of this logical queue, without moving their items. Takes effect only when load protection is on."
           },
           "item-listeners": {
             "type": "array",
@@ -5135,6 +5156,62 @@
         "enabled"
       ],
       "description": "Enables/disables Integrity Checker. Integrity Checker can be disabled to improve startup time."
+    },
+    "LoadProtection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "immutable-map-near-cache-size": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1000
+        },
+        "outbound": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max-pending-bytes-per-connection": {"type": "integer", "minimum": 1},
+            "max-physical-pending-bytes": {"type": "integer", "minimum": 1},
+            "slow-consumer-timeout-seconds": {"type": "integer", "minimum": 1}
+          }
+        },
+        "admission": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max-in-flight-requests-per-connection": {"type": "integer", "minimum": 1},
+            "max-in-flight-requests": {"type": "integer", "minimum": 1},
+            "max-message-bytes": {"type": "integer", "minimum": 1},
+            "heap-reject-threshold": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        },
+        "maintenance": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "thread-count": {"type": "integer", "minimum": 1},
+            "max-backlog": {"type": "integer", "minimum": 1},
+            "max-accepts-per-second": {"type": "integer", "minimum": 0},
+            "max-concurrent-authentications": {"type": "integer", "minimum": 1}
+          }
+        },
+        "connection-buffers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pooled": {"type": "boolean"},
+            "client-buffer-bytes": {"type": "integer", "minimum": 1},
+            "max-pooled-bytes": {"type": "integer", "minimum": 1}
+          }
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "description": "Load protection: bounded buffers, admission control, the maintenance lane, insert-only maps and sharded queues."
     },
     "DataConnectionConfig": {
       "type": "object",

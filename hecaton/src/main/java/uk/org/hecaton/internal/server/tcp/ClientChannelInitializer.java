@@ -19,6 +19,8 @@ package uk.org.hecaton.internal.server.tcp;
 import uk.org.hecaton.client.impl.protocol.util.ClientMessageDecoder;
 import uk.org.hecaton.client.impl.protocol.util.ClientMessageEncoder;
 import uk.org.hecaton.config.EndpointConfig;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
+import uk.org.hecaton.internal.loadprotection.MaintenanceLane;
 import uk.org.hecaton.internal.networking.Channel;
 import uk.org.hecaton.internal.server.ServerContext;
 import uk.org.hecaton.internal.server.ServerConnection;
@@ -35,7 +37,15 @@ public class ClientChannelInitializer
     @Override
     public void initChannel(Channel channel) {
         ServerConnection connection = (TcpServerConnection) channel.attributeMap().get(ServerConnection.class);
-        SingleProtocolEncoder protocolEncoder = new SingleProtocolEncoder(new ClientMessageEncoder());
+        MaintenanceLane maintenanceLane = serverContext.getClientEngine().getMaintenanceLane();
+        if (maintenanceLane != null && !maintenanceLane.admitNewConnection()) {
+            // load protection (F23): refused before any client work is done for it
+            connection.close("Client connection refused by load protection", null);
+            return;
+        }
+        ClientAdmission admission = serverContext.getClientEngine().getClientAdmission();
+        SingleProtocolEncoder protocolEncoder = new SingleProtocolEncoder(
+                new ClientMessageEncoder(admission == null ? -1 : admission.clientBufferBytes()));
         SingleProtocolDecoder protocolDecoder = new SingleProtocolDecoder(
                 CLIENT,
                 new ClientMessageDecoder(connection, serverContext.getClientEngine(), serverContext.properties()),
@@ -43,5 +53,8 @@ public class ClientChannelInitializer
 
         channel.outboundPipeline().addLast(protocolEncoder);
         channel.inboundPipeline().addLast(protocolDecoder);
+        if (admission != null) {
+            admission.usePooledBuffers(channel);
+        }
     }
 }

@@ -32,10 +32,21 @@ public final class ClientMessageReader {
     private int readOffset = -1;
     private ClientMessage clientMessage;
     private int sumUntrustedMessageLength;
+    private int sumTrustedMessageLength;
     private final int maxMessageLength;
+    private final int maxTrustedMessageLength;
 
     public ClientMessageReader(int maxMessageLength) {
+        this(maxMessageLength, Integer.MAX_VALUE);
+    }
+
+    /**
+     * @param maxMessageLength        the largest message from a client that is not authenticated
+     * @param maxTrustedMessageLength the largest message from an authenticated client (load protection, F23)
+     */
+    public ClientMessageReader(int maxMessageLength, int maxTrustedMessageLength) {
         this.maxMessageLength = maxMessageLength > 0 ? maxMessageLength : Integer.MAX_VALUE;
+        this.maxTrustedMessageLength = maxTrustedMessageLength > 0 ? maxTrustedMessageLength : Integer.MAX_VALUE;
     }
 
     public boolean readFrom(ByteBuffer src, boolean trusted) {
@@ -87,6 +98,15 @@ public final class ClientMessageReader {
                                     sumUntrustedMessageLength, frameLength, maxMessageLength));
                 }
                 sumUntrustedMessageLength += frameLength;
+            } else if (maxTrustedMessageLength != Integer.MAX_VALUE) {
+                // checked from the frame header, before the frame is allocated
+                if (Integer.MAX_VALUE - frameLength < sumTrustedMessageLength
+                        || sumTrustedMessageLength + frameLength > maxTrustedMessageLength) {
+                    throw new MaxMessageSizeExceeded(
+                            format("The client message size (%d + %d) exceeded the maximum allowed length (%d)",
+                                    sumTrustedMessageLength, frameLength, maxTrustedMessageLength));
+                }
+                sumTrustedMessageLength += frameLength;
             }
 
             src.position(src.position() + Bits.INT_SIZE_IN_BYTES);

@@ -68,6 +68,7 @@ import uk.org.hecaton.config.InstanceTrackingConfig;
 import uk.org.hecaton.config.IntegrityCheckerConfig;
 import uk.org.hecaton.config.ListConfig;
 import uk.org.hecaton.config.ListenerConfig;
+import uk.org.hecaton.config.LoadProtectionConfig;
 import uk.org.hecaton.config.ManagementCenterConfig;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.MemberAttributeConfig;
@@ -1125,6 +1126,18 @@ public class ClientDynamicClusterConfig extends Config {
     @Nonnull
     @Override
     public Config setIntegrityCheckerConfig(final IntegrityCheckerConfig config) {
+        throw new UnsupportedOperationException(UNSUPPORTED_ERROR_MESSAGE);
+    }
+
+    @Nonnull
+    @Override
+    public LoadProtectionConfig getLoadProtectionConfig() {
+        throw new UnsupportedOperationException(UNSUPPORTED_ERROR_MESSAGE);
+    }
+
+    @Nonnull
+    @Override
+    public Config setLoadProtectionConfig(@Nonnull LoadProtectionConfig config) {
         throw new UnsupportedOperationException(UNSUPPORTED_ERROR_MESSAGE);
     }
 

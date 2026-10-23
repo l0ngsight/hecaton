@@ -25,6 +25,7 @@ import uk.org.hecaton.internal.partition.ReplicaSyncEvent;
 import uk.org.hecaton.internal.services.ServiceNamespaceAware;
 import uk.org.hecaton.logging.ILogger;
 import uk.org.hecaton.spi.exception.PartitionMigratingException;
+import uk.org.hecaton.spi.exception.TargetDisconnectedException;
 import uk.org.hecaton.spi.impl.NodeEngine;
 import uk.org.hecaton.spi.impl.operationservice.BackupOperation;
 import uk.org.hecaton.spi.impl.operationservice.BlockingBackupOperation;
@@ -41,6 +42,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -306,6 +308,20 @@ public class WaitSet implements LiveOperationsTracker, Iterable<WaitSetEntry> {
             // primary operation already executed
             if (callerUuid.equals(op.getCallerUuid()) && !(op instanceof BackupOperation)) {
                 entry.cancel(cause);
+            }
+        }
+    }
+
+    /** Cancels the operations of all the callers in one pass over the wait set (load protection, F23). */
+    public void cancelAll(Set<UUID> callerUuids) {
+        for (WaitSetEntry entry : queue) {
+            if (!entry.isValid()) {
+                continue;
+            }
+            Operation op = entry.getOperation();
+            UUID callerUuid = op.getCallerUuid();
+            if (callerUuid != null && callerUuids.contains(callerUuid) && !(op instanceof BackupOperation)) {
+                entry.cancel(new TargetDisconnectedException("Client disconnected: " + callerUuid));
             }
         }
     }

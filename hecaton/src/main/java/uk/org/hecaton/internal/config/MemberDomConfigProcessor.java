@@ -58,6 +58,7 @@ import uk.org.hecaton.config.JavaKeyStoreSecureStoreConfig;
 import uk.org.hecaton.config.JoinConfig;
 import uk.org.hecaton.config.ListConfig;
 import uk.org.hecaton.config.ListenerConfig;
+import uk.org.hecaton.config.LoadProtectionConfig;
 import uk.org.hecaton.config.LocalDeviceConfig;
 import uk.org.hecaton.config.ManagementCenterConfig;
 import uk.org.hecaton.config.MapConfig;
@@ -212,6 +213,7 @@ import static uk.org.hecaton.internal.config.ConfigSections.IMPORT;
 import static uk.org.hecaton.internal.config.ConfigSections.INSTANCE_NAME;
 import static uk.org.hecaton.internal.config.ConfigSections.INSTANCE_TRACKING;
 import static uk.org.hecaton.internal.config.ConfigSections.INTEGRITY_CHECKER;
+import static uk.org.hecaton.internal.config.ConfigSections.LOAD_PROTECTION;
 import static uk.org.hecaton.internal.config.ConfigSections.JET;
 import static uk.org.hecaton.internal.config.ConfigSections.LICENSE_KEY;
 import static uk.org.hecaton.internal.config.ConfigSections.LIST;
@@ -404,6 +406,8 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
             handleDynamicConfiguration(node);
         } else if (matches(INTEGRITY_CHECKER.getName(), nodeName)) {
             handleIntegrityChecker(node);
+        } else if (matches(LOAD_PROTECTION.getName(), nodeName)) {
+            handleLoadProtection(node);
         } else if (matches(DATA_CONNECTION.getName(), nodeName)) {
             handleDataConnections(node);
         } else if (matches(TPC.getName(), nodeName)) {
@@ -1814,9 +1818,23 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
                 qConfig.setPriorityComparatorClassName(getTextContent(n));
             } else if (matches("user-code-namespace", nodeName)) {
                 qConfig.setUserCodeNamespace(getTextContent(n));
+            } else if (matches("shard-count", nodeName)) {
+                qConfig.setShardCount(getIntegerValue("shard-count", getTextContent(n)));
+            } else if (matches("shard-names", nodeName)) {
+                qConfig.setShardNames(handleQueueShardNames(n));
             }
         }
         config.addQueueConfig(qConfig);
+    }
+
+    protected List<String> handleQueueShardNames(Node n) {
+        List<String> shardNames = new ArrayList<>();
+        for (Node child : childElements(n)) {
+            if (matches("shard-name", cleanNodeName(child))) {
+                shardNames.add(getTextContent(child));
+            }
+        }
+        return shardNames;
     }
 
     protected void handleItemListeners(Node n, Consumer<ItemListenerConfig> configAddFunction) {
@@ -2021,6 +2039,8 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
                 mapConfig.setDataPersistenceConfig(createDataPersistenceConfig(node));
             } else if (matches("read-backup-data", nodeName)) {
                 mapConfig.setReadBackupData(getBooleanValue(getTextContent(node)));
+            } else if (matches("immutable", nodeName)) {
+                mapConfig.setImmutable(getBooleanValue(getTextContent(node)));
             } else if (matches("statistics-enabled", nodeName)) {
                 mapConfig.setStatisticsEnabled(getBooleanValue(getTextContent(node)));
             } else if (matches("per-entry-stats-enabled", nodeName)) {
@@ -3655,6 +3675,86 @@ public class MemberDomConfigProcessor extends AbstractDomConfigProcessor {
         Node attrEnabled = getNamedItemNode(node, "enabled");
         boolean enabled = attrEnabled != null && getBooleanValue(getTextContent(attrEnabled));
         config.getIntegrityCheckerConfig().setEnabled(enabled);
+    }
+
+    private void handleLoadProtection(Node node) {
+        LoadProtectionConfig loadProtection = config.getLoadProtectionConfig();
+        Node attrEnabled = getNamedItemNode(node, "enabled");
+        loadProtection.setEnabled(attrEnabled != null && getBooleanValue(getTextContent(attrEnabled)));
+        for (Node child : childElements(node)) {
+            String childName = cleanNodeName(child);
+            if (matches("immutable-map-near-cache-size", childName)) {
+                loadProtection.setImmutableMapNearCacheSize(getIntegerValue(childName, getTextContent(child)));
+            } else if (matches("outbound", childName)) {
+                handleLoadProtectionOutbound(child, loadProtection.getOutboundConfig());
+            } else if (matches("admission", childName)) {
+                handleLoadProtectionAdmission(child, loadProtection.getAdmissionConfig());
+            } else if (matches("maintenance", childName)) {
+                handleLoadProtectionMaintenance(child, loadProtection.getMaintenanceConfig());
+            } else if (matches("connection-buffers", childName)) {
+                handleLoadProtectionConnectionBuffers(child, loadProtection.getConnectionBufferConfig());
+            }
+        }
+    }
+
+    private void handleLoadProtectionOutbound(Node node, LoadProtectionConfig.OutboundConfig outbound) {
+        for (Node child : childElements(node)) {
+            String childName = cleanNodeName(child);
+            String value = getTextContent(child);
+            if (matches("max-pending-bytes-per-connection", childName)) {
+                outbound.setMaxPendingBytesPerConnection(getLongValue(childName, value));
+            } else if (matches("max-physical-pending-bytes", childName)) {
+                outbound.setMaxPhysicalPendingBytes(getLongValue(childName, value));
+            } else if (matches("slow-consumer-timeout-seconds", childName)) {
+                outbound.setSlowConsumerTimeoutSeconds(getIntegerValue(childName, value));
+            }
+        }
+    }
+
+    private void handleLoadProtectionAdmission(Node node, LoadProtectionConfig.AdmissionConfig admission) {
+        for (Node child : childElements(node)) {
+            String childName = cleanNodeName(child);
+            String value = getTextContent(child);
+            if (matches("max-in-flight-requests-per-connection", childName)) {
+                admission.setMaxInFlightRequestsPerConnection(getIntegerValue(childName, value));
+            } else if (matches("max-in-flight-requests", childName)) {
+                admission.setMaxInFlightRequests(getIntegerValue(childName, value));
+            } else if (matches("max-message-bytes", childName)) {
+                admission.setMaxMessageBytes(getIntegerValue(childName, value));
+            } else if (matches("heap-reject-threshold", childName)) {
+                admission.setHeapRejectThreshold(Float.parseFloat(value));
+            }
+        }
+    }
+
+    private void handleLoadProtectionMaintenance(Node node, LoadProtectionConfig.MaintenanceConfig maintenance) {
+        for (Node child : childElements(node)) {
+            String childName = cleanNodeName(child);
+            String value = getTextContent(child);
+            if (matches("thread-count", childName)) {
+                maintenance.setThreadCount(getIntegerValue(childName, value));
+            } else if (matches("max-backlog", childName)) {
+                maintenance.setMaxBacklog(getIntegerValue(childName, value));
+            } else if (matches("max-accepts-per-second", childName)) {
+                maintenance.setMaxAcceptsPerSecond(getIntegerValue(childName, value));
+            } else if (matches("max-concurrent-authentications", childName)) {
+                maintenance.setMaxConcurrentAuthentications(getIntegerValue(childName, value));
+            }
+        }
+    }
+
+    private void handleLoadProtectionConnectionBuffers(Node node, LoadProtectionConfig.ConnectionBufferConfig buffers) {
+        for (Node child : childElements(node)) {
+            String childName = cleanNodeName(child);
+            String value = getTextContent(child);
+            if (matches("pooled", childName)) {
+                buffers.setPooled(getBooleanValue(value));
+            } else if (matches("client-buffer-bytes", childName)) {
+                buffers.setClientBufferBytes(getIntegerValue(childName, value));
+            } else if (matches("max-pooled-bytes", childName)) {
+                buffers.setMaxPooledBytes(getLongValue(childName, value));
+            }
+        }
     }
 
     private void handleTpc(Node node) {

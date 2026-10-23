@@ -31,13 +31,17 @@ import uk.org.hecaton.client.impl.protocol.task.MessageTask;
 import uk.org.hecaton.client.impl.protocol.task.TransactionalMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.UrgentMessageTask;
 import uk.org.hecaton.client.impl.protocol.task.map.AbstractMapQueryMessageTask;
+import uk.org.hecaton.client.impl.protocol.task.queue.ShardedQueueMessageTask;
 import uk.org.hecaton.client.impl.statistics.ClientStatistics;
 import uk.org.hecaton.cluster.Address;
 import uk.org.hecaton.cluster.Member;
+import uk.org.hecaton.core.HecatonOverloadException;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.internal.cluster.AddressChecker;
 import uk.org.hecaton.internal.cluster.ClusterService;
 import uk.org.hecaton.internal.cluster.impl.AddressCheckerImpl;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
+import uk.org.hecaton.internal.loadprotection.MaintenanceLane;
 import uk.org.hecaton.internal.nio.Connection;
 import uk.org.hecaton.internal.nio.ConnectionListener;
 import uk.org.hecaton.internal.partition.IPartitionService;
@@ -77,6 +81,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.LongConsumer;
 import java.util.stream.Collectors;
@@ -244,8 +249,17 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
 
     //PETER:
     @Override
+    @SuppressWarnings("checkstyle:cyclomaticcomplexity")
     public void accept(ClientMessage clientMessage) {
         Connection connection = clientMessage.getConnection();
+        if (node.loadProtection.isEnabled()) {
+            // load protection (F23): requests on a sharded queue are served from its shards
+            ShardedQueueMessageTask shardedQueueTask = ShardedQueueMessageTask.forMessage(clientMessage, node, connection);
+            if (shardedQueueTask != null) {
+                blockingExecutor.execute(shardedQueueTask);
+                return;
+            }
+        }
         MessageTask messageTask = messageTaskFactory.create(clientMessage, connection);
 
         if (tpcEnabled && messageTask instanceof AbstractMessageTask abstractMessageTask) {
@@ -253,10 +267,15 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
             abstractMessageTask.setResponseBufAllocator(responseBufAllocator);
         }
         OperationServiceImpl operationService = nodeEngine.getOperationService();
-        if (isUrgent(messageTask)) {
+        MaintenanceLane maintenanceLane = getMaintenanceLane();
+        if (maintenanceLane != null && messageTask instanceof AuthenticationBaseMessageTask<?> authentication) {
+            authenticateOnLane(maintenanceLane, authentication, connection);
+        } else if (isUrgent(messageTask)) {
             operationService.execute((UrgentMessageTask) messageTask);
         } else if (messageTask instanceof AbstractPartitionMessageTask task) {
-            operationService.execute(task);
+            if (admit(task, connection)) {
+                operationService.execute(task);
+            }
         } else if (isQuery(messageTask)) {
             queryExecutor.execute(messageTask);
         } else if (messageTask instanceof TransactionalMessageTask) {
@@ -266,6 +285,55 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
         } else {
             executor.execute(messageTask);
         }
+    }
+
+    /**
+     * Load protection (F23): refuses a partition request while the heap is above its threshold after
+     * garbage collection, and counts it as in flight until it is answered otherwise.
+     */
+    private boolean admit(AbstractPartitionMessageTask<?> task, Connection connection) {
+        ClientAdmission admission = getClientAdmission();
+        if (admission == null) {
+            return true;
+        }
+        if (admission.shouldRefuse()) {
+            task.refuse(new HecatonOverloadException("The member refuses requests while its heap is above the load"
+                    + " protection threshold after garbage collection; retry later"));
+            return false;
+        }
+        task.setAdmissionTicket(admission.admit(connection));
+        return true;
+    }
+
+    /**
+     * Load protection (F23): authentications run on the maintenance lane, not on the operation
+     * threads, and connections beyond the authentications in progress are refused.
+     */
+    private void authenticateOnLane(MaintenanceLane maintenanceLane, AuthenticationBaseMessageTask<?> authentication,
+                                    Connection connection) {
+        if (!maintenanceLane.tryStartAuthentication()) {
+            connection.close("Too many client authentications in progress (load protection)", null);
+            return;
+        }
+        authentication.setAdmissionTicket(maintenanceLane::authenticationDone);
+        maintenanceLane.execute(() -> {
+            try {
+                authentication.run();
+            } finally {
+                // when the task failed before answering, the ticket is still set
+                authentication.releaseAdmissionTicket();
+            }
+        });
+    }
+
+    @Override
+    public MaintenanceLane getMaintenanceLane() {
+        return node.loadProtection.getMaintenanceLane();
+    }
+
+    @Override
+    public ClientAdmission getClientAdmission() {
+        return node.loadProtection.getClientAdmission();
     }
 
     private boolean isUrgent(MessageTask messageTask) {
@@ -405,9 +473,15 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
 
         ClientHeartbeatMonitor heartbeatMonitor = new ClientHeartbeatMonitor(
                 endpointManager, getLogger(ClientHeartbeatMonitor.class), nodeEngine.getExecutionService(), node.getProperties());
-        heartbeatMonitor.start();
-
-        lifecycleMonitor.start();
+        if (getMaintenanceLane() != null) {
+            // load protection (F23): the client monitors run on the maintenance lane
+            node.loadProtection.scheduleMaintenance(heartbeatMonitor, ClientHeartbeatMonitor.HEART_BEAT_CHECK_INTERVAL_SECONDS,
+                    TimeUnit.SECONDS);
+            node.loadProtection.scheduleMaintenance(lifecycleMonitor, lifecycleMonitor.checkMillis(), TimeUnit.MILLISECONDS);
+        } else {
+            heartbeatMonitor.start();
+            lifecycleMonitor.start();
+        }
     }
 
     @Override
@@ -472,6 +546,10 @@ public class ClientEngineImpl implements ClientEngine, CoreService,
         @Override
         public void connectionRemoved(Connection c) {
             ServerConnection connection = (ServerConnection) c;
+            ClientAdmission admission = getClientAdmission();
+            if (admission != null) {
+                admission.connectionRemoved(connection);
+            }
 
             if (!connection.isClient() || !nodeEngine.isRunning()) {
                 return;

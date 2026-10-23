@@ -33,6 +33,7 @@ import uk.org.hecaton.instance.BuildInfo;
 import uk.org.hecaton.instance.impl.Node;
 import uk.org.hecaton.instance.impl.NodeExtension;
 import uk.org.hecaton.internal.cluster.impl.ClusterServiceImpl;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.nio.Connection;
 import uk.org.hecaton.internal.nio.ConnectionType;
 import uk.org.hecaton.internal.serialization.InternalSerializationService;
@@ -53,6 +54,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import static uk.org.hecaton.internal.util.ExceptionUtil.peel;
 
@@ -65,6 +67,9 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     private static final List<Class<? extends Throwable>> NON_PEELABLE_EXCEPTIONS =
             List.of(Error.class, MemberLeftException.class);
 
+    private static final AtomicReferenceFieldUpdater<AbstractMessageTask, Runnable> ADMISSION_TICKET =
+            AtomicReferenceFieldUpdater.newUpdater(AbstractMessageTask.class, Runnable.class, "admissionTicket");
+
     protected AsyncSocket asyncSocket;
     protected IOBufferAllocator responseBufAllocator;
 
@@ -76,6 +81,9 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     protected final ILogger logger;
     protected final ClientEngine clientEngine;
     protected P parameters;
+
+    /** Load protection (F23): released once, when the response is sent; set before the task runs. */
+    private volatile Runnable admissionTicket;
 
     private final ClientEndpointManager endpointManager;
     private final NodeExtension nodeExtension;
@@ -307,6 +315,11 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
     @SuppressWarnings({"java:S125", "java:S1135"})
     protected void sendClientMessage(ClientMessage resultClientMessage) {
         resultClientMessage.setCorrelationId(clientMessage.getCorrelationId());
+        releaseAdmissionTicket();
+        ClientAdmission admission = clientEngine.getClientAdmission();
+        if (admission != null && asyncSocket == null) {
+            admission.onResponse(connection, resultClientMessage);
+        }
 
         if (asyncSocket == null) {
             connection.write(resultClientMessage);
@@ -326,6 +339,26 @@ public abstract class AbstractMessageTask<P> implements MessageTask, SecureReque
         int partitionId = key == null ? -1 : nodeEngine.getPartitionService().getPartitionId(key);
         resultClientMessage.setPartitionId(partitionId);
         sendClientMessage(resultClientMessage);
+    }
+
+    /** Load protection (F23): the request counts as in flight until its response is sent. */
+    public void setAdmissionTicket(Runnable admissionTicket) {
+        this.admissionTicket = admissionTicket;
+    }
+
+    /** Releases the admission ticket if the response has not released it (load protection, F23). */
+    public void releaseAdmissionTicket() {
+        if (admissionTicket != null) {
+            Runnable ticket = ADMISSION_TICKET.getAndSet(this, null);
+            if (ticket != null) {
+                ticket.run();
+            }
+        }
+    }
+
+    /** Answers the request with {@code reason} without running it (load protection, F23). */
+    public void refuse(Throwable reason) {
+        sendClientMessage(reason);
     }
 
     private void sendClientMessage(Throwable throwable) {

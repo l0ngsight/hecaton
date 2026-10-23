@@ -38,6 +38,7 @@ import uk.org.hecaton.config.IntegrityCheckerConfig;
 import uk.org.hecaton.config.InvalidConfigurationException;
 import uk.org.hecaton.config.ListConfig;
 import uk.org.hecaton.config.ListenerConfig;
+import uk.org.hecaton.config.LoadProtectionConfig;
 import uk.org.hecaton.config.ManagementCenterConfig;
 import uk.org.hecaton.config.MapConfig;
 import uk.org.hecaton.config.MemberAttributeConfig;
@@ -1292,6 +1293,18 @@ public class DynamicConfigurationAwareConfig extends Config {
     @Nonnull
     @Override
     public Config setIntegrityCheckerConfig(final IntegrityCheckerConfig config) {
+        throw new UnsupportedOperationException("Unsupported operation");
+    }
+
+    @Nonnull
+    @Override
+    public LoadProtectionConfig getLoadProtectionConfig() {
+        return staticConfig.getLoadProtectionConfig();
+    }
+
+    @Nonnull
+    @Override
+    public Config setLoadProtectionConfig(@Nonnull LoadProtectionConfig config) {
         throw new UnsupportedOperationException("Unsupported operation");
     }
 

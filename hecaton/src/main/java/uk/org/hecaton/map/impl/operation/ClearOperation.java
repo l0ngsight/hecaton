@@ -117,4 +117,10 @@ public class ClearOperation extends MapOperation
     public int getClassId() {
         return MapDataSerializerHook.CLEAR;
     }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // removes all entries
+        return ImmutableMapAccess.CHANGE;
+    }
 }

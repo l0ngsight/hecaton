@@ -21,6 +21,7 @@ import uk.org.hecaton.client.impl.ClientEndpointManager;
 import uk.org.hecaton.client.impl.ClientEngine;
 import uk.org.hecaton.client.impl.protocol.ClientMessage;
 import uk.org.hecaton.client.impl.protocol.ClientMessageReader;
+import uk.org.hecaton.internal.loadprotection.ClientAdmission;
 import uk.org.hecaton.internal.networking.HandlerStatus;
 import uk.org.hecaton.internal.networking.nio.InboundHandlerWithCounters;
 import uk.org.hecaton.internal.nio.Bits;
@@ -37,6 +38,7 @@ import static uk.org.hecaton.client.impl.protocol.ClientMessage.BEGIN_FRAGMENT_F
 import static uk.org.hecaton.client.impl.protocol.ClientMessage.END_FRAGMENT_FLAG;
 import static uk.org.hecaton.client.impl.protocol.ClientMessage.FRAGMENTATION_ID_OFFSET;
 import static uk.org.hecaton.client.impl.protocol.ClientMessage.UNFRAGMENTED_MESSAGE;
+import static uk.org.hecaton.internal.networking.HandlerStatus.BLOCKED;
 import static uk.org.hecaton.internal.networking.HandlerStatus.CLEAN;
 import static uk.org.hecaton.internal.nio.IOUtil.compactOrClear;
 
@@ -53,7 +55,9 @@ public class ClientMessageDecoder extends InboundHandlerWithCounters<ByteBuffer,
 
     private boolean clientIsTrusted;
     private final int maxMessageLength;
+    private final int maxTrustedMessageLength;
     private final ClientEndpointManager clientEndpointManager;
+    private final ClientAdmission admission;
 
     public ClientMessageDecoder(Connection connection, Consumer<ClientMessage> dst, HecatonProperties properties) {
         dst(dst);
@@ -61,14 +65,21 @@ public class ClientMessageDecoder extends InboundHandlerWithCounters<ByteBuffer,
             properties = new HecatonProperties((Properties) null);
         }
         clientEndpointManager = dst instanceof ClientEngine clientEngine ? clientEngine.getEndpointManager() : null;
+        admission = dst instanceof ClientEngine clientEngine ? clientEngine.getClientAdmission() : null;
         maxMessageLength = properties.getInteger(ClusterProperty.CLIENT_PROTOCOL_UNVERIFIED_MESSAGE_BYTES);
-        activeReader = new ClientMessageReader(maxMessageLength);
+        maxTrustedMessageLength = admission != null ? admission.maxMessageBytes() : Integer.MAX_VALUE;
+        activeReader = newReader();
         this.connection = connection;
     }
 
     @Override
     public void handlerAdded() {
-        initSrcBuffer();
+        if (admission != null) {
+            // load protection (F23): the read buffer has its own size; the socket's is unchanged
+            initSrcBuffer(admission.clientBufferBytes());
+        } else {
+            initSrcBuffer();
+        }
     }
 
     @Override
@@ -76,6 +87,10 @@ public class ClientMessageDecoder extends InboundHandlerWithCounters<ByteBuffer,
         src.flip();
         try {
             while (src.hasRemaining()) {
+                if (admission != null && !admission.mayRead(connection)) {
+                    // load protection: resumed by the admission once the connection is within its limits
+                    return BLOCKED;
+                }
                 boolean trusted = isEndpointTrusted();
                 boolean complete = activeReader.readFrom(src, trusted);
                 if (!complete) {
@@ -104,13 +119,17 @@ public class ClientMessageDecoder extends InboundHandlerWithCounters<ByteBuffer,
                     }
                 }
 
-                activeReader = new ClientMessageReader(maxMessageLength);
+                activeReader = newReader();
             }
 
             return CLEAN;
         } finally {
             compactOrClear(src);
         }
+    }
+
+    private ClientMessageReader newReader() {
+        return new ClientMessageReader(maxMessageLength, maxTrustedMessageLength);
     }
 
     private boolean isEndpointTrusted() {

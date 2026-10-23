@@ -108,4 +108,10 @@ public class ReplaceIfSameOperation extends BasePutOperation implements Mutating
     public int getClassId() {
         return MapDataSerializerHook.REPLACE_IF_SAME;
     }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // replaces a held value
+        return ImmutableMapAccess.CHANGE;
+    }
 }

@@ -116,6 +116,8 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
     public static final EvictionPolicy DEFAULT_EVICTION_POLICY = EvictionPolicy.NONE;
 
     private boolean readBackupData;
+
+    private boolean immutable;
     private boolean statisticsEnabled = DEFAULT_STATISTICS_ENABLED;
     private boolean perEntryStatsEnabled = DEFAULT_ENTRY_STATS_ENABLED;
     private int backupCount = DEFAULT_BACKUP_COUNT;
@@ -170,6 +172,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         this.mapStoreConfig = config.mapStoreConfig != null ? new MapStoreConfig(config.mapStoreConfig) : null;
         this.nearCacheConfig = config.nearCacheConfig != null ? new NearCacheConfig(config.nearCacheConfig) : null;
         this.readBackupData = config.readBackupData;
+        this.immutable = config.immutable;
         this.cacheDeserializedValues = config.cacheDeserializedValues;
         this.statisticsEnabled = config.statisticsEnabled;
         this.perEntryStatsEnabled = config.perEntryStatsEnabled;
@@ -508,6 +511,38 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
      */
     public MapConfig setReadBackupData(boolean readBackupData) {
         this.readBackupData = readBackupData;
+        return this;
+    }
+
+    /**
+     * Checks if the map is immutable: insert-only, with its values shared by all readers. Takes
+     * effect when {@link LoadProtectionConfig load protection} is on.
+     *
+     * @return {@code true} if the map is immutable
+     * @see #setImmutable(boolean)
+     */
+    public boolean isImmutable() {
+        return immutable;
+    }
+
+    /**
+     * Makes the map immutable (load protection, F23). An immutable map accepts the insert of a key
+     * that it does not hold and refuses every operation that would change, remove or insert again
+     * a key that it holds, with {@link uk.org.hecaton.map.ImmutableEntryException}.
+     * {@code putIfAbsent} keeps its contract and returns the value that is held. Because values
+     * never change, the members share them with all readers instead of copying them, and each
+     * member keeps a near cache of the map that never needs invalidating.
+     * <p>
+     * The map's in-memory format must be {@link InMemoryFormat#BINARY}, and it can have no
+     * eviction, time-to-live or max-idle. The setting takes effect only when
+     * {@link LoadProtectionConfig#setEnabled(boolean) load protection} is on; otherwise it is
+     * ignored with a warning.
+     *
+     * @param immutable {@code true} to make the map immutable
+     * @return the current map config instance
+     */
+    public MapConfig setImmutable(boolean immutable) {
+        this.immutable = immutable;
         return this;
     }
 
@@ -893,6 +928,9 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         if (readBackupData != that.readBackupData) {
             return false;
         }
+        if (immutable != that.immutable) {
+            return false;
+        }
         if (statisticsEnabled != that.statisticsEnabled) {
             return false;
         }
@@ -969,7 +1007,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         return hotRestartConfig.equals(that.hotRestartConfig);
     }
 
-    @SuppressWarnings("NPathComplexity")
+    @SuppressWarnings({"NPathComplexity", "checkstyle:cyclomaticcomplexity"})
     @Override
     public final int hashCode() {
         int result = (name != null ? name.hashCode() : 0);
@@ -981,6 +1019,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         result = 31 * result + (mapStoreConfig != null ? mapStoreConfig.hashCode() : 0);
         result = 31 * result + (nearCacheConfig != null ? nearCacheConfig.hashCode() : 0);
         result = 31 * result + (readBackupData ? 1 : 0);
+        result = 31 * result + (immutable ? 1 : 0);
         result = 31 * result + cacheDeserializedValues.hashCode();
         result = 31 * result + (mergePolicyConfig != null ? mergePolicyConfig.hashCode() : 0);
         result = 31 * result + inMemoryFormat.hashCode();
@@ -1016,6 +1055,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
                 + ", timeToLiveSeconds=" + timeToLiveSeconds
                 + ", maxIdleSeconds=" + maxIdleSeconds
                 + ", readBackupData=" + readBackupData
+                + ", immutable=" + immutable
                 + ", evictionConfig=" + evictionConfig
                 + ", merkleTree=" + merkleTreeConfig
                 + ", eventJournal=" + eventJournalConfig
@@ -1087,6 +1127,8 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         if (out.getVersion().isGreaterOrEqual(Versions.V5_4)) {
             out.writeString(userCodeNamespace);
         }
+        // Hecaton F23
+        out.writeBoolean(immutable);
     }
 
     @Override
@@ -1127,5 +1169,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
         if (in.getVersion().isGreaterOrEqual(Versions.V5_4)) {
             userCodeNamespace = in.readString();
         }
+        // Hecaton F23
+        immutable = in.readBoolean();
     }
 }

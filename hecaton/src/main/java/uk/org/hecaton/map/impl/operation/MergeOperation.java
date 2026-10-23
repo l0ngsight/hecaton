@@ -17,6 +17,7 @@
 package uk.org.hecaton.map.impl.operation;
 
 import uk.org.hecaton.config.InvalidConfigurationException;
+import uk.org.hecaton.internal.loadprotection.LoadProtection;
 import uk.org.hecaton.internal.serialization.Data;
 import uk.org.hecaton.internal.serialization.impl.SerializationUtil;
 import uk.org.hecaton.internal.util.Clock;
@@ -33,6 +34,7 @@ import uk.org.hecaton.nio.ObjectDataOutput;
 import uk.org.hecaton.query.impl.IndexRegistry;
 import uk.org.hecaton.query.impl.InternalIndex;
 import uk.org.hecaton.spi.impl.NodeEngine;
+import uk.org.hecaton.spi.impl.NodeEngineImpl;
 import uk.org.hecaton.spi.impl.operationservice.BackupAwareOperation;
 import uk.org.hecaton.spi.impl.operationservice.Operation;
 import uk.org.hecaton.spi.impl.operationservice.PartitionAwareOperation;
@@ -219,6 +221,9 @@ public class MergeOperation extends MapOperation
 
     private void merge(MapMergeTypes<Object, Object> mergingEntry) {
         Data dataKey = getNodeEngine().toData(mergingEntry.getRawKey());
+        if (mapContainer.isImmutable() && keepImmutableEntry(dataKey, mergingEntry)) {
+            return;
+        }
         Data oldValue = hasMapListener ? getValue(dataKey) : null;
 
         MapMergeResponse response = recordStore.merge(mergingEntry, mergePolicy, getCallerProvenance());
@@ -261,6 +266,24 @@ public class MergeOperation extends MapOperation
         }
         Record record = recordStore.getRecord(dataKey);
         return mapServiceContext.toData(record.getValue());
+    }
+
+    /**
+     * An immutable map keeps the entries it holds whatever the merge policy (F23): the existing
+     * entry wins. A merging value that differs from it is counted and logged as a conflict.
+     */
+    private boolean keepImmutableEntry(Data dataKey, MapMergeTypes<Object, Object> mergingEntry) {
+        Data existing = getValue(dataKey);
+        if (existing == null) {
+            return false;
+        }
+        if (!existing.equals(getNodeEngine().toData(mergingEntry.getRawValue()))) {
+            LoadProtection loadProtection = ((NodeEngineImpl) getNodeEngine()).getLoadProtection();
+            loadProtection.onImmutableMergeConflict();
+            loadProtection.getLogger().warning("Immutable map '" + name + "' kept its value for a key in partition "
+                    + getPartitionId() + "; a merging member held a different value for it");
+        }
+        return true;
     }
 
     public Data getValue(Data dataKey) {

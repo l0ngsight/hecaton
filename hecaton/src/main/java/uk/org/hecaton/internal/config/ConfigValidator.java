@@ -232,6 +232,27 @@ public final class ConfigValidator {
         throw new InvalidConfigurationException(format(msg, maxSizePolicy, inMemoryFormat, policies));
     }
 
+    /**
+     * Checks the configuration of an immutable map (load protection, F23): its values are shared
+     * as stored, so its format must be {@code BINARY}, and its entries are never removed, so it can
+     * have no eviction, time-to-live or max-idle.
+     */
+    public static void checkImmutableMapConfig(MapConfig mapConfig) {
+        String mapName = mapConfig.getName();
+        if (mapConfig.getInMemoryFormat() != InMemoryFormat.BINARY) {
+            throw new InvalidConfigurationException(format("Immutable map '%s' must have the BINARY in-memory format,"
+                    + " not %s", mapName, mapConfig.getInMemoryFormat()));
+        }
+        if (mapConfig.getEvictionConfig().getEvictionPolicy() != EvictionPolicy.NONE) {
+            throw new InvalidConfigurationException(format("Immutable map '%s' cannot have eviction (%s): its"
+                    + " entries are never removed", mapName, mapConfig.getEvictionConfig().getEvictionPolicy()));
+        }
+        if (mapConfig.getTimeToLiveSeconds() > 0 || mapConfig.getMaxIdleSeconds() > 0) {
+            throw new InvalidConfigurationException(format("Immutable map '%s' cannot have a time-to-live or max-idle:"
+                    + " its entries never expire", mapName));
+        }
+    }
+
     public static void checkMapEvictionConfig(EvictionConfig evictionConfig) {
         EvictionPolicyComparator comparator = evictionConfig.getComparator();
         String comparatorClassName = evictionConfig.getComparatorClassName();

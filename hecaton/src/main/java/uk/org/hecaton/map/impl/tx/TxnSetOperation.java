@@ -22,6 +22,7 @@ import uk.org.hecaton.internal.util.UUIDSerializationUtil;
 import uk.org.hecaton.map.impl.MapDataSerializerHook;
 import uk.org.hecaton.map.impl.MapService;
 import uk.org.hecaton.map.impl.operation.BasePutOperation;
+import uk.org.hecaton.map.impl.operation.ImmutableMapAccess;
 import uk.org.hecaton.map.impl.operation.steps.TxnSetOpSteps;
 import uk.org.hecaton.map.impl.operation.steps.engine.State;
 import uk.org.hecaton.map.impl.operation.steps.engine.Step;
@@ -195,5 +196,11 @@ public class TxnSetOperation extends BasePutOperation
     @Override
     public int getClassId() {
         return MapDataSerializerHook.TXN_SET;
+    }
+
+    @Override
+    protected ImmutableMapAccess immutableMapAccess() {
+        // TransactionalMapProxy refuses changes of an immutable map before the commit
+        return ImmutableMapAccess.READ;
     }
 }

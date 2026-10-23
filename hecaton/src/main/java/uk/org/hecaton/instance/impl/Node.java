@@ -64,6 +64,7 @@ import uk.org.hecaton.internal.config.DiscoveryConfigReadOnly;
 import uk.org.hecaton.internal.config.MemberAttributeConfigReadOnly;
 import uk.org.hecaton.internal.diagnostics.HealthMonitor;
 import uk.org.hecaton.internal.dynamicconfig.DynamicConfigurationAwareConfig;
+import uk.org.hecaton.internal.loadprotection.LoadProtection;
 import uk.org.hecaton.internal.management.ManagementCenterService;
 import uk.org.hecaton.internal.metrics.MetricsRegistry;
 import uk.org.hecaton.internal.metrics.impl.MetricsConfigHelper;
@@ -178,6 +179,7 @@ public class Node {
      */
     public final Address address;
     public final SecurityContext securityContext;
+    public final LoadProtection loadProtection;
 
     final ClusterTopologyIntentTracker clusterTopologyIntentTracker;
 
@@ -277,11 +279,14 @@ public class Node {
             compatibilitySerializationService = nodeExtension.createCompatibilitySerializationService();
             securityContext = config.getSecurityConfig().isEnabled() ? nodeExtension.getSecurityContext() : null;
             warnForUsageOfDeprecatedSymmetricEncryption(config, logger);
+            loadProtection = new LoadProtection(hecatonInstance.getName(), staticConfig, properties,
+                    loggingService.getLogger(LoadProtection.class));
             nodeEngine = new NodeEngineImpl(this);
             config.setServices(nodeEngine);
             config.onSecurityServiceUpdated(getSecurityService());
             MetricsRegistry metricsRegistry = nodeEngine.getMetricsRegistry();
             metricsRegistry.provideMetrics(nodeExtension);
+            loadProtection.registerMetrics(metricsRegistry);
             localAddressRegistry = new LocalAddressRegistry(this, addressPicker);
             server = nodeContext.createServer(this, serverSocketRegistry, localAddressRegistry);
             healthMonitor = nodeExtension.createHealthMonitor();
@@ -665,6 +670,9 @@ public class Node {
         if (nodeEngine != null) {
             logger.info("Shutting down node engine...");
             nodeEngine.shutdown(terminate);
+        }
+        if (loadProtection != null) {
+            loadProtection.shutdown();
         }
 
         if (memberModules != null) {

@@ -121,4 +121,11 @@ public class LoadAllOperation extends MapOperation implements PartitionAwareOper
     public int getClassId() {
         return MapDataSerializerHook.LOAD_ALL;
     }
+
+    @Override
+    protected void checkImmutableAccess() {
+        if (replaceExistingValues) {
+            throw immutableRejection("loadAll would replace the values it holds");
+        }
+    }
 }

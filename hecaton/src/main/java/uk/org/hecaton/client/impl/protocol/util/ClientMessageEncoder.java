@@ -35,10 +35,27 @@ public class ClientMessageEncoder extends OutboundHandler<Supplier<ClientMessage
 
     private ClientMessage message;
     private final ClientMessageWriter clientMessageWriter = new ClientMessageWriter();
+    private final int bufferBytes;
+
+    public ClientMessageEncoder() {
+        this(-1);
+    }
+
+    /**
+     * @param bufferBytes the size of the write buffer, or {@code -1} for the channel's send buffer
+     *                    size; load protection (F23) sets it apart from the socket's
+     */
+    public ClientMessageEncoder(int bufferBytes) {
+        this.bufferBytes = bufferBytes;
+    }
 
     @Override
     public void handlerAdded() {
-        initDstBuffer();
+        if (bufferBytes > 0) {
+            initDstBuffer(bufferBytes);
+        } else {
+            initDstBuffer();
+        }
     }
 
     @Override
@@ -57,6 +74,7 @@ public class ClientMessageEncoder extends OutboundHandler<Supplier<ClientMessage
 
                 if (clientMessageWriter.writeTo(dst, message)) {
                     // message got written, lets see if another message can be written
+                    message.written();
                     message = null;
                 } else {
                     // the message didn't get written completely, so we are done.

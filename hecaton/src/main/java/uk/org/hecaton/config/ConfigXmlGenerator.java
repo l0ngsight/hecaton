@@ -200,6 +200,7 @@ public class ConfigXmlGenerator {
         factoryWithPropertiesXmlGenerator(gen, "auditlog", config.getAuditlogConfig());
         userCodeDeploymentConfig(gen, config);
         integrityCheckerXmlGenerator(gen, config);
+        loadProtectionXmlGenerator(gen, config);
         dataConnectionConfiguration(gen, config);
         tpcConfiguration(gen, config);
         namespacesConfiguration(gen, config);
@@ -1212,6 +1213,39 @@ public class ConfigXmlGenerator {
                 "enabled",
                 config.getIntegrityCheckerConfig().isEnabled()
         );
+    }
+
+    private static void loadProtectionXmlGenerator(XmlGenerator gen, Config config) {
+        LoadProtectionConfig loadProtection = config.getLoadProtectionConfig();
+        LoadProtectionConfig.OutboundConfig outbound = loadProtection.getOutboundConfig();
+        LoadProtectionConfig.AdmissionConfig admission = loadProtection.getAdmissionConfig();
+        LoadProtectionConfig.MaintenanceConfig maintenance = loadProtection.getMaintenanceConfig();
+        LoadProtectionConfig.ConnectionBufferConfig buffers = loadProtection.getConnectionBufferConfig();
+        gen.open("load-protection", "enabled", loadProtection.isEnabled())
+                .node("immutable-map-near-cache-size", loadProtection.getImmutableMapNearCacheSize())
+                .open("outbound")
+                .node("max-pending-bytes-per-connection", outbound.getMaxPendingBytesPerConnection())
+                .node("max-physical-pending-bytes", outbound.getMaxPhysicalPendingBytes())
+                .node("slow-consumer-timeout-seconds", outbound.getSlowConsumerTimeoutSeconds())
+                .close()
+                .open("admission")
+                .node("max-in-flight-requests-per-connection", admission.getMaxInFlightRequestsPerConnection())
+                .node("max-in-flight-requests", admission.getMaxInFlightRequests())
+                .node("max-message-bytes", admission.getMaxMessageBytes())
+                .node("heap-reject-threshold", admission.getHeapRejectThreshold())
+                .close()
+                .open("maintenance")
+                .node("thread-count", maintenance.getThreadCount())
+                .node("max-backlog", maintenance.getMaxBacklog())
+                .node("max-accepts-per-second", maintenance.getMaxAcceptsPerSecond())
+                .node("max-concurrent-authentications", maintenance.getMaxConcurrentAuthentications())
+                .close()
+                .open("connection-buffers")
+                .node("pooled", buffers.isPooled())
+                .node("client-buffer-bytes", buffers.getClientBufferBytes())
+                .node("max-pooled-bytes", buffers.getMaxPooledBytes())
+                .close()
+                .close();
     }
 
     private static void dataConnectionConfiguration(final XmlGenerator gen, final Config config) {
