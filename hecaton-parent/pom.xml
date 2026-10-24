@@ -1556,6 +1556,20 @@
                                 <autoPublish>${maven.central.autoReleaseAfterClose}</autoPublish>
                                 <checksums>required</checksums>
                                 <deploymentName>Deployment ${deploy.name}</deploymentName>
+                                <!--
+                                not on Maven Central (the plugin does not honour maven-deploy-plugin's skip):
+                                test modules; the distribution archives, which the GitHub release carries and
+                                which would take the bundle over Central's 1 GB limit; and the shaded Hadoop
+                                jar, which has no sources of its own and ships in the distribution
+                                -->
+                                <excludeArtifacts>
+                                    <excludeArtifact>hecaton-it</excludeArtifact>
+                                    <excludeArtifact>distribution-it</excludeArtifact>
+                                    <excludeArtifact>hecaton-spring-tests</excludeArtifact>
+                                    <excludeArtifact>modulepath-tests</excludeArtifact>
+                                    <excludeArtifact>hecaton-distribution</excludeArtifact>
+                                    <excludeArtifact>hecaton-jet-hadoop-all</excludeArtifact>
+                                </excludeArtifacts>
                             </configuration>
                         </plugin>
                     </plugins>
