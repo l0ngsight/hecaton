@@ -770,6 +770,8 @@
                                     <outputName>hecaton-${project.version}-sbom</outputName>
                                     <outputFormat>all</outputFormat>
                                     <includeTestScope>false</includeTestScope>
+                                    <!-- the root module is not deployed; the release still needs its SBOM -->
+                                    <skipNotDeployed>false</skipNotDeployed>
                                 </configuration>
                             </execution>
                         </executions>
