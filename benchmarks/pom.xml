@@ -15,7 +15,7 @@
     <properties>
         <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hecaton.version>0.1.0-SNAPSHOT</hecaton.version>
+        <hecaton.version>1.0.0-SNAPSHOT</hecaton.version>
         <hazelcast.version>5.7.0</hazelcast.version>
         <jmh.version>1.37</jmh.version>
     </properties>
