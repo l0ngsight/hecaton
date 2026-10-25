@@ -23,7 +23,7 @@
     <parent>
         <groupId>uk.org.hecaton</groupId>
         <artifactId>hecaton-parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
         <relativePath>hecaton-parent/pom.xml</relativePath>
     </parent>
 
@@ -34,7 +34,7 @@
         https://github.com/mojohaus/versions/blob/a40373df037b6bcebd915901f72433891bfe691e/versions-maven-plugin/src/main/java/org/codehaus/mojo/versions/SetMojo.java#L330-L332
         So instead we need to duplicate
     -->
-    <version>0.1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Hecaton Root</name>
     <description>Hecaton In-Memory DataGrid</description>
