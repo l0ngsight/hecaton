@@ -5,6 +5,7 @@ The module `hecaton-jet-clickhouse` (in the full distribution's `lib/`) connects
 
 - **`ClickHouseMapStore`** keeps a map's entries in a ClickHouse table;
 - **`ClickHouseSources`** and **`ClickHouseSinks`** read and write tables in Jet pipelines;
+- the **SQL connector** `ClickHouse` maps tables for `SELECT`, `INSERT INTO` and `SINK INTO`;
 - **`ClickHouseDataConnection`** configures the connection once for all of them.
 
 It is a Hecaton connector; Hazelcast has none for ClickHouse. It talks to ClickHouse's HTTP
@@ -169,22 +170,66 @@ replicated table (or a table with `non_replicated_deduplication_window`) is not 
 After a job restarts, the sink can insert rows again (at-least-once); a `ReplacingMergeTree`
 table with a version column collapses them.
 
+## SQL
+
+```sql
+CREATE DATA CONNECTION clickhouse TYPE ClickHouse SHARED
+OPTIONS ('endpoints' = 'http://clickhouse-1:8123', 'username' = 'hecaton', 'password' = '...');
+
+-- the columns come from the table
+CREATE MAPPING people EXTERNAL NAME shop.people DATA CONNECTION clickhouse;
+
+-- or name the fields, with other names or types
+CREATE MAPPING people_names EXTERNAL NAME shop.people (
+    key BIGINT EXTERNAL NAME id,
+    label VARCHAR EXTERNAL NAME name
+) DATA CONNECTION clickhouse;
+
+SELECT name, age FROM people WHERE id >= ? AND age IS NOT NULL;
+INSERT INTO people SELECT v, 'generated', 30, 1, 0 FROM TABLE(generate_series(1, 1000));
+SINK INTO people VALUES (?, ?, ?, ?, ?);
+```
+
+A mapping without fields takes every column of a supported type (see [Types](#types)); columns
+of other types, such as arrays, are left out. A field's type can differ from its column's when
+the column's type converts to it.
+
+A `SELECT` sends to ClickHouse the parts of the `WHERE` clause that mean the same there:
+comparisons of columns with literals and parameters, `AND`, `OR`, `NOT`, `IS [NOT] NULL`. Values
+are sent as query parameters. Ordering comparisons of strings stay in Hecaton (ClickHouse orders
+strings by their UTF-8 bytes), as do functions and casts. The query reads only the columns it
+uses, and Hecaton evaluates the whole condition on the rows it receives, so results follow
+Hecaton's SQL whatever ClickHouse returns.
+
+`INSERT INTO` and `SINK INTO` insert batches of rows: each insert holds what the processor has
+received, up to `insertBatchSize` rows, and a failed insert is retried with the same
+deduplication token. There is no `UPDATE` or `DELETE`: for a table whose rows change, insert new
+versions into a `ReplacingMergeTree` table and read it with `useFinal`.
+
+| Option | Default | Meaning |
+|---|---|---|
+| `useFinal` | `false` | Read with `FINAL`: only the latest row of each key of a `ReplacingMergeTree` table |
+| `splitColumn` | not set | Read in parallel on every member, each processor reading the rows whose column hashes to it; without it, one processor reads |
+| `preferredLocalParallelism` | 2 | Processors per member of a split read |
+| `insertBatchSize` | 10000 | Largest number of rows in one insert |
+| `insertQuorum` | not set | `insert_quorum` of the inserts |
+
 ## Types
 
-| ClickHouse | Java (map values, keys) | Compact field |
-|---|---|---|
-| `Bool` | `Boolean` | `BOOLEAN` |
-| `Int8` | `Byte` | `INT8` |
-| `UInt8`, `Int16` | `Short` | `INT16` |
-| `UInt16`, `Int32` | `Integer` | `INT32` |
-| `UInt32`, `Int64` | `Long` | `INT64` |
-| `UInt64`, `(U)Int128`, `(U)Int256`, `Decimal*` | `BigDecimal` | `DECIMAL` |
-| `Float32`, `Float64` | `Float`, `Double` | `FLOAT32`, `FLOAT64` |
-| `String`, `FixedString`, `Enum8/16`, `UUID`, `IPv4`, `IPv6` | `String` | `STRING` |
-| `Date`, `Date32` | `LocalDate` | `DATE` |
-| `DateTime`, `DateTime64` | `OffsetDateTime` | `TIMESTAMP_WITH_TIMEZONE` |
+| ClickHouse | Java (map values, keys) | Compact field | SQL |
+|---|---|---|---|
+| `Bool` | `Boolean` | `BOOLEAN` | `BOOLEAN` |
+| `Int8` | `Byte` | `INT8` | `TINYINT` |
+| `UInt8`, `Int16` | `Short` | `INT16` | `SMALLINT` |
+| `UInt16`, `Int32` | `Integer` | `INT32` | `INTEGER` |
+| `UInt32`, `Int64` | `Long` | `INT64` | `BIGINT` |
+| `UInt64`, `(U)Int128`, `(U)Int256`, `Decimal*` | `BigDecimal` | `DECIMAL` | `DECIMAL` |
+| `Float32`, `Float64` | `Float`, `Double` | `FLOAT32`, `FLOAT64` | `REAL`, `DOUBLE` |
+| `String`, `FixedString`, `Enum8/16`, `UUID`, `IPv4`, `IPv6` | `String` | `STRING` | `VARCHAR` |
+| `Date`, `Date32` | `LocalDate` | `DATE` | `DATE` |
+| `DateTime`, `DateTime64` | `OffsetDateTime` | `TIMESTAMP_WITH_TIMEZONE` | `TIMESTAMP WITH TIME ZONE` |
 
 `Nullable(T)` maps to the nullable compact kinds, and `LowCardinality(T)` like `T`. When storing,
 a value of another numeric type is converted (an `Integer` key for an `Int64` column, for
-example). Arrays, maps, tuples and the other types are not supported by the map store; the Jet
-source and sink give access to every type through the ClickHouse client.
+example). Arrays, maps, tuples and the other types are not supported by the map store and SQL;
+the Jet source and sink give access to every type through the ClickHouse client.
