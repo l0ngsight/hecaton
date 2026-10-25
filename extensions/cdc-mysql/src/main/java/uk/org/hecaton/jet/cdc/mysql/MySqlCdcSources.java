@@ -32,6 +32,7 @@ import uk.org.hecaton.jet.retry.RetryStrategy;
 import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static uk.org.hecaton.jet.cdc.impl.CdcSourceP.RECONNECT_BEHAVIOR_PROPERTY;
 
@@ -92,9 +93,12 @@ public final class MySqlCdcSources {
                 .required("database.hostname")
                 .required("database.user")
                 .required("database.password")
-                .required("database.server.name")
-                .exclusive("database.whitelist", "database.blacklist")
-                .exclusive("table.whitelist", "table.blacklist");
+                .required("topic.prefix")
+                .exclusive("database.include.list", "database.exclude.list")
+                .exclusive("table.include.list", "table.exclude.list");
+
+        private static final int MIN_DEFAULT_SERVER_ID = 5400;
+        private static final int MAX_DEFAULT_SERVER_ID = 6400;
 
         private final DebeziumConfig config;
 
@@ -109,6 +113,9 @@ public final class MySqlCdcSources {
             config = new DebeziumConfig(name, "io.debezium.connector.mysql.MySqlConnector");
             config.setProperty(CdcSourceP.SEQUENCE_EXTRACTOR_CLASS_PROPERTY, MySqlSequenceExtractor.class.getName());
             config.setProperty("include.schema.changes", "false");
+            // Debezium 2 requires a server ID; Debezium 1 chose one in this range when none was set
+            config.setProperty("database.server.id",
+                    ThreadLocalRandom.current().nextInt(MIN_DEFAULT_SERVER_ID, MAX_DEFAULT_SERVER_ID + 1));
         }
 
         /**
@@ -158,7 +165,7 @@ public final class MySqlCdcSources {
          */
         @Nonnull
         public Builder setClusterName(@Nonnull String cluster) {
-            config.setProperty("database.server.name", cluster);
+            config.setProperty("topic.prefix", cluster);
             return this;
         }
 
@@ -185,7 +192,7 @@ public final class MySqlCdcSources {
          */
         @Nonnull
         public Builder setDatabaseWhitelist(@Nonnull String... dbNameRegExps) {
-            config.setProperty("database.whitelist", dbNameRegExps);
+            config.setProperty("database.include.list", dbNameRegExps);
             return this;
         }
 
@@ -197,7 +204,7 @@ public final class MySqlCdcSources {
          */
         @Nonnull
         public Builder setDatabaseBlacklist(@Nonnull String... dbNameRegExps) {
-            config.setProperty("database.blacklist", dbNameRegExps);
+            config.setProperty("database.exclude.list", dbNameRegExps);
             return this;
         }
 
@@ -211,7 +218,7 @@ public final class MySqlCdcSources {
          */
         @Nonnull
         public Builder setTableWhitelist(@Nonnull String... tableNameRegExps) {
-            config.setProperty("table.whitelist", tableNameRegExps);
+            config.setProperty("table.include.list", tableNameRegExps);
             return this;
         }
 
@@ -224,7 +231,7 @@ public final class MySqlCdcSources {
          */
         @Nonnull
         public Builder setTableBlacklist(@Nonnull String... tableNameRegExps) {
-            config.setProperty("table.blacklist", tableNameRegExps);
+            config.setProperty("table.exclude.list", tableNameRegExps);
             return this;
         }
 
@@ -237,7 +244,7 @@ public final class MySqlCdcSources {
          */
         @Nonnull
         public Builder setColumnBlacklist(@Nonnull String... columnNameRegExps) {
-            config.setProperty("column.blacklist", columnNameRegExps);
+            config.setProperty("column.exclude.list", columnNameRegExps);
             return this;
         }
 

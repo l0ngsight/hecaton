@@ -30,9 +30,9 @@ import uk.org.hecaton.logging.ILogger;
 import io.debezium.document.Document;
 import io.debezium.document.DocumentReader;
 import io.debezium.document.DocumentWriter;
-import io.debezium.relational.history.AbstractDatabaseHistory;
-import io.debezium.relational.history.DatabaseHistoryException;
+import io.debezium.relational.history.AbstractSchemaHistory;
 import io.debezium.relational.history.HistoryRecord;
+import io.debezium.relational.history.SchemaHistoryException;
 import org.apache.kafka.connect.connector.ConnectorContext;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
@@ -260,7 +260,7 @@ public abstract class CdcSourceP<T> extends AbstractProcessor {
         SourceTask task = newInstance(connector.taskClass().getName(), "task");
         task.initialize(new JetSourceTaskContext());
 
-        // Our DatabaseHistory implementation will be created by the
+        // Our SchemaHistory implementation will be created by the
         // following start() call, on this thread (blocking worker
         // thread) and this is how we pass it the list it should
         // use for storing history records.
@@ -498,16 +498,16 @@ public abstract class CdcSourceP<T> extends AbstractProcessor {
         }
     }
 
-    public static class DatabaseHistoryImpl extends AbstractDatabaseHistory {
+    public static class SchemaHistoryImpl extends AbstractSchemaHistory {
 
         private final List<byte[]> history;
 
-        public DatabaseHistoryImpl() {
+        public SchemaHistoryImpl() {
             this.history = Objects.requireNonNull(THREAD_LOCAL_HISTORY.get());
         }
 
         @Override
-        protected void storeRecord(HistoryRecord historyRecord) throws DatabaseHistoryException {
+        protected void storeRecord(HistoryRecord historyRecord) throws SchemaHistoryException {
             history.add(DocumentWriter.defaultWriter().writeAsBytes(historyRecord.document()));
         }
 
