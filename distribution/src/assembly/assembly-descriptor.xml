@@ -44,6 +44,7 @@
                 <include>uk.org.hecaton.jet:hecaton-jet-cdc-debezium</include>
                 <include>uk.org.hecaton.jet:hecaton-jet-cdc-mysql</include>
                 <include>uk.org.hecaton.jet:hecaton-jet-cdc-postgres</include>
+                <include>uk.org.hecaton.jet:hecaton-jet-clickhouse</include>
                 <include>uk.org.hecaton.jet:hecaton-jet-csv</include>
                 <include>uk.org.hecaton.jet:hecaton-jet-elasticsearch-7</include>
                 <include>uk.org.hecaton.jet:hecaton-jet-grpc</include>

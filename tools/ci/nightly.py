@@ -46,7 +46,8 @@ GROUPS = [
         "extensions/protobuf", "extensions/grpc", "extensions/python"]},
     {"group": "ext-stores", "shards": 1, "modules": [
         "extensions/mongodb", "extensions/elasticsearch/elasticsearch-7", "extensions/cdc-debezium",
-        "extensions/cdc-mysql", "extensions/cdc-postgres", "extensions/hadoop", "extensions/mapstore"]},
+        "extensions/cdc-mysql", "extensions/cdc-postgres", "extensions/clickhouse", "extensions/hadoop",
+        "extensions/mapstore"]},
     {"group": "hd", "shards": 1, "modules": ["hecaton-hd"]},
     {"group": "persistence", "shards": 1, "modules": ["hecaton-persistence"]},
     {"group": "vector", "shards": 1, "modules": ["hecaton-vector"]},

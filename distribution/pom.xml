@@ -313,6 +313,12 @@
         </dependency>
         <dependency>
             <groupId>uk.org.hecaton.jet</groupId>
+            <artifactId>hecaton-jet-clickhouse</artifactId>
+            <version>${project.version}</version>
+            <classifier>${fat.dependency.classifier}</classifier>
+        </dependency>
+        <dependency>
+            <groupId>uk.org.hecaton.jet</groupId>
             <artifactId>hecaton-jet-mongodb</artifactId>
             <version>${project.version}</version>
             <classifier>${fat.dependency.classifier}</classifier>

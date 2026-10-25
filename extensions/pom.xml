@@ -38,6 +38,7 @@
         <module>cdc-debezium</module>
         <module>cdc-mysql</module>
         <module>cdc-postgres</module>
+        <module>clickhouse</module>
         <module>csv</module>
         <module>elasticsearch/elasticsearch-7</module>
         <module>hadoop</module>
