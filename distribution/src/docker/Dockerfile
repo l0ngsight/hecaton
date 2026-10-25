@@ -12,7 +12,12 @@ ENV HECATON_HOME=/opt/hecaton \
     HECATON_CONFIG=config/hecaton-docker.xml \
     PATH=/opt/hecaton/bin:$PATH
 
-RUN groupadd --system hecaton \
+# Security updates of the base image's packages, and no Pebble: the base image's service manager
+# (/usr/bin/pebble), which the member does not use and whose Go runtime has known CVEs
+RUN apt-get update \
+    && apt-get -y upgrade \
+    && rm -rf /var/lib/apt/lists/* /usr/bin/pebble \
+    && groupadd --system hecaton \
     && useradd --system --gid hecaton --home-dir /opt/hecaton --shell /usr/sbin/nologin hecaton
 
 ADD hecaton-${HECATON_VERSION}-slim.tar.gz /opt/

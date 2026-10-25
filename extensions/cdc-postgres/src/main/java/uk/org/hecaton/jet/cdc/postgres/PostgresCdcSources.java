@@ -31,7 +31,7 @@ import uk.org.hecaton.jet.pipeline.Sources;
 import uk.org.hecaton.jet.pipeline.StreamSource;
 import uk.org.hecaton.jet.retry.RetryStrategy;
 import io.debezium.connector.postgresql.PostgresConnectorConfig;
-import io.debezium.connector.postgresql.spi.Snapshotter;
+import io.debezium.spi.snapshot.Snapshotter;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;
@@ -111,8 +111,8 @@ public final class PostgresCdcSources {
                 .required("database.password")
                 .required("database.dbname")
                 .inclusive("database.sslkey", "database.sslpassword")
-                .exclusive("schema.whitelist", "schema.blacklist")
-                .exclusive("table.whitelist", "table.blacklist");
+                .exclusive("schema.include.list", "schema.exclude.list")
+                .exclusive("table.include.list", "table.exclude.list");
 
         private final DebeziumConfig config;
 
@@ -126,7 +126,7 @@ public final class PostgresCdcSources {
             config = new DebeziumConfig(name, "io.debezium.connector.postgresql.PostgresConnector");
             config.setProperty(CdcSourceP.SEQUENCE_EXTRACTOR_CLASS_PROPERTY, PostgresSequenceExtractor.class.getName());
             config.setProperty(ChangeRecordCdcSourceP.DB_SPECIFIC_EXTRA_FIELDS_PROPERTY, "schema");
-            config.setProperty("database.server.name", UuidUtil.newUnsecureUuidString());
+            config.setProperty("topic.prefix", UuidUtil.newUnsecureUuidString());
             config.setProperty("snapshot.mode", "initial");
         }
 
@@ -160,14 +160,25 @@ public final class PostgresCdcSources {
         }
 
         /**
-         * Custom snapshotter that will be used by the connector.
+         * Custom snapshotter that will be used by the connector: an implementation of Debezium's
+         * {@link Snapshotter} SPI with a public no-argument constructor. Debezium finds it by its
+         * {@link Snapshotter#name() name} with {@link java.util.ServiceLoader}, so it must also be
+         * registered in {@code META-INF/services/io.debezium.spi.snapshot.Snapshotter} on the
+         * job's classpath.
          */
         @Nonnull
         public Builder setCustomSnapshotter(@Nonnull Class<?> snapshotterClass) {
-            checkState(Snapshotter.class.isAssignableFrom(snapshotterClass), "snapshotterClass must be " +
-                    "a subclass of Snapshotter");
+            checkState(Snapshotter.class.isAssignableFrom(snapshotterClass), "snapshotterClass must " +
+                    "implement " + Snapshotter.class.getName());
+            String name;
+            try {
+                name = ((Snapshotter) snapshotterClass.getDeclaredConstructor().newInstance()).name();
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalArgumentException("Cannot instantiate " + snapshotterClass.getName()
+                        + " with its public no-argument constructor", e);
+            }
             config.setProperty("snapshot.mode", PostgresConnectorConfig.SnapshotMode.CUSTOM.getValue());
-            config.setProperty("snapshot.custom.class", snapshotterClass.getName());
+            config.setProperty("snapshot.mode.custom.name", name);
             return this;
         }
 
@@ -234,7 +245,7 @@ public final class PostgresCdcSources {
          */
         @Nonnull
         public Builder setSchemaWhitelist(@Nonnull String... schemaNameRegExps) {
-            config.setProperty("schema.whitelist", schemaNameRegExps);
+            config.setProperty("schema.include.list", schemaNameRegExps);
             return this;
         }
 
@@ -247,7 +258,7 @@ public final class PostgresCdcSources {
          */
         @Nonnull
         public Builder setSchemaBlacklist(@Nonnull String... schemaNameRegExps) {
-            config.setProperty("schema.blacklist", schemaNameRegExps);
+            config.setProperty("schema.exclude.list", schemaNameRegExps);
             return this;
         }
 
@@ -261,7 +272,7 @@ public final class PostgresCdcSources {
          */
         @Nonnull
         public Builder setTableWhitelist(@Nonnull String... tableNameRegExps) {
-            config.setProperty("table.whitelist", tableNameRegExps);
+            config.setProperty("table.include.list", tableNameRegExps);
             return this;
         }
 
@@ -274,7 +285,7 @@ public final class PostgresCdcSources {
          */
         @Nonnull
         public Builder setTableBlacklist(@Nonnull String... tableNameRegExps) {
-            config.setProperty("table.blacklist", tableNameRegExps);
+            config.setProperty("table.exclude.list", tableNameRegExps);
             return this;
         }
 
@@ -286,7 +297,7 @@ public final class PostgresCdcSources {
          */
         @Nonnull
         public Builder setColumnBlacklist(@Nonnull String... columnNameRegExps) {
-            config.setProperty("column.blacklist", columnNameRegExps);
+            config.setProperty("column.exclude.list", columnNameRegExps);
             return this;
         }
 
