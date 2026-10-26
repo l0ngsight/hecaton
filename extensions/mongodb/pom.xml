@@ -148,6 +148,13 @@
             <artifactId>calcite-core</artifactId>
             <version>${calcite.version}</version>
             <scope>provided</scope>
+            <exclusions>
+                <!-- Lattice support only, which Hecaton does not use; it brings commons-lang 2.4 (CVE-2025-48924) -->
+                <exclusion>
+                    <groupId>net.hydromatic</groupId>
+                    <artifactId>aggdesigner-algorithm</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
