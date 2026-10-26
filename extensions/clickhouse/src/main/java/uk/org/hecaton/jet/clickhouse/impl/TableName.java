@@ -18,11 +18,12 @@ package uk.org.hecaton.jet.clickhouse.impl;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.Serializable;
 
 /**
  * A table name, optionally with its database, and its quoted form for SQL.
  */
-public record TableName(@Nullable String database, @Nonnull String table) {
+public record TableName(@Nullable String database, @Nonnull String table) implements Serializable {
 
     /**
      * Parses {@code table} or {@code database.table}. Names with dots can be quoted with back
