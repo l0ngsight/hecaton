@@ -25,7 +25,7 @@ Companion to [`SPEC.md`](SPEC.md). Section references (§) point to the spec.
 | **M8** Hecaton 1.0 | Hardening, perf, docs, security review, release | §10 quality gates met | 4–6 ew |
 | **M9** 1.x (P1) | F4, F5, F9, F10 encryption at rest, F11 client near cache, F13 sync, F14, F16, F17, LDAP/Kerberos, slim client jar | per feature | 30–40 ew |
 | **M10** 2.x (P2) | F12, F18, F19, F20 | per feature | 25–35 ew |
-| **M11** Load protection (implemented, in review) | F23: insert-only maps with shared payloads, pooled connection buffers and back pressure, workload isolation, partitioned queues ([design](design/load-protection.md)) | per phase, see the design | 20–26 ew (phases 3 and 4 optional) |
+| **M11** Load protection (implemented, in review) | F23: immutable (no-update) maps with shared payloads, pooled connection buffers and back pressure, workload isolation, partitioned queues ([design](design/load-protection.md)) | per phase, see the design | 20–26 ew (phases 3 and 4 optional) |
 
 M3–M7 can run in parallel after M2. With about 5 engineers, 1.0 is realistic in roughly
 8–10 months. The critical path is M1 → M2 → M5 → M6 (persistence builds on the HD/FFM

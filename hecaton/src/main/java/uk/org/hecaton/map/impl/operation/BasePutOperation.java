@@ -104,15 +104,6 @@ public abstract class BasePutOperation
         return ImmutableMapAccess.INSERT;
     }
 
-    @Override
-    protected void checkImmutableAccess() {
-        if (getTtl() > 0 || getMaxIdle() > 0) {
-            throw immutableRejection("its entries never expire, so " + operationName()
-                    + " cannot have a time-to-live or max-idle");
-        }
-        super.checkImmutableAccess();
-    }
-
     // overridden in extension classes
     protected long getMaxIdle() {
         return UNSET;

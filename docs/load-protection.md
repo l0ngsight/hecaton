@@ -47,23 +47,31 @@ hecaton:
 
 ## What it does
 
-### Insert-only (immutable) maps
+### Immutable maps
 
-`MapConfig#setImmutable(true)` makes a map insert-only: an entry, once put, is never changed or
-removed. `put`, `set`, `putIfAbsent` and `putAll` of a new key work; any operation that would
-change or remove an existing entry (`put` of an existing key, `replace`, `remove`, `delete`,
-`evict`, `executeOnKey`, `clear`, and changes in transactions) fails with
-`ImmutableEntryException`. A duplicate insert is rejected, not ignored; `putIfAbsent` of an
-existing key returns the existing value as usual. During a split-brain merge the existing value
-wins. An immutable map must use `InMemoryFormat.BINARY` and cannot have eviction, a time-to-live or a
-max-idle time; the member refuses such a configuration.
+`MapConfig#setImmutable(true)` makes a map immutable: the value of a key it holds is never
+updated. `put`, `set`, `putIfAbsent` and `putAll` of a new key work, with or without a
+time-to-live or max-idle. Any operation that would update the value of a held key (`put`, `set`
+or `putAll` of a held key, `replace`, an entry processor that sets a held entry's value,
+`loadAll` with `replaceExistingValues`, and these in transactions) fails with
+`ImmutableEntryException`. A duplicate insert is rejected, not ignored; `putIfAbsent` of a
+held key returns the held value as usual.
 
-Because values never change, members can share them instead of copying them:
+Entries can still go away: `remove`, `delete`, `evict`, `evictAll`, `clear`, entry processors that
+remove an entry, `setTtl`, and the map's own time-to-live, max-idle and eviction policy (LRU, LFU,
+...) all work as on any map. Once a key is no longer held it can be inserted again, possibly with
+a different value. During a split-brain merge the held value wins. An immutable map must use
+`InMemoryFormat.BINARY`; the member refuses another format.
+
+Because held values are never updated, members can share them instead of copying them:
 
 - **Reads from embedded members** go through a small near cache per map, of
   `immutable-map-near-cache-size` entries (1000 by default; `0` turns it off). Concurrent misses
   for one key make one remote call (single flight); absent keys are never cached. Repeated reads
-  of a hot value then allocate nothing.
+  of a hot value then allocate nothing. Removals, expiry and inserts invalidate it like any near
+  cache: invalidations are sent in batches (within `hecaton.map.invalidation.batchfrequency.seconds`,
+  10 s by default), so until one arrives a member can still return the last value of a key that was
+  removed or expired elsewhere.
 - **Values sent to clients and members** are written to the socket from the stored bytes, not
   copied into each response. The per-response cost is a small header, whatever the value's size.
 

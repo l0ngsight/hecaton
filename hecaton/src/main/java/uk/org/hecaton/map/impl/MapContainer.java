@@ -105,7 +105,7 @@ public interface MapContainer {
     MapConfig getMapConfig();
 
     /**
-     * Whether the map is immutable: insert-only, with values shared by readers (load protection,
+     * Whether the map is immutable: held values are never updated, and are shared by readers (load protection,
      * F23). True when load protection is on and the map is configured immutable.
      */
     default boolean isImmutable() {

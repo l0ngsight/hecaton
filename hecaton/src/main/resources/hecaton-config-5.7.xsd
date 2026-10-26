@@ -277,8 +277,9 @@
             <xs:element name="immutable" type="xs:boolean" minOccurs="0" default="false">
                 <xs:annotation>
                     <xs:documentation>
-                        True for an insert-only map: an entry, once put, is never changed or removed, so its
-                        value can be cached and shared by readers. Takes effect only when load protection is on.
+                        True for a map whose held values are never updated: a key can be inserted, and later
+                        removed, evicted or expired, but its value is never replaced, so it can be cached and shared
+                        by readers. Takes effect only when load protection is on.
                     </xs:documentation>
                 </xs:annotation>
             </xs:element>

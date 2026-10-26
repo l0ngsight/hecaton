@@ -28,9 +28,9 @@ import static uk.org.hecaton.internal.util.Preconditions.checkPositive;
  * <p>
  * With load protection on:
  * <ul>
- *     <li>maps with {@link MapConfig#setImmutable(boolean) immutable} set are insert-only, and
- *     their values are shared instead of copied: on the member that owns them, with the client
- *     responses, and on the other members through a near cache that never needs invalidating;</li>
+ *     <li>maps with {@link MapConfig#setImmutable(boolean) immutable} set never update a held
+ *     value, and their values are shared instead of copied: on the member that owns them, with
+ *     the client responses, and on the other members through a near cache;</li>
  *     <li>outbound data, in-flight client requests and client connection buffers are bounded
  *     ({@link #getOutboundConfig()}, {@link #getAdmissionConfig()},
  *     {@link #getConnectionBufferConfig()});</li>

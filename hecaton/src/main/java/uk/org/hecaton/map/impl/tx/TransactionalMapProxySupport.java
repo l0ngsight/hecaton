@@ -90,6 +90,10 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
         this.mapServiceContext = mapService.getMapServiceContext();
         this.mapNearCacheManager = mapServiceContext.getMapNearCacheManager();
         MapConfig mapConfig = nodeEngine.getConfig().findMapConfig(name);
+        if (nodeEngine instanceof NodeEngineImpl nodeEngineImpl) {
+            // the near cache that the map proxies of an immutable map use (F23)
+            mapConfig = nodeEngineImpl.getLoadProtection().withImmutableMapNearCache(mapConfig);
+        }
         this.operationProvider = mapServiceContext.getMapOperationProvider(name);
         this.partitionStrategy = mapServiceContext.getPartitioningStrategy(name,
                 mapConfig.getPartitioningStrategyConfig(), mapConfig.getPartitioningAttributeConfigs());
@@ -238,9 +242,6 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
 
     Data putInternal(Data key, Data value, long ttl, TimeUnit timeUnit, RemoteCallHook hook) {
         boolean immutable = isImmutable();
-        if (immutable && ttl > 0) {
-            throw immutableRejection("its entries never expire, so a put cannot have a time-to-live");
-        }
         boolean unlockImmediately = !valueMap.containsKey(key);
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         if (immutable && versionedValue.value != null) {
@@ -249,7 +250,7 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
             } else {
                 addUnlockTransactionRecord(key, versionedValue.version);
             }
-            throw immutableRejection("it already holds the key, and refuses to insert it again in a transaction");
+            throw immutableRejection("it already holds the key, and refuses to update it in a transaction");
         }
         long timeInMillis = getTimeInMillis(ttl, timeUnit);
         MapOperation op = operationProvider.createTxnSetOperation(name, key, value, versionedValue.version, timeInMillis);
@@ -257,12 +258,12 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
         return versionedValue.value;
     }
 
-    /** Whether the map is immutable (load protection, F23): insert-only. */
+    /** Whether the map is immutable (load protection, F23): its held values are never updated. */
     private boolean isImmutable() {
         return mapServiceContext.getMapContainer(name).isImmutable();
     }
 
-    private void refuseChangeOfImmutableMap(String operation) {
+    private void refuseUpdateOfImmutableMap(String operation) {
         if (isImmutable()) {
             throw immutableRejection("it refuses " + operation + " in a transaction");
         }
@@ -270,7 +271,7 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
 
     private ImmutableEntryException immutableRejection(String reason) {
         ((NodeEngineImpl) getNodeEngine()).getLoadProtection().onImmutableRejection();
-        return new ImmutableEntryException("Map '" + name + "' is immutable (insert-only): " + reason);
+        return new ImmutableEntryException("Map '" + name + "' is immutable (held values are never updated): " + reason);
     }
 
     Data putIfAbsentInternal(Data key, Data value, RemoteCallHook hook) {
@@ -293,7 +294,7 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
     }
 
     Data replaceInternal(Data key, Data value, RemoteCallHook hook) {
-        refuseChangeOfImmutableMap("replace");
+        refuseUpdateOfImmutableMap("replace");
         boolean unlockImmediately = !valueMap.containsKey(key);
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         if (versionedValue.value == null) {
@@ -313,7 +314,7 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
 
     boolean replaceIfSameInternal(Data key, Object oldValue,
                                   Data newValue, RemoteCallHook hook) {
-        refuseChangeOfImmutableMap("replace");
+        refuseUpdateOfImmutableMap("replace");
         boolean unlockImmediately = !valueMap.containsKey(key);
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         if (!isEquals(oldValue, versionedValue.value)) {
@@ -333,7 +334,6 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
     }
 
     Data removeInternal(Data key, RemoteCallHook hook) {
-        refuseChangeOfImmutableMap("remove");
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         tx.add(new MapTransactionLogRecord(name, key, getPartitionId(key),
                 operationProvider.createTxnDeleteOperation(name, key, versionedValue.version),
@@ -342,7 +342,6 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
     }
 
     boolean removeIfSameInternal(Data key, Object value, RemoteCallHook hook) {
-        refuseChangeOfImmutableMap("remove");
         boolean unlockImmediately = !valueMap.containsKey(key);
         VersionedValue versionedValue = lockAndGet(key, tx.getTimeoutMillis());
         if (!isEquals(versionedValue.value, value)) {

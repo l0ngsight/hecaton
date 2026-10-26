@@ -609,9 +609,9 @@ public class NearCachedMapProxyImpl<K, V> extends MapProxyImpl<K, V> {
     /**
      * Reads an entry of an immutable map that is not in the Near Cache (load protection, F23).
      * Concurrent reads of the same key share one remote read, so a burst of readers costs one
-     * transfer, and they all get the one object that the Near Cache keeps. Entries never change,
-     * so the cached object is never stale; absent keys are not cached, because they can be
-     * inserted later.
+     * transfer, and they all get the one object that the Near Cache keeps. Held values are never
+     * updated; removals, expiry and inserts invalidate the cached object as for any Near Cache.
+     * Absent keys are not cached, because they can be inserted later.
      */
     private InternalCompletableFuture<Object> readImmutable(Object ncKey) {
         InternalCompletableFuture<Object> read = new InternalCompletableFuture<>();

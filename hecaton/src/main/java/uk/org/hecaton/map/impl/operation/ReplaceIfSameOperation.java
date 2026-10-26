@@ -112,6 +112,6 @@ public class ReplaceIfSameOperation extends BasePutOperation implements Mutating
     @Override
     protected ImmutableMapAccess immutableMapAccess() {
         // replaces a held value
-        return ImmutableMapAccess.CHANGE;
+        return ImmutableMapAccess.UPDATE;
     }
 }

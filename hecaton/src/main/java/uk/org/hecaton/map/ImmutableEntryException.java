@@ -19,10 +19,10 @@ package uk.org.hecaton.map;
 import java.io.Serial;
 
 /**
- * Thrown when an operation would change, remove or insert again an entry of an immutable map
+ * Thrown when an operation would update the value of a key that an immutable map holds
  * ({@link uk.org.hecaton.config.MapConfig#setImmutable(boolean)}, load protection, F23). Immutable
- * maps are insert-only: a key can be inserted once and is then never changed or removed. The
- * stored value is left as it was.
+ * maps never update a held value: a key can be inserted, and removed, evicted or expired, but
+ * while it is held its value is never replaced. The stored value is left as it was.
  * <p>
  * An application that retries an insert after a timeout can receive this exception for its own
  * earlier attempt that did succeed; it can treat it as "already inserted", or insert with

@@ -17,8 +17,9 @@
 package uk.org.hecaton.map.impl.operation;
 
 /**
- * How an operation uses an immutable map (load protection, F23): immutable maps are insert-only,
- * and {@link MapOperation} checks the operation's access on the partition owner before it runs.
+ * How an operation uses an immutable map (load protection, F23): the values an immutable map holds
+ * are never updated, and {@link MapOperation} checks the operation's access on the partition owner
+ * before it runs.
  */
 public enum ImmutableMapAccess {
 
@@ -28,6 +29,9 @@ public enum ImmutableMapAccess {
     /** Inserts its key: allowed when the map does not hold the key. */
     INSERT,
 
-    /** Changes or removes entries: refused. */
-    CHANGE
+    /** Removes, evicts or expires entries: allowed. */
+    REMOVE,
+
+    /** Updates held values: refused. */
+    UPDATE
 }

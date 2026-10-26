@@ -287,7 +287,7 @@ public class PutAllOperation extends MapOperation
         Address caller = getCallerAddress();
         for (int i = 0; i < mapEntries.size(); i++) {
             if (recordStore.containsKey(mapEntries.getKey(i), caller)) {
-                throw immutableRejection("it already holds a key of putAll, and refuses to insert it again");
+                throw immutableRejection("it already holds a key of putAll, and refuses to update it");
             }
         }
     }

@@ -121,6 +121,6 @@ public class EvictAllOperation extends MapOperation
     @Override
     protected ImmutableMapAccess immutableMapAccess() {
         // removes entries from memory
-        return ImmutableMapAccess.CHANGE;
+        return ImmutableMapAccess.REMOVE;
     }
 }

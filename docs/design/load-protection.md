@@ -60,7 +60,7 @@ Non-goals:
 
 | Term | Meaning |
 |---|---|
-| Immutable map | An insert-only map: an entry cannot be changed, removed or inserted again once inserted (§4.2) |
+| Immutable map | A map that never updates a held value: a key can be inserted, removed, evicted or expired, but not updated (§4.2) |
 | Shared payload | One read-only, reference-counted view of a stored value's bytes, referenced by every response that sends it (§4.3) |
 | Logical bytes | Bytes queued for sending, counted per response (50,000 × 1 MB = 50 GB) |
 | Physical bytes | Distinct bytes actually held by outbound queues (the same 1 MB counted once) |
@@ -72,7 +72,8 @@ Non-goals:
 
 | Question | Answer | Effect on the plan |
 |---|---|---|
-| Remove and re-insert on immutable maps? | **No. Reject duplicate inserts** | Immutable maps are insert-only: no remove, delete, clear, eviction or expiry (§4.2.1). No tombstones and no payload retirement are needed |
+| Remove and re-insert on immutable maps? | **No. Reject duplicate inserts** | Immutable maps were insert-only: no remove, delete, clear, eviction or expiry. Superseded by the next row |
+| Removal, expiry and eviction on immutable maps? | **Yes. Refuse only updates by key** | Removal by key, `clear`, time-to-live, max-idle and eviction (LRU, LFU) are allowed; only an update of a held key's value is refused (§4.2.1). A removed key can be inserted again. Near caches are invalidated on removal, expiry and insert as for any map; payloads stay heap arrays, so no retirement is needed |
 | "Mutable" value in the problem statement? | Typo: values are large and **immutable** | No version pinning; one stored version per key |
 | In-memory format in production? | **`BINARY`** | Phase 1 targets `BINARY` only; `NATIVE`/tiered sharing becomes optional (phase 3). On `BINARY` the stored array is already shared with responses, so the growth must come from elsewhere (§3.1, §3.2) |
 | Client routing? | **All members** (smart routing) | Client gets go straight to the partition owner (measured: 0 copies, §3.1). Reads between members still matter for the services' embedded members (measured: 4–5 copies) and are in Phase 1 (§4.3.3). Read-from-backup is dropped: smart clients never send a get to a backup |
@@ -226,7 +227,7 @@ lp.getMaintenanceConfig()
 
 config.getMapConfig("catalog")
         .setInMemoryFormat(InMemoryFormat.BINARY)
-        .setImmutable(true);                                 // insert-only, §4.2
+        .setImmutable(true);                                 // no updates, §4.2
 
 config.getQueueConfig("jobs")
         .setShardCount(8);                                   // §4.6, nice to have
@@ -247,19 +248,22 @@ HecatonInstance member = Hecaton.newHecatonInstance(config);
 
 ### 4.2 Immutable maps (FR3)
 
-#### 4.2.1 Semantics: insert-only
+#### 4.2.1 Semantics: no updates
 
 A map with `setImmutable(true)` accepts the insert of a key that is not present and refuses every
-operation that would change, remove or insert again an existing key. Refusals throw
+operation that would update the value of an existing key. Removing, evicting and expiring entries
+is allowed. Refusals throw
 `ImmutableEntryException`, which extends `IllegalStateException`, so official clients surface it
 as `IllegalStateException` with the message (no new client error code).
 
 | Operation | Key absent | Key present |
 |---|---|---|
-| `put`, `set`, `putAsync`, `setAsync`, `putAll`, `setAll`, `putTransient` | inserted | **refused** (duplicate insert) |
+| `put`, `set`, `putAsync`, `setAsync`, `putAll`, `setAll`, `putTransient` (with or without a TTL or max-idle) | inserted | **refused** (update) |
 | `putIfAbsent`, `putIfAbsentAsync` | inserted | returns the existing value, nothing changes (its contract already rejects the insert) |
-| `replace`, `merge`, `compute*`, entry processors that call `setValue`, `MapLoader#loadAll(replaceExisting=true)` | as for an insert, where the operation inserts | **refused** |
-| `remove`, `delete`, `evict`, `evictAll`, `clear`, `removeAll`, `setTtl` | — | **refused** |
+| `replace`, `compute*`, entry processors that set a value, `MapLoader#loadAll(replaceExisting=true)` | as for an insert, where the operation inserts | **refused** |
+| `merge` (split brain) | inserted | the held entry wins |
+| `remove`, `delete`, `evict`, `evictAll`, `clear`, `removeAll`, entry processors that remove, `setTtl` | — | allowed |
+| time-to-live, max-idle, eviction policy (LRU, LFU, ...) | — | allowed: the entry expires or is evicted |
 | `get`, `getAll`, `containsKey`, queries, `values`, `entrySet`, read-only entry processors | unchanged | unchanged |
 | `MapLoader` load on a miss | inserted | — |
 | `destroy` (the whole map) | allowed: an administrative action that drops the map |
@@ -277,14 +281,13 @@ use `putIfAbsent`, which returns the stored value. The user guide says so.
 `ConfigValidator` refuses an immutable map that:
 
 - is not `BINARY` (until the optional phase 3 adds `NATIVE` and tiered);
-- has eviction, a time-to-live or a max-idle time (entries are never removed);
 - has a merge policy other than "existing wins" (§4.2.3).
 
 #### 4.2.3 Replication, recovery and split brain (FR6, NFR availability)
 
 Unchanged mechanisms: `backup-count`/`async-backup-count`, partition migration, anti-entropy.
-Since values never change, backups hold the same bytes as the primary and anti-entropy only ever
-adds missing entries.
+Since held values are never updated, backups hold the same bytes as the primary for every key
+they both hold.
 
 - **Member failure:** backups are promoted as today; no acknowledged insert is lost while at least
   one replica survives.
@@ -332,11 +335,11 @@ proxy, **which is how our services read**, or a client request that reached a no
 the value 3–5 times today. For immutable maps, Phase 1 removes those copies, all on the member side
 and in this order of value:
 
-1. **Member-side near cache by default.** An immutable map's entries never change and are never
-   removed (§4.2.1), so a near cache on the members needs no invalidation and can never be stale.
-   Under load protection, immutable maps get an `OBJECT` near cache on each member (bounded by
-   entry count/size, LRU), which takes the measured path from 4 copies to **0**. Hazelcast 5.7 can
-   be configured this way today (§7). Members return the cached instance to every caller, so callers
+1. **Member-side near cache by default.** An immutable map's held values are never updated
+   (§4.2.1); removals, expiry and re-inserts invalidate the near cache as for any map, so it is
+   stale only for the usual invalidation delay after a removal. Under load protection, immutable
+   maps get an `OBJECT` near cache on each member (bounded by entry count/size, LRU), which takes
+   the measured path from 4 copies to **0**. Hazelcast 5.7 can be configured this way today (§7). Members return the cached instance to every caller, so callers
    must not modify it; for an immutable map that is the contract (documented).
 2. **Single flight.** Concurrent misses of the same key on a member share one remote invocation,
    so a burst of 50,000 reads costs one transfer from the owner, not 50,000. Measured on 5.7's near
@@ -526,7 +529,7 @@ Metrics in the existing registry (JMX, Prometheus exporter), prefix `loadProtect
 | Phase | Content | Exit criteria | Est. |
 |---|---|---|---|
 | **0 Measure** — allocation part done | Done: `HotReadAllocation` + `tools/perf/hot-read-allocation.sh` — copies per read by path on Hazelcast 5.7 and Hecaton (§3.1). Open: the perf rig at 50k readers, slow readers (retention), connection churn with p99 of unrelated map/queue ops, time to serve a 50k-reader burst | §3.1 measured (done); the rest in `docs/performance.md` | 1 ew left |
-| **1 Immutable maps + bounds** (mandatory first) | `LoadProtectionConfig` + toggle; insert-only maps; first, reads between members — our path (§4.3.3: member near cache, single flight, deserialise once, one copy on the wire); then `SharedPayload`, shared frames and the no-copy invariant test; pooled, capped connection buffers; outbound accounting and limits; admission (defer/throttle/reject/disconnect); message size limit; metrics for these | `hot-read-allocation.sh` with `--max-copies-per-read 0` passes for every client and member-caller scenario of an immutable map (1 for cold remote reads); 50k × 1 MB reads over TLS keep heap growth below a fixed bound; 50k idle TLS connections cost less than the pool cap; no OOM with stalled readers; toggle off = inherited suite unchanged | 8–10 ew |
+| **1 Immutable maps + bounds** (mandatory first) | `LoadProtectionConfig` + toggle; immutable (no-update) maps; first, reads between members — our path (§4.3.3: member near cache, single flight, deserialise once, one copy on the wire); then `SharedPayload`, shared frames and the no-copy invariant test; pooled, capped connection buffers; outbound accounting and limits; admission (defer/throttle/reject/disconnect); message size limit; metrics for these | `hot-read-allocation.sh` with `--max-copies-per-read 0` passes for every client and member-caller scenario of an immutable map (1 for cold remote reads); 50k × 1 MB reads over TLS keep heap growth below a fixed bound; 50k idle TLS connections cost less than the pool cap; no OOM with stalled readers; toggle off = inherited suite unchanged | 8–10 ew |
 | **2 Isolation** (mandatory) | Maintenance lane, batched disconnects, accept/auth/handshake limits, TLS session resumption, quiet churn, cleanup metrics | Under a churn of N connections/s (N from Phase 0), p99 of map/queue ops within X% of the no-churn baseline; cleanup backlog bounded and drained | 3–4 ew |
 | **3 Other formats** (optional) | `NATIVE` and tiered immutable maps sharing native blocks | Only if needed | 2–3 ew |
 | **4 Partitioned queue** (nice to have) | `shardCount`, member-side routing, oldest-head polling, blocking take across shards, `shardNames` migration, optional smart client path | Throughput of one logical queue scales with members up to a measured limit; no acknowledged item lost when a member is killed; ordering error measured and documented | 4–6 ew |
@@ -539,7 +542,7 @@ DCO, fork log entry).
 ## 6. Testing
 
 - **Unit:** `SharedPayload` reference counting (including close-while-queued), shared-frame writing
-  across partial writes and through `TlsEncoder`, the insert-only operation matrix (§4.2.1) for
+  across partial writes and through `TlsEncoder`, the immutable-map operation matrix (§4.2.1) for
   every map operation and entry processor kind, concurrent inserts of one key (exactly one wins),
   buffer pool borrow/return and exhaustion, limits and watermarks, disconnect batching.
 - **No-copy invariant (CI):** `HotReadAllocation --max-copies-per-read 0` for the client and

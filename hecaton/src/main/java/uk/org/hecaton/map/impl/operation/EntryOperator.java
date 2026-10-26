@@ -270,10 +270,10 @@ public final class EntryOperator {
         if (readOnly && entryWasModified()) {
             throwModificationInReadOnlyException();
         }
-        if (!backup && (eventType == UPDATED || eventType == REMOVED) && mapContainer.isImmutable()) {
-            // nothing is applied yet: doPostOperateOps() applies the change
+        if (!backup && eventType == UPDATED && mapContainer.isImmutable()) {
+            // nothing is applied yet: doPostOperateOps() applies the update
             throw mapOperation.immutableRejection("entry processor " + entryProcessor.getClass().getName()
-                    + (eventType == UPDATED ? " changed" : " removed") + " a held entry");
+                    + " updated a held entry");
         }
 
         return this;
