@@ -515,7 +515,7 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
     }
 
     /**
-     * Checks if the map is immutable: insert-only, with its values shared by all readers. Takes
+     * Checks if the map is immutable: its held values are never updated, and are shared by all readers. Takes
      * effect when {@link LoadProtectionConfig load protection} is on.
      *
      * @return {@code true} if the map is immutable
@@ -527,14 +527,16 @@ public class MapConfig implements IdentifiedDataSerializable, NamedConfig, Versi
 
     /**
      * Makes the map immutable (load protection, F23). An immutable map accepts the insert of a key
-     * that it does not hold and refuses every operation that would change, remove or insert again
-     * a key that it holds, with {@link uk.org.hecaton.map.ImmutableEntryException}.
-     * {@code putIfAbsent} keeps its contract and returns the value that is held. Because values
-     * never change, the members share them with all readers instead of copying them, and each
-     * member keeps a near cache of the map that never needs invalidating.
+     * that it does not hold and refuses every operation that would update the value of a key that
+     * it holds, with {@link uk.org.hecaton.map.ImmutableEntryException}. Entries can be removed by
+     * key ({@code remove}, {@code delete}, {@code evict}), cleared, and expire or are evicted by
+     * the map's time-to-live, max-idle and eviction policy (for example LRU); a key that is no
+     * longer held can be inserted again. {@code putIfAbsent} keeps its contract and returns the
+     * value that is held. Because held values are never updated, the members share them with all
+     * readers instead of copying them, and each member keeps a near cache of the map, which removals
+     * and inserts invalidate as for any other near cache.
      * <p>
-     * The map's in-memory format must be {@link InMemoryFormat#BINARY}, and it can have no
-     * eviction, time-to-live or max-idle. The setting takes effect only when
+     * The map's in-memory format must be {@link InMemoryFormat#BINARY}. The setting takes effect only when
      * {@link LoadProtectionConfig#setEnabled(boolean) load protection} is on; otherwise it is
      * ignored with a warning.
      *

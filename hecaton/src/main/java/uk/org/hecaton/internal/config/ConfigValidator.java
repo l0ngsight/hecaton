@@ -234,22 +234,13 @@ public final class ConfigValidator {
 
     /**
      * Checks the configuration of an immutable map (load protection, F23): its values are shared
-     * as stored, so its format must be {@code BINARY}, and its entries are never removed, so it can
-     * have no eviction, time-to-live or max-idle.
+     * as stored, so its format must be {@code BINARY}. Eviction, time-to-live and max-idle are
+     * allowed: they remove entries and never update a held value.
      */
     public static void checkImmutableMapConfig(MapConfig mapConfig) {
-        String mapName = mapConfig.getName();
         if (mapConfig.getInMemoryFormat() != InMemoryFormat.BINARY) {
             throw new InvalidConfigurationException(format("Immutable map '%s' must have the BINARY in-memory format,"
-                    + " not %s", mapName, mapConfig.getInMemoryFormat()));
-        }
-        if (mapConfig.getEvictionConfig().getEvictionPolicy() != EvictionPolicy.NONE) {
-            throw new InvalidConfigurationException(format("Immutable map '%s' cannot have eviction (%s): its"
-                    + " entries are never removed", mapName, mapConfig.getEvictionConfig().getEvictionPolicy()));
-        }
-        if (mapConfig.getTimeToLiveSeconds() > 0 || mapConfig.getMaxIdleSeconds() > 0) {
-            throw new InvalidConfigurationException(format("Immutable map '%s' cannot have a time-to-live or max-idle:"
-                    + " its entries never expire", mapName));
+                    + " not %s", mapConfig.getName(), mapConfig.getInMemoryFormat()));
         }
     }
 

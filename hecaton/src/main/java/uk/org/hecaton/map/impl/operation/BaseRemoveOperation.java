@@ -98,7 +98,7 @@ public abstract class BaseRemoveOperation extends LockAwareOperation
 
     @Override
     protected ImmutableMapAccess immutableMapAccess() {
-        // removes entries
-        return ImmutableMapAccess.CHANGE;
+        // removes its key
+        return ImmutableMapAccess.REMOVE;
     }
 }

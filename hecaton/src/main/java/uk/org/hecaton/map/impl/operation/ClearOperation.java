@@ -121,6 +121,6 @@ public class ClearOperation extends MapOperation
     @Override
     protected ImmutableMapAccess immutableMapAccess() {
         // removes all entries
-        return ImmutableMapAccess.CHANGE;
+        return ImmutableMapAccess.REMOVE;
     }
 }

@@ -163,7 +163,7 @@ public final class LoadProtection {
         return enabled ? queueConfig.getShardCount() : 1;
     }
 
-    /** Counts an operation refused because it would change an immutable map. */
+    /** Counts an operation refused because it would update a value held by an immutable map. */
     public void onImmutableRejection() {
         immutableRejections.inc();
     }

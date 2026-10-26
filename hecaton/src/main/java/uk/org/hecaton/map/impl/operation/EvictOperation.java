@@ -118,6 +118,6 @@ public class EvictOperation extends LockAwareOperation
     @Override
     protected ImmutableMapAccess immutableMapAccess() {
         // removes an entry from memory
-        return ImmutableMapAccess.CHANGE;
+        return ImmutableMapAccess.REMOVE;
     }
 }

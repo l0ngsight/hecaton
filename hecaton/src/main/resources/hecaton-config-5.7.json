@@ -1193,7 +1193,7 @@
             "default": false
           },
           "immutable": {
-            "description": "True for an insert-only map: an entry, once put, is never changed or removed. Takes effect only when load protection is on.",
+            "description": "True for a map whose held values are never updated: a key can be inserted, and later removed, evicted or expired, but its value is never replaced. Takes effect only when load protection is on.",
             "type": "boolean",
             "default": false
           },

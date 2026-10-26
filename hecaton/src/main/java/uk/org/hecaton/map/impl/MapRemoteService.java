@@ -76,9 +76,9 @@ class MapRemoteService implements RemoteService {
     }
 
     /**
-     * The map config with a near cache for an immutable map that has none (F23): its entries never
-     * change, so the near cache never serves a stale value. It keeps deserialised values, shared by
-     * all readers on the member, local entries included.
+     * The map config with a near cache for an immutable map that has none (F23): its held values are
+     * never updated, and removals, expiry and re-inserts invalidate the near cache as for any map. It
+     * keeps deserialised values, shared by all readers on the member, local entries included.
      */
     static MapConfig withImmutableMapNearCache(MapConfig mapConfig, int size) {
         if (mapConfig.isNearCacheEnabled() || size == 0) {

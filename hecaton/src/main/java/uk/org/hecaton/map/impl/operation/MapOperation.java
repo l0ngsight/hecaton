@@ -154,7 +154,7 @@ public abstract class MapOperation extends AbstractNamedOperation
 
     /**
      * How this operation uses an immutable map (load protection, F23). The default is
-     * {@link ImmutableMapAccess#READ}; operations that insert, change or remove entries override it.
+     * {@link ImmutableMapAccess#READ}; operations that insert, update or remove entries override it.
      */
     protected ImmutableMapAccess immutableMapAccess() {
         return ImmutableMapAccess.READ;
@@ -167,9 +167,9 @@ public abstract class MapOperation extends AbstractNamedOperation
      */
     protected void checkImmutableAccess() {
         switch (immutableMapAccess()) {
-            case READ -> {
+            case READ, REMOVE -> {
             }
-            case CHANGE -> throw immutableRejection("it refuses " + operationName());
+            case UPDATE -> throw immutableRejection("it refuses " + operationName());
             case INSERT -> throw new IllegalStateException(getClass().getName() + " inserts without a key");
             default -> throw new IllegalStateException("unknown access " + immutableMapAccess());
         }
@@ -178,7 +178,7 @@ public abstract class MapOperation extends AbstractNamedOperation
     /** A rejection of this operation by an immutable map (F23), counted in the load protection metrics. */
     protected final ImmutableEntryException immutableRejection(String reason) {
         ((NodeEngineImpl) getNodeEngine()).getLoadProtection().onImmutableRejection();
-        return new ImmutableEntryException("Map '" + name + "' is immutable (insert-only): " + reason);
+        return new ImmutableEntryException("Map '" + name + "' is immutable (held values are never updated): " + reason);
     }
 
     /** {@code Remove} for {@code RemoveOperation}: the operation's name in messages. */

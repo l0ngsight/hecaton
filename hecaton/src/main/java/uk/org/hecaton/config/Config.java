@@ -3174,7 +3174,7 @@ public class Config {
     }
 
     /**
-     * Returns the load protection config (F23): insert-only maps with shared values, bounded
+     * Returns the load protection config (F23): immutable maps with shared values, bounded
      * buffers and back pressure, isolated connection lifecycle work, sharded queues.
      */
     @Nonnull

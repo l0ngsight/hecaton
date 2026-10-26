@@ -51,7 +51,7 @@ public abstract class KeyBasedMapOperation extends MapOperation
         if (immutableMapAccess() != ImmutableMapAccess.INSERT) {
             super.checkImmutableAccess();
         } else if (recordStore != null && recordStore.containsKey(dataKey, getCallerAddress())) {
-            throw immutableRejection("it already holds the key, and refuses to insert it again with " + operationName());
+            throw immutableRejection("it already holds the key, and refuses to update it with " + operationName());
         }
     }
 

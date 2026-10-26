@@ -135,7 +135,7 @@ public class SetTtlOperation extends LockAwareOperation
 
     @Override
     protected ImmutableMapAccess immutableMapAccess() {
-        // makes entries expire
-        return ImmutableMapAccess.CHANGE;
+        // makes entries expire, and keeps their values
+        return ImmutableMapAccess.REMOVE;
     }
 }

@@ -80,6 +80,6 @@ public class ReplaceOperation extends BasePutOperation implements MutatingOperat
     @Override
     protected ImmutableMapAccess immutableMapAccess() {
         // replaces a held value
-        return ImmutableMapAccess.CHANGE;
+        return ImmutableMapAccess.UPDATE;
     }
 }
