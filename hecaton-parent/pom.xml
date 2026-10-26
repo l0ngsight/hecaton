@@ -23,7 +23,7 @@
     <groupId>uk.org.hecaton</groupId>
     <artifactId>hecaton-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
 
     <name>Hecaton Parent POM</name>
     <description>Provides a base configuration for Hecaton Platform builds</description>
