@@ -17,12 +17,7 @@
 package uk.org.hecaton.map.impl;
 
 import uk.org.hecaton.config.Config;
-import uk.org.hecaton.config.EvictionConfig;
-import uk.org.hecaton.config.EvictionPolicy;
-import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.MapConfig;
-import uk.org.hecaton.config.MaxSizePolicy;
-import uk.org.hecaton.config.NearCacheConfig;
 import uk.org.hecaton.core.DistributedObject;
 import uk.org.hecaton.internal.loadprotection.LoadProtection;
 import uk.org.hecaton.internal.services.RemoteService;
@@ -64,7 +59,7 @@ class MapRemoteService implements RemoteService {
         LoadProtection loadProtection = ((NodeEngineImpl) nodeEngine).getLoadProtection();
         if (loadProtection.isImmutable(mapConfig)) {
             checkImmutableMapConfig(mapConfig);
-            mapConfig = withImmutableMapNearCache(mapConfig, loadProtection.getConfig().getImmutableMapNearCacheSize());
+            mapConfig = loadProtection.withImmutableMapNearCache(mapConfig);
         }
 
         if (mapConfig.isNearCacheEnabled()) {
@@ -73,25 +68,6 @@ class MapRemoteService implements RemoteService {
         } else {
             return new MapProxyImpl(name, mapServiceContext.getService(), nodeEngine, mapConfig);
         }
-    }
-
-    /**
-     * The map config with a near cache for an immutable map that has none (F23): its held values are
-     * never updated, and removals, expiry and re-inserts invalidate the near cache as for any map. It
-     * keeps deserialised values, shared by all readers on the member, local entries included.
-     */
-    static MapConfig withImmutableMapNearCache(MapConfig mapConfig, int size) {
-        if (mapConfig.isNearCacheEnabled() || size == 0) {
-            return mapConfig;
-        }
-        NearCacheConfig nearCacheConfig = new NearCacheConfig(mapConfig.getName())
-                .setInMemoryFormat(InMemoryFormat.OBJECT)
-                .setCacheLocalEntries(true)
-                .setEvictionConfig(new EvictionConfig()
-                        .setEvictionPolicy(EvictionPolicy.LRU)
-                        .setMaxSizePolicy(MaxSizePolicy.ENTRY_COUNT)
-                        .setSize(size));
-        return new MapConfig(mapConfig).setNearCacheConfig(nearCacheConfig);
     }
 
     @Override

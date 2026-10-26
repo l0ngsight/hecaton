@@ -90,6 +90,10 @@ public abstract class TransactionalMapProxySupport extends TransactionalDistribu
         this.mapServiceContext = mapService.getMapServiceContext();
         this.mapNearCacheManager = mapServiceContext.getMapNearCacheManager();
         MapConfig mapConfig = nodeEngine.getConfig().findMapConfig(name);
+        if (nodeEngine instanceof NodeEngineImpl nodeEngineImpl) {
+            // the near cache that the map proxies of an immutable map use (F23)
+            mapConfig = nodeEngineImpl.getLoadProtection().withImmutableMapNearCache(mapConfig);
+        }
         this.operationProvider = mapServiceContext.getMapOperationProvider(name);
         this.partitionStrategy = mapServiceContext.getPartitioningStrategy(name,
                 mapConfig.getPartitioningStrategyConfig(), mapConfig.getPartitioningAttributeConfigs());

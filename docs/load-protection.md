@@ -69,8 +69,9 @@ Because held values are never updated, members can share them instead of copying
   `immutable-map-near-cache-size` entries (1000 by default; `0` turns it off). Concurrent misses
   for one key make one remote call (single flight); absent keys are never cached. Repeated reads
   of a hot value then allocate nothing. Removals, expiry and inserts invalidate it like any near
-  cache, so for a short time after a key is removed or expires a member can still return its last
-  value.
+  cache: invalidations are sent in batches (within `hecaton.map.invalidation.batchfrequency.seconds`,
+  10 s by default), so until one arrives a member can still return the last value of a key that was
+  removed or expired elsewhere.
 - **Values sent to clients and members** are written to the socket from the stored bytes, not
   copied into each response. The per-response cost is a small header, whatever the value's size.
 

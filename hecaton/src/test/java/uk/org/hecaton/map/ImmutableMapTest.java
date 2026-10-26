@@ -216,6 +216,7 @@ public class ImmutableMapTest extends HecatonTestSupport {
         remove.<String, String>getMap("catalog").remove("new");
         remove.<String, String>getMap("catalog").delete("expiring");
         remove.commitTransaction();
+        // the member's near cache, which the transaction shares with the map proxy, no longer holds them
         assertThat(member.getMap("catalog").containsKey("new")).isFalse();
         assertThat(member.getMap("catalog").containsKey("expiring")).isFalse();
 

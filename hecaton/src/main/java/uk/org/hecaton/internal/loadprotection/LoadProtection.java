@@ -17,8 +17,13 @@
 package uk.org.hecaton.internal.loadprotection;
 
 import uk.org.hecaton.config.Config;
+import uk.org.hecaton.config.EvictionConfig;
+import uk.org.hecaton.config.EvictionPolicy;
+import uk.org.hecaton.config.InMemoryFormat;
 import uk.org.hecaton.config.LoadProtectionConfig;
 import uk.org.hecaton.config.MapConfig;
+import uk.org.hecaton.config.MaxSizePolicy;
+import uk.org.hecaton.config.NearCacheConfig;
 import uk.org.hecaton.config.QueueConfig;
 import uk.org.hecaton.internal.metrics.MetricsRegistry;
 import uk.org.hecaton.internal.metrics.Probe;
@@ -156,6 +161,28 @@ public final class LoadProtection {
     /** Whether the map is immutable: load protection is on and the map is configured immutable. */
     public boolean isImmutable(MapConfig mapConfig) {
         return enabled && mapConfig.isImmutable();
+    }
+
+    /**
+     * The map config with the near cache that the members keep for an immutable map that has none
+     * (F23), or the map config itself for other maps. The near cache keeps deserialised values,
+     * shared by all readers on the member, local entries included; held values are never updated,
+     * and removals, expiry and re-inserts invalidate it as for any map. Map and transactional
+     * proxies both use it, so that both see the same near cache.
+     */
+    public MapConfig withImmutableMapNearCache(MapConfig mapConfig) {
+        int size = config.getImmutableMapNearCacheSize();
+        if (!isImmutable(mapConfig) || mapConfig.isNearCacheEnabled() || size == 0) {
+            return mapConfig;
+        }
+        NearCacheConfig nearCacheConfig = new NearCacheConfig(mapConfig.getName())
+                .setInMemoryFormat(InMemoryFormat.OBJECT)
+                .setCacheLocalEntries(true)
+                .setEvictionConfig(new EvictionConfig()
+                        .setEvictionPolicy(EvictionPolicy.LRU)
+                        .setMaxSizePolicy(MaxSizePolicy.ENTRY_COUNT)
+                        .setSize(size));
+        return new MapConfig(mapConfig).setNearCacheConfig(nearCacheConfig);
     }
 
     /** The number of shards of the queue: its shard count with load protection on, 1 otherwise. */
