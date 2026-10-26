@@ -43,13 +43,26 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+      # The NVD database of the previous run, so that a run downloads only the changes. It is
+      # saved only when the job succeeds, never half-updated.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: nvd-${{ github.run_id }}
+          restore-keys: nvd-
       - name: Dependency check
         env:
-          # without an NVD API key the database download is slow and rate-limited
+          # Without an NVD API key, NVD allows a few requests per 30 seconds: a full download
+          # takes hours and ends with HTTP 429. Request a key at
+          # https://nvd.nist.gov/developers/request-an-api-key and add it as the secret NVD_API_KEY.
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
           options=()
-          [[ -n "$NVD_API_KEY" ]] && options+=(-DnvdApiKey="$NVD_API_KEY")
+          if [[ -n "$NVD_API_KEY" ]]; then
+            options+=(-DnvdApiKey="$NVD_API_KEY")
+          else
+            echo "::warning::The secret NVD_API_KEY is not set: the NVD download is rate-limited and may fail with HTTP 429."
+          fi
           ./mvnw -B -ntp -DskipTests install
           ./mvnw -B -ntp org.owasp:dependency-check-maven:aggregate "${options[@]}"
       - uses: actions/upload-artifact@v4
