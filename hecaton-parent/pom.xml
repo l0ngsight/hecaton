@@ -1633,6 +1633,40 @@
                         <artifactId>central-publishing-maven-plugin</artifactId>
                         <inherited>false</inherited>
                     </plugin>
+                    <plugin>
+                        <!--
+                        no -tests jars on Maven Central: they serve the reactor's own tests, and the Central
+                        plugin can exclude only whole artifacts. They are detached after install, so the
+                        modules that test with them still find them in the local repository
+                        -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-scripting-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>detach-test-jars</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>eval</goal>
+                                </goals>
+                                <configuration>
+                                    <engineName>groovy</engineName>
+                                    <script><![CDATA[
+                                        def tests = project.attachedArtifacts.findAll { it.classifier == 'tests' }
+                                        project.attachedArtifacts.removeAll(tests)
+                                        tests.each { log.info("Not publishing ${it.file.name} to Maven Central") }
+                                    ]]></script>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.apache.groovy</groupId>
+                                <artifactId>groovy-jsr223</artifactId>
+                                <version>4.0.33</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
