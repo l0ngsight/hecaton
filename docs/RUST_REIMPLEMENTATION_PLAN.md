@@ -6,7 +6,7 @@
 | Scope | A Rust implementation of the Hecaton **member**, wire-compatible with the Hazelcast 5.x client protocol; a Java client that stays; an **embedded mode** that runs the Rust member inside a JVM |
 | Baseline | Hecaton `main` (Hazelcast CE 5.7.0 lineage), see [`SPEC.md`](SPEC.md) |
 | Effort unit | engineer-weeks (ew), order of magnitude |
-| New repository | to be created; layout in §12 |
+| Canonical copy | [`l0ngsight/hecaton-rust`, `docs/PLAN.md`](https://github.com/l0ngsight/hecaton-rust/blob/main/docs/PLAN.md); edit it there |
 
 Section references of the form "spec §n" point to [`SPEC.md`](SPEC.md). Decisions are
 numbered R1…; features keep the spec's F numbers where they exist.
