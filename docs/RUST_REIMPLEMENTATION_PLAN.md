@@ -165,7 +165,7 @@ Prometheus metrics, the `hc`, `hc-start`, `hc-stop`, `hc-cli`, `hc-cluster-admin
 | **R5** | Storage: one in-memory format. `in-memory-format: BINARY/OBJECT/NATIVE` are all accepted; values are stored as `Data` bytes in a Rust allocator with per-map accounting, and `OBJECT` additionally caches decoded query views for Compact/Portable/JSON values | There is no heap to escape: HD (F11) is the default. `native-memory` config maps onto a global memory budget and eviction |
 | **R6** | Persistence (F10): own per-partition **write-ahead log + snapshot** files, encrypted at rest with `aes-gcm` behind the existing config | A data grid holds everything in memory; restart needs a durable log, not a KV engine. Avoids a C++ dependency. RocksDB/`fjall` are candidates for Tiered Storage (F12) later |
 | **R7** | CP Subsystem (F7): Raft via **`openraft`** with Hecaton's group, session, lock, semaphore, latch and CPMap state machines on top; CP persistence (F9) through its storage trait | Writing a correct Raft is a project in itself; `openraft` is mature, async and storage-agnostic. Fallback: an in-house Raft if `openraft`'s membership-change model fights CP group semantics (spike in M0) |
-| **R8** | SQL: batch SQL on **Apache DataFusion** (`sqlparser-rs` with a Hazelcast dialect layer); no streaming SQL, no Jet | The HCL-licensed Java engine is Calcite-bound. A clean-room Rust engine written from public behaviour and the `docs/design/sql` design notes (not from the HCL sources) ships under Apache 2.0, removing the licence split (spec §11.2). Needs legal confirmation before M8 starts |
+| **R8** | SQL: batch SQL on **Apache DataFusion** (`sqlparser-rs` with a Hazelcast dialect layer); no streaming SQL, no Jet | The HCL-licensed Java engine is Calcite-bound. A clean-room Rust engine written from public behaviour and the `docs/design/sql` design notes (not from the HCL sources) ships under Apache 2.0, removing the licence split (spec §11.2). **Decided:** the clean-room approach is approved; the rules in R13 still apply |
 | **R9** | Security: TLS with `rustls` (F1); realms simple/username-password, token, TLS client certificate (P0); LDAP via `ldap3` (P1); Kerberos via `libgssapi`/`cross-krb5` (P2). JAAS custom login modules only in embedded mode or with the JVM runtime | |
 | **R10** | Java user code: trait `UserCodeRuntime` with two implementations — **host JVM in embedded mode** (§7) and an optional **`hecaton-jvm` module** that loads `libjvm` into a standalone member through the `jni` crate | Entry processors, map stores, executors, custom predicates and interceptors are Java by definition. Standalone members without the module refuse them with a clear error |
 | **R11** | Config: the same XML/YAML documents (`hecaton.xml`/`hecaton.yaml`, same XSD), parsed in Rust; unknown or Java-only elements (Jet, user-code-deployment, cloud discovery) fail with a targeted message or an INFO log per a documented table | Spec G4 carries over: an EE-style config file keeps working |
@@ -409,7 +409,8 @@ config) is removed and listed in `changes-from-hazelcast.md`.
 
 ### 7.4 Limits
 
-- Java 25 only (FFM, `--enable-native-access`); a Rust crash in `unsafe` code can still
+- **Java 25 only** (decided: FFM with `--enable-native-access`, no JNI fallback for older
+  hosts; Java 17/21 applications use client/server mode); a Rust crash in `unsafe` code can still
   take the JVM down, hence R14's `miri`/fuzzing budget.
 - Jet stays unavailable in embedded mode too (RN2).
 - Platform coverage is what the native jars cover; other platforms use client/server mode.
@@ -485,7 +486,7 @@ The existing Java sources are the executable specification:
 | **M5** CP Subsystem | Raft groups on `openraft`, sessions, all CP structures, CPMap, CP management REST/CLI, CP group view listener | Linearizability harness green; ported CP scenario tests | 10–12 ew |
 | **M6** Persistence | WAL + snapshot per partition, metadata store, coordinated restart, partial-start policies, hot backup, CP persistence (F9), dynamic-config persistence | Crash-consistency suite green 30 nightlies | 10–12 ew |
 | **M7** WAN | Batch publisher, consumer, ack types, queue-full policies, management ops, dynamic add; IMap and ICache | Multi-cluster suite green | 6–8 ew |
-| **M8** Batch SQL | DataFusion engine, dialect, mappings/views/indexes DDL, DML, paging, SQL permissions | SQL compat scenarios and a ported subset of the SQL test suite green; legal sign-off on R8 | 14–20 ew |
+| **M8** Batch SQL | DataFusion engine, dialect, mappings/views/indexes DDL, DML, paging, SQL permissions | SQL compat scenarios and a ported subset of the SQL test suite green | 14–20 ew |
 | **M9** Embedded mode and Java carve-out | `hecaton-ffi`, native jars, `hecaton-embedded`, host-JVM user-code runtime, Java client module split, Rust member test fixture, Spring integration | Embedded Spring Boot sample and the migration samples pass against the embedded member; client test suite migrated | 12–16 ew |
 | **M10** 1.0 | `hecaton-jvm` optional runtime for standalone members, audit log, LDAP, WAN sync, docs, distribution, migration guide from Java Hecaton, performance report, security review | Quality gates of spec §10; `java-member` maintenance line declared | 8–12 ew |
 | **M11** Later | Vector (F20), Tiered Storage (F12), query cache, XA, Kerberos, rolling-upgrade tooling (F14), Python/Node embedded bindings, Jet decision | per feature | 30–40 ew |
@@ -511,21 +512,22 @@ M0 ─▶ M1 ─▶ M2 ─▶ M3 ─┬─▶ M4 security ───────�
 | Hidden protocol behaviour (retry semantics, event ordering, listener re-registration after reconnect, partition-lost events) that clients depend on and that is not in the codecs | Treat the Java member as the oracle: differential tests run the same client scenario against both members and diff the frame traces; the `compat-tests/` suite gets per-client reconnection scenarios early (M2) |
 | `openraft` membership and snapshot model vs CP group semantics (sessions, group destruction, `cp-member-count`, priority members) | M0 spike with a go/no-go; fallback is an in-house Raft (adds ~6 ew to M5) |
 | DataFusion dialect gap and plan quality for partitioned scans | Scope SQL to IMap/ReplicatedMap batch queries; publish the unsupported-syntax list; M0 spike on a custom `TableProvider` with index push-down |
-| Clean-room status of Rust SQL vs HCL | Written from behaviour and the Apache-2.0 design notes only; legal review before M8; contributors who worked on `hecaton-sql` do not write the Rust SQL engine's optimizer |
+| Clean-room status of Rust SQL vs HCL | Approved (R8); written from behaviour and the Apache-2.0 design notes only, and contributors who worked on `hecaton-sql` do not write the Rust SQL engine's optimizer |
 | FFM upcall cost makes entry processors in embedded mode slow | Measure in M0; batch upcalls per partition for `executeOnEntries`; keep the pure in-process fast path for proxies |
 | The Java member maintenance line splits the team | Time-box it (R12): security fixes only after Rust 1.0, EOL one year later |
 | Unsafe code in allocators, FFI and `io_uring` | `miri`, fuzzing, `#![forbid(unsafe_code)]` everywhere except three audited crates |
 | Scope creep toward Jet | RN2 is a hard rule for 1.0; revisit after M11 with a separate design |
 
+Settled: embedded mode is Java 25 only (§7.4); the clean-room Rust SQL engine is approved (R8).
+
 Open questions to settle before M0 ends:
 
-1. Does embedded mode need Java 17/21 hosts (JNI fallback) or is Java 25 acceptable?
-2. Rust client crate as a public product or internal (CLI, tests) only?
-3. Keep the `hc.*` property names 1:1, or take the chance to flatten the ~400 system
+1. Rust client crate as a public product or internal (CLI, tests) only?
+2. Keep the `hc.*` property names 1:1, or take the chance to flatten the ~400 system
    properties into a documented set (with the legacy names accepted)?
-4. Partition count and backup limits: keep 271/6 for migration parity, or allow larger
+3. Partition count and backup limits: keep 271/6 for migration parity, or allow larger
    counts for very large clusters (clients cope with any count)?
-5. Which `MC*` codecs does `hc-cli` actually need?
+4. Which `MC*` codecs does `hc-cli` actually need?
 
 ---
 
