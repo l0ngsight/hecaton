@@ -12,6 +12,10 @@
 #     Writes the serialization fixtures (RustSerializationOracle.java; hecaton-rust:
 #     fixtures/serialization).
 #
+#   rust-oracle.sh query OUT_DIR
+#     Writes the query fixtures: predicates and Java's result on each entry of a corpus
+#     (RustQueryOracle.java; hecaton-rust: fixtures/query).
+#
 # Uses hecaton/target/hecaton-*.jar when it exists (`./mvnw -pl hecaton-tpc-engine,hecaton install
 # -DskipTests`), otherwise the released jar from Maven Central given by HECATON_VERSION.
 set -euo pipefail
@@ -48,10 +52,11 @@ if [ -z "$hecaton_jar" ]; then
 fi
 byte_buddy_jar="$(fetch net.bytebuddy byte-buddy 1.17.8)" || exit 1
 echo "using $hecaton_jar" >&2
-mode="${1:?usage: rust-oracle.sh protocol SAMPLES_DIR OUT_DIR | serialization OUT_DIR}"
+mode="${1:?usage: rust-oracle.sh protocol SAMPLES_DIR OUT_DIR | serialization OUT_DIR | query OUT_DIR}"
 shift
 case "$mode" in
     protocol) java -cp "$hecaton_jar:$byte_buddy_jar" "$here/RustProtocolOracle.java" "$@" ;;
     serialization) java -cp "$hecaton_jar" "$here/RustSerializationOracle.java" "$@" ;;
+    query) java -cp "$hecaton_jar" "$here/RustQueryOracle.java" "$@" ;;
     *) echo "unknown mode $mode" >&2; exit 2 ;;
 esac
