@@ -35,6 +35,8 @@ as the [migration guide](migration.md) describes.
 ## The project
 
 - [Specification](SPEC.md) and [implementation plan](IMPLEMENTATION_PLAN.md).
+- [Rust reimplementation plan](RUST_REIMPLEMENTATION_PLAN.md): a Rust member, the Java client and
+  embedded mode.
 - [Releasing](releasing.md), [performance](performance.md), [security review](security-review.md).
 - Designs of Hecaton's own components: [persistence](design/persistence.md); the other
   `design/` pages are inherited from Hazelcast.
