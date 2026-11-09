@@ -6,9 +6,8 @@ name: Nightly tests
 # failures inherited from Hazelcast 5.7.0 (docs/test-baseline/hazelcast-5.7.0.txt) and
 # tools/ci/known-test-failures.txt; new, untriaged failures fail the run.
 
+# Automatic triggers are disabled to save Actions minutes: run from the Actions tab.
 on:
-  schedule:
-    - cron: '17 1 * * *'
   workflow_dispatch:
     inputs:
       ref:
@@ -23,7 +22,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Scheduled runs test main.
+  # Runs test main unless another ref is given.
   REF: ${{ inputs.ref || 'main' }}
 
 jobs:
