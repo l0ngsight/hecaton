@@ -1,9 +1,8 @@
 name: CI
 
+# Automatic triggers are disabled to save Actions minutes: run from the Actions tab.
 on:
-  push:
-    branches: [main, 'feature/**', 'claude/**']
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read

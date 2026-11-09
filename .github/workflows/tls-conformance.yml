@@ -2,9 +2,8 @@ name: TLS conformance
 
 # Plan M3 tests: a member with TLS, scanned with testssl.sh (tools/ci/tls-conformance.sh).
 
+# Automatic triggers are disabled to save Actions minutes: run from the Actions tab.
 on:
-  schedule:
-    - cron: '13 3 * * *'
   workflow_dispatch:
     inputs:
       ref:

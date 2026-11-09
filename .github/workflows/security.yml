@@ -1,16 +1,12 @@
 name: Security analysis
 
 # Static security analysis (spec §10, docs/security-review.md): CodeQL, OWASP dependency check
-# and SpotBugs with FindSecBugs on Hecaton's own modules. Weekly, on demand, and when the
-# workflow changes. Findings are reports to triage, not build failures.
+# and SpotBugs with FindSecBugs on Hecaton's own modules. On demand. Findings are reports
+# to triage, not build failures.
 
+# Automatic triggers are disabled to save Actions minutes: run from the Actions tab.
 on:
-  schedule:
-    - cron: '17 3 * * 1'
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/security.yml']
 
 permissions:
   contents: read

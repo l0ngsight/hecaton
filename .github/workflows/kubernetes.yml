@@ -3,9 +3,8 @@ name: Kubernetes
 # Plan §1.4: three Hecaton members form a cluster through Kubernetes discovery (DNS and API
 # modes) on kind, survive a rolling restart, and a client pod connects.
 
+# Automatic triggers are disabled to save Actions minutes: run from the Actions tab.
 on:
-  schedule:
-    - cron: '43 2 * * *'
   workflow_dispatch:
     inputs:
       ref:

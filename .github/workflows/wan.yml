@@ -3,9 +3,8 @@ name: WAN
 # Spec §10: WAN replication between three clusters of the Hecaton container image (wan-tests/):
 # active/passive, active/active, and a member failure while replicating.
 
+# Automatic triggers are disabled to save Actions minutes: run from the Actions tab.
 on:
-  schedule:
-    - cron: '13 3 * * *'
   workflow_dispatch:
     inputs:
       ref:
